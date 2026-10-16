@@ -6,13 +6,13 @@
 static const char *const B_NAME[NB] = {"FX", "SEL", "ENV", "LFO", "EDIT", "GLO", "HOME", "SAVE",
                                         "ARP", "SEQ", "PLAY", "REC", "OCT-", "OCT+"};
 #if BOARD_SMK37
-static const char *const E_NAME[NE] = {"SELECT", "ALGORITHM", "PRESETS", "K5", "K6", "K7", "K8"};   /* KNOB 1..4 */
+static const char *const E_NAME[NE] = {"SELECT", "ALGORITHM", "PRESETS", "K1", "K2", "K3", "K4"};   /* KNOB 1..4 */
 #else
 static const char *const E_NAME[NE] = {"SELECT", "ALGORITHM", "PRESETS", "KNOB 1", "KNOB 2",
                                         "KNOB 3", "KNOB 4"};
 #endif
 #if BOARD_SMK37
-#define PANEL_MAGIC 0x44555331u          /* "DUS1" (the SMK-37 build): never an FM-1 table; bump when PANEL_DEFAULT changes */
+#define PANEL_MAGIC 0x44555332u          /* "DUS2" (the SMK-37 build): never an FM-1 table; bump when PANEL_DEFAULT changes */
 #else
 #define PANEL_MAGIC 0x50414E35u          /* "PAN5": Felucca's layout, so its calibration stays valid */
 #endif
@@ -29,13 +29,13 @@ panel_t panel __attribute__((section(".noinit")));
 /* SMK-37 Pro (smk_input.h button ids, confirmed on a unit; the printed SMK label -> the FM-1 function):
  * FX = FX, SCALE = SEL, CHORD = ENV, NOTE REPEAT = LFO, PARA = EDIT, GLOBE = GLO, PATCH = HOME,
  * BT = SAVE, ARP, SEQ as printed, SEQ PLAY = PLAY, SEQ REC = REC, OCTAVE- / + as printed. KNOB BANK, FADER BANK,
- * < and > are the SMK-37 build's own (ui.c). Knobs as the FM-1's top row: K1 = MASTER (smk_input.h: a virtual pot),
- * K2 = SELECT, K3 = ALGORITHM, K4 = PRESETS; K5..K8 = KNOB 1..4. HARDWARE CALIBRATION (OCTAVE- + OCTAVE+ at
+ * < and > are the SMK-37 build's own (ui.c). Knobs: K1..K4 = KNOB 1..4 (the page's knobs, the
+ * row under the screen's knob strip), K5 = MASTER (smk_input.h: a virtual pot), K6 = SELECT, K7 = ALGORITHM, K8 = PRESETS. HARDWARE CALIBRATION (OCTAVE- + OCTAVE+ at
  * power-on) re-teaches all of it. */
 static const panel_t PANEL_DEFAULT = {
     PANEL_MAGIC,
     {14, 8, 9, 7, 13, 10, 12, 11, 6, 15, 16, 17, 4, 5},
-    {1, 2, 3, 4, 5, 6, 7},
+    {5, 6, 7, 0, 1, 2, 3},
     {1, 1, 1, 1, 1, 1, 1},
 };
 #else

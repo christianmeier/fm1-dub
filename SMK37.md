@@ -18,17 +18,17 @@ models, and refuse an FM-1 package (and an SMK package on an FM-1).
 ## Controls
 
 The FM-1's controls keep their DUB-1 meaning, so the manual applies; the screen keeps the FM-1's names (HOME,
-SEL, ENV, ...), and KNOB 1-4 are the knobs K5-K8. The SMK-37 adds the rest.
+SEL, ENV, ...), and KNOB 1-4 are the knobs K1-K4. The SMK-37 adds the rest.
 
 | SMK-37 | DUB-1 |
 | --- | --- |
 | Keys F3..G5 (the middle 27) | the FM-1's 27 keys: the scale (each adds its note or takes it out), the Chords page's root, and with REC held, in PERFORM and on the Pattern page the white keys as on the FM-1 |
 | Keys C3..E3 and G#5..C6 (the outer 10) | more of the scale; on the Chords page, the slot's root too |
 | 16 pads | the 16 white keys F3..G5. As the scale and the Chords page's roots, low notes on the bottom row (F3..F4), G4..G5 on the top row. Where the white keys are a row of sixteen (the effects grid while REC is held, PERFORM's 1-10, the Pattern page's steps) the top row is 1-8 and the bottom row 9-16, as the screen reads |
-| Pad lights | what the FM-1's key LEDs show, in colour, each pad of a group lit at least dim: the scale (its root brighter, the chord's tones as a stab plays, red in dub hold), the effects grid by group (held: white), the Pattern page's steps in the lane's colour (accents brighter, the step playing white), PERFORM's layers and moves, the Chords page's root, the picker's piece and mode |
-| K1 | MASTER (volume) |
-| K2 / K3 / K4 | SELECT / ALGORITHM / PRESETS |
-| K5..K8 | KNOB 1..4 |
+| Pad lights | what the FM-1's key LEDs show, in three colours: off dark orange, on light blue, active bright white-blue. The scale: out of it orange, in it blue (the root a stronger blue), the chord's tones as a stab plays bright (red in dub hold). The Pattern page: steps blue (accents stronger), the step playing bright. PERFORM: layers on blue, off orange, the moves red while held. The Chords page's root and the picker's piece and mode bright. The effects grid keeps its group colours (held: white). A note lights all its pads: the 16 pads are the white keys F3..G5, so a pad and the one diagonally up and to the left (and F3 and F4 at the bottom row's ends) are the same note an octave apart |
+| K1..K4 | KNOB 1..4 (the page's knobs) |
+| K5 | MASTER (volume) |
+| K6 / K7 / K8 | SELECT / ALGORITHM / PRESETS |
 | PATCH | HOME: the Dub page (again: ripples, scope, spectrum) |
 | CHORD / ARP / NOTE REPEAT / SEQ | ENV / ARP / LFO / SEQ: the Chord, Texture, Bass and Drums pages (again: the sound page, then FM or Pattern) |
 | FX / GLOBE | FX / GLO: the Space and Setup pages |
@@ -44,7 +44,7 @@ SEL, ENV, ...), and KNOB 1-4 are the knobs K5-K8. The SMK-37 adds the rest.
 | Pitch wheel | the tape: up runs it faster (the echo's time down to half), down slower (up to twice); the repeats bend on the way. At rest, the echo is as set |
 | Mod wheel | the filter: opens the chord's Cutoff on top of its knob |
 | OCTAVE- + OCTAVE+ held 5 s | UPDATE MODE |
-| OCTAVE- + OCTAVE+ held at power-on | HARDWARE CALIBRATION: teach the buttons and knobs again (it asks by the FM-1's names, KNOB 1-4 as K5-K8) |
+| OCTAVE- + OCTAVE+ held at power-on | HARDWARE CALIBRATION: teach the buttons and knobs again (it asks by the FM-1's names, KNOB 1-4 as K1-K4) |
 
 Only one card is up at a time: KNOB BANK closes the fader card. The wheels never change what is saved. Lights Off
 (Setup page) darkens the scale on the pads; the SMK-37 has no key lights and no dim button glow, so On and Keys

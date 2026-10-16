@@ -1965,8 +1965,8 @@ static int smk_card(void)
 }
 
 /* the pads' lights (leds()): what the FM-1's key LEDs show, in colour, each pad of a group lit at least dim. The
- * scale: out of it dim, in it brighter, the root brighter still, the chord's tones as it plays brightest (dub hold:
- * red). The effects grid: each group in its colour, its first pad brighter (the FM-1 lights its key), held white.
+ * scale: out of it dark orange, in it light blue, the root a brighter blue, the chord's tones as it plays bright
+ * white-blue (dub hold: red). The effects grid: each group in its colour, its first pad brighter (the FM-1 lights its key), held white.
  * The Pattern page: the lane's steps in the lane's colour (accents brighter), the step playing white. PERFORM: the
  * layers in their colours (dim when out), the moves red while held. The Chords page: the slot's root. The picker:
  * the piece and the mode lit. Lights Off: the scale dark (the rest stays) */
@@ -1979,21 +1979,19 @@ static void smk_pad(int p, uint32_t r, uint32_t g, uint32_t b, uint32_t lv)   /*
 }
 #define SMK_DIM 72u                                /* a pad of a group at rest: clearly lit, well under the others */
 static const uint8_t SMK_RGB_SCALE[3] = {60, 230, 205}, SMK_RGB_HOLD[3] = {240, 80, 70};
+/* three states told apart by colour, not only by level: off dark orange, on light blue, active bright white-blue */
+static const uint8_t SMK_OFF[3] = {110, 38, 0}, SMK_ON[3] = {40, 120, 210}, SMK_ROOT[3] = {70, 170, 255},
+                     SMK_ACT[3] = {190, 230, 255};
+#define SMK_STATE(p, c) smk_pad((p), (c)[0], (c)[1], (c)[2], 256u)
 static void smk_pads(void)
 {
     static const uint8_t GROUP[4][3] = {{60, 200, 230}, {70, 110, 255}, {170, 100, 240}, {250, 150, 40}};
-    static const uint8_t LANE[EN_NDRUM][3] = {{250, 130, 40}, {200, 210, 220}, {120, 160, 230}, {230, 70, 160},
-                                              {240, 200, 40}};
-    static const uint8_t LAYER[5][3] = {{60, 230, 205}, {110, 160, 250}, {230, 190, 90}, {250, 130, 40},
-                                        {200, 210, 220}};
-    static const uint8_t PIECE[3] = {240, 220, 180};
     int w, layout = smk_layout(ui.btn), grid = layout == SMK_PADS_GRID;
     if (layout == SMK_PADS_OWN) {                /* the picker */
         int mode = smk_mode_now();
         for (w = 0; w < SMK_NPADS; w++) {
             int on = w < 8 ? w == proj.piece : w - 8 == mode;
-            const uint8_t *c = w < 8 ? PIECE : SMK_RGB_SCALE;
-            smk_pad(w, c[0], c[1], c[2], on ? 256u : SMK_DIM);
+            SMK_STATE(w, on ? SMK_ACT : SMK_ON);
         }
         return;
     }
@@ -2009,37 +2007,42 @@ static void smk_pads(void)
         } else if (ui.perf) {                    /* PERFORM: 1-5 the layers, 6-10 the moves */
             if (w < 3) {
                 static const uint8_t LEVEL[3] = {P_CHORD, P_PINGS, P_BASS};
-                smk_pad(p, LAYER[w][0], LAYER[w][1], LAYER[w][2], proj.par[LEVEL[w]] > 0 ? 256u : SMK_DIM);
+                SMK_STATE(p, proj.par[LEVEL[w]] > 0 ? SMK_ON : SMK_OFF);
             } else if (w < 5) {
-                smk_pad(p, LAYER[w][0], LAYER[w][1], LAYER[w][2], ui.mutes >> w & 1u ? SMK_DIM : 256u);
+                SMK_STATE(p, ui.mutes >> w & 1u ? SMK_OFF : SMK_ON);
             } else if (w < 10) {
-                smk_pad(p, SMK_RGB_HOLD[0], SMK_RGB_HOLD[1], SMK_RGB_HOLD[2], ui.moves >> (w - 5) & 1u ? 256u : SMK_DIM);
+                if (ui.moves >> (w - 5) & 1u)
+                    smk_pad(p, SMK_RGB_HOLD[0], SMK_RGB_HOLD[1], SMK_RGB_HOLD[2], 256u);
+                else
+                    SMK_STATE(p, SMK_ON);
             } else {
                 smk_pad(p, 0, 0, 0, 0u);
             }
         } else if (ui.view == V_PAT) {           /* the Pattern page: the lane's steps */
-            const uint8_t *c = LANE[ui.lane < EN_NDRUM ? ui.lane : 0];
             uint32_t st = lane_steps(ui.lane) >> w & 1u;
             uint32_t ac = proj.par[P_DMODE] ? (uint32_t)(uint16_t)proj.par[P_DACC0 + ui.lane] >> w & 1u : 0u;
             if (en_playing && w == en_drum_pos[0])
-                smk_pad(p, 230, 230, 230, st ? 256u : 96u);
+                SMK_STATE(p, SMK_ACT);
             else
-                smk_pad(p, c[0], c[1], c[2], st ? (ac ? 256u : 150u) : SMK_DIM);
+                SMK_STATE(p, st ? (ac ? SMK_ROOT : SMK_ON) : SMK_OFF);
         } else if (ui.view == V_CHORDS) {        /* the Chords page: the slot's root */
             int on = proj.par[P_CQ0 + ui.slot] && pc == (uint32_t)proj.par[P_CR0 + ui.slot];
-            smk_pad(p, SMK_RGB_SCALE[0], SMK_RGB_SCALE[1], SMK_RGB_SCALE[2], on ? 256u : SMK_DIM);
+            SMK_STATE(p, on ? SMK_ACT : SMK_OFF);
         } else if (!proj.leds) {
             smk_pad(p, 0, 0, 0, 0u);
         } else {                                 /* the scale; the chord's tones as it plays */
-            uint32_t ap = pool_abs(), lv = ap >> pc & 1u ? (pc == (uint32_t)proj.par[P_ROOT] ? 220u : 140u) : SMK_DIM;
+            uint32_t ap = pool_abs(), in = ap >> pc & 1u, root = pc == (uint32_t)proj.par[P_ROOT];
             int i, tone = 0;
             for (i = 0; en_playing && i < EN_NPAD; i++)
                 tone |= en_chord[i] && en_chord[i] % 12u == pc;
-            if (tone && en_pad_level > 0.02f)
-                smk_pad(p, en_frozen ? SMK_RGB_HOLD[0] : 200u, en_frozen ? SMK_RGB_HOLD[1] : 250u,
-                        en_frozen ? SMK_RGB_HOLD[2] : 240u, 256u);
-            else
-                smk_pad(p, SMK_RGB_SCALE[0], SMK_RGB_SCALE[1], SMK_RGB_SCALE[2], lv);
+            if (tone && en_pad_level > 0.02f) {
+                if (en_frozen)
+                    smk_pad(p, SMK_RGB_HOLD[0], SMK_RGB_HOLD[1], SMK_RGB_HOLD[2], 256u);
+                else
+                    SMK_STATE(p, SMK_ACT);
+            } else {
+                SMK_STATE(p, !in ? SMK_OFF : root ? SMK_ROOT : SMK_ON);
+            }
         }
     }
 }

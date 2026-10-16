@@ -29,12 +29,12 @@ pad 0
 expect pool 0x6A9
 pad 0
 expect pool 0x6AD
-# their lights: the root bright, a note out of the scale (A3, pad 10) dim but lit
+# their lights: the root a stronger blue, a note out of the scale (A3, pad 10) dark orange
 wait 1000
 pads
 expect padg8 >150
-expect padg10 >40
-expect padg10 <90
+expect padr10 >90
+expect padb10 <20
 # the effects grid: REC held, the pads in reading order (pad 4 is the fifth effect, Low-pass)
 press REC
 wait 400
@@ -86,7 +86,7 @@ pad 3
 wait 200
 said Step 4 on
 expect par105 1
-expect padr3 >100
+expect padb3 >150
 key b0 down
 pad 2
 key b0 up
@@ -165,13 +165,15 @@ expect padlayout 2
 wait 200
 shot picker.png
 pads
-expect padg2 >40
-expect padg2 <90
-expect padr0 >200
+# the picker's states: the other pieces on (light blue), the piece playing active (bright)
+expect padb2 >150
+expect padr2 <90
+expect padr0 >150
 pad 2
 wait 200
 expect piece 2
-expect padr2 >200
+expect padr2 >150
+expect padr0 <90
 pad 13
 wait 200
 expect par20 5
