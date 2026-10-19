@@ -130,8 +130,8 @@ kbd { font: 600 .85em ui-monospace, Menlo, monospace; background: var(--card); b
       <thead><tr><th scope="col">SMK-37</th><th scope="col">DUB-1</th></tr></thead>
       <tbody>
         <tr><td>K1–K4</td><td>KNOB 1–4, the page's four values</td></tr>
-        <tr><td>K5, K6, K7, K8</td><td>MASTER (volume), SELECT, ALGORITHM, PRESETS</td></tr>
-        <tr><td>PATCH, CHORD, ARP, NOTE REPEAT, SEQ, FX, GLOBE</td><td>HOME, ENV, ARP, LFO, SEQ, FX, GLO: the Dub, Chord, Texture, Bass, Drums, Space and Setup pages</td></tr>
+        <tr><td>K5, K6, K7, K8</td><td>MASTER (volume), SELECT, ALGORITHM (on the Dub page the screen, on a layer's page its voice, elsewhere the mode), PRESETS</td></tr>
+        <tr><td>PATCH, CHORD, ARP, NOTE REPEAT, SEQ, FX, GLOBE</td><td>HOME, ENV, ARP, LFO, SEQ, FX, GLO: the Dub, Chord, Texture, Bass, Drums, Space and Setup pages; PATCH again, the Key page (Tempo, Root, Mode, Swing)</td></tr>
         <tr><td>PARA, SCALE, BT</td><td>EDIT (the Chords page; held, the next chord), SEL (PERFORM), SAVE</td></tr>
         <tr><td>SEQ PLAY, SEQ REC</td><td>PLAY; REC (tapped: dub hold; held: the effects grid on the pads)</td></tr>
         <tr><td>OCTAVE−, OCTAVE+</td><td>OCT−, OCT+: the pings' octave</td></tr>
@@ -140,9 +140,9 @@ kbd { font: 600 .85em ui-monospace, Menlo, monospace; background: var(--card); b
         <tr><td>FADER BANK</td><td>what the faders set: A the levels, B the space, C the shape. A fader takes over once it moves</td></tr>
         <tr><td>Keys</td><td>the scale; F3–G5 are the FM-1's 27 keys, the outer ten more of the scale</td></tr>
         <tr><td>Pads</td><td>the 16 white keys F3–G5 (low notes on the bottom row); in the effects grid, PERFORM and the Pattern page, 1–8 the top row</td></tr>
-        <tr><td>PERFORM (SCALE)</td><td>the knobs a mixer; pads 1–5 mute the chord, pings, bass, kick and hats; the black keys from F#3 (F#, G#, A#, C#, D#) solo them; pads 7–11, held, Throw, Open, Shut, Drop, Echo; pad 6 dark</td></tr>
+        <tr><td>PERFORM (SCALE)</td><td>the knobs the master actions, Filter, Dub, Energy, Space (0 in the middle); pad 6 held, the mix (Chord, Pings, Bass, Drums), lit, dark while held; pads 1–5 mute the chord, pings, bass, kick and hats; the black keys from F#3 (F#, G#, A#, C#, D#) solo them; pads 7–11, held, Throw, Open, Shut, Drop, Echo</td></tr>
         <tr><td>Pitch wheel</td><td>the tape: up faster, down slower; it springs back</td></tr>
-        <tr><td>Mod wheel</td><td>opens the chord's Cutoff on top of its knob; it stays where you leave it</td></tr>
+        <tr><td>Mod wheel</td><td>opens the chord's Cutoff on top of its knob (not the Filter, HOME's first knob); it stays where you leave it</td></tr>
       </tbody>
     </table>
   </div>
@@ -309,16 +309,16 @@ function hit(c, cls, attrs, parent = controls) {
   parent.appendChild(d);
   c.hit = d;
 }
-const TIP = { HOME: "The Dub page. Hold it and turn K6 (SELECT) for the tempo.", ENV: "The Chord page.", ARP: "The Texture page.", LFO: "The Bass page.",
+const TIP = { HOME: "The Dub page; again, the Key page (tempo, root, mode, swing). Hold it and turn K6 (SELECT) for the tempo.", ENV: "The Chord page.", ARP: "The Texture page.", LFO: "The Bass page.",
   SEQ: "The Drums page. Again: their sound; again: the Pattern page, sixteen steps on the pads.", FX: "The Space page.", GLO: "The Setup page.",
-  EDIT: "A tap: the Chords page. Held: the next chord.", SEL: "PERFORM: the knobs are a mixer; pads 1 to 5 mute the layers, the black keys from F sharp 3 solo them, pads 7 to 11, held, make the dub moves.",
+  EDIT: "A tap: the Chords page. Held: the next chord.", SEL: "PERFORM: the knobs are Filter, Dub, Energy and Space (hold pad 6: the mix); pads 1 to 5 mute the layers, the black keys from F sharp 3 solo them, pads 7 to 11, held, make the dub moves.",
   SAVE: "Saves all eight pieces. Hold it to put the piece back to its recipe.", PLAY: "Play or rest.",
   REC: "Tap: dub hold. Hold: the effects grid, played on the pads.", "OCT-": "The pings an octave down.", "OCT+": "The pings an octave up.",
   PICKER: "The picker: the pads pick the piece, top row, and the mode, bottom row. Again: back.", FADERS: "The next fader bank: the levels, the space, the shape.",
   PAGE: "The previous or next page." };
 const LIGHTS = new Set(["FX", "SEL", "ENV", "LFO", "GLO", "HOME", "ARP", "SEQ", "PLAY", "REC", "PICKER", "FADERS"]);
 const spoken = (l) => l.replace("OCTAVE-", "OCTAVE minus").replace("OCTAVE+", "OCTAVE plus").replace(/^<$/, "Left").replace(/^>$/, "Right");
-const KTIP = { master: "Volume.", [ENC.SELECT]: "SELECT: the previous or next page; with PATCH held, the tempo.", [ENC.ALGORITHM]: "ALGORITHM: on a layer's page, its voice; elsewhere, the mode.",
+const KTIP = { master: "Volume.", [ENC.SELECT]: "SELECT: the previous or next page; with PATCH held, the tempo.", [ENC.ALGORITHM]: "ALGORITHM: on the Dub page, the screen; on a layer's page, its voice; elsewhere, the mode.",
   [ENC.PRESETS]: "PRESETS: the piece.", [ENC.KNOB1]: "The first value on the screen.", [ENC.KNOB2]: "The second value on the screen.",
   [ENC.KNOB3]: "The third value on the screen.", [ENC.KNOB4]: "The fourth value on the screen." };
 // reading order: the wheels, the buttons, the knobs, the faders, the pads, the keys

@@ -1,6 +1,6 @@
 # The SMK-37 build: all 37 keys are the scale, the pads are the 16 white keys (the scale with low notes on the
 # bottom row; the effects grid, PERFORM and the Pattern page in reading order), their lights, the fader banks, the
-# wheels, < and >, the picker (KNOB BANK)
+# wheels, < and >, the picker (KNOB BANK); 1.2.0's Filter, Key page and PERFORM (pad 6 held: the mix)
 listen
 wait 3000
 expect playing 1
@@ -53,12 +53,20 @@ pad 4 up
 wait 800
 expect frozen 0
 expect padlayout 0
-# PERFORM (SEL), as 1.1.0's on the FM-1: pads 1-5 mute the layers, the black keys 1-5 solo them, pads 7-11 held
-# make the moves (Drop on pad 10), pad 6 between them dark (pads count from 0 here: pad 3 is the fourth)
+# PERFORM (SEL), as 1.2.0's on the FM-1: the knobs the master actions, pads 1-5 mute the layers, the black keys 1-5
+# solo them, pad 6 held the mix (as white 6), pads 7-11 held make the moves (Drop on pad 10) (pads count from 0
+# here: pad 3 is the fourth)
 tap SEL
 wait 200
 said PERFORM ON
 expect padlayout 1
+expect view 17
+spin K1 -20
+wait 300
+said Filter Shut 40
+spin K1 20
+wait 300
+said Filter Off
 pad 3
 wait 200
 said KICK OFF
@@ -67,12 +75,39 @@ expect padr3 >90
 pad 3
 wait 200
 said KICK ON
-pad 5
+# pad 6: lit; held, the mix on the knobs, and dark; let go, the master actions again
+pads
+expect padb5 >150
+pad 5 down
 wait 200
-said_none ON
+said MIX
+expect view 7
 pads
 expect padr5 <5
 expect padb5 <5
+spin K2 -100
+wait 200
+expect par1 0
+spin K2 100
+wait 200
+expect par1 100
+pad 5 up
+wait 200
+expect view 17
+pads
+expect padb5 >150
+# < > from PERFORM: on from the page it came from, as SELECT
+sbtn RIGHT
+expect view 1
+sbtn LEFT
+expect view 0
+tap SEL
+wait 200
+said PERFORM OFF
+tap SEL
+wait 200
+said PERFORM ON
+expect view 17
 pad 6 down
 wait 200
 said THROW
@@ -181,8 +216,44 @@ wheel pitch 0
 wheel mod 0
 wait 200
 expect warp 0
-# < > the pages, as SELECT
+# HOME (PATCH): the Dub page, its first knob the Filter; ALGORITHM (K7) the screen; again the Key page (Tempo, Root,
+# Mode, Swing), and again back
 tap HOME
+wait 200
+expect view 0
+spin K1 10
+wait 300
+said Filter Open 20
+spin K1 -10
+wait 300
+said Filter Off
+turn ALGO 1
+wait 200
+said SCREEN SCOPE
+expect screen 1
+turn ALGO -1
+wait 200
+expect screen 0
+tap HOME
+wait 200
+expect view 18
+spin K1 2
+wait 300
+said Tempo 124
+spin K1 -2
+wait 300
+said Tempo 122
+tap HOME
+wait 200
+expect view 0
+# < > the pages, as SELECT (and from the Key page: on from Dub)
+tap HOME
+wait 200
+expect view 18
+sbtn RIGHT
+expect view 1
+sbtn LEFT
+expect view 0
 sbtn RIGHT
 expect view 1
 sbtn RIGHT

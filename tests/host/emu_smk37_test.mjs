@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // The SMK-37 browser build (web/emu/build.sh smk37) in Node: boot it, play the pads and the keybed, expect sound,
 // screen frames and the pads lit; PERFORM (SEL) on the pads: pad 4 mutes the kick (its light dark orange), pad 6
-// dark; KNOB BANK: the picker.
+// lit, dark while held (the mix); KNOB BANK: the picker.
 import fs from "fs";
 const wasm = fs.readFileSync(process.argv[2]);
 let mem;
@@ -35,8 +35,13 @@ if (ex.web_pad_layout() !== 1) fail("PERFORM: pad layout " + ex.web_pad_layout()
 ex.web_pads(1 << 3); run(20); ex.web_pads(0); run(40);             // pad 4: the kick off
 const k = rgb(3);
 if (!(k[0] > 90 && k[2] < 20)) fail("kick pad " + k);
-const dark = rgb(5);
-if (Math.max(...dark) > 4) fail("pad 6 lit " + dark);
+const six = rgb(5);                                               // pad 6: lit; held, the mix, and dark
+if (!(six[2] > 150)) fail("pad 6 unlit " + six);
+ex.web_pads(1 << 5); run(40);
+const held = rgb(5);
+if (Math.max(...held) > 4) fail("pad 6 held, lit " + held);
+ex.web_pads(0); run(40);
+if (!(rgb(5)[2] > 150)) fail("pad 6 let go, unlit " + rgb(5));
 ex.web_buttons(1 << 1); run(20); ex.web_buttons(0); run(20);       // SEL: PERFORM off
 ex.web_smk_buttons(1); run(20); ex.web_smk_buttons(0); run(20);   // KNOB BANK: the picker
 if (ex.web_pad_layout() !== 2 || !(ex.web_smk_lit() & 1)) fail("picker");

@@ -24,25 +24,25 @@ SEL, ENV, ...), and KNOB 1-4 are the knobs K1-K4. The SMK-37 adds the rest.
 | --- | --- |
 | Keys F3..G5 (the middle 27) | the FM-1's 27 keys: the scale (each adds its note or takes it out), the Chords page's root, and with REC held, in PERFORM and on the Pattern page the white keys as on the FM-1 |
 | Keys C3..E3 and G#5..C6 (the outer 10) | more of the scale; on the Chords page, the slot's root too |
-| 16 pads | the 16 white keys F3..G5. As the scale and the Chords page's roots, low notes on the bottom row (F3..F4), G4..G5 on the top row. Where the white keys are a row of sixteen (the effects grid while REC is held, PERFORM, the Pattern page's steps) the top row is 1-8 and the bottom row 9-16, as the screen reads. PERFORM: pads 1-5 mute the layers (chord, pings, bass, kick, hats), pad 6 is dark, pads 7-11 held are the moves (Throw, Open, Shut, Drop, Echo), 12-16 dark; the solos are on the keybed's black keys 1-5 (F#3, G#3, A#3, C#4, D#4), as on the FM-1 |
-| Pad lights | what the FM-1's key LEDs show, in three colours: off dark orange, on light blue, active bright white-blue. The scale: out of it orange, in it blue (the root a stronger blue), the chord's tones as a stab plays bright (red in dub hold). The Pattern page: steps blue (accents stronger), the step playing bright. PERFORM: layers heard blue, out orange, a soloed layer blinking bright (the black keys have no lights), the moves red while held, pads 6 and 12-16 dark. The Chords page's root and the picker's piece and mode bright. The effects grid keeps its group colours (held: white). A note lights all its pads: the 16 pads are the white keys F3..G5, so a pad and the one diagonally up and to the left (and F3 and F4 at the bottom row's ends) are the same note an octave apart |
+| 16 pads | the 16 white keys F3..G5. As the scale and the Chords page's roots, low notes on the bottom row (F3..F4), G4..G5 on the top row. Where the white keys are a row of sixteen (the effects grid while REC is held, PERFORM, the Pattern page's steps) the top row is 1-8 and the bottom row 9-16, as the screen reads. PERFORM: pads 1-5 mute the layers (chord, pings, bass, kick, hats), pad 6 held puts the mix on the knobs (as white 6 on the FM-1), pads 7-11 held are the moves (Throw, Open, Shut, Drop, Echo), 12-16 dark; the solos are on the keybed's black keys 1-5 (F#3, G#3, A#3, C#4, D#4), as on the FM-1 |
+| Pad lights | what the FM-1's key LEDs show, in three colours: off dark orange, on light blue, active bright white-blue. The scale: out of it orange, in it blue (the root a stronger blue), the chord's tones as a stab plays bright (red in dub hold). The Pattern page: steps blue (accents stronger), the step playing bright. PERFORM: layers heard blue, out orange, a soloed layer blinking bright (the black keys have no lights), the moves red while held, pad 6 blue (dark while held: the mix on the knobs), pads 12-16 dark. The Chords page's root and the picker's piece and mode bright. The effects grid keeps its group colours (held: white). A note lights all its pads: the 16 pads are the white keys F3..G5, so a pad and the one diagonally up and to the left (and F3 and F4 at the bottom row's ends) are the same note an octave apart |
 | K1..K4 | KNOB 1..4 (the page's knobs) |
 | K5 | MASTER (volume) |
-| K6 / K7 / K8 | SELECT / ALGORITHM / PRESETS |
-| PATCH | HOME: the Dub page (again: ripples, scope, spectrum) |
+| K6 / K7 / K8 | SELECT / ALGORITHM / PRESETS (ALGORITHM: on the Dub page the screen, ripples, scope, spectrum; on a layer's page its voice; elsewhere the mode) |
+| PATCH | HOME: the Dub page, its first knob the Filter (down Shut's low-pass, up Open's high-pass, Off in the middle); again: the Key page (Tempo, Root, Mode, Swing); again: back. Held, K6 (SELECT): the tempo |
 | CHORD / ARP / NOTE REPEAT / SEQ | ENV / ARP / LFO / SEQ: the Chord, Texture, Bass and Drums pages (again: the sound page, then FM or Pattern) |
-| FX / GLOBE | FX / GLO: the Space and Setup pages |
+| FX / GLOBE | FX / GLO: the Space and Setup pages (Setup: Tune, MIDI out, Lights; the root is on the Key page) |
 | PARA | EDIT: tapped, the Chords page; held, the next chord |
-| SCALE | SEL: PERFORM (the knobs the mix; pads 1-5 the mutes, black keys 1-5 the solos, pads 7-11 the moves) |
+| SCALE | SEL: PERFORM (the knobs the master actions, Filter, Dub, Energy, Space; pad 6 held, the mix; pads 1-5 the mutes, black keys 1-5 the solos, pads 7-11 the moves) |
 | SEQ PLAY / SEQ REC | PLAY / REC: play or rest / dub hold (tapped), the effects grid (held) |
 | BT | SAVE |
 | OCTAVE- / OCTAVE+ | OCT- / OCT+: the pings' octave |
 | < / > | the previous / next page, as SELECT |
 | KNOB BANK | the picker: the screen and the pads show the eight pieces (top row) and the eight modes (bottom row); a pad picks. Lit while it is open; press again to close it |
-| FADER BANK | what the faders set: A the levels (Chord, Pings, Bass, Drums, as the Mix page), B the space (Echo, Echo time, Feedback, Reverb), C the shape (Cutoff, Decay, Density, Hits). Lit off bank A. The fader card shows the bank and its values |
+| FADER BANK | what the faders set: A the levels (Chord, Pings, Bass, Drums, as the Mix page), B the space (Echo, Echo time, Feedback, Reverb), C the shape (Cutoff, Decay, Density, Hits). Lit off bank A. The fader card shows the bank and its values. The faders set the piece's own values; PERFORM's Dub, Energy and Space move on top of them |
 | Faders 1..4 | the current bank's four values; a fader takes over only once it moves (also after a bank change) |
 | Pitch wheel | the tape: up runs it faster (the echo's time down to half), down slower (up to twice); the repeats bend on the way. At rest, the echo is as set |
-| Mod wheel | the filter: opens the chord's Cutoff on top of its knob |
+| Mod wheel | the chord's filter: opens its Cutoff on top of its knob (not HOME's Filter, the master action) |
 | OCTAVE- + OCTAVE+ held 5 s | UPDATE MODE |
 | OCTAVE- + OCTAVE+ held at power-on | HARDWARE CALIBRATION: teach the buttons and knobs again (it asks by the FM-1's names, KNOB 1-4 as K1-K4) |
 
