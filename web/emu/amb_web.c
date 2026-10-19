@@ -91,3 +91,54 @@ __attribute__((used, visibility("default"))) void web_store_set_len(uint32_t obj
 __attribute__((used, visibility("default"))) uint32_t web_store_writes(void) { return store_writes; }
 __attribute__((used, visibility("default"))) uint32_t web_nobj(void) { return OBJ_NOBJ; }
 __attribute__((used, visibility("default"))) uint32_t web_store_max(void) { return PLAT_STORE_MAX; }
+
+#if BOARD_SMK37
+/* The SMK-37 build (web/emu/build.sh smk37 -> build/emu-smk37/): its own controls, as host/amb_host.c's script
+ * drives them. The keybed: 37 keys, C3 = bit 0 (lo: keys 0..31, hi: keys 32..36); F3..G5 (keys 5..31) are also
+ * the FM-1's 27 keys. The pads: held, bit p = pad p (0..7 the top row); each pad keeps the key it pressed in the
+ * layout the UI asked for until it is let go, as the HAL does. */
+static uint32_t web_pad_mask;
+__attribute__((used, visibility("default"))) void web_keybed(uint32_t lo, uint32_t hi)
+{
+    uint64_t m = (uint64_t)lo | (uint64_t)(hi & 0x1Fu) << 32;
+    kb_hits |= m & ~kb_held;
+    kb_held = m;
+    held_keys = (uint32_t)(m >> 5) & ((1u << NKEYS) - 1u);
+}
+__attribute__((used, visibility("default"))) void web_pads(uint32_t m)
+{
+    uint32_t pd, on = m & ~web_pad_mask, off = web_pad_mask & ~m;
+    web_pad_mask = m & 0xFFFFu;
+    for (pd = 0; pd < SMK_NPADS; pd++) {
+        if (off >> pd & 1u) {
+            if (pad_key_of[pd])
+                pad_keys &= ~(1u << (pad_key_of[pd] - 1));
+            pad_key_of[pd] = 0;
+        }
+        if (on >> pd & 1u) {
+            if (pad_layout == SMK_PADS_OWN) {
+                pad_hits |= 1u << pd;
+                pad_key_of[pd] = 0;
+            } else {
+                pad_key_of[pd] = 1 + WHITE_K[pad_layout == SMK_PADS_GRID ? pd : pd < 8 ? pd + 8 : pd - 8];
+                pad_keys |= 1u << (pad_key_of[pd] - 1);
+            }
+        }
+    }
+}
+__attribute__((used, visibility("default"))) void web_smk_buttons(uint32_t m) { smk_btn_held = m & ((1u << NSB) - 1u); }
+__attribute__((used, visibility("default"))) void web_fader(int i, int v)
+{
+    if ((uint32_t)i < 4u)
+        fader_v[i] = v < 0 ? 0 : v > 127 ? 127 : v;
+}
+__attribute__((used, visibility("default"))) void web_wheels(int pitch, int mod)
+{
+    wheel_p = pitch < -127 ? -127 : pitch > 127 ? 127 : pitch;
+    wheel_m = mod < 0 ? 0 : mod > 127 ? 127 : mod;
+    wheel_new = 1;
+}
+__attribute__((used, visibility("default"))) uint8_t *web_pad_rgb(void) { return &pad_rgb[0][0]; }   /* 16 x r g b */
+__attribute__((used, visibility("default"))) uint32_t web_smk_lit(void) { return smk_lit; }
+__attribute__((used, visibility("default"))) int web_pad_layout(void) { return pad_layout; }
+#endif

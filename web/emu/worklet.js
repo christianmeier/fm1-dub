@@ -61,6 +61,16 @@ class Amb extends AudioWorkletProcessor {
       this.ex.web_enc(m.role, m.n | 0);
     } else if (m.type === "master") {
       this.ex.web_master(m.value | 0);
+    } else if (m.type === "keybed" && this.ex.web_keybed) {   // the SMK-37 build (smk37.html): its own controls
+      this.ex.web_keybed(m.lo >>> 0, m.hi >>> 0);
+    } else if (m.type === "pads" && this.ex.web_pads) {
+      this.ex.web_pads(m.mask >>> 0);
+    } else if (m.type === "smkbuttons" && this.ex.web_smk_buttons) {
+      this.ex.web_smk_buttons(m.mask >>> 0);
+    } else if (m.type === "fader" && this.ex.web_fader) {
+      this.ex.web_fader(m.i | 0, m.value | 0);
+    } else if (m.type === "wheels" && this.ex.web_wheels) {
+      this.ex.web_wheels(m.pitch | 0, m.mod | 0);
     } else if (m.type === "reader") {               // the screen reader on (HELLO now, then every 2 s) or off (BYE)
       this.reader = !!m.on;
       this.sysex(this.reader ? RD_HELLO : RD_BYE);
@@ -83,6 +93,10 @@ class Amb extends AudioWorkletProcessor {
     if (this.frames >= 44100) {                       // the share of real time spent running the device
       msg.load = Math.round(100 * this.busy / (this.frames / 44.1));
       this.busy = this.frames = 0;
+    }
+    if (ex.web_pad_rgb) {                             // the SMK-37 build: the pads' colours, its four buttons' lights
+      msg.pads = new Uint8Array(this.mem.buffer, ex.web_pad_rgb(), 48).slice();
+      msg.smkLit = ex.web_smk_lit() >>> 0;
     }
     const transfer = [];
     if (blits !== this.sentBlits) {

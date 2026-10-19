@@ -69,6 +69,7 @@ run host-build sh host/build_host.sh
 command -v node >/dev/null 2>&1 && run web-installer node web/test_web.mjs   # fm1ota.js / fm1pkg.js against a simulated device
 if command -v emcc >/dev/null 2>&1; then
     run emu sh -c "sh web/emu/build.sh >/dev/null && node tests/host/emu_test.mjs build/emu/amb.wasm"
+    run emu-smk37 sh -c "sh web/emu/build.sh smk37 >/dev/null && node tests/host/emu_smk37_test.mjs build/emu-smk37/amb.wasm"
     run app sh -c "sh web/app/build.sh >/dev/null && node tests/host/app_test.mjs build/app/amb.wasm"
 fi
 for s in tests/scenarios/*.amb; do

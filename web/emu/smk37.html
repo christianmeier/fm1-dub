@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SMK-37 Emulator · DUB-1</title>
+<meta name="description" content="DUB-1's SMK-37 build in your browser: the same code the M-Vave SMK-37 runs. Not yet tested on hardware.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600&family=Barlow+Semi+Condensed:wght@600;700&display=swap">
+<style>
+/* the FM-1 page's (index.html) look and structure; the panel is the SMK-37's controls, drawn here (our own
+   drawing: a plain diagram, not the keyboard's likeness) */
+:root { --ground: #10141a; --ink: #dee4e8; --muted: #9aa8b6; --rule: #2e3846; --accent: #5cc4cc; --river: #2b6e72; --river-2: #5cc4cc;
+        --card: #1e252f; --focus: #5cc4cc; --warn: #f2b45a; color-scheme: dark; }
+body { background: var(--ground); color: var(--ink); margin: 0; padding-inline: 16px; padding-block: 28px 48px;
+       font: 400 16px/1.55 "Helvetica Neue", Helvetica, Arial, sans-serif; }
+main { max-width: 1240px; margin: 0 auto; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem 1.2rem; margin: 0 0 1rem; }
+h1 { font-size: 2rem; font-weight: 300; line-height: 1.1; letter-spacing: .06em; margin: 0; }
+header p { margin: 0; color: var(--muted); }
+header nav { margin-left: auto; display: flex; gap: 1rem; flex-wrap: wrap; }
+header nav a[aria-current] { text-decoration: none; color: var(--river-2); }
+a { color: var(--ink); text-decoration-color: var(--river-2); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.untested { margin: 0 0 1rem; padding: .6rem .9rem; border: 1px solid var(--warn); color: var(--ink); background: var(--card); }
+.untested b { color: var(--warn); }
+/* a phone held upright: the panel scrolls sideways inside its frame (the page does not) */
+@media (max-width: 700px) { .frame { margin-inline: -16px; overflow-x: auto; } .device { min-width: 680px; } }
+.device { position: relative; width: 100%; aspect-ratio: 1400 / 760; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation; }
+.device:focus { outline: none; }
+.device:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 2.9% / 5.3%; }
+.device svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.controls, .keybed, .padgrid { position: absolute; inset: 0; pointer-events: none; }
+.hit { position: absolute; touch-action: none; cursor: pointer; -webkit-tap-highlight-color: transparent; border-radius: 10px; pointer-events: auto; }
+.hit.knob { cursor: ns-resize; border-radius: 50%; }
+.hit.slider { cursor: ns-resize; }
+.hit:focus { outline: none; }
+.hit:focus-visible { outline: 3px solid #f28a5a; outline-offset: 2px; }
+.device canvas { position: absolute; left: 12.142857%; top: 5.263158%; width: 17.142857%; height: 31.578947%; image-rendering: pixelated; background: #000; border-radius: 2px; }
+.btnface, .keyface { transition: fill .06s; }
+.lit .btnface { fill: #f28a5a; }
+.lit text.btn { fill: #2a140a; }
+.held .btnface, .held .keyface, .held .padface { stroke: #f28a5a; stroke-width: 3; }
+.latched .btnface { stroke: #6fc3ff; stroke-width: 3; }
+@media (prefers-reduced-motion: reduce) { .btnface, .keyface { transition: none; } }
+.start { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(10, 11, 13, .55); border-radius: 2.9% / 5.3%; }
+.start button { font: 400 1.2rem "Helvetica Neue", Helvetica, Arial, sans-serif; letter-spacing: .08em; text-transform: uppercase; padding: .6em 1.6em;
+                border: 1px solid var(--ink); background: var(--river); color: var(--ink); cursor: pointer; }
+.start button:focus-visible { outline: 3px solid #fdf9e4; outline-offset: 3px; }
+.start[hidden] { display: none; }
+.start button:disabled { opacity: .6; cursor: progress; }
+.bar { display: flex; flex-wrap: wrap; gap: .5rem 1.2rem; align-items: center; margin: .9rem 0 0; color: var(--muted); font-size: .92rem; }
+.bar button, .reader button { font: inherit; color: var(--ink); background: var(--card); border: 1px solid var(--ink); padding: .3em .8em; cursor: pointer; }
+.bar button[aria-pressed="true"] { background: var(--river); }
+.bar .cpu { font-variant-numeric: tabular-nums; }
+.bar label, .reader label { display: inline-flex; gap: .4rem; align-items: center; color: var(--ink); }
+.reader { margin: 1.2rem 0 0; padding: .8rem 1rem; background: var(--card); border: 1px solid var(--ink); }
+.reader h2 { font: 600 1.1rem "Helvetica Neue", Helvetica, Arial, sans-serif; margin: 0 0 .3rem; }
+.reader .said { margin: 0 0 .6rem; font-size: 1.1rem; min-height: 1.55em; overflow-wrap: anywhere; }
+.reader .said .lbl { color: var(--muted); font-size: .92rem; }
+.reader fieldset { border: 0; padding: 0; margin: 0 0 .5rem; display: flex; flex-wrap: wrap; gap: .2rem 1.2rem; }
+.reader legend { padding: 0; margin: 0 0 .2rem; font-weight: 600; }
+.reader .row { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; }
+input[type="radio"], input[type="checkbox"] { accent-color: var(--river-2); width: 1.05em; height: 1.05em; }
+.help { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 1rem 2rem; margin: 1.6rem 0 0; }
+.help h2 { font: 600 1.1rem "Helvetica Neue", Helvetica, Arial, sans-serif; margin: 0 0 .3rem; }
+.help p, .help ul { margin: 0; color: var(--muted); max-width: 64ch; }
+.help ul { padding-left: 1.1rem; }
+.help .wide { grid-column: 1 / -1; }
+.help table { border-collapse: collapse; color: var(--muted); font-size: .95rem; }
+.help th, .help td { text-align: left; padding: .2rem .9rem .2rem 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.help th { color: var(--ink); font-weight: 600; }
+kbd { font: 600 .85em ui-monospace, Menlo, monospace; background: var(--card); border: 1px solid var(--ink); padding: 0 .3em; color: var(--ink); }
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1><a href="../" style="color:inherit;text-decoration:none">DUB-1</a></h1>
+  <p>on the M-Vave SMK-37, in the browser: the same code its build runs</p>
+  <nav aria-label="DUB-1"><a href="../emu/">FM-1 emulator</a><a href="./" aria-current="page">SMK-37 emulator</a><a href="../manual/">Manual</a><a href="https://github.com/sbegueria/fm1-dub">Source</a></nav>
+</header>
+<p class="untested"><b>Not yet tested on hardware.</b> The SMK-37 build is genkigenki's port, brought onto DUB-1 1.1. This page runs
+  its code; it does not slow the screen to the SMK-37's 12 MHz, so the real keyboard may redraw the animated views more slowly.</p>
+
+<h2 class="sr" id="h-device">The SMK-37</h2>
+<div class="frame">
+<div class="device" id="device" role="group" aria-labelledby="h-device" aria-describedby="device-help" tabindex="-1">
+  <svg id="panel" viewBox="0 0 1400 760" aria-hidden="true" focusable="false"></svg>
+  <canvas id="screen" width="240" height="240" role="img" aria-label="The screen. What it shows is read out: see Screen reader, below the keyboard."></canvas>
+  <div class="controls" id="controls" inert></div>
+  <div class="start" id="start"><button id="go" type="button">Switch on</button></div>
+</div>
+</div>
+<p class="sr" id="device-help">Knobs, faders and wheels: the arrow keys, Page Up and Page Down faster. Buttons, pads and keys: Space or Enter presses, held as long as you hold it; Shift with Space keeps a button held until you press it again. Pads and keys: the arrows move between them.</p>
+
+<div class="bar">
+  <span id="status" role="status">Off. Sound starts when you switch it on.</span>
+  <span class="cpu" id="cpu"></span>
+  <button id="mute" type="button" aria-pressed="false" disabled>Mute</button>
+  <button id="reset" type="button" title="Forget your scale and sound, and start again from the factory settings">Factory reset</button>
+  <label><input type="checkbox" id="shortcuts" checked> Keyboard shortcuts</label>
+</div>
+
+<section class="reader" aria-labelledby="h-reader">
+  <h2 id="h-reader">Screen reader</h2>
+  <p class="said"><span class="lbl">The screen says:</span> <span id="said-text"></span></p>
+  <fieldset>
+    <legend>Who reads the screen out</legend>
+    <label><input type="radio" name="mode" value="sr" checked> My own screen reader</label>
+    <label><input type="radio" name="mode" value="voice"> This page's voice</label>
+    <label><input type="radio" name="mode" value="off"> Nobody</label>
+  </fieldset>
+  <div class="row">
+    <button id="where" type="button" disabled>Read the whole screen</button>
+    <button id="again" type="button" disabled>Say it again</button>
+  </div>
+</section>
+<div id="live-a" class="sr" aria-live="assertive" aria-atomic="true"></div>
+<div id="live-p" class="sr" aria-live="polite" aria-atomic="true"></div>
+
+<section class="help" aria-label="How to play it">
+  <div class="wide">
+    <h2>The SMK-37's controls</h2>
+    <p>It is the same DUB-1 as on the FM-1, so the manual applies; the screen keeps the FM-1's button names. Each button here shows
+      its printed label, and under it what it is in DUB-1.</p>
+    <table>
+      <thead><tr><th scope="col">SMK-37</th><th scope="col">DUB-1</th></tr></thead>
+      <tbody>
+        <tr><td>K1–K4</td><td>KNOB 1–4, the page's four values</td></tr>
+        <tr><td>K5, K6, K7, K8</td><td>MASTER (volume), SELECT, ALGORITHM, PRESETS</td></tr>
+        <tr><td>PATCH, CHORD, ARP, NOTE REPEAT, SEQ, FX, GLOBE</td><td>HOME, ENV, ARP, LFO, SEQ, FX, GLO: the Dub, Chord, Texture, Bass, Drums, Space and Setup pages</td></tr>
+        <tr><td>PARA, SCALE, BT</td><td>EDIT (the Chords page; held, the next chord), SEL (PERFORM), SAVE</td></tr>
+        <tr><td>SEQ PLAY, SEQ REC</td><td>PLAY; REC (tapped: dub hold; held: the effects grid on the pads)</td></tr>
+        <tr><td>OCTAVE−, OCTAVE+</td><td>OCT−, OCT+: the pings' octave</td></tr>
+        <tr><td>&lt; &gt;</td><td>the previous / next page</td></tr>
+        <tr><td>KNOB BANK</td><td>the picker: the pads pick the piece (top row) and the mode (bottom row)</td></tr>
+        <tr><td>FADER BANK</td><td>what the faders set: A the levels, B the space, C the shape. A fader takes over once it moves</td></tr>
+        <tr><td>Keys</td><td>the scale; F3–G5 are the FM-1's 27 keys, the outer ten more of the scale</td></tr>
+        <tr><td>Pads</td><td>the 16 white keys F3–G5 (low notes on the bottom row); in the effects grid, PERFORM and the Pattern page, 1–8 the top row</td></tr>
+        <tr><td>PERFORM (SCALE)</td><td>the knobs a mixer; pads 1–5 mute the chord, pings, bass, kick and hats; the black keys from F#3 (F#, G#, A#, C#, D#) solo them; pads 7–11, held, Throw, Open, Shut, Drop, Echo; pad 6 dark</td></tr>
+        <tr><td>Pitch wheel</td><td>the tape: up faster, down slower; it springs back</td></tr>
+        <tr><td>Mod wheel</td><td>opens the chord's Cutoff on top of its knob; it stays where you leave it</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div>
+    <h2>Mouse and touch</h2>
+    <ul>
+      <li>Drag a knob, a fader or a wheel up or down, or use the scroll wheel over it. The pitch wheel springs back when you let go.</li>
+      <li>Click or touch buttons, pads and keys. Several fingers at once work on a touch screen.</li>
+      <li><kbd>Shift</kbd>-click (or right-click) a button to hold it down, click again to let go.</li>
+    </ul>
+  </div>
+  <div>
+    <h2>Keyboard</h2>
+    <ul>
+      <li><kbd>Tab</kbd> goes through the controls. The pads are one stop, the keys another: the arrows move along them.</li>
+      <li>Shortcuts, while the keyboard has the focus: pads 1–8 <kbd>Q</kbd>–<kbd>I</kbd>, 9–16 <kbd>A</kbd>–<kbd>K</kbd>; the black keys from F#3 <kbd>1</kbd>–<kbd>0</kbd>, <kbd>-</kbd>.</li>
+      <li><kbd>Space</kbd> SEQ PLAY, <kbd>Enter</kbd> SEQ REC, <kbd>Esc</kbd> PATCH (HOME), <kbd>Z</kbd> / <kbd>X</kbd> OCTAVE− / +, <kbd>↑</kbd> <kbd>↓</kbd> K6 (SELECT).</li>
+    </ul>
+  </div>
+  <div>
+    <h2>Saving</h2>
+    <p>SAVE (BT) keeps your pieces in this browser, apart from the FM-1 emulator's. Factory reset forgets them.
+      The SMK-37's TRS jack is a MIDI output this build does not use; it has no key lights and no button glow.</p>
+  </div>
+</section>
+</main>
+
+<script>
+"use strict";
+const NS = "http://www.w3.org/2000/svg", W = 1400, H = 760;
+const BTN = { FX: 0, SEL: 1, ENV: 2, LFO: 3, EDIT: 4, GLO: 5, HOME: 6, SAVE: 7, ARP: 8, SEQ: 9, PLAY: 10, REC: 11, "OCT-": 12, "OCT+": 13 };
+const SB = { KNOB_BANK: 0, FADER_BANK: 1, LEFT: 2, RIGHT: 3 };
+const ENC = { SELECT: 0, ALGORITHM: 1, PRESETS: 2, KNOB1: 3, KNOB2: 4, KNOB3: 5, KNOB4: 6 };
+const BODY = "#33363b", TRAY = "#24262a", KEY_W = "#d9dadc", KEY_B = "#2a2c30", KNOB = "#1f2124", BTNC = "#2e3135", LABEL = "#e8e8ea", SUB = "#9aa8b6";
+const STORE_KEY = "dub-smk37-emu-store", PREFS_KEY = "dub-smk37-emu-prefs";
+const NOTE = ["C", "C sharp", "D", "E flat", "E", "F", "F sharp", "G", "A flat", "A", "B flat", "B"];
+const IS_BLACK = [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0];
+const $ = (id) => document.getElementById(id);
+const prefs = (() => { try { return JSON.parse(localStorage.getItem(PREFS_KEY) || "{}"); } catch { return {}; } })();
+const savePrefs = () => { try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); } catch { /* private window */ } };
+
+const svg = $("panel");
+function el(tag, attrs, parent = svg) {
+  const e = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  parent.appendChild(e);
+  return e;
+}
+function text(parent, x, y, s, size, fill = LABEL, weight = 600) {
+  const t = el("text", { x, y, "text-anchor": "middle", "font-family": "'Barlow Semi Condensed', 'Arial Narrow', Arial, sans-serif",
+                         "font-size": size, "font-weight": weight, fill, "letter-spacing": ".04em", class: "btn", "pointer-events": "none" }, parent);
+  t.textContent = s;
+  return t;
+}
+
+// ---------------------------------------------------------------- the panel (a picture: aria-hidden)
+el("rect", { x: 4, y: 4, width: W - 8, height: H - 8, rx: 40, fill: BODY });
+el("rect", { x: 160, y: 30, width: 260, height: 260, rx: 20, fill: "#111214" });      // the screen's bezel
+
+// the wheels: pitch (springs back) and mod (stays)
+const wheels = {};
+function wheel(x, label, name, min, max, rest) {
+  const g = el("g", { class: "ctl" }), y = 70, h = 200;
+  el("rect", { x: x - 4, y: y - 4, width: 48, height: h + 8, rx: 12, fill: TRAY }, g);
+  el("rect", { x, y, width: 40, height: h, rx: 10, fill: KNOB, stroke: "#44474c", "stroke-width": 2 }, g);
+  const mark = el("rect", { x: x + 4, y: 0, width: 32, height: 8, rx: 3, fill: LABEL }, g);
+  text(g, x + 20, y - 14, label, 15);
+  wheels[name] = { g, mark, x, y, h, min, max, value: rest, rest, name, label };
+  return wheels[name];
+}
+wheel(30, "PITCH", "pitch", -127, 127, 0);
+wheel(96, "MOD", "mod", 0, 127, 0);
+
+// the encoders: K1..K4 the page's knobs, K5..K8 MASTER, SELECT, ALGORITHM, PRESETS
+const knobs = {};
+function knob(x, y, r, label, sub, role) {
+  const g = el("g", { class: "ctl knob" });
+  el("circle", { cx: x, cy: y, r: r + 5, fill: TRAY }, g);
+  el("circle", { cx: x, cy: y, r, fill: KNOB, stroke: "#44474c", "stroke-width": 2 }, g);
+  const ind = el("line", { x1: x, y1: y - r + 5, x2: x, y2: y - r + 14, stroke: LABEL, "stroke-width": 3, "stroke-linecap": "round" }, g);
+  text(g, x, y - r - 22, label, 15);
+  text(g, x, y - r - 8, sub, 11, SUB, 600);
+  el("circle", { cx: x, cy: y, r: r + 12, fill: "transparent" }, g);
+  knobs[label] = { g, ind, x, y, angle: 0, role, label, sub };
+  return knobs[label];
+}
+const KSUB = ["KNOB 1", "KNOB 2", "KNOB 3", "KNOB 4", "MASTER", "SELECT", "ALGORITHM", "PRESETS"];
+const KROLE = [ENC.KNOB1, ENC.KNOB2, ENC.KNOB3, ENC.KNOB4, "master", ENC.SELECT, ENC.ALGORITHM, ENC.PRESETS];
+el("rect", { x: 820, y: 30, width: 300, height: 260, rx: 18, fill: TRAY });
+for (let i = 0; i < 8; i++) knob(860 + (i % 4) * 74, i < 4 ? 108 : 228, 22, `K${i + 1}`, KSUB[i], KROLE[i]);
+
+// the faders
+const faders = [];
+el("rect", { x: 1140, y: 30, width: 230, height: 260, rx: 18, fill: TRAY });
+for (let i = 0; i < 4; i++) {
+  const g = el("g", { class: "ctl" }), x = 1170 + i * 56, y = 72, h = 190;
+  el("rect", { x: x - 3, y, width: 6, height: h, rx: 3, fill: "#111214" }, g);
+  const cap = el("rect", { x: x - 18, y: 0, width: 36, height: 16, rx: 4, fill: "#5a5e65", stroke: LABEL, "stroke-width": 1.5 }, g);
+  text(g, x, 56, `F${i + 1}`, 15);
+  el("rect", { x: x - 26, y: y - 10, width: 52, height: h + 20, fill: "transparent" }, g);
+  faders.push({ g, cap, x, y, h, value: 64, i });
+}
+
+// the 18 buttons: printed label, and what it is in DUB-1 underneath
+const buttons = {};
+function button(x, y, w, h, label, sub, fm, sb) {
+  const g = el("g", { class: "ctl" });
+  el("rect", { x, y, width: w, height: h, rx: 8, fill: BTNC, stroke: "#4a4d52", "stroke-width": 1.5, class: "btnface" }, g);
+  const parts = /^OCTAVE/.test(label) ? ["OCTAVE", label.slice(6) === "-" ? "\u2212" : "+"] : label.split(" ");
+  if (parts.length > 1 && label.length > 6) { text(g, x + w / 2, y + 19, parts[0], 12); text(g, x + w / 2, y + 32, parts.slice(1).join(" "), 12); }
+  else text(g, x + w / 2, y + 27, label, 14);
+  if (sub) text(g, x + w / 2, y + h - 7, sub, 10, SUB);
+  buttons[label] = { g, fm, sb, label, sub };
+}
+const BROWS = [
+  [["KNOB BANK", "PICKER", null, SB.KNOB_BANK], ["FADER BANK", "FADERS", null, SB.FADER_BANK], ["<", "PAGE", null, SB.LEFT],
+   [">", "PAGE", null, SB.RIGHT], ["OCTAVE-", "OCT-", BTN["OCT-"], null], ["OCTAVE+", "OCT+", BTN["OCT+"], null]],
+  [["PATCH", "HOME", BTN.HOME, null], ["CHORD", "ENV", BTN.ENV, null], ["ARP", "ARP", BTN.ARP, null],
+   ["NOTE REPEAT", "LFO", BTN.LFO, null], ["SEQ", "SEQ", BTN.SEQ, null], ["FX", "FX", BTN.FX, null]],
+  [["GLOBE", "GLO", BTN.GLO, null], ["PARA", "EDIT", BTN.EDIT, null], ["SCALE", "SEL", BTN.SEL, null],
+   ["BT", "SAVE", BTN.SAVE, null], ["SEQ PLAY", "PLAY", BTN.PLAY, null], ["SEQ REC", "REC", BTN.REC, null]]];
+el("rect", { x: 436, y: 30, width: 368, height: 260, rx: 18, fill: TRAY });
+BROWS.forEach((row, r) => row.forEach(([l, s, fm, sb], c) => button(448 + c * 59, 46 + r * 80, 52, 62, l, s, fm, sb)));
+
+// the pads, 2 x 8: pad 0..7 the top row
+const pads = [];
+el("rect", { x: 30, y: 312, width: 1340, height: 150, rx: 18, fill: TRAY });
+for (let p = 0; p < 16; p++) {
+  const g = el("g", { class: "ctl" }), x = 44 + (p % 8) * 165, y = p < 8 ? 324 : 394;
+  const face = el("rect", { x, y, width: 148, height: 58, rx: 8, fill: "#3a3d42", stroke: "#4a4d52", "stroke-width": 1.5, class: "padface" }, g);
+  text(g, x + 14, y + 18, String(p + 1), 12, "#c8ccd2");
+  pads.push({ g, face, p });
+}
+
+// the keybed: 37 keys, C3..C6
+const keys = [];
+(function keybed(x0, y0, w, h) {
+  el("rect", { x: x0, y: y0, width: w, height: h, rx: 18, fill: TRAY });
+  const nW = 22, pitch = (w - 20) / nW, wk = [];
+  let wi = 0;
+  for (let k = 0; k < 37; k++) if (!IS_BLACK[k % 12]) wk[k] = wi++;
+  for (let k = 0; k < 37; k++) {                        // the white keys first: the black ones draw over them
+    if (IS_BLACK[k % 12]) continue;
+    const g = el("g", { class: "ctl" });
+    el("rect", { x: x0 + 10 + wk[k] * pitch + 1, y: y0 + 10, width: pitch - 2, height: h - 20, rx: 5, fill: KEY_W, class: "keyface white" }, g);
+    keys[k] = { g, k };
+  }
+  for (let k = 0; k < 37; k++) {
+    if (!IS_BLACK[k % 12]) continue;
+    const g = el("g", { class: "ctl" }), bw = pitch * 0.62;
+    el("rect", { x: x0 + 10 + wk[k - 1] * pitch + pitch - bw / 2, y: y0 + 10, width: bw, height: (h - 20) * 0.6, rx: 4, fill: KEY_B, class: "keyface black" }, g);
+    keys[k] = { g, k };
+  }
+})(30, 478, 1340, 256);
+
+// ---------------------------------------------------------------- touch targets
+const device = $("device"), controls = $("controls");
+function hit(c, cls, attrs, parent = controls) {
+  const b = c.g.getBBox(), d = document.createElement("div");
+  d.className = "hit" + (cls ? " " + cls : "");
+  Object.assign(d.style, { left: `${100 * b.x / W}%`, top: `${100 * b.y / H}%`, width: `${100 * b.width / W}%`, height: `${100 * b.height / H}%` });
+  for (const [k, v] of Object.entries(attrs)) d.setAttribute(k, v);
+  d.addEventListener("touchstart", (e) => e.preventDefault(), { passive: false });
+  parent.appendChild(d);
+  c.hit = d;
+}
+const TIP = { HOME: "The Dub page. Hold it and turn K6 (SELECT) for the tempo.", ENV: "The Chord page.", ARP: "The Texture page.", LFO: "The Bass page.",
+  SEQ: "The Drums page. Again: their sound; again: the Pattern page, sixteen steps on the pads.", FX: "The Space page.", GLO: "The Setup page.",
+  EDIT: "A tap: the Chords page. Held: the next chord.", SEL: "PERFORM: the knobs are a mixer; pads 1 to 5 mute the layers, the black keys from F sharp 3 solo them, pads 7 to 11, held, make the dub moves.",
+  SAVE: "Saves all eight pieces. Hold it to put the piece back to its recipe.", PLAY: "Play or rest.",
+  REC: "Tap: dub hold. Hold: the effects grid, played on the pads.", "OCT-": "The pings an octave down.", "OCT+": "The pings an octave up.",
+  PICKER: "The picker: the pads pick the piece, top row, and the mode, bottom row. Again: back.", FADERS: "The next fader bank: the levels, the space, the shape.",
+  PAGE: "The previous or next page." };
+const LIGHTS = new Set(["FX", "SEL", "ENV", "LFO", "GLO", "HOME", "ARP", "SEQ", "PLAY", "REC", "PICKER", "FADERS"]);
+const spoken = (l) => l.replace("OCTAVE-", "OCTAVE minus").replace("OCTAVE+", "OCTAVE plus").replace(/^<$/, "Left").replace(/^>$/, "Right");
+const KTIP = { master: "Volume.", [ENC.SELECT]: "SELECT: the previous or next page; with PATCH held, the tempo.", [ENC.ALGORITHM]: "ALGORITHM: on a layer's page, its voice; elsewhere, the mode.",
+  [ENC.PRESETS]: "PRESETS: the piece.", [ENC.KNOB1]: "The first value on the screen.", [ENC.KNOB2]: "The second value on the screen.",
+  [ENC.KNOB3]: "The third value on the screen.", [ENC.KNOB4]: "The fourth value on the screen." };
+// reading order: the wheels, the buttons, the knobs, the faders, the pads, the keys
+for (const w of Object.values(wheels))
+  hit(w, "slider", { role: "slider", tabindex: 0, "aria-label": w.name === "pitch" ? "Pitch wheel" : "Mod wheel",
+                     "aria-description": w.name === "pitch" ? "The tape: up faster, down slower. Springs back." : "Opens the chord's cutoff.",
+                     "aria-valuemin": w.min, "aria-valuemax": w.max });
+for (const b of Object.values(buttons)) {
+  const attrs = { role: "button", tabindex: 0, "aria-label": spoken(b.label) + (b.label === b.sub ? "" : `, ${b.sub}`),
+                  "aria-description": (TIP[b.sub] || "") + " Hold with Space." };
+  if (LIGHTS.has(b.sub)) attrs["aria-pressed"] = "false";
+  hit(b, "", attrs);
+  b.hit.title = TIP[b.sub] || "";
+}
+for (const k of Object.values(knobs)) {
+  if (k.role === "master")
+    hit(k, "knob", { role: "slider", tabindex: 0, "aria-label": "K5, MASTER", "aria-description": "Volume.", "aria-valuemin": 0, "aria-valuemax": 100 });
+  else
+    hit(k, "knob", { role: "button", tabindex: 0, "aria-label": `${k.label}, ${k.sub}`, "aria-description": KTIP[k.role] + " Turn with the arrow keys." });
+  k.hit.title = KTIP[k.role];
+}
+for (const f of faders)
+  hit(f, "slider", { role: "slider", tabindex: 0, "aria-label": `Fader ${f.i + 1}`, "aria-description": "Sets a value of the fader bank (FADER BANK).",
+                     "aria-valuemin": 0, "aria-valuemax": 127 });
+const padgrid = document.createElement("div");
+padgrid.className = "padgrid";
+padgrid.setAttribute("role", "group");
+padgrid.setAttribute("aria-label", "Pads");
+padgrid.setAttribute("aria-description", "Sixteen pads, 1 to 8 the top row. The arrows move between them.");
+controls.appendChild(padgrid);
+for (const p of pads) hit(p, "", { role: "button", tabindex: p.p === 0 ? 0 : -1, "aria-label": `Pad ${p.p + 1}` }, padgrid);
+const keybed = document.createElement("div");
+keybed.className = "keybed";
+keybed.setAttribute("role", "group");
+keybed.setAttribute("aria-label", "Keys");
+keybed.setAttribute("aria-description", "37 keys, C3 to C6: the scale. The arrows move between them.");
+controls.appendChild(keybed);
+keys.forEach((k, i) => hit(k, "", { role: "button", tabindex: i === 0 ? 0 : -1, "aria-label": `${NOTE[i % 12]} ${3 + Math.floor(i / 12)} key` }, keybed));
+// the black keys' targets above the white ones (they are drawn over them)
+keys.forEach((k, i) => { if (IS_BLACK[i % 12]) k.hit.style.zIndex = 1; });
+
+// ---------------------------------------------------------------- state and input
+let node = null, out = null, latched = new Set(), master = 2800, sentBtn = -1, sentSb = -1, sentLo = -1, sentHi = -1, sentPads = -1;
+const btnHeldBy = new Map(), keyHeldBy = new Map(), padHeldBy = new Map();   // id -> button label / key / pad
+function send(m) { if (node) node.port.postMessage(m); }
+function syncButtons() {
+  const held = new Set(btnHeldBy.values());
+  let fm = 0, sb = 0;
+  for (const b of Object.values(buttons)) {
+    const lat = latched.has(b.label), on = held.has(b.label) || lat;
+    if (on) { if (b.fm !== null) fm |= 1 << b.fm; if (b.sb !== null) sb |= 1 << b.sb; }
+    b.g.classList.toggle("held", on);
+    b.g.classList.toggle("latched", lat);
+    const name = spoken(b.label) + (b.label === b.sub ? "" : `, ${b.sub}`) + (lat ? ", held down" : "");
+    if (b.hit.getAttribute("aria-label") !== name) b.hit.setAttribute("aria-label", name);
+  }
+  if (fm !== sentBtn) { sentBtn = fm; send({ type: "buttons", mask: fm }); }
+  if (sb !== sentSb) { sentSb = sb; send({ type: "smkbuttons", mask: sb }); }
+}
+function syncKeys() {
+  let lo = 0, hi = 0;
+  const held = new Set(keyHeldBy.values());
+  for (const k of held) { if (k < 32) lo |= 1 << k; else hi |= 1 << (k - 32); }
+  lo >>>= 0;
+  if (lo !== sentLo || hi !== sentHi) { sentLo = lo; sentHi = hi; send({ type: "keybed", lo, hi }); }
+  keys.forEach((k, i) => k.g.classList.toggle("held", held.has(i)));
+}
+function syncPads() {
+  let m = 0;
+  for (const p of padHeldBy.values()) m |= 1 << p;
+  if (m !== sentPads) { sentPads = m; send({ type: "pads", mask: m }); }
+  pads.forEach((p, i) => p.g.classList.toggle("held", !!(m & (1 << i))));
+}
+function tap(map, id, v, sync) {
+  map.set(id, v);
+  sync();
+  setTimeout(() => { map.delete(id); sync(); }, 120);
+}
+function keyHold(target, map, v, sync, latchable) {
+  target.addEventListener("keydown", (e) => {
+    if (e.key !== " " && e.key !== "Enter") return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.repeat || !node) return;
+    if (latchable && (e.shiftKey || latched.has(v))) { latched.has(v) ? latched.delete(v) : latched.add(v); syncButtons(); return; }
+    map.set("f" + e.key, v);
+    sync();
+  });
+  target.addEventListener("keyup", (e) => {
+    if ((e.key === " " || e.key === "Enter") && map.delete("f" + e.key)) { e.stopPropagation(); sync(); }
+  });
+  target.addEventListener("blur", () => {
+    let any = false;
+    for (const id of [...map.keys()]) if (id[0] === "f") { map.delete(id); any = true; }
+    if (any) sync();
+  });
+  target.addEventListener("click", (e) => { if (e.detail === 0 && node) tap(map, "c" + v, v, sync); });
+}
+for (const b of Object.values(buttons)) {
+  b.hit.addEventListener("contextmenu", (e) => e.preventDefault());
+  b.hit.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    if (e.shiftKey || e.button === 2 || latched.has(b.label)) { latched.has(b.label) ? latched.delete(b.label) : latched.add(b.label); syncButtons(); return; }
+    b.hit.setPointerCapture(e.pointerId);
+    btnHeldBy.set("p" + e.pointerId, b.label);
+    syncButtons();
+  });
+  keyHold(b.hit, btnHeldBy, b.label, syncButtons, true);
+}
+function roving(list, i, e) {
+  const to = { ArrowLeft: i - 1, ArrowRight: i + 1, ArrowUp: i - 8, ArrowDown: i + 8, Home: 0, End: list.length - 1 }[e.key];
+  if (to === undefined || e.altKey || e.metaKey || e.ctrlKey) return;
+  if ((e.key === "ArrowUp" || e.key === "ArrowDown") && list !== pads) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const j = Math.max(0, Math.min(list.length - 1, to));
+  list.forEach((x, n) => x.hit.tabIndex = n === j ? 0 : -1);
+  list[j].hit.focus();
+}
+function holdable(list, map, sync) {
+  list.forEach((c, i) => {
+    c.hit.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      c.hit.setPointerCapture(e.pointerId);
+      map.set("p" + e.pointerId, i);
+      sync();
+    });
+    keyHold(c.hit, map, i, sync, false);
+    c.hit.addEventListener("keydown", (e) => roving(list, i, e));
+  });
+}
+holdable(keys, keyHeldBy, syncKeys);
+holdable(pads, padHeldBy, syncPads);
+function pointerUp(e) {
+  const id = "p" + e.pointerId;
+  if (btnHeldBy.delete(id)) syncButtons();
+  if (keyHeldBy.delete(id)) syncKeys();
+  if (padHeldBy.delete(id)) syncPads();
+}
+device.addEventListener("pointerup", pointerUp);
+device.addEventListener("pointercancel", pointerUp);
+device.addEventListener("lostpointercapture", pointerUp);
+device.addEventListener("pointerdown", () => { if (node && !device.contains(document.activeElement)) device.focus({ preventScroll: true }); });
+
+// knobs (endless encoders; K5 is MASTER, kept here as the device keeps it)
+function drawKnob(k) { k.ind.setAttribute("transform", `rotate(${k.angle} ${k.x} ${k.y})`); }
+function showMaster(k) {
+  const pct = Math.round(100 * master / 4096);
+  k.hit.setAttribute("aria-valuenow", pct);
+  k.hit.setAttribute("aria-valuetext", `${pct} percent`);
+}
+function turn(k, n) {
+  if (!n) return;
+  if (k.role === "master") {
+    master = Math.max(0, Math.min(4096, master + n * 64));
+    k.angle = -135 + 270 * master / 4096;
+    send({ type: "master", value: master });
+    showMaster(k);
+  } else {
+    k.angle = (k.angle + n * 18) % 360;
+    send({ type: "enc", role: k.role, n });
+  }
+  drawKnob(k);
+}
+// a control dragged up and down, scrolled, or stepped with the arrows: n steps (+ up)
+function draggable(c, step, onSteps, onEnd) {
+  let drag = null, wheelAcc = 0;
+  c.hit.addEventListener("pointerdown", (e) => { e.preventDefault(); c.hit.setPointerCapture(e.pointerId); drag = { y: e.clientY, acc: 0 }; });
+  c.hit.addEventListener("pointermove", (e) => {
+    if (!drag) return;
+    drag.acc += drag.y - e.clientY;
+    drag.y = e.clientY;
+    const n = Math.trunc(drag.acc / step);
+    if (n) { drag.acc -= n * step; onSteps(n); }
+  });
+  const end = () => { if (drag) { drag = null; if (onEnd) onEnd(); } };
+  c.hit.addEventListener("pointerup", end);
+  c.hit.addEventListener("pointercancel", end);
+  c.hit.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const dy = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY;
+    if (Math.abs(dy) >= 50) { onSteps(dy < 0 ? 1 : -1); wheelAcc = 0; return; }
+    wheelAcc -= dy;
+    const n = Math.trunc(wheelAcc / 25);
+    if (n) { wheelAcc -= n * 25; onSteps(n); }
+  }, { passive: false });
+  c.hit.addEventListener("keydown", (e) => {
+    const n = { ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1, PageUp: 5, PageDown: -5 }[e.key];
+    if (!n || e.altKey || e.metaKey || e.ctrlKey) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (node) onSteps(n);
+  });
+  c.hit.addEventListener("keyup", (e) => { if (onEnd && /^(Arrow|Page)/.test(e.key)) onEnd(); });
+}
+for (const k of Object.values(knobs)) {
+  if (k.role === "master") { k.angle = -135 + 270 * master / 4096; drawKnob(k); showMaster(k); }
+  draggable(k, k.role === "master" ? 3 : 7, (n) => turn(k, n));
+}
+function drawFader(f) {
+  f.cap.setAttribute("y", f.y + f.h - 8 - f.h * f.value / 127);
+  f.hit.setAttribute("aria-valuenow", f.value);
+}
+for (const f of faders) {
+  drawFader(f);
+  draggable(f, 1, (n) => {
+    f.value = Math.max(0, Math.min(127, f.value + n * 2));
+    drawFader(f);
+    send({ type: "fader", i: f.i, value: f.value });
+  });
+}
+function drawWheel(w) {
+  w.mark.setAttribute("y", w.y + w.h - 8 - (w.h - 8) * (w.value - w.min) / (w.max - w.min));
+  w.hit.setAttribute("aria-valuenow", w.value);
+}
+const sendWheels = () => send({ type: "wheels", pitch: wheels.pitch.value, mod: wheels.mod.value });
+for (const w of Object.values(wheels)) {
+  drawWheel(w);
+  draggable(w, 1, (n) => {
+    w.value = Math.max(w.min, Math.min(w.max, w.value + n * 3));
+    drawWheel(w);
+    sendWheels();
+  }, w.name === "pitch" ? () => { w.value = 0; drawWheel(w); sendWheels(); } : null);   // the pitch wheel springs back
+}
+
+// shortcuts
+const KEYMAP = {};
+"qwertyui".split("").forEach((c, i) => KEYMAP["Key" + c.toUpperCase()] = { pad: i });
+"asdfghjk".split("").forEach((c, i) => KEYMAP["Key" + c.toUpperCase()] = { pad: 8 + i });
+const BLACK_FROM_F3 = [6, 8, 10, 13, 15, 18, 20, 22, 25, 27, 30];      // F#3 .. D#5: the FM-1's eleven black keys
+"1234567890".split("").forEach((c, i) => KEYMAP["Digit" + c] = { key: BLACK_FROM_F3[i] });
+KEYMAP.Minus = { key: BLACK_FROM_F3[10] };
+Object.assign(KEYMAP, { Space: { btn: "SEQ PLAY" }, Enter: { btn: "SEQ REC" }, Escape: { btn: "PATCH" }, KeyZ: { btn: "OCTAVE-" }, KeyX: { btn: "OCTAVE+" } });
+const shortcuts = $("shortcuts");
+if (prefs.shortcuts === false) shortcuts.checked = false;
+shortcuts.addEventListener("change", () => { prefs.shortcuts = shortcuts.checked; savePrefs(); });
+device.addEventListener("keydown", (e) => {
+  if (!node || !shortcuts.checked || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.code === "ArrowUp" || e.code === "ArrowDown") { turn(knobs.K6, e.code === "ArrowUp" ? 1 : -1); e.preventDefault(); return; }
+  const m = KEYMAP[e.code];
+  if (!m) return;
+  e.preventDefault();
+  if (e.repeat) return;
+  if (m.pad !== undefined) { padHeldBy.set("k" + e.code, m.pad); syncPads(); }
+  else if (m.key !== undefined) { keyHeldBy.set("k" + e.code, m.key); syncKeys(); }
+  else { btnHeldBy.set("k" + e.code, m.btn); syncButtons(); }
+});
+addEventListener("keyup", (e) => {
+  const id = "k" + e.code;
+  if (keyHeldBy.delete(id)) syncKeys();
+  if (btnHeldBy.delete(id)) syncButtons();
+  if (padHeldBy.delete(id)) syncPads();
+});
+addEventListener("blur", () => {
+  for (const m of [btnHeldBy, keyHeldBy, padHeldBy]) for (const id of [...m.keys()]) if (id[0] === "k" || id[0] === "f") m.delete(id);
+  syncButtons(); syncKeys(); syncPads();
+});
+
+// ---------------------------------------------------------------- screen and lights
+const ctx = $("screen").getContext("2d");
+const img = ctx.createImageData(240, 240);
+function drawScreen(fb) {
+  const d = img.data;
+  for (let i = 0; i < 240 * 240; i++) {
+    const v = fb[i], p = ((v >> 8) | (v << 8)) & 0xFFFF;
+    d[i * 4] = ((p >> 11) & 31) * 255 / 31;
+    d[i * 4 + 1] = ((p >> 5) & 63) * 255 / 63;
+    d[i * 4 + 2] = (p & 31) * 255 / 31;
+    d[i * 4 + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+}
+let litB = -1, litS = -1, padsLast = "";
+function drawLights(b, s, rgb) {
+  if (b !== litB || s !== litS) {
+    litB = b; litS = s;
+    for (const x of Object.values(buttons)) {
+      const on = (x.fm !== null && !!(b & (1 << x.fm))) || (x.sb !== null && !!(s & (1 << x.sb)));
+      x.g.classList.toggle("lit", on);
+      if (LIGHTS.has(x.sub)) x.hit.setAttribute("aria-pressed", on ? "true" : "false");
+    }
+  }
+  if (rgb) {
+    const key = rgb.join(",");
+    if (key === padsLast) return;
+    padsLast = key;
+    // the LEDs' levels, lifted for a screen: an unlit pad its rubber, a lit one its colour (its brightest channel to full)
+    pads.forEach((p, i) => {
+      const r = rgb[3 * i], g = rgb[3 * i + 1], bl = rgb[3 * i + 2], mx = Math.max(r, g, bl);
+      if (mx < 4) { p.face.setAttribute("fill", "#3a3d42"); return; }
+      const k = 0.35 + 0.65 * mx / 255, f = (c) => Math.round(255 * k * c / mx);
+      p.face.setAttribute("fill", `rgb(${f(r)}, ${f(g)}, ${f(bl)})`);
+    });
+  }
+}
+
+// ---------------------------------------------------------------- the screen reader (fm1-reader), as index.html
+const said = $("said-text");
+let words = [], wordsReady = null, spokenOf = null, tts = null, ttsP = null, last = null, keeping = 0, liveFlip = false;
+const mode = () => document.querySelector('input[name="mode"]:checked').value;
+const libs = import("./reader/words.js").then((m) => { spokenOf = m; }).catch(() => {});
+async function loadWords(link) {
+  await libs;
+  if (!link || !spokenOf) return;
+  const base = link.slice(link.lastIndexOf("/") + 1);
+  for (const url of [`../words/${base}`, link]) {
+    try {
+      const r = await fetch(url);
+      if (r.ok) { words = spokenOf.wordsOf(await r.json()); return; }
+    } catch { /* the next */ }
+  }
+}
+function voice() {
+  if (!ttsP) ttsP = import("./reader/tts.js").then((m) => m.createTTS()).then((t) => (tts = t))
+    .catch(() => { $("status").textContent = "This page's voice could not start: your own screen reader still reads the screen."; return null; });
+  return ttsP;
+}
+function say(screen, now, keep) {
+  const t = spokenOf ? spokenOf.spoken(screen, words) : screen;
+  last = { screen, now, keep };
+  said.textContent = t;
+  $("again").disabled = false;
+  if (mode() === "voice") {
+    voice().then((v) => {
+      if (!v) return;
+      const p = v.speak(t, { rate: 260, interrupt: now && !keeping });
+      if (keep) { keeping++; p.then(() => keeping--); }
+    });
+  } else if (mode() === "sr") {
+    liveFlip = !liveFlip;
+    (now || keep ? $("live-a") : $("live-p")).textContent = t + (liveFlip ? "" : " ");
+  }
+}
+function heard(bytes) {
+  let i = 0;
+  while (i < bytes.length) {
+    if (bytes[i] !== 0xf0) { i++; continue; }
+    let j = i + 1;
+    while (j < bytes.length && bytes[j] !== 0xf7) j++;
+    const d = bytes.subarray(i, j + 1);
+    i = j + 1;
+    if (d[1] !== 0x7d || d[2] !== 0x53 || d[3] !== 0x52) continue;
+    const str = (a) => String.fromCharCode(...a.filter((b) => b < 128));
+    if (d[4] === 1 && !wordsReady) {
+      const [, link = ""] = str(d.subarray(6, d.length - 1)).split("\0");
+      wordsReady = loadWords(/^https:\/\/[^\s"']+\.json$/.test(link) ? link : "");
+      $("where").disabled = false;
+    } else if (d[4] === 16) {
+      const t = str(d.subarray(6, d.length - 1).filter((b) => b)), f = d[5];
+      (wordsReady || libs).then(() => say(t, (f & 1) !== 0, (f & 2) !== 0));
+    }
+  }
+}
+function readerMode() {
+  const m = mode();
+  prefs.mode = m;
+  savePrefs();
+  if (m !== "voice" && tts) tts.stop();
+  if (m === "voice") voice().then((t) => t && t.unlock());
+  send({ type: "reader", on: m !== "off" });
+  $("where").disabled = !node || m === "off";
+  if (m === "off") said.textContent = "";
+}
+if (prefs.mode) { const r = document.querySelector(`input[name="mode"][value="${prefs.mode}"]`); if (r) r.checked = true; }
+document.querySelectorAll('input[name="mode"]').forEach((r) => r.addEventListener("change", readerMode));
+$("where").addEventListener("click", () => send({ type: "where" }));
+$("again").addEventListener("click", () => last && say(last.screen, true, last.keep));
+for (const ev of ["pointerdown", "keydown"]) addEventListener(ev, () => { if (tts) tts.unlock(); }, true);
+
+// ---------------------------------------------------------------- storage
+function loadStore() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(STORE_KEY) || "{}"), o = {};
+    for (const [k, b64] of Object.entries(raw)) o[k] = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)).buffer;
+    return o;
+  } catch { return {}; }
+}
+function saveStore(store) {
+  try {
+    const raw = {};
+    for (const [o, u8] of Object.entries(store)) { let s = ""; for (const c of u8) s += String.fromCharCode(c); raw[o] = btoa(s); }
+    localStorage.setItem(STORE_KEY, JSON.stringify(raw));
+  } catch { /* this session only */ }
+}
+
+// ---------------------------------------------------------------- switching on
+const status = $("status"), cpu = $("cpu");
+async function switchOn() {
+  const go = $("go");
+  go.disabled = true;
+  go.textContent = "Starting...";
+  status.textContent = "Starting.";
+  try {
+    const ac = new AudioContext({ sampleRate: 44100, latencyHint: "interactive" });
+    const [wasm] = await Promise.all([fetch("amb.wasm").then((r) => { if (!r.ok) throw new Error(`amb.wasm: ${r.status}`); return r.arrayBuffer(); }),
+                                      ac.audioWorklet.addModule("worklet.js")]);
+    node = new AudioWorkletNode(ac, "amb", { numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2] });
+    out = ac.createGain();
+    node.connect(out).connect(ac.destination);
+    const ready = new Promise((res) => {
+      node.port.onmessage = (e) => {
+        const m = e.data;
+        if (m.type === "ready") res();
+        else if (m.type === "frame") {
+          if (m.fb) drawScreen(m.fb);
+          drawLights(m.buttons, m.smkLit || 0, m.pads);
+          window.ambLast = m;
+          if (m.said) heard(m.said);
+          if (m.load !== undefined) cpu.textContent = `DUB-1 uses ${m.load}% of this computer's time`;
+          if (m.store) saveStore(m.store);
+        }
+      };
+    });
+    node.port.postMessage({ type: "load", wasm, store: loadStore(), master }, [wasm]);
+    await ready;
+    await ac.resume();
+    $("start").hidden = true;
+    controls.inert = false;
+    $("mute").disabled = false;
+    status.textContent = ac.sampleRate === 44100 ? "On." : `On (the browser runs audio at ${ac.sampleRate} Hz).`;
+    for (const f of faders) send({ type: "fader", i: f.i, value: f.value });
+    sendWheels();
+    syncButtons(); syncKeys(); syncPads();
+    readerMode();
+    device.focus({ preventScroll: true });
+  } catch (err) {
+    node = null;
+    go.disabled = false;
+    go.textContent = "Switch on";
+    status.textContent = "Could not start: " + (err && err.message || err) + ". Chrome, Edge, Firefox and Safari should all work.";
+  }
+}
+$("go").addEventListener("click", switchOn);
+$("mute").addEventListener("click", () => {
+  const on = $("mute").getAttribute("aria-pressed") !== "true";
+  $("mute").setAttribute("aria-pressed", on ? "true" : "false");
+  if (out) out.gain.setTargetAtTime(on ? 0 : 1, out.context.currentTime, 0.01);
+  status.textContent = on ? "Muted: DUB-1 goes on playing, silently." : "Sound on.";
+});
+$("reset").addEventListener("click", () => {
+  if ($("reset").dataset.armed) {
+    try { localStorage.removeItem(STORE_KEY); } catch {}
+    location.reload();
+  } else {
+    $("reset").dataset.armed = "1";
+    $("reset").textContent = "Click again to forget everything";
+    status.textContent = "Press Factory reset again to forget your pieces and start from the factory settings.";
+  }
+});
+</script>
+</body>
+</html>

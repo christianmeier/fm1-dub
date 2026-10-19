@@ -54,6 +54,12 @@ play notes.
 The SMK-37's TRS jack is a MIDI output and this build does not use it; there is no TRS MIDI IN, so MIDI and its
 clock come in over USB only.
 
+## Emulator
+
+`web/emu/build.sh smk37` builds the SMK-37 build for the browser into `build/emu-smk37/` (its page is
+`web/emu/smk37.html`: 37 keys, 16 pads, 4 faders, 8 encoders, 18 buttons and the wheels). It runs the same code,
+but it does not slow the screen to the SMK-37's 12 MHz.
+
 ## Build
 
 See [BUILDING.md](BUILDING.md) for the toolchain.
