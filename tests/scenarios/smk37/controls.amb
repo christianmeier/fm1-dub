@@ -53,7 +53,8 @@ pad 4 up
 wait 800
 expect frozen 0
 expect padlayout 0
-# PERFORM (SEL): pads 1-5 the mutes, 6-10 the moves held (the top row first)
+# PERFORM (SEL), as 1.1.0's on the FM-1: pads 1-5 mute the layers, the black keys 1-5 solo them, pads 7-11 held
+# make the moves (Drop on pad 10), pad 6 between them dark (pads count from 0 here: pad 3 is the fourth)
 tap SEL
 wait 200
 said PERFORM ON
@@ -61,16 +62,49 @@ expect padlayout 1
 pad 3
 wait 200
 said KICK OFF
+pads
+expect padr3 >90
 pad 3
 wait 200
 said KICK ON
-pad 5 down
+pad 5
+wait 200
+said_none ON
+pads
+expect padr5 <5
+expect padb5 <5
+pad 6 down
 wait 200
 said THROW
-expect padr5 >200
-pad 5 up
+expect padr6 >200
+pad 6 up
 wait 200
-expect padr5 <90
+expect padr6 <90
+pad 9 down
+wait 200
+said DROP
+expect padr9 >200
+pad 9 up
+pad 10 down
+wait 200
+said ECHO
+pad 10 up
+pads
+expect padr11 <5
+# a black key solos its layer: pad 0 (the chord) blinks bright, the others (pad 1, the pings) go dark orange
+tapkey b0
+wait 200
+said SOLO CHORD
+expect pool 0x6AD
+pads
+expect padb0 >150
+expect padr1 >90
+expect padb1 <20
+tapkey b0
+wait 200
+said SOLO OFF
+pads
+expect padb1 >150
 tap SEL
 wait 200
 said PERFORM OFF

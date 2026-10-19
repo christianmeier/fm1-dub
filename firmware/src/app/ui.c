@@ -640,7 +640,7 @@ static void pattern_key(uint32_t key, uint32_t keys)
 /* The SMK-37's controls beyond the FM-1's (plat.h SMK section; the FM-1's keep their DUB-1 meaning):
  *   pads           the 16 white keys F3..G5, lit as the FM-1's keys are, in colour. As the scale (and the Chords
  *                  page's roots) low notes on the bottom row; where the white keys are a row of sixteen (the effects
- *                  grid, the Pattern page's steps, PERFORM's 1-10) the top row is 1-8 and the bottom row 9-16, as
+ *                  grid, the Pattern page's steps, PERFORM's 1-11) the top row is 1-8 and the bottom row 9-16, as
  *                  the screen reads
  *   keys           F3..G5 the FM-1's 27; C3..E3 and G#5..C6 more of the scale (on the Chords page, the root too)
  *   KNOB BANK      the picker on the pads (and the screen): the top row the eight pieces, the bottom row the eight
@@ -1786,7 +1786,7 @@ static int help_lines(int b, const char *l[HELP_LINES])
     case B_GLO: L("SETUP"); L("ROOT, TUNE, MIDI OUT, LIGHTS"); break;
     case B_EDIT: L("TAP: THE CHORDS (8 SLOTS:"); L(" THE KEYS, THE SLOT'S ROOT)"); L("HOLD: THE NEXT CHORD"); break;
 #if BOARD_SMK37
-    case B_SEL: L("PERFORM: KNOBS MIX; PADS 1-5"); L(" MUTE CHORD PINGS BASS KICK HATS;"); L("6-10 HELD: THROW OPEN SHUT"); L(" KICK DROP ECHO"); break;
+    case B_SEL: L("PERFORM: THE KNOBS MIX"); L("PADS 1-5 MUTE, BLACK 1-5 SOLO:"); L(" CHORD PINGS BASS KICK HATS"); L("PADS 7-11 HELD: THROW OPEN SHUT"); L(" DROP ECHO"); break;
     case B_REC: L("TAP: DUB HOLD (THE ECHO"); L(" REPEATS WHAT IT HOLDS)"); L("HOLD: THE EFFECTS GRID,"); L(" PLAYED ON THE PADS"); break;
 #else
     case B_SEL: L("PERFORM: THE KNOBS MIX"); L("WHITE 1-5 MUTE, BLACK 1-5 SOLO:"); L(" CHORD PINGS BASS KICK HATS"); L("WHITE 7-11 HELD: THROW OPEN SHUT"); L(" DROP ECHO"); break;
@@ -2014,8 +2014,9 @@ static int smk_card(void)
 /* the pads' lights (leds()): what the FM-1's key LEDs show, in colour, each pad of a group lit at least dim. The
  * scale: out of it dark orange, in it light blue, the root a brighter blue, the chord's tones as it plays bright
  * white-blue (dub hold: red). The effects grid: each group in its colour, its first pad brighter (the FM-1 lights its key), held white.
- * The Pattern page: the lane's steps in the lane's colour (accents brighter), the step playing white. PERFORM: the
- * layers in their colours (dim when out), the moves red while held. The Chords page: the slot's root. The picker:
+ * The Pattern page: the lane's steps in the lane's colour (accents brighter), the step playing white. PERFORM: pads
+ * 1-5 the layers (on while heard, blinking bright while soloed: the solos' black keys have no lights), pad 6 dark,
+ * 7-11 the moves (red while held), 12-16 dark. The Chords page: the slot's root. The picker:
  * the piece and the mode lit. Lights Off: the scale dark (the rest stays) */
 static void smk_pad(int p, uint32_t r, uint32_t g, uint32_t b, uint32_t lv)   /* lv: 0..256 of r g b */
 {
@@ -2051,14 +2052,17 @@ static void smk_pads(void)
                 smk_pad(p, 230, 230, 230, 256u);
             else
                 smk_pad(p, c[0], c[1], c[2], (w & 3) ? SMK_DIM : 128u);
-        } else if (ui.perf) {                    /* PERFORM: 1-5 the layers, 6-10 the moves */
-            if (w < 3) {
-                static const uint8_t LEVEL[3] = {P_CHORD, P_PINGS, P_BASS};
-                SMK_STATE(p, proj.par[LEVEL[w]] > 0 ? SMK_ON : SMK_OFF);
-            } else if (w < 5) {
-                SMK_STATE(p, ui.mutes >> w & 1u ? SMK_OFF : SMK_ON);
-            } else if (w < 10) {
-                if (ui.moves >> (w - 5) & 1u)
+        } else if (ui.perf) {                    /* PERFORM (PERF_KEY): pads 1-5 the layers, 7-11 the moves, the rest dark */
+            int i;
+            for (i = 0; i < 10 && PERF_KEY[i] != key; i++)
+                ;
+            if (i < 5) {                         /* a layer: heard or not; soloed (a black key) blinking bright */
+                if (ui.solo >> i & 1u)
+                    SMK_STATE(p, (plat_ms() / 250u) & 1u ? SMK_ON : SMK_ACT);
+                else
+                    SMK_STATE(p, perf_sounds(i) ? SMK_ON : SMK_OFF);
+            } else if (i < 10) {
+                if (ui.moves >> (i - 5) & 1u)
                     smk_pad(p, SMK_RGB_HOLD[0], SMK_RGB_HOLD[1], SMK_RGB_HOLD[2], 256u);
                 else
                     SMK_STATE(p, SMK_ON);
