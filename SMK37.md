@@ -42,7 +42,7 @@ SEL, ENV, ...), and KNOB 1-4 are the knobs K1-K4. The SMK-37 adds the rest.
 | FADER BANK | what the faders set: A the levels (Chord, Pings, Bass, Drums, as the Mix page), B the space (Echo, Echo time, Feedback, Reverb), C the shape (Cutoff, Decay, Density, Hits). Lit off bank A. The fader card shows the bank and its values. The faders set the piece's own values; PERFORM's Dub, Energy and Space move on top of them |
 | Faders 1..4 | the current bank's four values; a fader takes over only once it moves (also after a bank change) |
 | Pitch wheel | the tape: up runs it faster (the echo's time down to half), down slower (up to twice); the repeats bend on the way. At rest, the echo is as set |
-| Mod wheel | the chord's filter: opens its Cutoff on top of its knob (not HOME's Filter, the master action) |
+| Mod wheel | the Filter (HOME's first knob, and PERFORM's): up shuts it on top of the knob, all the way at the top (the music under water, the kick left out); it stays where you leave it |
 | OCTAVE- + OCTAVE+ held 5 s | UPDATE MODE |
 | OCTAVE- + OCTAVE+ held at power-on | HARDWARE CALIBRATION: teach the buttons and knobs again (it asks by the FM-1's names, KNOB 1-4 as K1-K4) |
 

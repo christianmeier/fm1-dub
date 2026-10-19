@@ -206,7 +206,7 @@ fader 0 0
 expect par0 0
 fader 0 64
 expect par0 50
-# the wheels: the tape and the filter, never saved
+# the wheels: the tape and the Filter (not the chord's Cutoff: par12 stays), never saved
 wheel pitch 127
 wheel mod 127
 wait 200

@@ -358,7 +358,11 @@ static void knob_set(int k, int v)
         return;
     } else if (k >= K_FILTER && k <= K_SPACE) {
         ui.mac[k - K_FILTER] = (int8_t)v;
+#if BOARD_SMK37
+        en_macro(k - K_FILTER, smk_live(k, v));
+#else
         en_macro(k - K_FILTER, v);
+#endif
         return;                                  /* (for playing: nothing saved) */
     } else if (k == K_MODE) {
         set_mode(v);
@@ -712,8 +716,8 @@ static void pattern_key(uint32_t key, uint32_t keys)
  *   < >            the previous / next page (as SELECT)
  *   pitch wheel    the tape: up faster (the echo's time down to half), down slower (up to twice); the repeats
  *                  bend as it gets there
- *   mod wheel      the chord's filter: its Cutoff opened on top of its knob (not HOME's Filter, the master
- *                  action) */
+ *   mod wheel      the Filter (HOME's first knob, PERFORM's): up, shut on top of the knob, all the way at the
+ *                  top (the music under water, the kick left out); it stays where it's left; never saved */
 #define SMK_NBANK 3
 #define SMK_CARD_MS 1800u
 static const uint8_t SMK_FADER_PAR[SMK_NBANK][4] = {{P_CHORD, P_PINGS, P_BASS, P_DRUMS},
@@ -740,15 +744,13 @@ static void smk_reset(void)
 }
 static int smk_fcard(void) { return plat_ms() < smk.card_until; }
 
-static int smk_live(int k, int v)               /* Cutoff: the mod wheel opens it the rest of the way */
+static int smk_live(int k, int v)               /* the Filter: the mod wheel shuts it the rest of the way */
 {
-    int lo, hi;
-    if (k != P_CUTOFF || !smk.modw)
+    if (k != K_FILTER || !smk.modw)
         return v;
-    knob_range(k, &lo, &hi);
-    return v + (hi - v) * (int)smk.modw / 127;
+    return v + (-50 - v) * (int)smk.modw / 127;
 }
-static void smk_resend(void) { en_set(P_CUTOFF, smk_live(P_CUTOFF, proj.par[P_CUTOFF])); }
+static void smk_resend(void) { en_macro(EN_MAC_FILTER, smk_live(K_FILTER, ui.mac[EN_MAC_FILTER])); }
 
 /* the pads' layout: the effects grid (REC held) first, then the picker, then the rows of sixteen */
 static int smk_layout(uint32_t btn)
@@ -833,7 +835,7 @@ static void smk_input(uint32_t btn)
         ui.act_t = now;
     }
     if (plat_wheels(&pitch, &modw)) {
-        char t[8];
+        char t[12];                          /* ("SHUT 100") */
         if (pitch != smk.pitch) {                /* the tape: the echo's time, in % of what it is set to */
             uint32_t pc = (uint32_t)(100.0f * fm_exp2f((float)pitch * (-1.0f / 127.0f)) + 0.5f), n;
             smk.pitch = pitch;
@@ -845,12 +847,21 @@ static void smk_input(uint32_t btn)
             t[n] = 0;
             say_as("ECHO TIME", t, 0);
         }
-        if (modw != smk.modw) {                  /* the filter */
+        if (modw != smk.modw) {                  /* the Filter, shut on top of its knob */
+            int v;
             smk.modw = modw;
             smk_resend();
-            t[0] = '+';
-            itoa_u((uint32_t)(modw * 100 / 127), t + 1);
-            say_as("CUTOFF", t, 0);
+            v = smk_live(K_FILTER, ui.mac[EN_MAC_FILTER]);
+            if (v < 0) {
+                memcpy(t, "SHUT ", 5);
+                itoa_u((uint32_t)(-v * 2), t + 5);
+            } else if (v > 0) {
+                memcpy(t, "OPEN ", 5);
+                itoa_u((uint32_t)(v * 2), t + 5);
+            } else {
+                memcpy(t, "OFF", 4);
+            }
+            say_as("FILTER", t, 0);
         }
         ui.act_t = now;
     }
