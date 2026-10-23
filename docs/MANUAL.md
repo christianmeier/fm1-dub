@@ -147,6 +147,9 @@ kick ducks it fully; a beat without one a little less, and less again while the 
 kick out (a Break), so the music keeps breathing (the ghost duck). The noise is ducked deeper than
 the music.
 
+In PERFORM, each key says what it did on a card in the middle for a moment: a mute ("PINGS muted",
+in the layer's colour), a solo, a move as you press it ("THROW: every stab into the echo"), the mix.
+
 **Hold white 6** for the **Mix** page: KNOB 1–4 the levels of the chord, the pings, the bass and the
 drums (the same levels OCT− / OCT+ set on each layer's page), until you let go. A muted layer's knob
 is grey, its level kept. A page's button **leaves PERFORM**: the keys are the scale again
@@ -367,6 +370,9 @@ GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
   repeats as rings where they land, as faint as they are; a thrown stab the tallest, in a white frame,
   its repeats brighter.
   Turning Density shows there at once.
+- **The Pings page's lane:** the four loops, a row each (13, 17, 23 and 29 eighths, each across the lane,
+  so you see them drift against each other), each note a dot at its pitch, the step each loop is on lit,
+  brighter as it sounds. Turning Density shows there at once.
 
 ![The Space page with FEEDBACK lit as it turns, set to 6.7 s, the line above it saying HOW LONG THE REPEATS GO ON; ECHO 55, ECHO TIME 1/8., REVERB 35](img/screen-turning.png "Turning Feedback on the Space page")
 ![The scope: the output as a thick teal line over a dotted centre line, the two traces before it fading behind; Fm7 at the top](img/screen-scope.png "ALGORITHM: the scope")

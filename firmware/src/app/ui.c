@@ -221,7 +221,7 @@ static struct {
     uint8_t card_shake;                /* the card a big move's (red: a shake, new chords, a reset) or not */
     uint16_t card_col;                 /* its colour */
     uint8_t lock;                      /* Lock (SEL held): each phrase keeps what it has */
-    char card_head[16], card_text[24];
+    char card_head[16], card_text[40];
     uint32_t oct_until, oct_pulse;     /* the ring: up until, then fading; its last step (a pulse) */
     uint32_t big_until;                /* (1.4.0) the big ring (a knob turning, SELECT's filter): up until, then fading */
     int16_t big_k;                     /* its knob (VIEW_KNOB's codes) */
@@ -717,13 +717,20 @@ static void lock_toggle(void)                    /* SEL held: Lock, on or off: t
     say("LOCK", ui.lock ? "ON" : "OFF");
     card_show("LOCK", ui.lock ? "the groove kept" : "the groove free", K_ACC, 0);
 }
+/* (1.4.0, the user's) PERFORM's keys said in the middle too, on a card: a mute, a solo, a move, the mix */
+static const uint16_t PERF_COL[5] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_PULSE};
+static const char *const PERF_WHAT[5] = {"every stab into the echo", "the filter pushed open", "the filter pushed shut",
+                                         "the kick and the bass out", "the echo pushed, feeding back"};
+static const char *const PERF_LOW[5] = {"chord", "pings", "bass", "kick", "hats"};
 static void perf_key(uint32_t key, int down)
 {
     int i;
     if (key == PERF_SHIFT) {
         set_view(down ? V_MIX : V_PERF);
-        if (down)
+        if (down) {
             say("MIX", 0);
+            card_show("MIX", "the knobs: the four levels", K_ACC, 0);
+        }
         return;
     }
     for (i = 0; i < PERF_N && PERF_KEY[i] != key; i++)
@@ -740,12 +747,16 @@ static void perf_key(uint32_t key, int down)
             ui.touched = (int8_t)(i - 10 < 3 ? i - 10 : 3);
             ui.touch_until = plat_ms() + 1200u;
         }
-        if (ui.solo & m)
+        if (ui.solo & m) {
             say("SOLO", PERF_NAME[i]);
-        else if (ui.solo)                        /* (one let go, others still soloed) */
+            card_show("SOLO", PERF_LOW[i - 10], K_CLAP, 0);
+        } else if (ui.solo) {                    /* (one let go, others still soloed) */
             say(PERF_NAME[i], "SOLO OFF");
-        else
+            card_show(PERF_NAME[i], "solo off", K_CLAP, 0);
+        } else {
             say("SOLO", "OFF");
+            card_show("SOLO", "off: all heard", K_CLAP, 0);
+        }
         return;
     }
     if (i < 5) {                                 /* the chord, pings, bass, kick, hats: a mute (the levels kept) */
@@ -758,6 +769,7 @@ static void perf_key(uint32_t key, int down)
             ui.touch_until = plat_ms() + 1200u;
         }
         say(PERF_NAME[i], ui.mutes >> i & 1u ? "OFF" : "ON");
+        card_show(PERF_NAME[i], ui.mutes >> i & 1u ? "muted" : "on", ui.mutes >> i & 1u ? K_DIM : PERF_COL[i], 0);
         return;
     }
     if (down)
@@ -765,8 +777,10 @@ static void perf_key(uint32_t key, int down)
     else
         ui.moves &= ~(1u << (i - 5));
     en_perf(ui.moves);
-    if (down)
+    if (down) {
         say(PERF_NAME[i], 0);
+        card_show(PERF_NAME[i], PERF_WHAT[i - 5], K_FROST, 0);
+    }
 }
 
 static void set_view(int v);
@@ -1534,7 +1548,7 @@ static void input(void)
                 static const uint16_t LC[NLAYER] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE};
                 static const uint16_t MC[4] = {K_PAD, K_BELL, K_BASS, K_PULSE};
                 const int k = VIEW_KNOB[ui.view][i], l = oct_layer(ui.view);
-                if ((l == 2 && (k == P_GROOVE || k == P_BNOTES)) || (l == 0 && k == P_STABS)) {   /* (the bass's lane shows it: the ring steps
+                if ((l == 2 && (k == P_GROOVE || k == P_BNOTES)) || (l == 0 && k == P_STABS) || (l == 1 && k == P_DENSITY)) {   /* (the bass's lane shows it: the ring steps
                                                                       * aside, the header says it) */
                     char t[16];
                     knob_text(k, t);
@@ -2521,8 +2535,39 @@ static void draw_chord_lane(void)
     }
 }
 
+/* (1.4.0) the Pings page: its lane alone, large. The four loops a row each (13, 17, 23 and 29 eighths, each across
+ * the lane: they drift against each other), each note a dot at its pitch (higher, higher in the row), the step each
+ * loop is on lit, brighter as it sounds */
+static void draw_pings_lane(void)
+{
+    int l, j;
+    for (l = 0; l < EN_NLOOP; l++) {
+        const int len = EN_LOOP_LEN[l], at = en_loop_pos[l];
+        const int32_t y = 100 + l * 11;
+        const float g = en_playing ? en_loop_glow[l] : 0.0f;
+        cv_round(29, y + 3, 5, 4, 1, mix(K_BELL_T, K_BELL, 6 + 2 * l));
+        for (j = 0; j < len; j++) {
+            const int32_t x0 = 40 + j * 176 / len, x1 = 40 + (j + 1) * 176 / len - 2;
+            const int n = en_loop_note[l][j];
+            if (en_playing && j == at)           /* the step it's on */
+                cv_rect(x0, y - 1, x1 - x0 + 1, 11, K_PANEL);
+            if (n >= 0) {
+                const int32_t ny = y + 5 - (n > 5 ? 5 : n);   /* (the higher the note, the higher in its row) */
+                const uint16_t c = j == at && en_playing ? mix(K_BELL, K_TEXT, 4 + q16(g) * 12 / 16) : mix(K_BELL_T, K_BELL, 13);
+                cv_round(x0, ny - 1, x1 - x0 + 1 > 7 ? 7 : x1 - x0 + 1, 6, 2, c);
+            } else {
+                cv_rect(x0 + (x1 - x0) / 2, y + 4, 1, 1, K_LINE);
+            }
+        }
+    }
+}
+
 static void draw_lanes(void)
 {
+    if (oct_layer(ui.view) == 1) {               /* (1.4.0) the pings' pages: its lane alone */
+        draw_pings_lane();
+        return;
+    }
     if (oct_layer(ui.view) == 0) {               /* (1.4.0) the chord's pages: its lane alone */
         draw_chord_lane();
         return;
