@@ -668,6 +668,12 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   FM voice) **Algo, Ratio, Feedback, Bite**. The other layers alike: the LFO among the part's knobs, the FM page
   without it. Built already (1.4.0): the bass's LFO moves Shape (±25 around the knob's), not the Bite; the chord's
   sweeps deeper (±2.5 octaves at 100, on a curve so the pieces' 20-30 stay as they were).
+- **The LFOs, from REPORT10** (build/research/dubtechno/REPORT10-lfo.md, 86 tracks, 2026-10-24): the records move
+  mostly by slow drift (60-87% of their slow movement; DUB-1 22-40%), rarely by a bar-locked LFO, never faster than
+  a bar, the bass never. Proposed: a Drift mode (a smoothed random walk, 8-32 bars, ±0.3-0.5 oct) on the chord's
+  filter and the noise first; a Rate (1-32 bars synced, free 4-60 s, Drift), default 4 bars; the noise slower and
+  shallower; the bass's LFO off; the pings' reworked (barely heard now); per-stab scatter smaller. To decide with the
+  user. Also found: the widener's 0.21 Hz Haas sweep combs the mono sum (about 5.7 dB on the hats): to check.
 - **The noise's LFO seen** (the user's idea): a sine moving behind the Noise page's two rows of hits, its crest
   where the rings are brightest.
 
