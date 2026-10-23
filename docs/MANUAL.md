@@ -364,7 +364,7 @@ GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
 - **The Bass page's lane:** the bass alone, large, under the ring: this bar's notes as bars as long
   as they hold (an octave note higher), the groove's other notes (those Density leaves out, or a B
   bar's) as outlines; A or B at its left (bars 4 and 8, the phrase's variant). Turning Groove or
-  Density shows there at once (the ring steps aside, its words above the lane).
+  Density shows there at once, under the big ring.
 - **The Chord page's lane:** the chord's stabs alone, large: each a bar as tall as it was struck (those
   still to come this bar at a middle height), its tail fading for as long as it rings, the echo's
   repeats as rings where they land, as faint as they are; a thrown stab the tallest, in a white frame,

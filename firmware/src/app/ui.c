@@ -230,7 +230,6 @@ static struct {
     const char *big_help;              /* what it does, under the name (KNOB_HELP's; 0: none) */
     char big_txt[16];                  /* (a value of no knob's: the screen's view) its text, and its place 0..1 */
     float big_tf;
-    uint8_t big_noring;                /* (a knob the page's own lane shows: the help alone, no ring) */
     uint16_t big_col;                  /* its colour: the layer's, or the accent */
     float oct_v;                       /* the ring's arc, gliding to the level */
     uint32_t prog_gen;                 /* the engine's slots, as last taken (en_prog_gen) */
@@ -1095,7 +1094,6 @@ static void big_show_help(int k, const char *name, uint16_t col, const char *hel
     ui.big_col = col;
     ui.big_help = help;
     ui.big_txt[0] = 0;
-    ui.big_noring = 0;
     ui.big_until = now + OCT_SHOW;
     ui.oct_ring = 0;                             /* (one ring at a time: the last one turned) */
 }
@@ -1566,12 +1564,7 @@ static void input(void)
                 static const uint16_t LC[NLAYER] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE};
                 static const uint16_t MC[4] = {K_PAD, K_BELL, K_BASS, K_PULSE};
                 const int k = VIEW_KNOB[ui.view][i], l = oct_layer(ui.view);
-                if ((l == 2 && (k == P_GROOVE || k == P_BNOTES)) || (l == 0 && k == P_STABS) || (l == 1 && k == P_DENSITY) ||
-                    (l == 3 && (k == P_KDENS || k == P_HITS))) {   /* (the bass's lane shows it: the ring steps
-                                                                      * aside, the header says it) */
-                    big_show_help(k, KNOB_LABEL[ui.view][i], LC[l], KNOB_HELP[ui.view][i]);
-                    ui.big_noring = 1;
-                } else if (ui.view != V_CHORDS && ui.view != V_PAT && k != K_SAVE && k != K_CPU && k != K_NONE)
+                if (ui.view != V_CHORDS && ui.view != V_PAT && k != K_SAVE && k != K_CPU && k != K_NONE)
                     big_show_help(k, KNOB_LABEL[ui.view][i], ui.view == V_MIX ? MC[i] : l >= 0 ? LC[l] : K_ACC,
                                   KNOB_HELP[ui.view][i]);
             }
@@ -2896,22 +2889,6 @@ static void draw_big(uint32_t now)
     if (!big_on(now))
         return;
     f = now < ui.big_until ? 16 : 16 - (int)((now - ui.big_until) * 16u / OCT_FADE);
-    if (ui.big_noring) {                         /* (the lane shows it: the help alone, above the lane) */
-        char a[48], b[48];
-        int nl = ui.big_help ? help_lines(ui.big_help, a, b, (int)sizeof a) : 0;
-        uint16_t hc = mix(K_BG, mix(K_DIM, K_TEXT, 7), f);
-        if (nl) {
-            const int32_t y0 = nl == 2 ? 68 : 80;
-            int32_t w = text_w(&FONT_S, a), w2 = nl == 2 ? text_w(&FONT_S, b) : 0;
-            if (w2 > w)
-                w = w2;
-            cv_round(CX - w / 2 - 6, y0 - 1, w + 12, nl * 14 + 4, 4, K_BG);
-            text_c(CX, y0, &FONT_S, a, hc);
-            if (nl == 2)
-                text_c(CX, y0 + 14, &FONT_S, b, hc);
-        }
-        return;
-    }
     if (ui.big_txt[0]) {                         /* (no knob's: the screen's view) */
         lo = 0, hi = 1, v = 1;
     } else {
