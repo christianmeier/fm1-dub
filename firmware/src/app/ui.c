@@ -2510,9 +2510,13 @@ static void draw_chord_lane(void)
             len = j - i - 1;
         for (k = 1; k <= len; k++)               /* its tail, fading */
             cv_rect(x + k * 11 - 4, 119 - 1, 11, 3, mix(K_BG, K_PAD_T, 16 - k * 12 / (len + 1)));
-        cv_round(x, 120 - h / 2, 7, h, 2, en_playing && i == pos ? K_TEXT : en_stab_v[i] ? K_PAD : mix(K_PAD_T, K_PAD, 8));
-        if (en_stab_thr >> i & 1u) {             /* thrown: outlined */
-            cv_rect(x - 2, 120 - h / 2 - 2, 11, 1, K_TEXT), cv_rect(x - 2, 120 + h / 2 + 1, 11, 1, K_TEXT);
+        if (en_stab_thr >> i & 1u) {             /* thrown: the tallest, wider, a white frame two pixels round it */
+            h = 30;
+            cv_round(x - 3, 120 - h / 2 - 3, 13, h + 6, 4, K_TEXT);
+            cv_round(x - 1, 120 - h / 2 - 1, 9, h + 2, 3, K_BG);
+            cv_round(x, 120 - h / 2, 7, h, 2, en_playing && i == pos ? K_TEXT : K_PAD);
+        } else {
+            cv_round(x, 120 - h / 2, 7, h, 2, en_playing && i == pos ? K_TEXT : en_stab_v[i] ? K_PAD : mix(K_PAD_T, K_PAD, 8));
         }
     }
 }

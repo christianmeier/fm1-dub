@@ -364,7 +364,8 @@ GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
   Density shows there at once (the ring steps aside, its words above the lane).
 - **The Chord page's lane:** the chord's stabs alone, large: each a bar as tall as it was struck (those
   still to come this bar at a middle height), its tail fading for as long as it rings, the echo's
-  repeats as rings where they land, as faint as they are; a thrown stab outlined, its repeats brighter.
+  repeats as rings where they land, as faint as they are; a thrown stab the tallest, in a white frame,
+  its repeats brighter.
   Turning Density shows there at once.
 
 ![The Space page with FEEDBACK lit as it turns, set to 6.7 s, the line above it saying HOW LONG THE REPEATS GO ON; ECHO 55, ECHO TIME 1/8., REVERB 35](img/screen-turning.png "Turning Feedback on the Space page")
