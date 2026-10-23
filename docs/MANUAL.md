@@ -362,6 +362,10 @@ GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
   as they hold (an octave note higher), the groove's other notes (those Density leaves out, or a B
   bar's) as outlines; A or B at its left (bars 4 and 8, the phrase's variant). Turning Groove or
   Density shows there at once (the ring steps aside, its words above the lane).
+- **The Chord page's lane:** the chord's stabs alone, large: each a bar as tall as it was struck (those
+  still to come this bar at a middle height), its tail fading for as long as it rings, the echo's
+  repeats as rings where they land, as faint as they are; a thrown stab outlined, its repeats brighter.
+  Turning Density shows there at once.
 
 ![The Space page with FEEDBACK lit as it turns, set to 6.7 s, the line above it saying HOW LONG THE REPEATS GO ON; ECHO 55, ECHO TIME 1/8., REVERB 35](img/screen-turning.png "Turning Feedback on the Space page")
 ![The scope: the output as a thick teal line over a dotted centre line, the two traces before it fading behind; Fm7 at the top](img/screen-scope.png "ALGORITHM: the scope")

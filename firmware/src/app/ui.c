@@ -1534,12 +1534,12 @@ static void input(void)
                 static const uint16_t LC[NLAYER] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE};
                 static const uint16_t MC[4] = {K_PAD, K_BELL, K_BASS, K_PULSE};
                 const int k = VIEW_KNOB[ui.view][i], l = oct_layer(ui.view);
-                if (l == 2 && (k == P_GROOVE || k == P_BNOTES)) {   /* (the bass's lane shows it: the ring steps
+                if ((l == 2 && (k == P_GROOVE || k == P_BNOTES)) || (l == 0 && k == P_STABS)) {   /* (the bass's lane shows it: the ring steps
                                                                       * aside, the header says it) */
                     char t[16];
                     knob_text(k, t);
                     say(KNOB_LABEL[ui.view][i], t);
-                    big_show_help(k, KNOB_LABEL[ui.view][i], LC[2], KNOB_HELP[ui.view][i]);
+                    big_show_help(k, KNOB_LABEL[ui.view][i], LC[l], KNOB_HELP[ui.view][i]);
                     ui.big_noring = 1;
                 } else if (ui.view != V_CHORDS && ui.view != V_PAT && k != K_SAVE && k != K_CPU && k != K_NONE)
                     big_show_help(k, KNOB_LABEL[ui.view][i], ui.view == V_MIX ? MC[i] : l >= 0 ? LC[l] : K_ACC,
@@ -2453,8 +2453,76 @@ static void draw_bass_lane(void)
     }
 }
 
+/* (1.4.0) the chord's page: its lane alone, large. Each stab a bar as tall as it was struck (the ones still to come
+ * this bar at a middle height), its tail fading for as long as it rings, its echo's repeats as rings where they land,
+ * as faint as they are (a thrown one's brighter, outlined); the playhead's column */
+static void draw_chord_lane(void)
+{
+    const uint32_t bar = en_lane[0];
+    const int pos = en_drum_pos[0];
+    const float step_s = proj.par[P_TEMPO] > 0 ? 15.0f / (float)proj.par[P_TEMPO] : 0.12f;
+    const float tail = en_stab_t60 * 0.5f / step_s;   /* (to about -30 dB, in sixteenths) */
+    float ghost[16];
+    uint8_t gthr[16];
+    int i, k;
+    if (en_playing)
+        cv_round(38 + pos * 11, 98, 10, 46, 2, K_PANEL);
+    for (i = 0; i < 16; i++)                     /* the beats */
+        cv_rect(40 + i * 11 + 2, 140, 2, (i & 3) ? 2 : 4, (i & 3) ? K_LINE : K_DIM);
+    for (i = 0; i < 16; i++)
+        ghost[i] = 0.0f, gthr[i] = 0;
+    if (!en_ext && proj.par[P_TEMPO] > 0) {      /* the echo's repeats: where each lands, as faint as it is */
+        const float e = en_echo_ms * (float)proj.par[P_TEMPO] * (1.0f / 15000.0f);
+        for (i = 0; i < 16; i++)
+            if (bar >> i & 1u) {
+                const int thr = en_stab_thr >> i & 1u;
+                float a = en_echo_in * (thr ? 1.6f : 1.0f);
+                for (k = 1; k <= 8; k++) {
+                    const int q = (int)((float)i + (float)k * e + 0.5f) % 16;
+                    a *= en_echo_g;
+                    if (a < 0.05f)
+                        break;
+                    if (a > ghost[q])
+                        ghost[q] = a, gthr[q] = (uint8_t)thr;
+                }
+            }
+    }
+    for (i = 0; i < 16; i++) {                   /* the repeats first, under the stabs */
+        const int32_t x = 40 + i * 11;
+        if (ghost[i] > 0.0f && !(bar >> i & 1u)) {
+            const uint16_t c = mix(K_BG, gthr[i] ? K_TEXT : K_PAD, 6 + q16(ghost[i]) * 9 / 16);
+            cv_rect(x + 1, 116, 5, 1, c), cv_rect(x + 1, 122, 5, 1, c);
+            cv_rect(x, 117, 1, 5, c), cv_rect(x + 6, 117, 1, 5, c);
+        }
+    }
+    for (i = 0; i < 16; i++) {
+        const int32_t x = 40 + i * 11;
+        int j, len, h;
+        float v;
+        if (!(bar >> i & 1u))
+            continue;
+        v = en_stab_v[i] ? (float)en_stab_v[i] * (1.0f / 255.0f) : 0.7f;
+        h = 8 + (int)(20.0f * v);
+        for (j = i + 1; j < 16 && !(bar >> j & 1u); j++)
+            ;
+        len = (int)(tail + 0.5f);
+        if (len > j - i - 1)
+            len = j - i - 1;
+        for (k = 1; k <= len; k++)               /* its tail, fading */
+            cv_rect(x + k * 11 - 4, 119 - 1, 11, 3, mix(K_BG, K_PAD_T, 16 - k * 12 / (len + 1)));
+        cv_round(x, 120 - h / 2, 7, h, 2, en_playing && i == pos ? K_TEXT : en_stab_v[i] ? K_PAD : mix(K_PAD_T, K_PAD, 8));
+        if (en_stab_thr >> i & 1u) {             /* thrown: outlined */
+            cv_rect(x - 2, 120 - h / 2 - 2, 11, 1, K_TEXT), cv_rect(x - 2, 120 + h / 2 + 1, 11, 1, K_TEXT);
+        }
+    }
+}
+
 static void draw_lanes(void)
 {
+    if (oct_layer(ui.view) == 0) {               /* (1.4.0) the chord's pages: its lane alone */
+        draw_chord_lane();
+        return;
+    }
     if (oct_layer(ui.view) == 2) {               /* (1.4.0) the bass's pages: its lane alone */
         draw_bass_lane();
         return;

@@ -503,6 +503,9 @@ volatile uint16_t en_lane[6];
 volatile float en_bass_gate = 3.0f;
 volatile int8_t en_bass_octn = -1;
 volatile int8_t en_bass_off[16];
+volatile float en_stab_t60 = 0.3f;
+volatile uint16_t en_stab_thr;
+volatile uint8_t en_stab_v[16];
 volatile int16_t en_scope[EN_SCOPE_N];
 volatile uint32_t en_scope_w;
 volatile int16_t en_spec[EN_SPEC_N];
@@ -1947,8 +1950,12 @@ static void tick(void)
     int st = (int)(sixteenth & 15u), l, d;
     float r = frand();
     gate_ctr = 0;
-    if (st == 0)
+    if (st == 0) {
         bar_start();
+        en_stab_thr = 0;                         /* (the chord's page: a new bar's stabs) */
+        for (l = 0; l < 16; l++)
+            en_stab_v[l] = 0;
+    }
     const int kick = lay_kick && !(mutes & EN_M_KICK) && !(perf & EN_PF_KICKDROP), hats = !(mutes & EN_M_HATS);
     lanes();
     {
@@ -1992,6 +1999,10 @@ static void tick(void)
         float vel = st == (int)__builtin_ctz(en_stab_pat) ? 0.9f + 0.1f * frand() : 0.65f + 0.25f * frand();
         if (!(mutes & EN_M_CHORD))
             stab_fire(vel, thr || (perf & EN_PF_THROW) || (fxm >> EN_FX_THROW & 1u));
+        en_stab_v[st] = (uint8_t)(fm_minf(vel, 1.0f) * 255.0f);   /* (the chord's page: as struck) */
+        if (en_stab_thrown)
+            en_stab_thr |= (uint16_t)(1u << st);
+        en_stab_t60 = st_t60;
     }
     noise_step((int)(sixteenth & 31u));         /* (the noise's groove: two bars) */
     for (d = 0; d < EN_NDRUM; d++)
