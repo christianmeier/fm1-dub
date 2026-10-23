@@ -3189,8 +3189,8 @@ static void draw_main(void)
     }
     ch_age = ch_t ? now - ch_t : 1000u;
     ch_c = en_frozen ? K_FROST : ch_age < 900u ? mix(K_ACC, K_TEXT, (int)(ch_age * 16u / 900u)) : K_TEXT;
-    if (!en_frozen && ch_age >= 900u && scr_layer(ui.view) < 0) {   /* (1.4.0, the user's: the kick, on the whole: the
-                                                  * chord's name a soft grey, white with each kick, as strong as it is) */
+    if (!en_frozen && ch_age >= 900u) {          /* (1.4.0, the user's: the kick, on every page that names the chord:
+                                                  * its name a soft grey, white with each kick, as strong as it is) */
         const float kg = en_playing ? en_drum_glow[0] : 0.0f;
         ch_c = mix(K_DIM, K_TEXT, q16(kg * 1.4f));
         if (kg > 0.01f)

@@ -316,7 +316,7 @@ GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
   echo makes a thicker, brighter ring. In dub hold the rings turn red, and a new stab makes a
   single ring (the echo plays what it holds). Each bass note drops a gold ring too (no repeats:
   the bass hardly goes into the echo), so with the chord muted the bass still shows. The chord's
-  name is in the middle, a soft grey that flashes white with each kick, as strong as it hits (red in
+  name is in the middle, a soft grey that flashes white with each kick, as strong as it hits, on every page that shows it (red in
   dub hold). A new chord comes in big and teal, bouncing big, small, big, small, and settles to white
   over about a second. Around it the four ping loops each circle as a blue dot, one step a turn's step: its
   place is where the loop is, and it lights up when the loop plays a ping (dim, a ghost, between).
