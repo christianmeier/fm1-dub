@@ -227,6 +227,7 @@ static struct {
     int16_t big_k;                     /* its knob (VIEW_KNOB's codes) */
     float big_v;                       /* its arc, gliding to the value */
     char big_name[16];                 /* its name, under it */
+    const char *big_help;              /* what it does, under the name (KNOB_HELP's; 0: none) */
     uint16_t big_col;                  /* its colour: the layer's, or the accent */
     float oct_v;                       /* the ring's arc, gliding to the level */
     uint32_t prog_gen;                 /* the engine's slots, as last taken (en_prog_gen) */
@@ -1048,7 +1049,9 @@ static float big_frac(int k)                     /* the knob's place, 0..1 of it
     knob_range(k, &lo, &hi);
     return hi > lo ? (float)(knob_get(k) - lo) / (float)(hi - lo) : 0.0f;
 }
-static void big_show(int k, const char *name, uint16_t col)
+static void big_show_help(int k, const char *name, uint16_t col, const char *help);
+static void big_show(int k, const char *name, uint16_t col) { big_show_help(k, name, col, 0); }
+static void big_show_help(int k, const char *name, uint16_t col, const char *help)
 {
     uint32_t now = plat_ms();
     int i;
@@ -1059,6 +1062,7 @@ static void big_show(int k, const char *name, uint16_t col)
         ui.big_name[i] = (char)(name[i] >= 'a' && name[i] <= 'z' ? name[i] - 32 : name[i]);
     ui.big_name[i] = 0;
     ui.big_col = col;
+    ui.big_help = help;
     ui.big_until = now + OCT_SHOW;
     ui.oct_ring = 0;                             /* (one ring at a time: the last one turned) */
 }
@@ -1448,7 +1452,7 @@ static void input(void)
             turn(EN_SELECT, K_FILTER, e);
             knob_text(K_FILTER, t);
             say("FILTER", t);
-            big_show(K_FILTER, "Filter", K_ACC);
+            big_show_help(K_FILTER, "Filter", K_ACC, "Shut: under water. Open: thin");
         }
         ui.turn_t = plat_ms();
     }
@@ -1506,7 +1510,8 @@ static void input(void)
                 static const uint16_t MC[4] = {K_PAD, K_BELL, K_BASS, K_PULSE};
                 const int k = VIEW_KNOB[ui.view][i], l = oct_layer(ui.view);
                 if (ui.view != V_CHORDS && ui.view != V_PAT && k != K_SAVE && k != K_CPU && k != K_NONE)
-                    big_show(k, KNOB_LABEL[ui.view][i], ui.view == V_MIX ? MC[i] : l >= 0 ? LC[l] : K_ACC);
+                    big_show_help(k, KNOB_LABEL[ui.view][i], ui.view == V_MIX ? MC[i] : l >= 0 ? LC[l] : K_ACC,
+                                  KNOB_HELP[ui.view][i]);
             }
             ui.touched = (int8_t)i;
             ui.touch_until = plat_ms() + 1200u;
@@ -2555,6 +2560,41 @@ static void draw_slots(void)
  * number inside, its name under; the arc glides to the level, a step a brief brightening; muted, grey; it fades out
  * OCT_SHOW after the last press */
 #define BIG_R 40                                 /* (1.4.0) the big rings' radius (the level's, a knob's) */
+#define HELP_W 232                               /* (the help under the big ring: two lines at most, this wide) */
+/* a help line in one line or two, split at the space that keeps the wider of the two narrowest: the lines' count
+ * (0: it doesn't fit) */
+static int help_lines(const char *h, char *a, char *b, int n)
+{
+    int i, best = -1, bw = 1 << 30, len = 0;
+    while (h[len])
+        len++;
+    if (len >= n)
+        return 0;
+    for (i = 0; i <= len; i++)
+        a[i] = h[i];
+    b[0] = 0;
+    if (text_w(&FONT_S, a) <= HELP_W)
+        return 1;
+    for (i = 1; i < len; i++)
+        if (h[i] == ' ') {
+            int w1, w2, j;
+            for (j = 0; j < i; j++)
+                a[j] = h[j];
+            a[i] = 0;
+            w1 = text_w(&FONT_S, a);
+            w2 = text_w(&FONT_S, h + i + 1);
+            if ((w1 > w2 ? w1 : w2) < bw)
+                bw = w1 > w2 ? w1 : w2, best = i;
+        }
+    if (best < 0 || bw > HELP_W)
+        return 0;
+    for (i = 0; i < best; i++)
+        a[i] = h[i];
+    a[best] = 0;
+    for (i = best + 1; i <= len; i++)
+        b[i - best - 1] = h[i];
+    return 2;
+}
 static void draw_oct(uint32_t now)
 {
     static const uint16_t C[NLAYER] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE};
@@ -2600,7 +2640,7 @@ static void draw_oct(uint32_t now)
  * the top, a switch its place; Motion's regions marked; it fades out OCT_SHOW after the last click */
 static void draw_big(uint32_t now)
 {
-    const int32_t r = BIG_R, cy = 64;
+    const int32_t r = BIG_R, cy = ui.big_help ? 55 : 64;   /* (up a little, to make room for the help) */
     int k = ui.big_k, v, f, lo, hi;
     int32_t f2;
     uint16_t c, tr, tx;
@@ -2618,8 +2658,8 @@ static void draw_big(uint32_t now)
     c = mix(K_BG, (lo < 0 && !v) ? K_DIM : ui.big_col, f);
     tr = mix(K_BG, K_LINE, f);
     tx = mix(K_BG, K_TEXT, f);
-    for (f2 = -(r + 7); f2 <= r + 7; f2++) {     /* (a disc behind it, the middle hidden) */
-        int32_t w = (int32_t)fm_sqrtf((float)((r + 7) * (r + 7) - f2 * f2));
+    for (f2 = -(r + 4); f2 <= r + 4; f2++) {     /* (a disc behind it, the middle hidden) */
+        int32_t w = (int32_t)fm_sqrtf((float)((r + 4) * (r + 4) - f2 * f2));
         cv_rect(CX - w, cy + f2, 2 * w + 1, 1, K_BG);
     }
     arc_th(CX, cy, r, 6.0f, ui.big_v, tr, c, K_BG, lo < 0);
@@ -2644,6 +2684,18 @@ static void draw_big(uint32_t now)
         int32_t w = text_w(&FONT_B, under);
         cv_round(CX - w / 2 - 5, cy + r - 1, w + 10, 18, 5, K_BG);
         text_c(CX, cy + r - 1, &FONT_B, under, c);
+    }
+    if (ui.big_help) {                           /* what it does, under the name: one line or two, centred */
+        char a[48], b[48];
+        int nl = help_lines(ui.big_help, a, b, (int)sizeof a);
+        if (nl) {
+            const int32_t y0 = cy + r + 17;
+            uint16_t hc = mix(K_BG, mix(K_DIM, K_TEXT, 7), f);   /* (a light grey, under the name) */
+            cv_rect(0, y0, 240, nl * 14 + 2, K_BG);
+            text_c(CX, y0, &FONT_S, a, hc);
+            if (nl == 2)
+                text_c(CX, y0 + 14, &FONT_S, b, hc);
+        }
     }
 }
 
@@ -2905,7 +2957,8 @@ static void draw_knobs(void)
             caps(t, vn, sizeof t);
             x0 = cv_text(6, -1, &FONT_XS, t, K_DIM) + 5;
         }
-        if (now_touch && ui.touched >= 0 && ui.touched < 4 && !fm_knob_off(ui.view, ui.touched)) {   /* a knob turning: what it does, the rule's
+        if (now_touch && ui.touched >= 0 && ui.touched < 4 && !fm_knob_off(ui.view, ui.touched) &&
+            !big_on(plat_ms())) {   /* a knob turning (no big ring: the Chords, the Pattern pages): what it does, the rule's
                                                                           * whole width */
             char hp[48];
             caps(hp, KNOB_HELP[ui.view][ui.touched], sizeof hp);

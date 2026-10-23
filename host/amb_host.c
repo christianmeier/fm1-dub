@@ -478,15 +478,20 @@ static int expect(const char *what, const char *val)
         for (i = 0; i < EN_SCOPE_N; i++)
             got = abs(en_scope[i]) > got ? abs(en_scope[i]) : got;
     }
-    else if (!strcmp(what, "helpfit")) {          /* the knobs' help lines too wide for the rule (0: all fit) */
+    else if (!strcmp(what, "helpfit")) {          /* the knobs' help lines too wide (under the big ring, two lines; on the rule) (0: all fit) */
         int v, k;
         char hp[48];
         got = 0;
         for (v = 0; v < NVIEWS; v++)
             for (k = 0; k < 4; k++) {
+                char a2[48], b2[48];
                 caps(hp, KNOB_HELP[v][k], sizeof hp);
-                if (text_w(&FONT_XS, hp) > 222 || strlen(KNOB_HELP[v][k]) >= sizeof hp)
-                    printf("  too wide: %s\n", hp), got++;
+                if (v == V_CHORDS || v == V_PAT) {   /* (no big ring there: the help on the rule, in capitals) */
+                    if (text_w(&FONT_XS, hp) > 222 || strlen(KNOB_HELP[v][k]) >= sizeof hp)
+                        printf("  too wide: %s\n", hp), got++;
+                } else if (!help_lines(KNOB_HELP[v][k], a2, b2, (int)sizeof a2)) {   /* (under the big ring: two lines) */
+                    printf("  too wide: %s\n", KNOB_HELP[v][k]), got++;
+                }
             }
     }
     else if (!strcmp(what, "nev"))                /* the noise's events that show, so far */
