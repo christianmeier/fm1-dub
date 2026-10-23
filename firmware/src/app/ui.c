@@ -223,8 +223,11 @@ static struct {
     uint8_t lock;                      /* Lock (SEL held): each phrase keeps what it has */
     char card_head[16], card_text[24];
     uint32_t oct_until, oct_pulse;     /* the ring: up until, then fading; its last step (a pulse) */
-    uint32_t flt_until;                /* (1.4.0) the filter's ring (SELECT): up until, then fading */
-    float flt_v;                       /* its arc, gliding to the filter */
+    uint32_t big_until;                /* (1.4.0) the big ring (a knob turning, SELECT's filter): up until, then fading */
+    int16_t big_k;                     /* its knob (VIEW_KNOB's codes) */
+    float big_v;                       /* its arc, gliding to the value */
+    char big_name[16];                 /* its name, under it */
+    uint16_t big_col;                  /* its colour: the layer's, or the accent */
     float oct_v;                       /* the ring's arc, gliding to the level */
     uint32_t prog_gen;                 /* the engine's slots, as last taken (en_prog_gen) */
     uint8_t lane;                      /* the Pattern page: the lane edited */
@@ -1033,18 +1036,33 @@ static void oct_show(int l)                      /* the ring up (from where it w
         ui.oct_v = (float)proj.par[LAYER_LEVEL[l]] * 0.01f;
     ui.oct_ring = (uint8_t)(l + 1);
     ui.oct_until = now + OCT_SHOW;
-    ui.flt_until = 0;                            /* (one ring at a time) */
+    ui.big_until = 0;                            /* (one ring at a time) */
     ui.oct_pulse = now;
 }
-static void flt_show(void)                       /* (1.4.0) the filter's ring up (it glides from where it was) */
+/* (1.4.0, the user's: "the large circle ... take it further"; the screen too small to see what a knob changes) the
+ * big ring: a knob turning shows its value over the middle, large, its name under it; one ring at a time, the last
+ * one turned; it fades out OCT_SHOW after the last click */
+static float big_frac(int k)                     /* the knob's place, 0..1 of its range */
+{
+    int lo, hi;
+    knob_range(k, &lo, &hi);
+    return hi > lo ? (float)(knob_get(k) - lo) / (float)(hi - lo) : 0.0f;
+}
+static void big_show(int k, const char *name, uint16_t col)
 {
     uint32_t now = plat_ms();
-    if (now >= ui.flt_until + OCT_FADE)
-        ui.flt_v = (float)(knob_get(K_FILTER) + 50) * 0.01f;   /* (its range -50..+50, shown x2) */
-    ui.flt_until = now + OCT_SHOW;
+    int i;
+    if (ui.big_k != k || now >= ui.big_until + OCT_FADE)
+        ui.big_v = big_frac(k);
+    ui.big_k = (int16_t)k;
+    for (i = 0; name && name[i] && i < (int)sizeof ui.big_name - 1; i++)
+        ui.big_name[i] = (char)(name[i] >= 'a' && name[i] <= 'z' ? name[i] - 32 : name[i]);
+    ui.big_name[i] = 0;
+    ui.big_col = col;
+    ui.big_until = now + OCT_SHOW;
     ui.oct_ring = 0;                             /* (one ring at a time: the last one turned) */
 }
-static int flt_on(uint32_t now) { return ui.flt_until && now < ui.flt_until + OCT_FADE; }
+static int big_on(uint32_t now) { return ui.big_until && now < ui.big_until + OCT_FADE; }
 static int oct_ring_on(uint32_t now)             /* the ring's layer + 1, while it shows on this page (else 0) */
 {
     if (!ui.oct_ring || now >= ui.oct_until + OCT_FADE || oct_layer(ui.view) != ui.oct_ring - 1)
@@ -1430,7 +1448,7 @@ static void input(void)
             turn(EN_SELECT, K_FILTER, e);
             knob_text(K_FILTER, t);
             say("FILTER", t);
-            flt_show();
+            big_show(K_FILTER, "Filter", K_ACC);
         }
         ui.turn_t = plat_ms();
     }
@@ -1482,6 +1500,14 @@ static void input(void)
                 continue;                        /* (an FM page on a voice that isn't FM: the knobs rest, greyed; the
                                                   * LFO, the fourth, works on every voice) */
             turn(EN_K1 + (int)i, VIEW_KNOB[ui.view][i], e);
+            {   /* (1.4.0) the big ring: the knob's value large over the middle (not where the page itself is the
+                 * picture: the Chords and the Pattern pages; nor Save and the CPU) */
+                static const uint16_t LC[NLAYER] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE};
+                static const uint16_t MC[4] = {K_PAD, K_BELL, K_BASS, K_PULSE};
+                const int k = VIEW_KNOB[ui.view][i], l = oct_layer(ui.view);
+                if (ui.view != V_CHORDS && ui.view != V_PAT && k != K_SAVE && k != K_CPU && k != K_NONE)
+                    big_show(k, KNOB_LABEL[ui.view][i], ui.view == V_MIX ? MC[i] : l >= 0 ? LC[l] : K_ACC);
+            }
             ui.touched = (int8_t)i;
             ui.touch_until = plat_ms() + 1200u;
             ui.act_t = ui.turn_t = plat_ms();
@@ -1625,13 +1651,17 @@ static void arc(int32_t cx, int32_t cy, int32_t r, float v, uint16_t track, uint
 }
 /* a mark across a knob's ring at v (0..1 of its sweep), a little past both its edges: where a knob's behaviour changes
  * (Motion's regions, 40 and 70) */
-static void arc_mark(int32_t cx, int32_t cy, int32_t r, float v, uint16_t col)
+static void arc_mark_th(int32_t cx, int32_t cy, int32_t r, float th, float v, uint16_t col)
 {
-    const float a = (0.375f + 0.75f * v) * FM_TWO_PI, c = fm_cosf(a), sn = fm_sinf(a);
+    const float a = (0.375f + 0.75f * v) * FM_TWO_PI, c = fm_cosf(a), sn = fm_sinf(a), sx = -sn * 0.7f, sy = c * 0.7f;
     float d;
-    for (d = (float)r - 5.2f; d <= (float)r + 1.6f; d += 0.4f)
+    for (d = (float)r - th - 1.8f; d <= (float)r + 1.6f; d += 0.4f) {
         px_blend(cx + (int32_t)(c * d + 0.5f), cy + (int32_t)(sn * d + 0.5f), col, 16u);
+        if (th > 4.0f)                          /* (on the big ring, two pixels wide) */
+            px_blend(cx + (int32_t)(c * d + sx + 0.5f), cy + (int32_t)(sn * d + sy + 0.5f), col, 16u);
+    }
 }
+static void arc_mark(int32_t cx, int32_t cy, int32_t r, float v, uint16_t col) { arc_mark_th(cx, cy, r, 3.4f, v, col); }
 
 static void caps(char *d, const char *s, int n)  /* s in capitals, at most n - 1 characters */
 {
@@ -2524,10 +2554,11 @@ static void draw_slots(void)
 /* the level ring (OCT- / OCT+ on a layer's page): over the middle, the layer's level as a big knob in its colour, the
  * number inside, its name under; the arc glides to the level, a step a brief brightening; muted, grey; it fades out
  * OCT_SHOW after the last press */
+#define BIG_R 40                                 /* (1.4.0) the big rings' radius (the level's, a knob's) */
 static void draw_oct(uint32_t now)
 {
     static const uint16_t C[NLAYER] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE};
-    const int32_t r = 30, cy = 66;
+    const int32_t r = BIG_R, cy = 64;   /* (1.4.0: as large as the big ring) */
     int l = oct_ring_on(now) - 1, f;
     int32_t f2;
     uint16_t c, tr, tx;
@@ -2546,57 +2577,73 @@ static void draw_oct(uint32_t now)
     tr = mix(K_BG, K_LINE, f);
     tx = mix(K_BG, K_TEXT, f);
     c = mix(K_BG, c, f);
-    for (f2 = -(r + 6); f2 <= r + 6; f2++) {     /* (a disc behind it, the middle hidden) */
-        int32_t w = (int32_t)fm_sqrtf((float)((r + 6) * (r + 6) - f2 * f2));
+    for (f2 = -(r + 7); f2 <= r + 7; f2++) {     /* (a disc behind it, the middle hidden) */
+        int32_t w = (int32_t)fm_sqrtf((float)((r + 7) * (r + 7) - f2 * f2));
         cv_rect(CX - w, cy + f2, 2 * w + 1, 1, K_BG);
     }
-    arc_th(CX, cy, r, 5.0f, ui.oct_v, tr, c, K_BG, 0);
+    arc_th(CX, cy, r, 6.0f, ui.oct_v, tr, c, K_BG, 0);
     if ((ui.mutes & LAYER_MUTE[l]) == LAYER_MUTE[l]) {
-        text_c(CX, cy - 6, &FONT_XS, "MUTED", tx);
+        text_c(CX, cy - 12, &FONT_C, "MUTED", tx);
     } else {
         itoa_u((uint32_t)proj.par[LAYER_LEVEL[l]], t);
-        text_c(CX, cy - 11, &FONT_C, t, tx);
+        text_c(CX, cy - 17, &FONT_L, t, tx);
     }
     {
-        int32_t w = text_w(&FONT_XS, LAYER_NAME[l]);
-        cv_round(CX - w / 2 - 4, cy + r - 2, w + 8, 14, 4, K_BG);
-        text_c(CX, cy + r - 2, &FONT_XS, LAYER_NAME[l], c);
+        int32_t w = text_w(&FONT_B, LAYER_NAME[l]);
+        cv_round(CX - w / 2 - 5, cy + r - 1, w + 10, 18, 5, K_BG);
+        text_c(CX, cy + r - 1, &FONT_B, LAYER_NAME[l], c);
     }
 }
 
-/* (1.4.0) the filter's ring (SELECT): over the middle, as the level ring, the filter from Shut (left) through Off (the
- * top) to Open (right), the amount inside, its name under; it fades out OCT_SHOW after the last click */
-static void draw_flt(uint32_t now)
+/* (1.4.0) the big ring: a knob turning (or SELECT's filter) over the middle, its value large inside (the filter: the
+ * amount, Shut or Open under it), its name under the ring; a 0..100 knob an arc from the start, a centred one from
+ * the top, a switch its place; Motion's regions marked; it fades out OCT_SHOW after the last click */
+static void draw_big(uint32_t now)
 {
-    const int32_t r = 30, cy = 66;
-    int v, f;
+    const int32_t r = BIG_R, cy = 64;
+    int k = ui.big_k, v, f, lo, hi;
     int32_t f2;
     uint16_t c, tr, tx;
-    char t[8];
-    if (!flt_on(now))
+    char t[16];
+    const char *under;
+    const felucca_font_t *fn;
+    if (!big_on(now))
         return;
-    v = knob_get(K_FILTER);
-    ui.flt_v += ((float)(v + 50) * 0.01f - ui.flt_v) * 0.55f;   /* (-50..+50, shown as 0..100 each way) */
-    f = now < ui.flt_until ? 16 : 16 - (int)((now - ui.flt_until) * 16u / OCT_FADE);
-    c = mix(K_BG, v ? K_ACC : K_DIM, f);
+    knob_range(k, &lo, &hi);
+    v = knob_get(k);
+    ui.big_v += (big_frac(k) - ui.big_v) * 0.55f;   /* (it glides, ~100 ms) */
+    if (fm_fabsf(big_frac(k) - ui.big_v) < 0.003f)
+        ui.big_v = big_frac(k);
+    f = now < ui.big_until ? 16 : 16 - (int)((now - ui.big_until) * 16u / OCT_FADE);
+    c = mix(K_BG, (lo < 0 && !v) ? K_DIM : ui.big_col, f);
     tr = mix(K_BG, K_LINE, f);
     tx = mix(K_BG, K_TEXT, f);
-    for (f2 = -(r + 6); f2 <= r + 6; f2++) {     /* (a disc behind it, the middle hidden) */
-        int32_t w = (int32_t)fm_sqrtf((float)((r + 6) * (r + 6) - f2 * f2));
+    for (f2 = -(r + 7); f2 <= r + 7; f2++) {     /* (a disc behind it, the middle hidden) */
+        int32_t w = (int32_t)fm_sqrtf((float)((r + 7) * (r + 7) - f2 * f2));
         cv_rect(CX - w, cy + f2, 2 * w + 1, 1, K_BG);
     }
-    arc_th(CX, cy, r, 5.0f, ui.flt_v, tr, c, K_BG, 1);
-    if (!v) {
-        text_c(CX, cy - 6, &FONT_XS, "OFF", tx);
-    } else {
-        itoa_u((uint32_t)(v < 0 ? -2 * v : 2 * v), t);
-        text_c(CX, cy - 11, &FONT_C, t, tx);
+    arc_th(CX, cy, r, 6.0f, ui.big_v, tr, c, K_BG, lo < 0);
+    if (k == P_MOTION) {                         /* (Motion's three regions) */
+        arc_mark_th(CX, cy, r, 6.0f, 0.4f, tx);
+        arc_mark_th(CX, cy, r, 6.0f, 0.7f, tx);
     }
+    under = ui.big_name;
+    if (k == K_FILTER) {                         /* (the filter: the amount large, Shut or Open under it) */
+        if (!v) {
+            t[0] = 'O', t[1] = 'f', t[2] = 'f', t[3] = 0;
+        } else {
+            itoa_u((uint32_t)(v < 0 ? -2 * v : 2 * v), t);
+        }
+        under = v < 0 ? "SHUT" : v > 0 ? "OPEN" : "FILTER";
+    } else {
+        knob_text(k, t);
+    }
+    fn = text_w(&FONT_L, t) <= 2 * r - 14 ? &FONT_L : text_w(&FONT_C, t) <= 2 * r - 8 ? &FONT_C : &FONT_B;
+    text_c(CX, cy - (fn == &FONT_L ? 17 : fn == &FONT_C ? 12 : 9), fn, t, tx);
     {
-        const char *n = v < 0 ? "SHUT" : v > 0 ? "OPEN" : "FILTER";
-        int32_t w = text_w(&FONT_XS, n);
-        cv_round(CX - w / 2 - 4, cy + r - 2, w + 8, 14, 4, K_BG);
-        text_c(CX, cy + r - 2, &FONT_XS, n, c);
+        int32_t w = text_w(&FONT_B, under);
+        cv_round(CX - w / 2 - 5, cy + r - 1, w + 10, 18, 5, K_BG);
+        text_c(CX, cy + r - 1, &FONT_B, under, c);
     }
 }
 
@@ -2651,13 +2698,13 @@ static void draw_main(void)
         h = hash(hash(0x50415454u, ui.lane | (uint32_t)proj.par[P_DMODE] << 4 | (uint32_t)en_drum_pos[0] << 8), en_playing);
         for (i = 0; i < EN_NDRUM; i++)
             h = hash(hash(h, lane_steps((int)i)), (uint32_t)(uint16_t)proj.par[P_DACC0 + i]);
-        h = hash(h, (uint32_t)oct_ring_on(now) | (uint32_t)flt_on(now) << 8);
-        if (h != ui.sig[1] || oct_ring_on(now) || flt_on(now)) {
+        h = hash(h, (uint32_t)oct_ring_on(now) | (uint32_t)big_on(now) << 8);
+        if (h != ui.sig[1] || oct_ring_on(now) || big_on(now)) {
             ui.sig[1] = h;
             cv_begin(240, MAIN_H, K_BG);
             draw_pattern();
             draw_oct(now);
-            draw_flt(now);
+            draw_big(now);
             cv_blit(0, MAIN_Y);
         }
         return;
@@ -2666,11 +2713,11 @@ static void draw_main(void)
         h = hash(hash(0x43484F52u, ui.slot | (uint32_t)proj.par[P_PMODE] << 4), (uint32_t)en_prog_pos + 1u);
         for (i = 0; i < EN_NPROG; i++)
             h = hash(h, (uint32_t)proj.par[P_CR0 + i] | (uint32_t)proj.par[P_CQ0 + i] << 4 | (uint32_t)proj.par[P_CX0 + i] << 8);
-        if (h != ui.sig[1] || flt_on(now)) {
+        if (h != ui.sig[1] || big_on(now)) {
             ui.sig[1] = h;
             cv_begin(240, MAIN_H, K_BG);
             draw_slots();
-            draw_flt(now);
+            draw_big(now);
             cv_blit(0, MAIN_Y);
         }
         return;
@@ -2809,7 +2856,7 @@ static void draw_main(void)
     draw_duck();
     draw_lanes();
     draw_oct(now);
-    draw_flt(now);
+    draw_big(now);
     draw_card(now);
     cv_blit(0, MAIN_Y);
 }
