@@ -363,7 +363,7 @@ GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
   the last one turned; it fades a second after; a new page clears it.
 - **The Bass page's lane:** the bass alone, large, under the ring: this bar's notes as bars as long
   as they hold (an octave note higher), the groove's other notes (those Density leaves out, or a B
-  bar's) as outlines; A or B at its left (bars 4 and 8, the phrase's variant). Turning Groove or
+  bar's) as outlines; at its left, A and B, the phrase's two bars (B: bars 4 and 8), the one playing lit. Turning Groove or
   Density shows there at once, under the big ring.
 - **The Chord page's lane:** the chord's stabs alone, large: each a bar as tall as it was struck (those
   still to come this bar at a middle height), its tail fading for as long as it rings, the echo's
@@ -374,7 +374,7 @@ GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
   so you see them drift against each other), each note a dot at its pitch, the step each loop is on lit,
   brighter as it sounds. Turning Density shows there at once.
 - **The Drums page's lane:** what its knobs move: the kick, a row (orange: a ghost dimmer), and the
-  hats, a row (white: the shaker filled, the open hat an outline), all the same height; A or B at the
+  hats, a row (white: the shaker filled, the open hat an outline), all the same height; A and B at the
   left. Turning Density or Hits shows there at once. (The whole kit is on the Pattern page.)
 
 ![The Space page with FEEDBACK lit as it turns, set to 6.7 s, the line above it saying HOW LONG THE REPEATS GO ON; ECHO 55, ECHO TIME 1/8., REVERB 35](img/screen-turning.png "Turning Feedback on the Space page")

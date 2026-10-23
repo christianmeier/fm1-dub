@@ -2438,6 +2438,13 @@ static void draw_duck(void)                      /* right: the kick's ducking, f
  * as long as they would be; a turn of Groove or Density shows at once; the playhead's column; A or B (bars 4 and 8,
  * the phrase's variant) at the left, level with the root */
 #define BASS_ROOT_Y 120                          /* (the root's row; 1.3 px a semitone, up and down) */
+/* (1.4.0, the user's) the phrase's two bars, A and B, a column at the lane's left: the one playing lit in the
+ * layer's colour, the other grey */
+static void phrase_ab(int b, uint16_t col)
+{
+    text_c(17, 99, &FONT_C, "A", b ? K_LINE : col);
+    text_c(17, 119, &FONT_C, "B", b ? col : K_LINE);
+}
 static int bass_len(uint32_t notes, int i, float gate)   /* a note's length in steps: its gate, to the next note */
 {
     int j, len = (int)(gate + 0.5f);
@@ -2455,7 +2462,7 @@ static void draw_bass_lane(void)
     int i, playing = -1;
     if (en_playing)
         cv_round(38 + pos * 11, 98, 10, 46, 2, K_PANEL);
-    text_c(17, BASS_ROOT_Y - 6, &FONT_C, b ? "B" : "A", K_BASS);
+    phrase_ab(b, K_BASS);
     for (i = 0; i < 16; i++)                     /* the beats: the grid under it */
         cv_rect(40 + i * 11 + 2, 140, 2, (i & 3) ? 2 : 4, (i & 3) ? K_LINE : K_DIM);
     for (i = 0; i < 16; i++)                     /* the note playing: the one whose length covers the playhead */
@@ -2582,7 +2589,7 @@ static void draw_drums_lane(void)
     int i;
     if (en_playing)
         cv_round(38 + pos * 11, 101, 10, 40, 2, K_PANEL);
-    text_c(17, 110, &FONT_C, b ? "B" : "A", K_PULSE);
+    phrase_ab(b, K_PULSE);
     for (i = 0; i < 16; i++) {
         const int32_t x = 40 + i * 11;
         const int now = en_playing && i == pos;
