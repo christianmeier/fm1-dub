@@ -641,6 +641,14 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   (big pips or the name: Groove "Offbeat", Echo time "1/8."), a knob with marks (Motion's 40 and 70 on the big ring,
   where they can be read). And the screen less cluttered around it: what to keep, what to drop (to look at with the
   UI review: the lanes, the level bars, the duck meter, the knob strip's rule and help line).
+- **A layer's page shows its own lane only** (the user, 2026-10-23: "I don't need to see the whole pianoroll ... show
+  only the line that matters, the current voice, even make it bigger ... a good way of visually showing the changes
+  in the pattern when we move the groove knob"). In place of the six lanes: the page's layer large, in its colour, the
+  playhead through the bar: the chord's stabs (each's strength, the throws), the pings' loops (the notes at their
+  pitch), the bass's groove (each note as long as it holds; Groove and Density seen changing), the drums in three
+  thin rows (kick, shaker, open hat), the noise's 32 steps. The B bars (4 and 8) shown as they change. The Dub, Space,
+  Setup pages and PERFORM keep the overview. On a pattern knob (Groove, Density, Hits) the big ring might step
+  aside: the lane itself the feedback. A first piece of the declutter.
 - **A MIDI follow mode** (an arranger; a user, Erich, a guitarist with a MIDI guitar: "takes the played chords as
   they are and arranges the other instruments around it"). Today MIDI in, channel 1, toggles a note in or out of the
   scale (and the clock). Ideas: the chord played (the notes within a short window) becomes the chord playing,
