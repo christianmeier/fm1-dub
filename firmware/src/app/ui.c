@@ -11,7 +11,7 @@
  *                  (held: on); both together, quickly: the layer muted or back (held 5 s: the update mode)
  *   SEL            PERFORM: the keys mute (white 1-5) and solo (black 1-5) the layers and, held, make the dub moves
  *                  (white 7-11); the knobs the master actions (Filter, Dub, Energy, Space), with white 6 held the mix
- *   SELECT         the pages, in the panel's order (with HOME held: the tempo)   ALGORITHM the voice, the walk
+ *   SELECT         the DJ filter, on every page (1.4.0; with HOME held: the tempo)   ALGORITHM the voice, the walk
  *                  (Chords), the noise's character, else the screen   PRESETS the piece
  *   FX ENV LFO GLO / HOME SAVE ARP SEQ   the pages: SPACE, CHORD, BASS, SETUP / DUB, NOISE, PINGS, DRUMS
  *   KNOB 1-4       the page's four values
@@ -223,6 +223,8 @@ static struct {
     uint8_t lock;                      /* Lock (SEL held): each phrase keeps what it has */
     char card_head[16], card_text[24];
     uint32_t oct_until, oct_pulse;     /* the ring: up until, then fading; its last step (a pulse) */
+    uint32_t flt_until;                /* (1.4.0) the filter's ring (SELECT): up until, then fading */
+    float flt_v;                       /* its arc, gliding to the filter */
     float oct_v;                       /* the ring's arc, gliding to the level */
     uint32_t prog_gen;                 /* the engine's slots, as last taken (en_prog_gen) */
     uint8_t lane;                      /* the Pattern page: the lane edited */
@@ -1031,8 +1033,18 @@ static void oct_show(int l)                      /* the ring up (from where it w
         ui.oct_v = (float)proj.par[LAYER_LEVEL[l]] * 0.01f;
     ui.oct_ring = (uint8_t)(l + 1);
     ui.oct_until = now + OCT_SHOW;
+    ui.flt_until = 0;                            /* (one ring at a time) */
     ui.oct_pulse = now;
 }
+static void flt_show(void)                       /* (1.4.0) the filter's ring up (it glides from where it was) */
+{
+    uint32_t now = plat_ms();
+    if (now >= ui.flt_until + OCT_FADE)
+        ui.flt_v = (float)(knob_get(K_FILTER) + 50) * 0.01f;   /* (its range -50..+50, shown x2) */
+    ui.flt_until = now + OCT_SHOW;
+    ui.oct_ring = 0;                             /* (one ring at a time: the last one turned) */
+}
+static int flt_on(uint32_t now) { return ui.flt_until && now < ui.flt_until + OCT_FADE; }
 static int oct_ring_on(uint32_t now)             /* the ring's layer + 1, while it shows on this page (else 0) */
 {
     if (!ui.oct_ring || now >= ui.oct_until + OCT_FADE || oct_layer(ui.view) != ui.oct_ring - 1)
@@ -1412,23 +1424,13 @@ static void input(void)
                 itoa_u((uint32_t)proj.par[P_TEMPO], t);
                 say("TEMPO", t);
             }
-        } else {                                 /* (in the round's order, PAGE_ORDER; at its ends, it stays) */
-            int from = page_of(ui.view), v;
-            if (ui.view == V_MIX || ui.view == V_PERF) {   /* from PERFORM: SELECT leaves it, on from the page it came
-                                                            * from */
-                from = page_of(ui.perf_from);
-                perf_set(0);
-            }
-            if (ui.view == V_CHORDS)
-                from = page_of(ui.chords_from);
-            v = round_pos(from) + (e > 0 ? 1 : -1);
-            if (round_pos(from) >= 0 && v >= 0 && v < NROUND) {
-                if (PAGE_ORDER[v] == V_NSND) {   /* (SAVE then goes back to the page before) */
-                    ui.noise_from = (uint8_t)from;
-                    ui.noise_round = 1;
-                }
-                set_view(PAGE_ORDER[v]);
-            }
+        } else {                                 /* (1.4.0, the user's: the DJ filter, on every page, as PERFORM's
+                                                  * KNOB 1; its notch at Off; a ring while it turns) */
+            char t[12];
+            turn(EN_SELECT, K_FILTER, e);
+            knob_text(K_FILTER, t);
+            say("FILTER", t);
+            flt_show();
         }
         ui.turn_t = plat_ms();
     }
@@ -2562,6 +2564,42 @@ static void draw_oct(uint32_t now)
     }
 }
 
+/* (1.4.0) the filter's ring (SELECT): over the middle, as the level ring, the filter from Shut (left) through Off (the
+ * top) to Open (right), the amount inside, its name under; it fades out OCT_SHOW after the last click */
+static void draw_flt(uint32_t now)
+{
+    const int32_t r = 30, cy = 66;
+    int v, f;
+    int32_t f2;
+    uint16_t c, tr, tx;
+    char t[8];
+    if (!flt_on(now))
+        return;
+    v = knob_get(K_FILTER);
+    ui.flt_v += ((float)(v + 50) * 0.01f - ui.flt_v) * 0.55f;   /* (-50..+50, shown as 0..100 each way) */
+    f = now < ui.flt_until ? 16 : 16 - (int)((now - ui.flt_until) * 16u / OCT_FADE);
+    c = mix(K_BG, v ? K_ACC : K_DIM, f);
+    tr = mix(K_BG, K_LINE, f);
+    tx = mix(K_BG, K_TEXT, f);
+    for (f2 = -(r + 6); f2 <= r + 6; f2++) {     /* (a disc behind it, the middle hidden) */
+        int32_t w = (int32_t)fm_sqrtf((float)((r + 6) * (r + 6) - f2 * f2));
+        cv_rect(CX - w, cy + f2, 2 * w + 1, 1, K_BG);
+    }
+    arc_th(CX, cy, r, 5.0f, ui.flt_v, tr, c, K_BG, 1);
+    if (!v) {
+        text_c(CX, cy - 6, &FONT_XS, "OFF", tx);
+    } else {
+        itoa_u((uint32_t)(v < 0 ? -2 * v : 2 * v), t);
+        text_c(CX, cy - 11, &FONT_C, t, tx);
+    }
+    {
+        const char *n = v < 0 ? "SHUT" : v > 0 ? "OPEN" : "FILTER";
+        int32_t w = text_w(&FONT_XS, n);
+        cv_round(CX - w / 2 - 4, cy + r - 2, w + 8, 14, 4, K_BG);
+        text_c(CX, cy + r - 2, &FONT_XS, n, c);
+    }
+}
+
 /* a nudge's card: a rounded panel in the middle, outlined amber (a nudge) or red (a shake), the layer and its move
  * and what changed; it fades out CARD_SHOW after */
 static void draw_card(uint32_t now)
@@ -2613,12 +2651,13 @@ static void draw_main(void)
         h = hash(hash(0x50415454u, ui.lane | (uint32_t)proj.par[P_DMODE] << 4 | (uint32_t)en_drum_pos[0] << 8), en_playing);
         for (i = 0; i < EN_NDRUM; i++)
             h = hash(hash(h, lane_steps((int)i)), (uint32_t)(uint16_t)proj.par[P_DACC0 + i]);
-        h = hash(h, (uint32_t)oct_ring_on(now));
-        if (h != ui.sig[1] || oct_ring_on(now)) {
+        h = hash(h, (uint32_t)oct_ring_on(now) | (uint32_t)flt_on(now) << 8);
+        if (h != ui.sig[1] || oct_ring_on(now) || flt_on(now)) {
             ui.sig[1] = h;
             cv_begin(240, MAIN_H, K_BG);
             draw_pattern();
             draw_oct(now);
+            draw_flt(now);
             cv_blit(0, MAIN_Y);
         }
         return;
@@ -2627,10 +2666,11 @@ static void draw_main(void)
         h = hash(hash(0x43484F52u, ui.slot | (uint32_t)proj.par[P_PMODE] << 4), (uint32_t)en_prog_pos + 1u);
         for (i = 0; i < EN_NPROG; i++)
             h = hash(h, (uint32_t)proj.par[P_CR0 + i] | (uint32_t)proj.par[P_CQ0 + i] << 4 | (uint32_t)proj.par[P_CX0 + i] << 8);
-        if (h != ui.sig[1]) {
+        if (h != ui.sig[1] || flt_on(now)) {
             ui.sig[1] = h;
             cv_begin(240, MAIN_H, K_BG);
             draw_slots();
+            draw_flt(now);
             cv_blit(0, MAIN_Y);
         }
         return;
@@ -2769,6 +2809,7 @@ static void draw_main(void)
     draw_duck();
     draw_lanes();
     draw_oct(now);
+    draw_flt(now);
     draw_card(now);
     cv_blit(0, MAIN_Y);
 }

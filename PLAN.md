@@ -630,7 +630,15 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   (the reader says it); HOME held + SELECT still the tempo; the pages by their buttons only (a modifier for
   stepping, later, if a reader's user asks). The Dub page's KNOB 1 freed: HOME's first page the Arrangement
   (Evolve, Motion, the dub mixer, Drift).
-- To settle: the pace (in steps, A first, or all at once).
+- The pace: in steps (the user, 2026-10-23): the Filter on SELECT (built), then A (each layer: its part, then its
+  voice; Change per layer), then B (HOME: Arrangement, Song, Key) with song structure and the dub mixer, then C (the
+  space together). Each step tested on the FM-1.
+- **A MIDI follow mode** (an arranger; a user, Erich, a guitarist with a MIDI guitar: "takes the played chords as
+  they are and arranges the other instruments around it"). Today MIDI in, channel 1, toggles a note in or out of the
+  scale (and the clock). Ideas: the chord played (the notes within a short window) becomes the chord playing,
+  latched till the next, the change on the next beat or bar; or the notes played as the allowed notes (his acidbox
+  way: the scale from what you play); a MIDI message for the root and the key. Asked him: his guitar's channels (one
+  a string?), follow the chord or only the notes, when a change lands. A setting on the Song or Key page (B).
 
 ## Now: two lines in parallel (the user, 2026-10-23)
 

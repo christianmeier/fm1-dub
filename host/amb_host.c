@@ -506,6 +506,10 @@ static int expect(const char *what, const char *val)
         got = en_view_layer;
     else if (!strcmp(what, "octring"))            /* the level ring showing: its layer + 1 (0: none) */
         got = oct_ring_on(plat_ms());
+    else if (!strcmp(what, "filter"))             /* (1.4.0) the DJ filter (SELECT, PERFORM's KNOB 1): -50 Shut .. +50 Open */
+        got = ui.mac[0];
+    else if (!strcmp(what, "fltring"))            /* the filter's ring showing (1) or not */
+        got = flt_on(plat_ms());
     else if (!strcmp(what, "dirty"))
         got = ui.dirty;
     else if (!strcmp(what, "store_writes"))

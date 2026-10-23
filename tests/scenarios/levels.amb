@@ -12,58 +12,38 @@ spin K1 76
 key w5 up
 tap HOME
 expect par0 76
-# SELECT's round: Space, Chord, Bass, Setup, Dub, Noise, Pings, Drums (and at its ends it stays)
+# the pages by their buttons (1.4.0: SELECT turns the filter); SAVE from the Chord page: the Noise page; SAVE again
+# Noise space; HOME back
 tap FX
 wait 100
 expect view 5
 shot round_space.png
-turn SELECT -1 100
-expect view 5
-turn SELECT 1 100
-expect view 1
-turn SELECT 1 100
-expect view 3
-turn SELECT 1 100
-expect view 6
-turn SELECT 1 100
-expect view 0
-turn SELECT 1 100
-expect view 19
-wait 100
-shot round_noise.png
-turn SELECT 1 100
-expect view 2
-turn SELECT 1 100
-expect view 4
-wait 100
-shot round_drums.png
-turn SELECT 1 100
-expect view 4
-turn SELECT -3 100
-expect view 0
-# SAVE from the Chord page: the Noise page; SELECT goes on from the Noise page's own place (Pings); SAVE again stays
 tap ENV
 tap SAVE
 expect view 19
-turn SELECT 1 100
-expect view 2
-tap HOME
-turn SELECT 1 100
-expect view 19
+wait 100
+shot round_noise.png
 tap SAVE
 expect view 21
 tap HOME
 expect view 0
-# from a sound page and from PERFORM: on from its layer's page (SELECT leaves PERFORM; so does a page's button,
-# to that page's first, the keys the scale again)
 tap SEQ
+wait 100
+shot round_drums.png
+# SELECT on a sound page and on PERFORM: the filter, the page kept (PERFORM stays on)
 tap SEQ
 expect view 11
 turn SELECT -1 100
-expect view 2
+expect view 11
+turn SELECT 1 100
 tap SEL
+wait 1000
+turn SELECT 3 100
+expect view 17
+expect filter 1
 turn SELECT -1 100
-expect view 19
+expect filter 0
+tap HOME
 said PERFORM OFF
 tap SEL
 wait 200

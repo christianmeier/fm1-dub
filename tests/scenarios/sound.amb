@@ -33,7 +33,7 @@ spin K1 7
 wait 200
 expect par48 5
 said Kick tune +5
-turn SELECT -1
+tap ARP
 wait 300
 expect view 2
 wait 6000

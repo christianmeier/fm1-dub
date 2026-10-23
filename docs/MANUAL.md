@@ -77,7 +77,7 @@ DUB-1 starts playing as soon as it's on. A few minutes with it:
    drums, SAVE the noise, FX the space (again, the Echo page), HOME the whole (the Dub page; again,
    the Key page: tempo, root, mode, swing), GLO the setup. The page's name is at the top right.
    KNOB 1–4 set the four values at the bottom of the screen; while one turns, the line above them
-   says what it does. SELECT steps through the pages, in the order their buttons sit on the panel.
+   says what it does. SELECT is the DJ filter, on every page.
    Try Cutoff on the Chord page, or
    Feedback on the Space page. Or turn the Filter on the Dub page (KNOB 1) down, and
    bring it back. On a layer's page, OCT− and OCT+ turn that layer down and up; both together, a
@@ -108,7 +108,7 @@ The drawing at the top shows them all; here they are in more detail.
 | HOME | The Dub page: the Filter and the machine's movement. Again: the Key page (tempo, root, mode, swing), and again back to Dub; HOME blinks on the Key page. Held on for 1.5 s (nothing turned meanwhile): **a shake of everything**, the chord, the pings, the bass, the drums and the noise at once ("SHAKE ALL"), the page kept; again and again, to explore until something sounds right. Held with SELECT turned: the tempo. |
 | ENV · ARP · LFO · SEQ | The layers' pages: Chord, Pings, Bass, Drums. Again: the layer's sound page, then its FM page (an FM voice) or, for the drums, the Pattern page, then back. Held (half a second): a **nudge** to the layer's sound; held on (1.5 s): a **shake** (below). |
 | FX · GLO | The Space page (FX again: the **Echo page**, FX blinking; again, back); the Setup page, for what holds for every piece (GLO again, it stays). The lit button shows the page. FX held: a nudge to the space; held on: a shake (a new echo time). **GLO held** (half a second, then let go): **saves** all eight pieces (a card, SAVED); held on (1.5 s): the piece back to its recipe (a red card, RESET). |
-| SELECT | The previous or next page, in the order the page buttons sit on the panel, the top row then the bottom one: **Space** (FX), **Chord** (ENV), **Bass** (LFO), **Setup** (GLO), **Dub** (HOME), **Noise** (SAVE), **Pings** (ARP), **Drums** (SEQ). The eight dots under the page's name, top right, show where you are, in the same order. From a sound page, an FM page, the Pattern, Key or Echo page or Noise space, it goes on from its page's place in the round (the Noise page's own, between Dub and Pings); from the Chords page or PERFORM, from the page you came from (and it leaves PERFORM). Hold HOME and turn it for the tempo, from any page. |
+| SELECT | **The DJ filter**, on every page (the same one as PERFORM's KNOB 1 and the Dub page's Filter): left shuts it (a low-pass, under water), right opens it (a high-pass, thin and bright), Off in the middle, where it stops on its way through (three clicks to leave it). While it turns, a big ring in the middle shows it, and the header says it ("FILTER Shut 40"); the page stays. Hold HOME and turn it for the tempo, from any page. The pages are on their buttons; the eight dots under the page's name, top right, show where you are, in the order the buttons sit on the panel. |
 | ALGORITHM | On a layer's page (Chord, Pings, Bass, Drums): that layer's **voice** (see [The voices](#the-voices)). On the Noise pages: its character. On the Chords page: the walk's character (Home, Wander, Free). Anywhere else: the middle of the screen, as ripples, a scope or a spectrum (see [The screen](#4-the-screen)). The mode, a piece's choice, is on the Key page (HOME again). |
 | PRESETS | The piece (see [The pieces](#7-the-pieces)). |
 | KNOB 1–4 | The four values on the screen. A few clicks are always single steps; a quick turn speeds up, so half a turn sweeps the range. While a knob turns, the line above the knobs says what it does. A **centred** knob (0 in the middle: the sound pages' −50…+50 ones, the Noise page's Density, Air and Tone, PERFORM's Filter, Wet and Energy) has a **notch** at 0: turning through, it stops there, and to leave it takes three clicks the same way (the first two are held back). A switch shows its positions as dots, up to ten (Drift, Mode, Algo). A grey knob does nothing there. |
@@ -119,7 +119,7 @@ The drawing at the top shows them all; here they are in more detail.
 **One rule for the buttons:** a button with one page stays on it when you press it again (EDIT,
 SEL, GLO); a button with several steps through them (HOME: Dub, Key; FX: Space, Echo; SAVE: Noise,
 Noise space; a layer's: its page, its sound page, its FM or Pattern page). To leave a page, press
-another page's button or turn SELECT.
+another page's button.
 
 **PERFORM** (SEL). The knobs become the **Perform** page, the master actions, each acting on the
 whole music. Filter, Wet and Energy are 0 in the middle (the piece as it is), with the notch there,
@@ -149,9 +149,9 @@ the music.
 
 **Hold white 6** for the **Mix** page: KNOB 1–4 the levels of the chord, the pings, the bass and the
 drums (the same levels OCT− / OCT+ set on each layer's page), until you let go. A muted layer's knob
-is grey, its level kept. A page's button or SELECT **leaves PERFORM**: the keys are the scale again
+is grey, its level kept. A page's button **leaves PERFORM**: the keys are the scale again
 (the mutes and solos stay), and SEL brings PERFORM back. A page's button goes to its page (HOME: the
-Dub page); SELECT goes on from the page you were on before PERFORM. The keys, from the lowest up,
+Dub page). The keys, from the lowest up,
 are three sets, with white 6 between them. Each key that does something is lit:
 
 | | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 |
@@ -228,7 +228,7 @@ Endless to Loop keeps the eight you see, to catch a progression you like as it g
 Endless, the one playing moves up to slot 1 and the walk goes on.
 
 Editing the slot that's playing is heard at once. The slot playing is lit; in Loop the other pages
-show "2/4" under the chord's name. EDIT again stays; any page's button, or SELECT, leaves the page.
+show "2/4" under the chord's name. EDIT again stays; any page's button leaves the page.
 **EDIT held** (half a second), anywhere, moves to the next chord. The slots are kept with the piece.
 
 **The effects grid** (REC held). After a moment the whole screen shows sixteen effects, four rows of four (the knobs do nothing while it's up);
@@ -526,9 +526,9 @@ The pieces' echo tails run from about 4 to 8 seconds.
 
 ## 8. The pages
 
-One page a part, each on its own button, with four values on KNOB 1–4. SELECT steps through them
-in the order their buttons sit on the panel: Space (FX), Chord (ENV), Bass (LFO), Setup (GLO), then
-Dub (HOME), Noise (SAVE), Pings (ARP), Drums (SEQ). This chapter takes them by layer.
+One page a part, each on its own button, with four values on KNOB 1–4. The buttons sit on the panel
+as Space (FX), Chord (ENV), Bass (LFO), Setup (GLO), then Dub (HOME), Noise (SAVE), Pings (ARP),
+Drums (SEQ), and the page dots follow that order. This chapter takes them by layer.
 
 Each layer's page starts with its **Density** on KNOB 1: how many stabs, pings, bass notes, kicks
 or noise hits.
@@ -691,8 +691,7 @@ comes with the piece (ALGORITHM changes it).
 
 ![The Noise page: VINYL, DENSITY 0, AIR 0, TONE 0, DECAY 50, the noise's spectrum in the middle](img/screen-noise.png "The Noise page")
 
-SAVE, a tap; again, **Noise space** (below), and again back. It's on SELECT's round too, between
-Dub and Pings, and SELECT goes on from there.
+SAVE, a tap; again, **Noise space** (below), and again back.
 The noise isn't a bed of hiss but a voice of its own, played like the drums:
 
 - **The crackle groove:** hits on a two-bar pattern of sixteenths, spread evenly (a Euclidean

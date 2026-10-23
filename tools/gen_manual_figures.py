@@ -89,7 +89,7 @@ def panel(screen_png):
     s = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" role="img" '
          f'aria-label="The FM-1 front panel running AMB-1, each control labelled with what it does">', STYLE,
          f'<rect x="4" y="4" width="{W - 8}" height="{H - 8}" rx="44" fill="{BODY}"/>',
-         knob(105, 92, 24, "MASTER", "Volume"), knob(215, 92, 24, "SELECT", "Page|HOME + it: tempo"),
+         knob(105, 92, 24, "MASTER", "Volume"), knob(215, 92, 24, "SELECT", "Filter|HOME + it: tempo"),
          knob(105, 210, 24, "PRESETS", "Piece"), knob(215, 210, 24, "ALGORITHM", "Voice · screen"),
          f'<rect x="58" y="284" width="210" height="58" rx="14" fill="{TRAY}"/>',
          button(72, 294, 82, 38, "OCT-"), button(170, 294, 82, 38, "OCT+"),

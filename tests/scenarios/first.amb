@@ -34,10 +34,19 @@ tap GLO
 wait 100
 shot setup.png
 expect view 6
-# SELECT steps through the pages in the panel's order (FX ENV LFO GLO, HOME SAVE ARP SEQ): from Setup back to
-# Space, the first, then on to Drums, the last
+# (1.4.0) SELECT turns the DJ filter, on every page (the page stays; its ring shows; the notch at Off holds two
+# clicks back, so three clicks down are Shut 2)
 turn SELECT -3 100
-expect view 5
-turn SELECT 7 100
-expect view 4
+expect view 6
+expect filter -1
+expect fltring 1
+turn SELECT 1 100
+expect filter 0
+wait 1000
+turn SELECT 3 100
+expect filter 1
+turn SELECT -1 100
+expect filter 0
+wait 2000
+expect fltring 0
 tap HOME

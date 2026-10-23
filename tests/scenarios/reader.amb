@@ -25,10 +25,16 @@ wait 300
 said Lights Keys
 spin K3 -1
 wait 300
-# SELECT turns the pages (the panel's order: Space, Chord, Bass, Setup, ...)
-turn SELECT -3
+# the Space page (1.4.0: SELECT turns the filter, said: below)
+tap FX
 wait 300
 said Space page: Echo 
+# SELECT: the filter, said as it turns
+turn SELECT -3 100
+wait 300
+said FILTER
+turn SELECT 1 100
+wait 300
 # the echo times, each in its own words (the words file)
 spin K2 -10
 wait 300
