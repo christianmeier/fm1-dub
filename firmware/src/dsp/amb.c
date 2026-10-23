@@ -504,6 +504,8 @@ volatile float en_bass_gate = 3.0f;
 volatile int8_t en_bass_octn = -1;
 volatile int8_t en_bass_off[16];
 volatile float en_stab_t60 = 0.3f;
+volatile uint16_t en_lane_sh, en_lane_op;
+volatile uint8_t en_kick_v[16], en_hat_v[16];
 volatile uint16_t en_stab_thr;
 volatile uint8_t en_stab_v[16];
 volatile int16_t en_scope[EN_SCOPE_N];
@@ -1930,6 +1932,24 @@ static void lanes(void)
     en_lane[5] = (uint16_t)(lay_bass && !(mutes & EN_M_BASS) && !(perf & EN_PF_KICKDROP) && par[P_BASS] > 0 ? bar_bass : 0u);
     en_bass_gate = fm_minf(GROOVE_GATE[gpat()] * fm_exp2f(rel(P_BLEN)), 15.8f);   /* (the bass's page: its notes' length) */
     en_bass_octn = (int8_t)(ph.oct >= 0 ? ph.oct % (pcount(bar_bass) > 1 ? pcount(bar_bass) : 1) : -1);
+    en_lane_sh = (uint16_t)(hats && lay_hats ? bar_sh : 0u);   /* (the Drums page: the hats apart, and how loud) */
+    en_lane_op = (uint16_t)(hats && (lay_open || fill) ? bar_op : 0u);
+    {
+        int i;
+        for (i = 0; i < 16; i++) {
+            float kv = 1.0f, hv = par[P_DMODE] ? 0.8f : (float)ph.vel[i] * (1.0f / 255.0f);
+            if (bar_k >> i & 1u && i == 14 && !(KSHAPE[kick_shape] >> 14 & 1u))
+                kv = 0.45f;
+            if (!par[P_DMODE] && kick_shape == KS_GHOST && (i == 4 || i == 12))
+                kv = 0.32f;
+            if (par[P_DMODE] && !((uint32_t)(uint16_t)par[P_DACC0] >> i & 1u))
+                kv = 1.0f - 0.006f * (float)par[P_DACCENT];
+            if (par[P_DMODE] && !((uint32_t)(uint16_t)par[P_DACC0 + 1] >> i & 1u))
+                hv = 1.0f - 0.006f * (float)par[P_DACCENT];
+            en_kick_v[i] = (uint8_t)(kv * 255.0f);
+            en_hat_v[i] = (uint8_t)(fm_minf(hv, 1.0f) * 255.0f);
+        }
+    }
 }
 
 /* a pattern's hit: its chance (Play: Pattern only, so Auto's music stays as it was), its accent */

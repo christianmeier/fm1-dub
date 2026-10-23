@@ -373,6 +373,10 @@ GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
 - **The Pings page's lane:** the four loops, a row each (13, 17, 23 and 29 eighths, each across the lane,
   so you see them drift against each other), each note a dot at its pitch, the step each loop is on lit,
   brighter as it sounds. Turning Density shows there at once.
+- **The Drums page's lane:** the kick (a block each, the ghosts lower), the shaker (a tick each, as loud
+  as the phrase's feel has it), the open hat (a ring), the rim and the clap under them (the clap an
+  outline: in Auto it comes only now and then); A or B at the left. Turning Density or Hits shows there
+  at once.
 
 ![The Space page with FEEDBACK lit as it turns, set to 6.7 s, the line above it saying HOW LONG THE REPEATS GO ON; ECHO 55, ECHO TIME 1/8., REVERB 35](img/screen-turning.png "Turning Feedback on the Space page")
 ![The scope: the output as a thick teal line over a dotted centre line, the two traces before it fading behind; Fm7 at the top](img/screen-scope.png "ALGORITHM: the scope")

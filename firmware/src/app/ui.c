@@ -1548,7 +1548,8 @@ static void input(void)
                 static const uint16_t LC[NLAYER] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE};
                 static const uint16_t MC[4] = {K_PAD, K_BELL, K_BASS, K_PULSE};
                 const int k = VIEW_KNOB[ui.view][i], l = oct_layer(ui.view);
-                if ((l == 2 && (k == P_GROOVE || k == P_BNOTES)) || (l == 0 && k == P_STABS) || (l == 1 && k == P_DENSITY)) {   /* (the bass's lane shows it: the ring steps
+                if ((l == 2 && (k == P_GROOVE || k == P_BNOTES)) || (l == 0 && k == P_STABS) || (l == 1 && k == P_DENSITY) ||
+                    (l == 3 && (k == P_KDENS || k == P_HITS))) {   /* (the bass's lane shows it: the ring steps
                                                                       * aside, the header says it) */
                     char t[16];
                     knob_text(k, t);
@@ -2549,14 +2550,60 @@ static void draw_pings_lane(void)
         for (j = 0; j < len; j++) {
             const int32_t x0 = 40 + j * 176 / len, x1 = 40 + (j + 1) * 176 / len - 2;
             const int n = en_loop_note[l][j];
-            if (en_playing && j == at)           /* the step it's on */
-                cv_rect(x0, y - 1, x1 - x0 + 1, 11, K_PANEL);
+            const int32_t xc = (x0 + x1) / 2;     /* (each step's middle: the same marks on every row, not stretched) */
+            if (en_playing && j == at)           /* the step it's on: the same width on every row */
+                cv_round(xc - 4, y - 1, 9, 11, 2, K_PANEL);
             if (n >= 0) {
-                const int32_t ny = y + 5 - (n > 5 ? 5 : n);   /* (the higher the note, the higher in its row) */
+                const int32_t ny = y + 4 - (n > 4 ? 4 : n);   /* (the higher the note, the higher in its row) */
                 const uint16_t c = j == at && en_playing ? mix(K_BELL, K_TEXT, 4 + q16(g) * 12 / 16) : mix(K_BELL_T, K_BELL, 13);
-                cv_round(x0, ny - 1, x1 - x0 + 1 > 7 ? 7 : x1 - x0 + 1, 6, 2, c);
+                cv_disc(xc, ny + 2, 2, c);
             } else {
-                cv_rect(x0 + (x1 - x0) / 2, y + 4, 1, 1, K_LINE);
+                cv_rect(xc, y + 4, 1, 1, K_LINE);
+            }
+        }
+    }
+}
+
+/* (1.4.0) the Drums page: its lanes alone, large. The kick (each a block, the ghosts low), the shaker (a tick each,
+ * as loud as the phrase's feel has it), the open hat (a ring), and the rim and the clap under them when they play;
+ * the playhead's column; A or B at the left (bars 4 and 8, the phrase's variant) */
+static void draw_drums_lane(void)
+{
+    const uint32_t k = en_lane[1], sh = en_lane_sh, op = en_lane_op, rim = en_lane[3], clap = en_lane[4];
+    const int pos = en_drum_pos[0], b = en_phrase_bar == 3 || en_phrase_bar == 7;
+    int i;
+    if (en_playing)
+        cv_round(38 + pos * 11, 98, 10, 46, 2, K_PANEL);
+    text_c(17, 108, &FONT_C, b ? "B" : "A", K_PULSE);
+    for (i = 0; i < 16; i++) {
+        const int32_t x = 40 + i * 11;
+        const int now = en_playing && i == pos;
+        if (k >> i & 1u) {                       /* the kick: a block, the ghosts low */
+            const int h = 4 + en_kick_v[i] * 12 / 255;
+            cv_round(x, 116 - h, 8, h, 2, now ? K_TEXT : en_kick_v[i] < 160 ? mix(K_PULSE_T, K_PULSE, 8) : K_PULSE);
+        } else {
+            cv_rect(x + 3, 114, 2, 2, (i & 3) ? K_LINE : K_DIM);
+        }
+        if (sh >> i & 1u) {                      /* the shaker: a tick, as loud as it plays */
+            const int h = 2 + en_hat_v[i] * 7 / 255;
+            cv_round(x + 2, 129 - h, 4, h, 1, now ? K_TEXT : mix(K_LINE, K_TEXT, 6 + en_hat_v[i] * 10 / 255));
+        }
+        if (op >> i & 1u) {                      /* the open hat: a ring */
+            const uint16_t c = now ? K_TEXT : K_DIM;
+            cv_rect(x + 1, 131, 6, 1, c), cv_rect(x + 1, 137, 6, 1, c);
+            cv_rect(x, 132, 1, 5, c), cv_rect(x + 7, 132, 1, 5, c);
+        }
+        if (rim >> i & 1u)                        /* the rim, the clap: under them */
+            cv_round(x + 1, 140, 6, 3, 1, K_RIM);
+        if (clap >> i & 1u) {                    /* (the clap only now and then in Auto: an outline; its glow when it plays) */
+            if (now && en_drum_glow[4] > 0.5f) {
+                cv_round(x + 1, 139, 6, 4, 1, K_CLAP);
+            } else if (proj.par[P_DMODE] && proj.par[P_DCH4] >= 50) {
+                cv_round(x + 1, 140, 6, 3, 1, K_CLAP);
+            } else {
+                const uint16_t c = mix(K_BG, K_CLAP, 9);
+                cv_rect(x + 1, 139, 6, 1, c), cv_rect(x + 1, 142, 6, 1, c);
+                cv_rect(x + 1, 140, 1, 2, c), cv_rect(x + 6, 140, 1, 2, c);
             }
         }
     }
@@ -2564,6 +2611,10 @@ static void draw_pings_lane(void)
 
 static void draw_lanes(void)
 {
+    if (oct_layer(ui.view) == 3 && ui.view != V_PAT) {   /* (1.4.0) the drums' pages: their lanes alone */
+        draw_drums_lane();
+        return;
+    }
     if (oct_layer(ui.view) == 1) {               /* (1.4.0) the pings' pages: its lane alone */
         draw_pings_lane();
         return;
