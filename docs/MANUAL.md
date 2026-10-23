@@ -602,8 +602,10 @@ the fourth, the LFO, works on every voice.
 - **Feedback:** operator 4 modulating itself, more than the voice's own (0) towards gritty, and
   noise.
 - **LFO:** a slow sweep in time with the bars, 0 (off) to 100 (the deepest). The chord: its
-  filter, up to an octave and a half either way, over two bars; the pings: their brightness (how
-  hard the modulators work), over a bar; the bass: its bite, over four bars. The pieces sweep their
+  filter, up to two and a half octaves either way, over two bars (gently low on the knob, deep near
+  the top); the pings: their brightness (how hard the modulators work), over a bar; the bass: its
+  Shape, over four bars, around the Shape knob's own (up to 25 either way: a sine leaning to a
+  square and back). The pieces sweep their
   chords a little (20 to 30) and leave the pings and the bass still.
 
 Algo and Ratio are relative to the voice (Voice, 0); Feedback and the LFO start from the voice as

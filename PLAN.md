@@ -662,6 +662,15 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   way: the scale from what you play); a MIDI message for the root and the key. Asked him: his guitar's channels (one
   a string?), follow the chord or only the notes, when a change lands. A setting on the Song or Key page (B).
 
+- **The LFO as structure** (the user, 2026-10-23, for the redesign, step A): "The LFO is an important part of the
+  structure of each voice, and I would put its knob next to the groove one." The Bass's pages, the user's layout:
+  first (structure) **Groove, LFO, Density, Fifth**; second (its sound) **Octave, Shape, Gate, Glide**; third (the
+  FM voice) **Algo, Ratio, Feedback, Bite**. The other layers alike: the LFO among the part's knobs, the FM page
+  without it. Built already (1.4.0): the bass's LFO moves Shape (±25 around the knob's), not the Bite; the chord's
+  sweeps deeper (±2.5 octaves at 100, on a curve so the pieces' 20-30 stay as they were).
+- **The noise's LFO seen** (the user's idea): a sine moving behind the Noise page's two rows of hits, its crest
+  where the rings are brightest.
+
 ## Now: two lines in parallel (the user, 2026-10-23)
 
 After 1.3.0's release (the docs done, e20d31b..e10ddf4; a release video being made in build/film/release-1.3.0/):
