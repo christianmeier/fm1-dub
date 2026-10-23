@@ -267,7 +267,7 @@ save it (GLO held) or keep it with Lock (SEL held).
 |---|---|
 | ENV | the chord: Attack, Colour, Reso, its Decay and Cutoff a little; on an FM voice, its ratio and feedback |
 | ARP | the pings: Tone, Ratio, Length, Bend, Wet (an FM voice: its ratio and feedback); now and then one note of one loop |
-| LFO | the bass: Bite, Shape, Length, Slide, the Fifth (an FM voice: its ratio and feedback); its shake also moves the **groove** to a neighbour (Drone, Offbeat, Dotted, Sync, Roller, in that row) |
+| LFO | the bass: Bite, Shape, Gate, Glide, the Fifth (an FM voice: its ratio and feedback); its shake also moves the **groove** to a neighbour (Drone, Offbeat, Dotted, Sync, Roller, in that row) |
 | SEQ | the drums: the kick's tune, length and punch, the hats' tone (the Drums page's Tone) and level |
 | SAVE | the noise: Tone, Density, Decay, Air; its shake: another noise character |
 | FX | the space: the echo's send and feedback (smaller steps), the reverb, the plate's size, the cloud; its shake: a new echo time |
@@ -610,7 +610,7 @@ ALGORITHM's view, the scope or the spectrum of its sound), with the chord's name
 |---|---|---|---|---|
 | Chord | **Attack**: 0 the voice's strike, up to a slow swell | **Decay**: how long a stab rings, 0–100, from 60 ms to 1.5 s (times the voice's own length) | **Colour**: as each voice has it: the saws' detune, the FM voices' brightness, the organs' upper drawbars, the noise against its saw | **Reso**: the filter's resonance |
 | Pings | **Tone**: round to metallic (moves the piece's Ping tone) | **Ratio**: the FM modulator, from harmonic to clangy | **Length** | **Bend**: the pitch falling at the strike, 0 the voice's own, up to from four times its note |
-| Bass | **Bite**: drive, and Growl's bite | **Shape**: up, towards a square; down, towards a pure sine | **Length**: how long each note holds, against its groove's | **Slide**: the glide between notes, ~1 ms to ~250 ms |
+| Bass | **Bite**: drive, and Growl's bite | **Shape**: up, towards a square; down, towards a pure sine | **Gate**: how long each note holds, against its groove's | **Glide**: how long it slides to the next note, ~1 ms to ~250 ms |
 | Drums | **Kick tune**: semitones from the key's note, −12 to +12 | **Kick len** | **Punch**: the kick's start pitch and its click | **Hat len**: how long the shaker and the open hat ring, from about half the kit's to twice |
 
 The chord's Decay is the voice's length times its own: an Organ or a Pad rings longer than Saws at
@@ -1040,7 +1040,7 @@ The defaults are Basic's; each piece has its own.
 | Chord sound | Colour, Reso | −50 – +50 | 0 |
 | Ping sound | Tone, Ratio, Length | −50 – +50 | 0 |
 | Ping sound | Bend | 0–100 (from the voice's own) | 0 |
-| Bass sound | Bite, Shape, Length, Slide | −50 – +50 | 0 |
+| Bass sound | Bite, Shape, Gate, Glide | −50 – +50 | 0 |
 | Chord, Ping, Bass FM | Algo | Voice, 1–8, 2-op | Voice |
 | Chord, Ping, Bass FM | Ratio | −50 – +50 | 0 |
 | Chord, Ping, Bass FM | Feedback (from the voice's own) | 0–100 | 0 |

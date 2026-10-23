@@ -119,7 +119,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Chord", "Pings", "Bass", "Drums"},
     {"Attack", "Decay", "Colour", "Reso"},
     {"Tone", "Ratio", "Length", "Bend"},
-    {"Bite", "Shape", "Length", "Slide"},
+    {"Bite", "Shape", "Gate", "Glide"},          /* (1.4.0, the user's: the common words) */
     {"Kick tune", "Kick len", "Punch", "Hat len"},
     {"Algo", "Ratio", "Feedback", "LFO"},
     {"Algo", "Ratio", "Feedback", "LFO"},
@@ -154,7 +154,7 @@ static const char *const KNOB_HELP[NVIEWS][4] = {
      "The filter's resonance"},
     {"The ping, round to metallic", "The modulator: harmonic to clangy", "How long each ping rings",
      "The pitch falling at the strike"},
-    {"Drive: clean to growling", "A pure sine, to a square", "How long each note holds", "The glide between notes"},
+    {"Drive: clean to growling", "A pure sine, to a square", "How long each note holds (its gate)", "How long it slides to the next"},
     {"The kick's pitch, in semitones", "How long the kick booms", "The kick's click and start pitch",
      "How long the hats ring"},
     {"Which operators modulate which", "Operators 3 and 4's pitch", "Op 4 on itself: pure to gritty",
@@ -2409,52 +2409,46 @@ static void draw_duck(void)                      /* right: the kick's ducking, f
 
 /* below: the bar, a lane a layer. On a layer's page (and its sound pages) its lanes as ever, the others in grey (the
  * pings and the noise have none: all grey) */
-/* (1.4.0, the user's: "show only the line that matters, the current voice, even make it bigger") the bass's page: its
- * lane alone, large. This bar's notes as bars as long as they hold (the octave note higher), the groove's other notes
- * (left out by Density, or this bar's variant) as outlines, so a turn of Groove or Density shows at once; the playhead's
- * column; A or B (bars 4 and 8, the phrase's variant) at the left */
+/* (1.4.0, the user asked: "show only the line that matters, the current voice, even make it bigger") the bass's page:
+ * its lane alone, large. Each note at its pitch against the root's (the fifth above or below, the octave note up), as
+ * long as it holds: this bar's filled, the groove's others (left out by Density, or this bar's variant) as outlines
+ * as long as they would be; a turn of Groove or Density shows at once; the playhead's column; A or B (bars 4 and 8,
+ * the phrase's variant) at the left, level with the root */
+#define BASS_ROOT_Y 120                          /* (the root's row; 1.3 px a semitone, up and down) */
+static int bass_len(uint32_t notes, int i, float gate)   /* a note's length in steps: its gate, to the next note */
+{
+    int j, len = (int)(gate + 0.5f);
+    for (j = i + 1; j < 16 && !(notes >> j & 1u); j++)
+        ;
+    if (len > j - i)
+        len = j - i;
+    return len < 1 ? 1 : len;
+}
 static void draw_bass_lane(void)
 {
     const uint32_t bar = en_lane[5], groove = en_groove(en_groove_pat(proj.par[P_GROOVE]));
     const int pos = en_drum_pos[0], b = en_phrase_bar == 3 || en_phrase_bar == 7;
     const float gate = en_bass_gate;
-    int i, n = 0, playing = -1;
+    int i, playing = -1;
     if (en_playing)
-        cv_round(38 + pos * 11, 104, 10, 40, 2, K_PANEL);
-    text_c(18, 112, &FONT_B, b ? "B" : "A", b ? K_BASS : K_DIM);
+        cv_round(38 + pos * 11, 98, 10, 46, 2, K_PANEL);
+    text_c(17, BASS_ROOT_Y - 6, &FONT_C, b ? "B" : "A", K_BASS);
     for (i = 0; i < 16; i++)                     /* the beats: the grid under it */
-        cv_rect(40 + i * 11 + 2, 139, 2, (i & 3) ? 2 : 4, (i & 3) ? K_LINE : K_DIM);
-    for (i = 0; i < 16; i++) {                   /* the note playing, if one is: the one whose length covers the playhead */
-        int j, len;
-        if (!(bar >> i & 1u))
-            continue;
-        for (j = i + 1; j < 16 && !(bar >> j & 1u); j++)
-            ;
-        len = (int)(gate + 0.5f);
-        if (len > j - i)
-            len = j - i;
-        if (len < 1)
-            len = 1;
-        if (en_playing && pos >= i && pos < i + len)
+        cv_rect(40 + i * 11 + 2, 140, 2, (i & 3) ? 2 : 4, (i & 3) ? K_LINE : K_DIM);
+    for (i = 0; i < 16; i++)                     /* the note playing: the one whose length covers the playhead */
+        if (bar >> i & 1u && en_playing && pos >= i && pos < i + bass_len(bar, i, gate))
             playing = i;
-    }
     for (i = 0; i < 16; i++) {
-        int32_t x = 40 + i * 11;
-        if (bar >> i & 1u) {                     /* a note this bar plays: as long as it holds, the octave one higher */
-            int j, len, up = n == en_bass_octn && i;
-            for (j = i + 1; j < 16 && !(bar >> j & 1u); j++)
-                ;
-            len = (int)(gate + 0.5f);
-            if (len > j - i)
-                len = j - i;
-            if (len < 1)
-                len = 1;
-            cv_round(x, up ? 108 : 123, len * 11 - 3, 11, 4, i == playing ? K_BASS : mix(K_BASS_T, K_BASS, 9));
-            n++;
-        } else if (groove >> i & 1u) {           /* the groove's, not played this bar: an outline */
-            uint16_t c = mix(K_BG, K_BASS_T, 14);
-            cv_rect(x + 1, 123, 6, 1, c), cv_rect(x + 1, 133, 6, 1, c);
-            cv_rect(x, 124, 1, 9, c), cv_rect(x + 7, 124, 1, 9, c);
+        const int32_t x = 40 + i * 11, y = BASS_ROOT_Y - (int32_t)((float)en_bass_off[i] * 1.3f) - 5;
+        if (bar >> i & 1u) {                     /* a note this bar plays */
+            cv_round(x, y, bass_len(bar, i, gate) * 11 - 3, 10, 4, i == playing ? K_BASS : mix(K_BASS_T, K_BASS, 9));
+        } else if (groove >> i & 1u) {           /* the groove's, not played this bar: an outline, as long as it'd be */
+            const int32_t w = bass_len(groove, i, gate) * 11 - 3;
+            const uint16_t c = mix(K_BG, K_BASS_T, 14);
+            cv_rect(x + 2, y, w - 4, 1, c), cv_rect(x + 2, y + 9, w - 4, 1, c);
+            cv_rect(x, y + 2, 1, 6, c), cv_rect(x + w - 1, y + 2, 1, 6, c);
+            cv_rect(x + 1, y + 1, 1, 1, c), cv_rect(x + w - 2, y + 1, 1, 1, c);
+            cv_rect(x + 1, y + 8, 1, 1, c), cv_rect(x + w - 2, y + 8, 1, 1, c);
         }
     }
 }

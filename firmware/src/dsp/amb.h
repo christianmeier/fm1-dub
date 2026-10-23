@@ -218,7 +218,9 @@ extern volatile uint8_t en_nev_k[EN_NEV_N], en_nev_s[EN_NEV_N], en_nev_p[EN_NEV_
 extern volatile uint32_t en_nev_w;
 extern volatile uint16_t en_lane[6];
 extern volatile float en_bass_gate;              /* (1.4.0, the bass's page) how long its notes hold, in sixteenths */
-extern volatile int8_t en_bass_octn;             /* which of this bar's bass notes is an octave up (0..; -1: none) */           /* this bar as it plays: the stabs, the kick, the hats, the rim, the clap, the bass */
+extern volatile int8_t en_bass_octn;             /* which of this bar's bass notes is an octave up (0..; -1: none) */
+extern volatile int8_t en_bass_off[16];          /* each groove step's note, in semitones from the root's (the fifth
+                                                  * above or below, the octave note up): this bar's */           /* this bar as it plays: the stabs, the kick, the hats, the rim, the clap, the bass */
 
 /* the pure parts, for the tests and the screen */
 uint32_t en_euclid(int k, int n, int rot);     /* Bjorklund's pattern, as a bitmask (bit 0 = step 0) */

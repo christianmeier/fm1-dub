@@ -37,7 +37,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     {"Ping voice", 0, EN_NPV - 1, 0}, {"Bass voice", 0, EN_NBV - 1, 0}, {"Kit", 0, EN_NKIT - 1, 0},
     {"Attack", 0, 100, 0},   {"Colour", -50, 50, 0},   {"Resonance", -50, 50, 0}, {"Env amount", -50, 50, 0},
     {"Tone", -50, 50, 0},     {"Ratio", -50, 50, 0},    {"Ping len", -50, 50, 0}, {"Bend", 0, 100, 0},
-    {"Bite", -50, 50, 0},     {"Shape", -50, 50, 0},    {"Bass len", -50, 50, 0}, {"Slide", -50, 50, 0},
+    {"Bite", -50, 50, 0},     {"Shape", -50, 50, 0},    {"Gate", -50, 50, 0},     {"Glide", -50, 50, 0},
     {"Kick tune", -12, 12, 0}, {"Kick len", -50, 50, 0}, {"Punch", -50, 50, 0},   {"Hat tone", -50, 50, 0},
     {"Chord alg", 0, 9, 0},   {"Chord ratio", -50, 50, 0}, {"Chord fb", 0, 100, 0}, {"Chord LFO", 0, 100, 0},
     {"Ping alg", 0, 9, 0},    {"Ping ratio", -50, 50, 0}, {"Ping fb", 0, 100, 0}, {"Ping LFO", 0, 100, 0},
@@ -502,6 +502,7 @@ volatile uint8_t en_stab_thrown;
 volatile uint16_t en_lane[6];
 volatile float en_bass_gate = 3.0f;
 volatile int8_t en_bass_octn = -1;
+volatile int8_t en_bass_off[16];
 volatile int16_t en_scope[EN_SCOPE_N];
 volatile uint32_t en_scope_w;
 volatile int16_t en_spec[EN_SPEC_N];
@@ -917,7 +918,7 @@ static struct {
     uint8_t vel[16], late[16];                   /* (the hats' feel: each step's accent, its lateness) */
 } ph;
 static uint32_t ph_rng = 0x2545F491u;
-static uint32_t bar_k, bar_sh, bar_op, bar_bass;   /* this bar's: the kick's, the shaker's, the open hat's, the bass's */
+static uint32_t bar_k, bar_sh, bar_op, bar_bass, bar_fifth;   /* (bar_fifth: the bass's notes on the fifth) */   /* this bar's: the kick's, the shaker's, the open hat's, the bass's */
 static int ph_st;                                /* (the step a drum hit is on: its lateness) */
 static void noise_pattern(void);
 static int cr_dbars;                            /* bars till the drifts' next targets (on a barline) */
@@ -1629,11 +1630,13 @@ static void drums_wait_step(int32_t k)          /* k samples went by: hits whose
 }
 
 /* ----------------------------------------------------------------- bass --- */
-static void bass_hit(int first, int up)
+static void bass_hit(int first, int up, int st)
 {
-    int pc = chord_pcs[0], n, g = par[P_GROOVE];
-    if ((!first || g == 0) && chord_nt >= 3 && frand() < (float)par[P_FIFTH] * 0.01f)
-        pc = chord_pcs[2];                      /* the fifth (with Drone: a whole bar of it) */
+    int pc = chord_pcs[0], n;
+    (void)first;
+    if (chord_nt >= 3 && bar_fifth >> st & 1u)  /* the fifth (with Drone: a whole bar of it); (1.4.0) from the phrase's
+                                                  * plan, the same each A bar, not drawn at each note: the screen shows it */
+        pc = chord_pcs[2];
     n = bass_note(pc);
     if (!first && up)
         n += 12;                                /* now and then, an octave up */
@@ -1769,6 +1772,27 @@ static void ph_bar(int pb)
         bar_bass = g | 1u << 14;
     else if (b)                                   /* (B, sparse: every other of A's, the first kept) */
         bar_bass = ph_thin(bar_bass, pcount(bar_bass) / 2 - (f ? 1 : 0), f, 4u);
+    {   /* (1.4.0) the bass's fifths, drawn from the phrase's seed (Fifth: how many), the same each A bar; each groove
+         * step's note against the root's, for the screen */
+        const uint32_t fst = bar_bass & (0u - bar_bass);
+        const int root = bass_note(chord_pcs[0]), drone = par[P_GROOVE] == 0;
+        int i, k = 0, cnt = pcount(bar_bass) > 1 ? pcount(bar_bass) : 1;
+        bar_fifth = 0u;
+        for (i = 0; i < 16; i++) {
+            int off = 0;
+            if (g >> i & 1u || bar_bass >> i & 1u) {
+                if (chord_nt >= 3 && (drone || !(fst >> i & 1u)) &&
+                    (float)(ph_hash(ph.seed ^ 0xF1F7u * (uint32_t)(i + 1)) >> 8) * (1.0f / 16777216.0f) < (float)par[P_FIFTH] * 0.01f)
+                    bar_fifth |= 1u << i, off = bass_note(chord_pcs[2]) - root;
+                if (bar_bass >> i & 1u) {
+                    if (ph.oct >= 0 && k == ph.oct % cnt && i)
+                        off += 12;
+                    k++;
+                }
+            }
+            en_bass_off[i] = (int8_t)off;
+        }
+    }
     if (par[P_DMODE]) {                          /* (Pattern: yours, each step's Chance on the grid) */
         bar_k = dpat(0), bar_sh = dpat(1), bar_op = dpat(2);
         return;
@@ -1959,7 +1983,8 @@ static void tick(void)
         /* (1.3.0) the bar's notes, from the plan (Density and Energy: which rest, the same each A bar); the octave
          * note, if the plan has one, the same place each bar */
         const uint32_t first = bar_bass & (0u - bar_bass), below = bar_bass & ((1u << st) - 1u);
-        bass_hit(first >> st & 1u, ph.oct >= 0 && pcount(below) == ph.oct % (pcount(bar_bass) > 1 ? pcount(bar_bass) : 1) && st);
+        bass_hit(first >> st & 1u, ph.oct >= 0 && pcount(below) == ph.oct % (pcount(bar_bass) > 1 ? pcount(bar_bass) : 1) && st,
+                 st);
     }
     if (en_stab_pat >> st & 1u) {               /* (the random draws made muted or not: the music goes on the same) */
         uint32_t later = en_stab_pat >> (st + 1);
