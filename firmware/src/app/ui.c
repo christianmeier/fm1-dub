@@ -2666,6 +2666,8 @@ static void draw_noise_lane(void)
     const int st = en_nz_step, bar2 = st >= 16;
     const float step_s = proj.par[P_TEMPO] > 0 ? 15.0f / (float)proj.par[P_TEMPO] : 0.12f;
     const int tail = (int)(en_nz_t60 * 0.5f / step_s + 0.5f);   /* (to about -30 dB, in sixteenths) */
+    const int amp = proj.par[P_NLFO] * 7 / 100;  /* (the LFO's wave: 7 px either way at 100, clear of the other row) */
+    const uint16_t wave = mix(K_BG, K_NOISE, 6);
     int r, i, k;
     text_c(17, 99, &FONT_C, "1", bar2 ? K_LINE : K_NOISE);
     text_c(17, 119, &FONT_C, "2", bar2 ? K_NOISE : K_LINE);
@@ -2673,6 +2675,21 @@ static void draw_noise_lane(void)
         const int32_t y = r ? 126 : 106;
         if (en_playing && (st >= 16) == r)
             cv_round(38 + (st & 15) * 11, y - 5, 10, 20, 2, K_PANEL);
+        if (amp > 0) {                           /* (1.4.0, the user's) behind the hits, the LFO: the rings' tone over
+                                                  * the bar, a cycle a row, brightest (up) on beat 2; as tall as deep */
+            int32_t x, y0 = 0;
+            for (x = 36; x <= 214; x++) {
+                const int32_t yy = y + 5 - (int32_t)((float)amp * fm_sinf(6.2831853f * (float)(x - 43) * (1.0f / 176.0f)) + 0.5f);
+                const int32_t a0 = x == 36 ? yy : y0 < yy ? y0 : yy, a1 = x == 36 ? yy : y0 > yy ? y0 : yy;
+                cv_rect(x, a0, 1, a1 - a0 + 1, wave);
+                y0 = yy;
+            }
+            if (en_playing && (st >= 16) == r) {  /* (a dot on it where the sound is now) */
+                const int32_t xd = 43 + (st & 15) * 11;
+                cv_round(xd - 2, y + 5 - (int32_t)((float)amp * fm_sinf(6.2831853f * (float)(st & 15) * (1.0f / 16.0f)) + 0.5f) - 2,
+                         5, 5, 2, K_NOISE);
+            }
+        }
         for (i = 0; i < 16; i++) {
             const int s = r * 16 + i;
             const int32_t x = 40 + i * 11;
@@ -3127,6 +3144,7 @@ static void draw_main(void)
     for (i = 0; i < EN_NDRUM; i++)
         h = hash(h, (uint32_t)q16(en_drum_glow[i]));
     h = hash(h, ui.view | (uint32_t)oct_ring_on(now) << 8);
+    h = hash(h, (uint32_t)proj.par[P_NLFO]);     /* (the Noise pages' wave: as deep as the LFO) */
     if (parent_of(ui.view) >= 0) {               /* a sound or FM page: redrawn as its values move */
         for (i = 0; i < 4; i++)
             h = hash(h, (uint32_t)(proj.par[VIEW_KNOB[ui.view][i]] + 64));
