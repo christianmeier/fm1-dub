@@ -504,6 +504,9 @@ volatile float en_bass_gate = 3.0f;
 volatile int8_t en_bass_octn = -1;
 volatile int8_t en_bass_off[16];
 volatile float en_stab_t60 = 0.3f;
+volatile uint32_t en_nz_pat;
+volatile uint8_t en_nz_vel[32], en_nz_step;
+volatile float en_nz_t60 = 0.3f;
 volatile uint16_t en_lane_sh, en_lane_op;
 volatile uint8_t en_kick_v[16], en_hat_v[16];
 volatile uint16_t en_stab_thr;
@@ -3542,6 +3545,9 @@ static void noise_pattern(void)
     nz_pat = p;
     for (i = 0; i < 32; i++)
         nz_vel[i] = (uint8_t)(cr_u() < 0.15f ? 64 : 180 + (int)(cr_u() * 75.0f));   /* (a ghost now and then) */
+    en_nz_pat = p;                               /* (the Noise page's lane) */
+    for (i = 0; i < 32; i++)
+        en_nz_vel[i] = nz_vel[i];
 }
 static float nz_note(int pc) { return mtof((float)(28 + (pc + 8) % 12)); }   /* octave 1: E1 .. Eb2 */
 /* a sixteenth (tick): the hit struck for it told; the next step's, if the groove has one, struck ahead of its tick by
@@ -3549,6 +3555,7 @@ static float nz_note(int pc) { return mtof((float)(28 + (pc + 8) % 12)); }   /* 
  * mid-ring); a dry click on the grid now and then (the character's loose ones at random: render_crackle) */
 static void noise_step(int s)
 {
+    en_nz_step = (uint8_t)(s & 31);              /* (the Noise page: the step playing) */
     const unsigned c = nz_char();
     const int nx = (s + 1) & 31;
     float f[3], v, gap, lead = 0.0f;
@@ -3631,6 +3638,8 @@ static void render_crackle(uint32_t n)
         float dec = fm_clampf((float)par[P_NTUNE] * 0.01f + 0.3f * NCHAR[c].dec + 0.15f * sg +
                               0.3f * (cr_dv[3] - 1.0f), 0.0f, 1.0f), t;
         cg = 0.8f + 0.18f * dec;
+        en_nz_t60 = NCHAR[c].res > 0.0f ? 0.07f * fm_exp2f(4.1f * dec) : 0.02f;   /* (the Noise page: ~70 ms .. ~1.2 s;
+                                                  * Dust's dry bursts short) */
         t = fm_clampf(nc + 0.7f * (cr_dv[1] - 1.0f) + 0.4f * arcm + lfo_n, -1.0f, 1.0f);   /* (and its LFO) */
         bf = 2.0f * fm_sinf(FM_PI * fm_minf(700.0f * fm_exp2f(1.5f * t), 2400.0f) / TAPE_SR);
         lpk = fm_clampf(0.72f + 0.22f * t, 0.3f, 0.97f);

@@ -2609,8 +2609,43 @@ static void draw_drums_lane(void)
     }
 }
 
+/* (1.4.0) the Noise pages: its groove alone, large: two bars of sixteenths, a row each (1 above 2), each hit a block
+ * as strong as it is (a ghost lower), its ring a tail fading as long as it rings; 1 and 2 at the left, the bar
+ * playing lit; the playhead in its row. (The dry clicks come at random: not shown) */
+static void draw_noise_lane(void)
+{
+    const uint32_t p = ((ui.mutes & EN_M_NOISE) || !proj.par[P_CRACKLE]) ? 0u : en_nz_pat;
+    const int st = en_nz_step, bar2 = st >= 16;
+    const float step_s = proj.par[P_TEMPO] > 0 ? 15.0f / (float)proj.par[P_TEMPO] : 0.12f;
+    const int tail = (int)(en_nz_t60 * 0.5f / step_s + 0.5f);   /* (to about -30 dB, in sixteenths) */
+    int r, i, k;
+    text_c(17, 99, &FONT_C, "1", bar2 ? K_LINE : K_NOISE);
+    text_c(17, 119, &FONT_C, "2", bar2 ? K_NOISE : K_LINE);
+    for (r = 0; r < 2; r++) {
+        const int32_t y = r ? 126 : 106;
+        if (en_playing && (st >= 16) == r)
+            cv_round(38 + (st & 15) * 11, y - 5, 10, 20, 2, K_PANEL);
+        for (i = 0; i < 16; i++) {
+            const int s = r * 16 + i;
+            const int32_t x = 40 + i * 11;
+            if (p >> s & 1u) {
+                const int h = 4 + en_nz_vel[s] * 10 / 255, now = en_playing && s == st;
+                for (k = 1; k <= tail && i + k < 16 && !(p >> (s + k) & 1u); k++)   /* its ring, fading */
+                    cv_rect(x + k * 11 - 4, y + 4, 11, 2, mix(K_BG, mix(K_BG, K_NOISE, 9), 16 - k * 14 / (tail + 1)));
+                cv_round(x, y + 5 - h / 2, 7, h, 2, now ? K_TEXT : en_nz_vel[s] < 100 ? mix(K_BG, K_NOISE, 9) : K_NOISE);
+            } else {
+                cv_rect(x + 3, y + 4, 2, 2, (i & 3) ? K_LINE : K_DIM);
+            }
+        }
+    }
+}
+
 static void draw_lanes(void)
 {
+    if (ui.view == V_NSND || ui.view == V_NSND2) {   /* (1.4.0) the Noise pages: its groove alone */
+        draw_noise_lane();
+        return;
+    }
     if (oct_layer(ui.view) == 3 && ui.view != V_PAT) {   /* (1.4.0) the drums' pages: their lanes alone */
         draw_drums_lane();
         return;

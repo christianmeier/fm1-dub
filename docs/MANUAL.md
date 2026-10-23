@@ -376,6 +376,10 @@ GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
 - **The Drums page's lane:** what its knobs move: the kick, a row (orange: a ghost dimmer), and the
   hats, a row (white: the shaker filled, the open hat an outline), all the same height; A and B at the
   left. Turning Density or Hits shows there at once. (The whole kit is on the Pattern page.)
+- **The Noise pages' lane:** its groove, two bars of sixteenths, a row each (1 above 2), each hit a block
+  as strong as it is (a ghost lower), its ring a tail fading as long as it rings (Decay); 1 and 2 at the
+  left, the bar playing lit. A new groove (Density, a phrase's start) shows when it's drawn; the dry
+  clicks come at random and aren't shown.
 
 ![The Space page with FEEDBACK lit as it turns, set to 6.7 s, the line above it saying HOW LONG THE REPEATS GO ON; ECHO 55, ECHO TIME 1/8., REVERB 35](img/screen-turning.png "Turning Feedback on the Space page")
 ![The scope: the output as a thick teal line over a dotted centre line, the two traces before it fading behind; Fm7 at the top](img/screen-scope.png "ALGORITHM: the scope")
