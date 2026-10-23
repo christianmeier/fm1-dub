@@ -500,6 +500,8 @@ volatile uint32_t en_stab_pat, en_throws, en_stabs;
 volatile float en_stab_vel, en_echo_ms, en_echo_g, en_echo_in, en_duck;
 volatile uint8_t en_stab_thrown;
 volatile uint16_t en_lane[6];
+volatile float en_bass_gate = 3.0f;
+volatile int8_t en_bass_octn = -1;
 volatile int16_t en_scope[EN_SCOPE_N];
 volatile uint32_t en_scope_w;
 volatile int16_t en_spec[EN_SPEC_N];
@@ -1899,6 +1901,8 @@ static void lanes(void)
     en_lane[3] = (uint16_t)(hats && lay_hats ? dpat(3) : 0u);
     en_lane[4] = (uint16_t)(hats && (sec == SEC_FULL || sec == SEC_GROOVE || par[P_DMODE]) ? dpat(4) : 0u);
     en_lane[5] = (uint16_t)(lay_bass && !(mutes & EN_M_BASS) && !(perf & EN_PF_KICKDROP) && par[P_BASS] > 0 ? bar_bass : 0u);
+    en_bass_gate = fm_minf(GROOVE_GATE[gpat()] * fm_exp2f(rel(P_BLEN)), 15.8f);   /* (the bass's page: its notes' length) */
+    en_bass_octn = (int8_t)(ph.oct >= 0 ? ph.oct % (pcount(bar_bass) > 1 ? pcount(bar_bass) : 1) : -1);
 }
 
 /* a pattern's hit: its chance (Play: Pattern only, so Auto's music stays as it was), its accent */

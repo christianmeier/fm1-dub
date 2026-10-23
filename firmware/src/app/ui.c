@@ -228,6 +228,9 @@ static struct {
     float big_v;                       /* its arc, gliding to the value */
     char big_name[16];                 /* its name, under it */
     const char *big_help;              /* what it does, under the name (KNOB_HELP's; 0: none) */
+    char big_txt[16];                  /* (a value of no knob's: the screen's view) its text, and its place 0..1 */
+    float big_tf;
+    uint8_t big_noring;                /* (a knob the page's own lane shows: the help alone, no ring) */
     uint16_t big_col;                  /* its colour: the layer's, or the accent */
     float oct_v;                       /* the ring's arc, gliding to the level */
     uint32_t prog_gen;                 /* the engine's slots, as last taken (en_prog_gen) */
@@ -933,6 +936,8 @@ static void pattern_key(uint32_t key, uint32_t keys)
 /* ------------------------------------------------------------ buttons --- */
 static void set_view(int v)
 {
+    if (v != ui.view)
+        ui.big_until = 0;                        /* (a new page: the last page's big ring gone) */
     ui.view = (uint8_t)v;
     ui.touched = -1;
 }
@@ -1063,10 +1068,22 @@ static void big_show_help(int k, const char *name, uint16_t col, const char *hel
     ui.big_name[i] = 0;
     ui.big_col = col;
     ui.big_help = help;
+    ui.big_txt[0] = 0;
+    ui.big_noring = 0;
     ui.big_until = now + OCT_SHOW;
     ui.oct_ring = 0;                             /* (one ring at a time: the last one turned) */
 }
 static int big_on(uint32_t now) { return ui.big_until && now < ui.big_until + OCT_FADE; }
+static void big_show_text(const char *name, const char *txt, float tf, uint16_t col)   /* (no knob's: the screen) */
+{
+    int i;
+    big_show_help(K_NONE, name, col, 0);
+    for (i = 0; txt[i] && i < (int)sizeof ui.big_txt - 1; i++)
+        ui.big_txt[i] = txt[i];
+    ui.big_txt[i] = 0;
+    ui.big_tf = tf;
+    ui.big_v = tf;
+}
 static int oct_ring_on(uint32_t now)             /* the ring's layer + 1, while it shows on this page (else 0) */
 {
     if (!ui.oct_ring || now >= ui.oct_until + OCT_FADE || oct_layer(ui.view) != ui.oct_ring - 1)
@@ -1462,6 +1479,7 @@ static void input(void)
             int c = ((proj.par[P_NCHAR] + (int)(e % EN_NNCHAR)) % EN_NNCHAR + EN_NNCHAR) % EN_NNCHAR;
             knob_set(P_NCHAR, c);
             say("NOISE", EN_NCHAR_NAME[c]);
+            big_show(P_NCHAR, "Noise", K_NOISE);  /* (1.4.0, the user's: ALGORITHM big in the centre too) */
         } else if (ui.view == V_CHORDS) {        /* the walk's character: its chords walked again, at once */
             int w = (((proj.par[P_PMODE] & 3) + (int)(e % EN_NWALK)) % EN_NWALK + EN_NWALK) % EN_NWALK;
             knob_set(P_PMODE, (proj.par[P_PMODE] & EN_PLOOP) | w);
@@ -1472,13 +1490,20 @@ static void input(void)
                 say("WALK", WHAT[w]);
             }
         } else if (vp >= 0) {
+            static const uint16_t LC[NLAYER] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE};
+            const int l = oct_layer(ui.view);
             set_voice(vp, proj.par[vp] + (int)e);   /* (every detent: a quick turn comes as several at once) */
+            big_show(vp, vp == P_KIT ? "Kit" : "Voice", l >= 0 ? LC[l] : K_ACC);   /* (1.4.0: big in the centre) */
         } else {                                 /* the middle of the screen: the ripples, a scope, a spectrum (the mode,
                                                   * a piece's choice, is on the Key page) */
             static const char *const SCREEN_NAME[3] = {"RIPPLES", "SCOPE", "SPECTRUM"};
             proj.screen = (uint8_t)(((int)proj.screen + (int)(e % 3) + 3) % 3);
             mark_dirty();
             say("SCREEN", SCREEN_NAME[proj.screen]);
+            {   /* (1.4.0: big in the centre too) */
+                static const char *const SN[3] = {"Ripples", "Scope", "Spectrum"};
+                big_show_text("Screen", SN[proj.screen], (float)proj.screen * 0.5f, K_ACC);
+            }
         }
         ui.turn_t = plat_ms();
     }
@@ -1509,7 +1534,14 @@ static void input(void)
                 static const uint16_t LC[NLAYER] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE};
                 static const uint16_t MC[4] = {K_PAD, K_BELL, K_BASS, K_PULSE};
                 const int k = VIEW_KNOB[ui.view][i], l = oct_layer(ui.view);
-                if (ui.view != V_CHORDS && ui.view != V_PAT && k != K_SAVE && k != K_CPU && k != K_NONE)
+                if (l == 2 && (k == P_GROOVE || k == P_BNOTES)) {   /* (the bass's lane shows it: the ring steps
+                                                                      * aside, the header says it) */
+                    char t[16];
+                    knob_text(k, t);
+                    say(KNOB_LABEL[ui.view][i], t);
+                    big_show_help(k, KNOB_LABEL[ui.view][i], LC[2], KNOB_HELP[ui.view][i]);
+                    ui.big_noring = 1;
+                } else if (ui.view != V_CHORDS && ui.view != V_PAT && k != K_SAVE && k != K_CPU && k != K_NONE)
                     big_show_help(k, KNOB_LABEL[ui.view][i], ui.view == V_MIX ? MC[i] : l >= 0 ? LC[l] : K_ACC,
                                   KNOB_HELP[ui.view][i]);
             }
@@ -2377,8 +2409,62 @@ static void draw_duck(void)                      /* right: the kick's ducking, f
 
 /* below: the bar, a lane a layer. On a layer's page (and its sound pages) its lanes as ever, the others in grey (the
  * pings and the noise have none: all grey) */
+/* (1.4.0, the user's: "show only the line that matters, the current voice, even make it bigger") the bass's page: its
+ * lane alone, large. This bar's notes as bars as long as they hold (the octave note higher), the groove's other notes
+ * (left out by Density, or this bar's variant) as outlines, so a turn of Groove or Density shows at once; the playhead's
+ * column; A or B (bars 4 and 8, the phrase's variant) at the left */
+static void draw_bass_lane(void)
+{
+    const uint32_t bar = en_lane[5], groove = en_groove(en_groove_pat(proj.par[P_GROOVE]));
+    const int pos = en_drum_pos[0], b = en_phrase_bar == 3 || en_phrase_bar == 7;
+    const float gate = en_bass_gate;
+    int i, n = 0, playing = -1;
+    if (en_playing)
+        cv_round(38 + pos * 11, 104, 10, 40, 2, K_PANEL);
+    text_c(18, 112, &FONT_B, b ? "B" : "A", b ? K_BASS : K_DIM);
+    for (i = 0; i < 16; i++)                     /* the beats: the grid under it */
+        cv_rect(40 + i * 11 + 2, 139, 2, (i & 3) ? 2 : 4, (i & 3) ? K_LINE : K_DIM);
+    for (i = 0; i < 16; i++) {                   /* the note playing, if one is: the one whose length covers the playhead */
+        int j, len;
+        if (!(bar >> i & 1u))
+            continue;
+        for (j = i + 1; j < 16 && !(bar >> j & 1u); j++)
+            ;
+        len = (int)(gate + 0.5f);
+        if (len > j - i)
+            len = j - i;
+        if (len < 1)
+            len = 1;
+        if (en_playing && pos >= i && pos < i + len)
+            playing = i;
+    }
+    for (i = 0; i < 16; i++) {
+        int32_t x = 40 + i * 11;
+        if (bar >> i & 1u) {                     /* a note this bar plays: as long as it holds, the octave one higher */
+            int j, len, up = n == en_bass_octn && i;
+            for (j = i + 1; j < 16 && !(bar >> j & 1u); j++)
+                ;
+            len = (int)(gate + 0.5f);
+            if (len > j - i)
+                len = j - i;
+            if (len < 1)
+                len = 1;
+            cv_round(x, up ? 108 : 123, len * 11 - 3, 11, 4, i == playing ? K_BASS : mix(K_BASS_T, K_BASS, 9));
+            n++;
+        } else if (groove >> i & 1u) {           /* the groove's, not played this bar: an outline */
+            uint16_t c = mix(K_BG, K_BASS_T, 14);
+            cv_rect(x + 1, 123, 6, 1, c), cv_rect(x + 1, 133, 6, 1, c);
+            cv_rect(x, 124, 1, 9, c), cv_rect(x + 7, 124, 1, 9, c);
+        }
+    }
+}
+
 static void draw_lanes(void)
 {
+    if (oct_layer(ui.view) == 2) {               /* (1.4.0) the bass's pages: its lane alone */
+        draw_bass_lane();
+        return;
+    }
     static const uint16_t C0[6] = {K_PAD, K_PULSE, K_TEXT, K_RIM, K_CLAP, K_BASS},
                           T0[6] = {K_PAD_T, K_PULSE_T, K_LINE, K_RIM_T, K_CLAP_T, K_BASS_T};
     static const int8_t DR[6] = {-1, 0, 1, 3, 4, -1};   /* each lane's drum (its chance) */
@@ -2598,7 +2684,7 @@ static int help_lines(const char *h, char *a, char *b, int n)
 static void draw_oct(uint32_t now)
 {
     static const uint16_t C[NLAYER] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE};
-    const int32_t r = BIG_R, cy = 64;   /* (1.4.0: as large as the big ring) */
+    const int32_t r = BIG_R, cy = 46;   /* (1.4.0: as large as the big ring, and as high) */
     int l = oct_ring_on(now) - 1, f;
     int32_t f2;
     uint16_t c, tr, tx;
@@ -2623,15 +2709,13 @@ static void draw_oct(uint32_t now)
     }
     arc_th(CX, cy, r, 6.0f, ui.oct_v, tr, c, K_BG, 0);
     if ((ui.mutes & LAYER_MUTE[l]) == LAYER_MUTE[l]) {
-        text_c(CX, cy - 12, &FONT_C, "MUTED", tx);
+        text_c(CX, cy - 17, &FONT_C, "MUTED", tx);
     } else {
         itoa_u((uint32_t)proj.par[LAYER_LEVEL[l]], t);
-        text_c(CX, cy - 17, &FONT_L, t, tx);
+        text_c(CX, cy - 22, &FONT_L, t, tx);
     }
     {
-        int32_t w = text_w(&FONT_B, LAYER_NAME[l]);
-        cv_round(CX - w / 2 - 5, cy + r - 1, w + 10, 18, 5, K_BG);
-        text_c(CX, cy + r - 1, &FONT_B, LAYER_NAME[l], c);
+        text_c(CX, cy + 8, &FONT_XS, LAYER_NAME[l], c);   /* (inside the ring, under the level) */
     }
 }
 
@@ -2640,7 +2724,7 @@ static void draw_oct(uint32_t now)
  * the top, a switch its place; Motion's regions marked; it fades out OCT_SHOW after the last click */
 static void draw_big(uint32_t now)
 {
-    const int32_t r = BIG_R, cy = ui.big_help ? 55 : 64;   /* (up a little, to make room for the help) */
+    const int32_t r = BIG_R, cy = 46;            /* (high: the lane below it free, the user asked) */
     int k = ui.big_k, v, f, lo, hi;
     int32_t f2;
     uint16_t c, tr, tx;
@@ -2649,12 +2733,35 @@ static void draw_big(uint32_t now)
     const felucca_font_t *fn;
     if (!big_on(now))
         return;
-    knob_range(k, &lo, &hi);
-    v = knob_get(k);
-    ui.big_v += (big_frac(k) - ui.big_v) * 0.55f;   /* (it glides, ~100 ms) */
-    if (fm_fabsf(big_frac(k) - ui.big_v) < 0.003f)
-        ui.big_v = big_frac(k);
     f = now < ui.big_until ? 16 : 16 - (int)((now - ui.big_until) * 16u / OCT_FADE);
+    if (ui.big_noring) {                         /* (the lane shows it: the help alone, above the lane) */
+        char a[48], b[48];
+        int nl = ui.big_help ? help_lines(ui.big_help, a, b, (int)sizeof a) : 0;
+        uint16_t hc = mix(K_BG, mix(K_DIM, K_TEXT, 7), f);
+        if (nl) {
+            const int32_t y0 = nl == 2 ? 68 : 80;
+            int32_t w = text_w(&FONT_S, a), w2 = nl == 2 ? text_w(&FONT_S, b) : 0;
+            if (w2 > w)
+                w = w2;
+            cv_round(CX - w / 2 - 6, y0 - 1, w + 12, nl * 14 + 4, 4, K_BG);
+            text_c(CX, y0, &FONT_S, a, hc);
+            if (nl == 2)
+                text_c(CX, y0 + 14, &FONT_S, b, hc);
+        }
+        return;
+    }
+    if (ui.big_txt[0]) {                         /* (no knob's: the screen's view) */
+        lo = 0, hi = 1, v = 1;
+    } else {
+        knob_range(k, &lo, &hi);
+        v = knob_get(k);
+    }
+    {
+        const float tf = ui.big_txt[0] ? ui.big_tf : big_frac(k);
+        ui.big_v += (tf - ui.big_v) * 0.55f;     /* (it glides, ~100 ms) */
+        if (fm_fabsf(tf - ui.big_v) < 0.003f)
+            ui.big_v = tf;
+    }
     c = mix(K_BG, (lo < 0 && !v) ? K_DIM : ui.big_col, f);
     tr = mix(K_BG, K_LINE, f);
     tx = mix(K_BG, K_TEXT, f);
@@ -2675,23 +2782,27 @@ static void draw_big(uint32_t now)
             itoa_u((uint32_t)(v < 0 ? -2 * v : 2 * v), t);
         }
         under = v < 0 ? "SHUT" : v > 0 ? "OPEN" : "FILTER";
+    } else if (ui.big_txt[0]) {
+        int q;
+        for (q = 0; ui.big_txt[q] && q < 15; q++)
+            t[q] = ui.big_txt[q];
+        t[q] = 0;
     } else {
         knob_text(k, t);
     }
-    fn = text_w(&FONT_L, t) <= 2 * r - 14 ? &FONT_L : text_w(&FONT_C, t) <= 2 * r - 8 ? &FONT_C : &FONT_B;
-    text_c(CX, cy - (fn == &FONT_L ? 17 : fn == &FONT_C ? 12 : 9), fn, t, tx);
-    {
-        int32_t w = text_w(&FONT_B, under);
-        cv_round(CX - w / 2 - 5, cy + r - 1, w + 10, 18, 5, K_BG);
-        text_c(CX, cy + r - 1, &FONT_B, under, c);
-    }
+    fn = text_w(&FONT_L, t) <= 2 * r - 16 ? &FONT_L : text_w(&FONT_C, t) <= 2 * r - 10 ? &FONT_C : &FONT_B;
+    text_c(CX, cy - (fn == &FONT_L ? 22 : fn == &FONT_C ? 17 : 14), fn, t, tx);
+    text_c(CX, cy + 8, &FONT_XS, under, c);      /* (its name inside the ring, under the value) */
     if (ui.big_help) {                           /* what it does, under the name: one line or two, centred */
         char a[48], b[48];
         int nl = help_lines(ui.big_help, a, b, (int)sizeof a);
         if (nl) {
-            const int32_t y0 = cy + r + 17;
-            uint16_t hc = mix(K_BG, mix(K_DIM, K_TEXT, 7), f);   /* (a light grey, under the name) */
-            cv_rect(0, y0, 240, nl * 14 + 2, K_BG);
+            const int32_t y0 = cy + r + 3;
+            uint16_t hc = mix(K_BG, mix(K_DIM, K_TEXT, 7), f);   /* (a light grey, under the ring) */
+            int32_t w = text_w(&FONT_S, a), w2 = nl == 2 ? text_w(&FONT_S, b) : 0;
+            if (w2 > w)
+                w = w2;
+            cv_rect(CX - w / 2 - 4, y0, w + 8, nl * 14 + 2, K_BG);
             text_c(CX, y0, &FONT_S, a, hc);
             if (nl == 2)
                 text_c(CX, y0 + 14, &FONT_S, b, hc);

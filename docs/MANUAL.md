@@ -355,8 +355,13 @@ GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
 - **The big ring:** a knob turning, in the middle: its value large inside, its name under it, in its
   layer's colour (teal elsewhere), and under the name, in one or two lines, what it does; a 0–100 knob fills from the start, a centred one from the top, a
   switch shows its choice by name; Motion's ring has its regions marked at 40 and 70. SELECT's filter
-  shows there too (the amount, Shut or Open), and OCT− / OCT+'s level (see [Controls](#3-controls)).
-  One ring at a time, the last one turned; it fades a second after.
+  shows there too (the amount, Shut or Open), and OCT− / OCT+'s level (see [Controls](#3-controls)),
+  and ALGORITHM's choice (a voice, a kit, the noise's character, the screen's view). One ring at a time,
+  the last one turned; it fades a second after; a new page clears it.
+- **The Bass page's lane:** the bass alone, large, under the ring: this bar's notes as bars as long
+  as they hold (an octave note higher), the groove's other notes (those Density leaves out, or a B
+  bar's) as outlines; A or B at its left (bars 4 and 8, the phrase's variant). Turning Groove or
+  Density shows there at once (the ring steps aside, its words above the lane).
 
 ![The Space page with FEEDBACK lit as it turns, set to 6.7 s, the line above it saying HOW LONG THE REPEATS GO ON; ECHO 55, ECHO TIME 1/8., REVERB 35](img/screen-turning.png "Turning Feedback on the Space page")
 ![The scope: the output as a thick teal line over a dotted centre line, the two traces before it fading behind; Fm7 at the top](img/screen-scope.png "ALGORITHM: the scope")
