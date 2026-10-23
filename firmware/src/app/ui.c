@@ -296,6 +296,17 @@ static void say_as(const char *a, const char *b, uint32_t flags)
     }
 }
 static void say(const char *a, const char *b) { say_as(a, b, ANN_NOW); }
+/* (1.4.0, the user's: the value is the big ring's) the header shows the name alone; the reader hears it with its value */
+static void say_name(const char *a, const char *b)
+{
+    say_as(a, 0, 0);
+    if (ann_on()) {
+        char t[48];
+        msg_text(a, b, t);
+        ann_say(t, 0, ANN_NOW);
+        sp_said = 1;
+    }
+}
 /* a long press's card in the middle (a nudge, a shake, the next chord, new chords, saved, a reset): what it did, in
  * big, outlined in its colour; it fades out CARD_SHOW after (draw_card) */
 #define CARD_SHOW 1500u
@@ -668,7 +679,7 @@ static void set_voice(int p, int v)
     proj.par[p] = (int16_t)v;
     en_set(p, v);
     en_param_text(p, v, t);
-    say(p == P_KIT ? "KIT" : "VOICE", t);
+    say_name(p == P_KIT ? "KIT" : "VOICE", t);
     mark_dirty();
 }
 
@@ -1483,7 +1494,7 @@ static void input(void)
             char t[12];
             turn(EN_SELECT, K_FILTER, e);
             knob_text(K_FILTER, t);
-            say("FILTER", t);
+            say_name("FILTER", t);
             big_show_help(K_FILTER, "Filter", K_ACC, "Shut: under water. Open: thin");
         }
         ui.turn_t = plat_ms();
@@ -1493,7 +1504,7 @@ static void input(void)
         if (ui.view == V_NSND || ui.view == V_NSND2) {   /* the Noise pages: its character */
             int c = ((proj.par[P_NCHAR] + (int)(e % EN_NNCHAR)) % EN_NNCHAR + EN_NNCHAR) % EN_NNCHAR;
             knob_set(P_NCHAR, c);
-            say("NOISE", EN_NCHAR_NAME[c]);
+            say_name("NOISE", EN_NCHAR_NAME[c]);
             big_show(P_NCHAR, "Noise", K_NOISE);  /* (1.4.0, the user's: ALGORITHM big in the centre too) */
         } else if (ui.view == V_CHORDS) {        /* the walk's character: its chords walked again, at once */
             int w = (((proj.par[P_PMODE] & 3) + (int)(e % EN_NWALK)) % EN_NWALK + EN_NWALK) % EN_NWALK;
@@ -1514,7 +1525,7 @@ static void input(void)
             static const char *const SCREEN_NAME[3] = {"RIPPLES", "SCOPE", "SPECTRUM"};
             proj.screen = (uint8_t)(((int)proj.screen + (int)(e % 3) + 3) % 3);
             mark_dirty();
-            say("SCREEN", SCREEN_NAME[proj.screen]);
+            say_name("SCREEN", SCREEN_NAME[proj.screen]);
             {   /* (1.4.0: big in the centre too) */
                 static const char *const SN[3] = {"Ripples", "Scope", "Spectrum"};
                 big_show_text("Screen", SN[proj.screen], (float)proj.screen * 0.5f, K_ACC);
@@ -1544,12 +1555,11 @@ static void input(void)
                 continue;                        /* (an FM page on a voice that isn't FM: the knobs rest, greyed; the
                                                   * LFO, the fourth, works on every voice) */
             turn(EN_K1 + (int)i, VIEW_KNOB[ui.view][i], e);
-            if (VIEW_KNOB[ui.view][i] != K_SAVE) {   /* (1.4.0, the user's) the header: the knob's name, in capitals,
-                                                       * and its value, for every knob (shown, not said again) */
-                char nm[16], tv[16];
+            if (VIEW_KNOB[ui.view][i] != K_SAVE) {   /* (1.4.0, the user's) the header: the knob's name, in capitals, for
+                                                       * every knob (its value the big ring's; shown, not said again) */
+                char nm[16];
                 caps(nm, KNOB_LABEL[ui.view][i], sizeof nm);
-                knob_text(VIEW_KNOB[ui.view][i], tv);
-                say_as(nm, tv, 0);
+                say_as(nm, 0, 0);
             }
             {   /* (1.4.0) the big ring: the knob's value large over the middle (not where the page itself is the
                  * picture: the Chords and the Pattern pages; nor Save and the CPU) */
