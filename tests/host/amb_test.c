@@ -394,7 +394,7 @@ int main(void)
         CHECK(n[0] == 0 && n[1] > 0 && n[2] * 2u > n[1] * 3u, "Throws: %u / %u / %u", n[0], n[1], n[2]);
     }
 
-    /* the kick's shapes (1.4.0: a switch, Four, Half, One, Ghost): Four (100) four on the floor in every bar it plays;
+    /* the kick's shapes (1.4.0: a switch, Four, Ghost, Half, One): Four (100) four on the floor in every bar it plays;
      * Half (50), mostly half-time, with Evolve's wander some of the others */
     {
         int k, b, four[2] = {0, 0}, half[2] = {0, 0}, one[2] = {0, 0}, played[2] = {0, 0};
@@ -411,7 +411,7 @@ int main(void)
                 uint16_t p;
                 run(60.0f / 122.0f * 4.0f);      /* (a bar at 122) */
                 p = en_lane[1];
-                if (!p)
+                if (!p || b < 64)                /* (past the piece's opening on four: eight phrases) */
                     continue;
                 played[k]++;
                 four[k] += p == 0x1111u;
@@ -422,9 +422,28 @@ int main(void)
         printf("  the kick, Four: four in %d of %d bars; Half: four %d, half %d, one %d of %d\n", four[0], played[0],
                four[1], half[1], one[1], played[1]);
         CHECK(played[0] > 100 && four[0] == played[0], "Four: four in %d of %d", four[0], played[0]);
-        CHECK(played[1] > 100 && half[1] > played[1] / 4 && four[1] < played[1] * 6 / 10,   /* (a piece starts on four:
-                                                  * its first three phrases, then wanders to its shape over five) */
+        CHECK(played[1] > 100 && half[1] + one[1] > played[1] / 5 && four[1] < played[1] * 7 / 10,   /* (past the
+                                                  * opening; four here counts Ghost too, Half's neighbour) */
               "Half: four %d, half %d, one %d of %d", four[1], half[1], one[1], played[1]);
+    }
+
+    /* (1.4.0, format 18) the noise's Density: 0 no hits; turned, its hits from the next bar, not the next phrase */
+    {
+        int n0, n1;
+        fresh();
+        en_seed(5);
+        en_set(P_NGRAIN, 50);
+        en_regrow();
+        en_play(1);
+        run(60.0f / 122.0f * 4.0f * 3.0f + 0.1f);   /* (into the third bar of the first phrase) */
+        en_set(P_NGRAIN, 100);
+        run(60.0f / 122.0f * 4.0f * 1.05f);
+        n1 = __builtin_popcount(en_nz_pat);
+        en_set(P_NGRAIN, 0);
+        run(60.0f / 122.0f * 4.0f * 1.05f);
+        n0 = __builtin_popcount(en_nz_pat);
+        printf("  the noise's Density: at 100, %d hits in two bars; at 0, %d (each a bar after the turn)\n", n1, n0);
+        CHECK(n1 >= 14 && n0 == 0, "noise Density: 100 gave %d, 0 gave %d", n1, n0);
     }
 
     /* the drums' and the bass's phrase plan: A A A B A A A B, the A bars the same, the two B bars the same */

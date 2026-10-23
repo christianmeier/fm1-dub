@@ -111,7 +111,7 @@ The drawing at the top shows them all; here they are in more detail.
 | SELECT | **The DJ filter**, on every page (the same one as PERFORM's KNOB 1 and the Dub page's Filter): left shuts it (a low-pass, under water), right opens it (a high-pass, thin and bright), Off in the middle, where it stops on its way through (three clicks to leave it). While it turns, a big ring in the middle shows it, and the header says it ("FILTER Shut 40"); the page stays. Hold HOME and turn it for the tempo, from any page. The pages are on their buttons; the eight dots under the page's name, top right, show where you are, in the order the buttons sit on the panel. |
 | ALGORITHM | On a layer's page (Chord, Pings, Bass, Drums): that layer's **voice** (see [The voices](#the-voices)). On the Noise pages: its character. On the Chords page: the walk's character (Home, Wander, Free). Anywhere else: the middle of the screen, as ripples, a scope or a spectrum (see [The screen](#4-the-screen)). The mode, a piece's choice, is on the Key page (HOME again). |
 | PRESETS | The piece (see [The pieces](#7-the-pieces)). |
-| KNOB 1–4 | The four values on the screen. A few clicks are always single steps; a quick turn speeds up, so half a turn sweeps the range. While a knob turns, its value shows large in the middle of the screen, in a big ring with its name and what it does under it (on the Chords and Pattern pages, which show the change themselves, the line above the knobs says what it does). A **centred** knob (0 in the middle: the sound pages' −50…+50 ones, the Noise page's Density, Air and Tone, PERFORM's Filter, Wet and Energy) has a **notch** at 0: turning through, it stops there, and to leave it takes three clicks the same way (the first two are held back). A switch shows its positions as dots, up to ten (Drift, Mode, Algo). A grey knob does nothing there. |
+| KNOB 1–4 | The four values on the screen. A few clicks are always single steps; a quick turn speeds up, so half a turn sweeps the range. While a knob turns, its value shows large in the middle of the screen, in a big ring with its name and what it does under it (on the Chords and Pattern pages, which show the change themselves, the line above the knobs says what it does). A **centred** knob (0 in the middle: the sound pages' −50…+50 ones, the Noise page's Air and Tone, PERFORM's Filter, Wet and Energy) has a **notch** at 0: turning through, it stops there, and to leave it takes three clicks the same way (the first two are held back). A switch shows its positions as dots, up to ten (Drift, Mode, Algo). A grey knob does nothing there. |
 | OCT− / OCT+ | On a layer's page (Chord, Pings, Bass, Drums or Noise, and their sound, FM and Pattern pages, and Noise space): that layer's **level**, 5 down or up a press ("BASS 55" in the header, and a big ring in the middle, in the layer's colour, the level inside, until a second after the last press); held, it keeps going. **Both together**, let go within a second: the layer **muted** ("BASS MUTED"), its level kept; again, back ("BASS ON"). The drums mute the kick and the hats together. These are PERFORM's mutes (white 1–5): a mute made here shows there, and the other way round. Held together for five seconds: the update mode (see [Troubleshooting](#11-troubleshooting)); a long press never mutes. On the other pages they do nothing. (The pings' octave is on the Pings page, KNOB 2.) |
 | MASTER | Volume. |
 | SAVE | The **Noise page** (below); again, **Noise space** (its width, its sends and how often its groove changes; SAVE blinks); again, back to the Noise page. Held: a nudge to the noise; held on (1.5 s): a shake (another noise character). Saving is on GLO. |
@@ -324,15 +324,15 @@ GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
   Under it all, the noise: a grey speck for each of its hits you can hear, and for each dry click
   (on its side), as bright as it is loud, gone in a moment; a strong hit a brighter one. More
   Level or Density (the Noise page), more specks. The specks show on the whole piece's ripples
-  only, not on a layer's page.
+  and on the Noise pages (there alone), not on a layer's page.
 - **ALGORITHM** (on any page but a layer's, the Noise page or the Chords page) changes what the middle shows: the ripples, a **scope** or a
   **spectrum**, and then the ripples again (turned back, the other way round). Each piece keeps its own view, saved with it: Haze on the spectrum, say, and Pressure on the scope. With the
   scope or the spectrum showing, the chord's name moves to the top.
 - On a layer's own page (Chord, Pings, Bass, Drums) and its sound page, the middle shows **that layer alone**: the ripples its notes, in
   its colour (the stabs on the Chord page, the pings with their loops' dots on the Pings page, a ring a bass note, a
   ring a drum hit), and the scope or the spectrum its sound, dry. The lanes below keep showing the whole bar, the
-  layer's own in colour and the others in grey (the pings and the noise have no lane: all grey). The Noise page
-  always shows the spectrum, of the noise alone. Dub, PERFORM, Space, Echo and the other pages show the whole piece.
+  layer's own in colour and the others in grey (the pings and the noise have no lane: all grey). The Noise pages
+  follow it too, with the noise alone: its specks, or its scope or spectrum. Dub, PERFORM, Space, Echo and the other pages show the whole piece.
   - The **scope** draws the output (left and right mixed) as a thick line. Each trace starts on a
     rising zero crossing so the picture stands still, and the two traces before it fade behind.
     Its height follows the level, so a quiet passage still fills it.
@@ -735,10 +735,11 @@ The noise isn't a bed of hiss but a voice of its own, played like the drums:
 - **The Air:** a quiet hiss under it, and now and then a dry vinyl click.
 - **Under the duck:** the noise dips on every beat, deeper than the music, and swells between.
 
-The knobs are around the piece's own noise, 0 (Decay 50) in the middle:
+The knobs are around the piece's own noise, 0 (Decay 50) in the middle, except Density:
 
-- **Density:** how many hits ring in the two bars, from 2 to 16 (with the character's own lean);
-  the dry clicks come with it.
+- **Density:** how many hits ring in the two bars, from none at 0 to 16 at 100 (8 at 50); the dry
+  clicks come with it, and at 0 they're gone too (the hiss stays: Air). A turn is heard from the
+  next bar.
 - **Air:** the hiss under it, softer or more.
 - **Tone:** the band-pass, the rings darker (about 250 Hz) or brighter (up to about 2 kHz). The
   arrangement's sweep moves it too.
@@ -798,9 +799,10 @@ PERFORM's Wet moves the noise too: its dry down and its plate and echo up, or th
 
 ![The Drums page: TIGHT, KICK Four, HITS 10, HATS 40, TONE 0](img/screen-drums.png "The Drums page")
 
-- **Kick:** the kick's shape, a switch: **Four** (four on the floor), **Half** (one and three),
-  **One** (the downbeat alone), **Ghost** (four with two and four ghosted, 10 dB down). It takes
-  effect from the next bar, and holds for a few phrases; with Evolve up it wanders now and then to a
+- **Kick:** the kick's shape, a switch, from the fullest to the sparest: **Four** (four on the floor),
+  **Ghost** (four, with two and four ghosted, about 10 dB softer), **Half** (one and three), **One**
+  (the downbeat alone). One click is one position. It takes effect from the next bar, even at a
+  piece's opening, and holds for a few phrases; with Evolve up it wanders now and then to a
   neighbouring shape (on Four, a Thin phrase ghosted or half). Evolve lets it wander
   further, a Thin phrase takes it a step sparser, and Energy (PERFORM) moves it. The kick is out in
   a Break and the second half of a fill; with the Pattern page on Pattern, your kick lane plays
@@ -1018,7 +1020,8 @@ The defaults are Basic's; each piece has its own.
 | Pings | Octave | −2 – +2 | 0 |
 | Pings | Wet | 0–100 (the dry 0 dB – −6 dB at 50 – −20 dB) | 70 |
 | Pings | Cloud | 0–100 | 30 |
-| Noise | Density, Air, Tone | −50 – +50 | 0 |
+| Noise | Density | 0–100 (hits in two bars: none – 16) | the piece's |
+| Noise | Air, Tone | −50 – +50 | 0 |
 | Noise | Decay | 0–100 (about 70 ms – over a second) | 50 |
 | Noise | Character (ALGORITHM) | Vinyl, Tape, Dust, Room, Machine | Vinyl |
 | Noise space | Width, Plate, Echo | 0–100 (50: as the pieces have it) | 50 |
@@ -1031,7 +1034,7 @@ The defaults are Basic's; each piece has its own.
 | Key | Root | C – B | F |
 | Key | Mode | 8 modes, or Custom | Dorian |
 | Key | Swing | 50%–70% | 51% |
-| Drums | Kick (its shape) | Four, Half, One, Ghost | Four |
+| Drums | Kick (its shape) | Four, Ghost, Half, One | Four |
 | Drums | Hits | 0–100 | 10 |
 | Drums | Hats | 0–100 (−12 dB – ×1 at 50 – +12 dB) | 40 |
 | Drums | Tone (the hats) | −50 – +50 | 0 |

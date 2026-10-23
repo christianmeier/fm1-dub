@@ -56,7 +56,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     {"Kick chance", 0, 100, 100}, {"Shaker chance", 0, 100, 100}, {"Open chance", 0, 100, 100}, {"Rim chance", 0, 100, 100},
     {"Clap chance", 0, 100, 5},
     {"Accent", 0, 100, 50}, {"Drum play", 0, 1, 0},
-    {"Noise tone", -50, 50, 0}, {"Noise density", -50, 50, 0}, {"Air", -50, 50, 0}, {"Noise drift", -50, 50, 0},
+    {"Noise tone", -50, 50, 0}, {"Noise density", 0, 100, 56}, {"Air", -50, 50, 0}, {"Noise drift", -50, 50, 0},
     {"Noise", 0, EN_NNCHAR - 1, 0},
     {"Throws", 0, 100, 50},   {"Wet", 0, 100, 50},    {"Notes", 0, 100, 100},   {"Hats level", 0, 100, 50},
     {"Chord wet", 0, 100, 50}, {"Kick density", 0, 100, 100}, {"Blur", 0, 100, 50}, {"Echo tone", 0, 100, 50},
@@ -86,7 +86,7 @@ static const struct {
                     0, 0, 0, 25, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
-                    0, 0, 0, 0, 0,
+                    0, 56, 0, 0, 0,
                     70, 70, 90, 40,
                     45, 100, 25, 50, 40, 50,
                     50, 50, 50, 0,
@@ -97,7 +97,7 @@ static const struct {
                     0, 0, 0, 30, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
-                    -5, -10, 10, 0, 3,
+                    -5, 44, 10, 0, 3,
                     70, 60, 100, 55,
                     35, 75, 50, 50, 60, 50,
                     50, 50, 50, 0,
@@ -108,7 +108,7 @@ static const struct {
                     0, 0, 0, 20, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
-                    5, 10, -10, 0, 0,
+                    5, 63, -10, 0, 0,
                     70, 70, 90, 60,
                     50, 100, 30, 50, 45, 50,
                     50, 50, 50, 0,
@@ -119,7 +119,7 @@ static const struct {
                     0, 0, 0, 30, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
-                    -10, 0, 30, 10, 1,
+                    -10, 44, 30, 10, 1,
                     70, 65, 100, 50,
                     55, 75, 50, 50, 85, 50,
                     85, 50, 50, 0,
@@ -130,7 +130,7 @@ static const struct {
                     0, 0, 0, 45, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
-                    0, 0, 0, 10, 0,
+                    0, 56, 0, 10, 0,
                     70, 65, 85, 65,
                     50, 100, 20, 50, 55, 50,
                     50, 50, 50, 0,
@@ -141,7 +141,7 @@ static const struct {
                     0, 0, 0, 40, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
-                    0, -10, 0, 0, 1,
+                    0, 38, 0, 0, 1,
                     80, 75, 90, 58,
                     55, 100, 50, 50, 85, 50,
                     50, 50, 50, 0,
@@ -152,7 +152,7 @@ static const struct {
                     0, 0, 0, 20, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
-                    -10, -30, 20, -10, 1,
+                    -10, 19, 20, -10, 1,
                     70, 70, 90, 55,
                     60, 100, 50, 50, 75, 50,
                     85, 50, 50, 0,
@@ -163,7 +163,7 @@ static const struct {
                     0, 0, 0, 30, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
-                    5, 10, 10, 15, 2,
+                    5, 69, 10, 15, 2,
                     70, 70, 100, 50,
                     50, 50, 50, 50, 70, 50,
                     50, 50, 50, 0,
@@ -306,7 +306,7 @@ void en_param_text(int i, int v, char *b)
         }
         return;
     }
-    if ((i == P_TUNE || i == P_POCT || i == P_BASSOCT || (i >= P_CATT && i < P_CR0) || (i >= P_NCOL && i <= P_NDRIFT)) && v > 0)
+    if ((i == P_TUNE || i == P_POCT || i == P_BASSOCT || (i >= P_CATT && i < P_CR0) || (i >= P_NCOL && i <= P_NDRIFT && i != P_NGRAIN)) && v > 0)
         *b++ = '+';
     itoa_s(v, b);
 }
@@ -545,6 +545,8 @@ static int16_t par[P_NPARAMS];
 typedef struct {
     float colour, grain, room, drift;           /* dark .. bright; smooth .. granular; dry .. roomy; steady .. restless */
     uint8_t character;                          /* NCHAR[] */
+    uint8_t hits;                               /* (1.4.0, format 18) Density: the hits in two bars, 0..16 (0: none, the
+                                                 * clicks gone too); grain, the clicks' density, from it (nz_dens) */
 } noise_ctl_t;
 static noise_ctl_t nctl;
 static float throw_mul = 1.0f, ping_dry = 0.5f, hats_lvl = 1.0f;   /* Throws, Ghost, Hats level (apply) */
@@ -929,6 +931,7 @@ static uint32_t ph_rng = 0x2545F491u;
 static uint32_t bar_k, bar_sh, bar_op, bar_bass, bar_fifth;   /* (bar_fifth: the bass's notes on the fifth) */   /* this bar's: the kick's, the shaker's, the open hat's, the bass's */
 static int ph_st;                                /* (the step a drum hit is on: its lateness) */
 static void noise_pattern(void);
+static void nz_dens(void);
 static int cr_dbars;                            /* bars till the drifts' next targets (on a barline) */
 static void noise_step(int s);
 static uint8_t nz_drawn;
@@ -1704,6 +1707,8 @@ static void section_set(int s)
 static uint8_t sec_age;                         /* phrases in Full since the last departure */
 static uint8_t ph_age, ph_reset;                /* phrases since the kick's shape or the plan last changed */
 static uint8_t kick_now;                        /* (the kick's Density turned: its shape drawn again at the next bar) */
+static uint8_t nz_now;                          /* (the noise's Density turned: its groove drawn again at the next bar) */
+static uint8_t kick_hand;                       /* (and from then on, the piece's opening on four left be: the knob's) */
 static int section_pick(void)
 {
     float r = frand(), m;
@@ -1841,8 +1846,11 @@ static void bar_start(void)
         }
         en_change_next = 0;
     }
+    if (nz_now && !lock)                         /* (the noise's Density turned: its hits from this bar) */
+        noise_pattern();
     if (kick_now && !lock) {                     /* (the kick's knob turned: its new shape from this bar) */
         kick_now = 0;
+        kick_hand = 1;
         kick_shape = kick_next = (uint8_t)kick_draw(sec);
         hats_publish();
         ph_age = 0;
@@ -1901,15 +1909,16 @@ static int kick_draw(int next)
     const uint32_t phr = (bar + 1u) >> 3;       /* (the next phrase's number: 0 at the top) */
     float x = (float)v * 0.04f, lam = 1.4f - evolve, w[KS_N], t = 0.0f, r;
     int k;
-    if (phr < 2u || (sec == SEC_BREAK && next != SEC_BREAK && next != SEC_THIN))
-        return KS_FOUR;
+    if (!kick_hand && (phr < 2u || (sec == SEC_BREAK && next != SEC_BREAK && next != SEC_THIN)))
+        return KS_FOUR;                          /* (the piece's opening on four, the kick whole after a Break: till the
+                                                  * knob is turned) */
     if (v >= 90) {                               /* (the classics pass: the dub pieces' density, four in Full and in a
                                                   * Groove; a Thin, ghosted or half) */
         if (next != SEC_THIN)
             return KS_FOUR;
         return frand() < 0.5f ? KS_GHOST : KS_HALF;
     }
-    if (phr < 8u)
+    if (phr < 8u && !kick_hand)
         x += (4.0f - x) * (float)(8u - phr) * (1.0f / 6.0f);
     if (next == SEC_THIN)
         x -= 1.0f;
@@ -2615,10 +2624,10 @@ static void apply(int p, int v)
         break;
     case P_KIT: kit = (unsigned)v < EN_NKIT ? v : 0; break;
     case P_NCOL: nctl.colour = (float)v * 0.02f; break;   /* the noise's controls, -1..+1 (render_crackle) */
-    case P_NGRAIN: nctl.grain = (float)v * 0.02f; break;
+    case P_NGRAIN: nz_dens(); nz_now = 1; break;   /* (1.4.0: 0..100, its hits from the next bar) */
     case P_NROOM: nctl.room = (float)v * 0.02f; break;
     case P_NDRIFT: nctl.drift = (float)v * 0.02f; break;
-    case P_NCHAR: nctl.character = (uint8_t)((unsigned)v < EN_NNCHAR ? v : 0); break;
+    case P_NCHAR: nctl.character = (uint8_t)((unsigned)v < EN_NNCHAR ? v : 0); nz_dens(); break;
     case P_CTHROW:                               /* the stabs' throws: x0 .. x1 (50) .. x3 */
         throw_mul = v <= 50 ? (float)v * 0.02f : 1.0f + (float)(v - 50) * 0.04f;
         break;
@@ -2840,6 +2849,7 @@ static void play_start(int from_top)
             loop_pos[i] = 0;
         section_set(SEC_FULL);
         sec_next = SEC_FULL;
+        kick_hand = kick_now = 0;                /* (a new start: the opening on four again) */
         kick_shape = kick_next = (uint8_t)kick_draw(SEC_FULL);
         hats_publish();
         nz_drawn = 0;
@@ -3531,16 +3541,30 @@ static float cr_u(void)                          /* the noises' own randomness: 
     return (float)(cnoise >> 8) * (1.0f / 16777216.0f);
 }
 static unsigned nz_char(void) { return nctl.character < EN_NNCHAR ? nctl.character : 0u; }
+/* (1.4.0, format 18) Density 0..100: the hits in two bars, 16 at 100, none at 0; the clicks' density as before 18
+ * (where -50..50 and the character's offset made 2..16 hits: en_nz_dens18 the way across) */
+static void nz_dens(void)
+{
+    const int v = par[P_NGRAIN] < 0 ? 0 : par[P_NGRAIN] > 100 ? 100 : par[P_NGRAIN];
+    nctl.hits = (uint8_t)((v * 16 + 50) / 100);
+    nctl.grain = fm_clampf(((float)v * 0.16f - 9.0f) * (1.0f / 7.0f) - 0.5f * NCHAR[nz_char()].dens, -1.0f, 1.0f);
+}
+int en_nz_dens18(int old, int character)         /* a value before 18 (-50..50) as 18's (0..100) */
+{
+    const float d = fm_clampf((float)old * 0.02f + 0.5f * NCHAR[(unsigned)character < EN_NNCHAR ? character : 0].dens,
+                              -1.0f, 1.0f);
+    const int k = (int)(9.0f + 7.0f * d + 0.5f);
+    return (k * 100 + 8) / 16;
+}
 /* the phrase's groove: Density's hits (2..16 in two bars), Euclidean, turned, a couple nudged a step off; now and then
  * the last one kept (more often as Evolve falls): a motif that comes back */
 static void noise_pattern(void)
 {
-    const unsigned c = nz_char();
-    float d = fm_clampf(nctl.grain + 0.5f * NCHAR[c].dens, -1.0f, 1.0f);
-    int k = (int)(9.0f + 7.0f * d + 0.5f), i, m;
+    int k = nctl.hits, i, m;
     uint32_t p;
-    if (nz_drawn && cr_u() > 0.35f + 0.5f * evolve + 0.3f * nctl.drift)   /* (Change: more often new) */
+    if (nz_drawn && !nz_now && cr_u() > 0.35f + 0.5f * evolve + 0.3f * nctl.drift)   /* (Change: more often new) */
         return;
+    nz_now = 0;
     nz_drawn = 1;
     if (sec == SEC_BREAK || sec == SEC_THIN)
         k = k * 7 / 10;
@@ -3574,7 +3598,7 @@ static void noise_step(int s)
         v = (float)nz_vel[s & 31] * (1.0f / 255.0f);
         nev(v > 0.5f ? 1 : 0, v * crackle_vol * 9.0f, 0.5f);
     }
-    if ((mutes & EN_M_NOISE) || crackle_vol <= 0.0f)
+    if ((mutes & EN_M_NOISE) || crackle_vol <= 0.0f || !nctl.hits)   /* (Density 0: no hits, no clicks) */
         return;
     {   /* the grid's dry clicks: of the clicks a second, those not loose, a sixteenth at a time */
         const float rate = (3.0f + 12.0f * crackle_vol) * cr_dv[2] * fm_exp2f(fm_clampf(nctl.grain, -1.0f, 1.0f)) *
@@ -3659,7 +3683,7 @@ static void render_crackle(uint32_t n)
     gh = 0.03f * g * cr_dv[0] * fm_exp2f(1.2f * nr);   /* the Air: quiet (it breathes with the duck: render_chunk) */
     lpc = fm_clampf(0.4f * fm_exp2f(0.5f * nc), 0.15f, 0.8f);   /* (its band: ~2-4 kHz at the top) */
     vg = 0.5f * g * NCHAR[c].clicks * fm_exp2f(0.7f * ng);   /* (the dry clicks, quiet) */
-    thr = (uint32_t)((3.0f + 12.0f * g) * cr_dv[2] * fm_exp2f(ng) * NCHAR[c].loose * (4294967296.0f / EN_SR));   /* dry
+    thr = !nctl.hits ? 0u : (uint32_t)((3.0f + 12.0f * g) * cr_dv[2] * fm_exp2f(ng) * NCHAR[c].loose * (4294967296.0f / EN_SR));   /* dry
                                                   * clicks a second, the loose ones (the rest on the grid: noise_step) */
     {   /* (the state in locals: the compiler keeps it in registers, past the sends' stores) */
         uint32_t cn = cnoise;

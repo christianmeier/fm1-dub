@@ -422,6 +422,15 @@ static void noise10(void)                       /* before 11: each piece's noise
         proj.par[p] = proj.slot[proj.piece < NPIECES ? proj.piece : 0].par[p];
 }
 
+static void nz17(void)                          /* before 18: the noise's Density, -50..50 (the character's offset on
+                                                 * it), as 0..100 */
+{
+    int i;
+    proj.par[P_NGRAIN] = (int16_t)en_nz_dens18(proj.par[P_NGRAIN], proj.par[P_NCHAR]);
+    for (i = 0; i < NPIECES; i++)
+        proj.slot[i].par[P_NGRAIN] = (int16_t)en_nz_dens18(proj.slot[i].par[P_NGRAIN], proj.slot[i].par[P_NCHAR]);
+}
+
 static void gaps9(int16_t *par)                  /* before 10: an empty slot is a gap (its root, left as it was, is not
                                                   * a degree of the walk's) */
 {
@@ -491,10 +500,14 @@ int project_load(void)
             fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR13, o->slot[i].pool, i);
         }
         from13((const project13_t *)(const void *)&buf);
+    } else if (n >= 8 && buf.magic == PROJ_MAGIC && buf.format == 17u && n >= (int)sizeof(project_t)) {
+        proj = buf;                              /* (17: as 18 laid out; the noise's Density converted below) */
+        proj.format = PROJ_FORMAT;
+        old = 17;
     } else {
         proj = buf;
     }
-    if (old)                                     /* (the new ones, from the recipes) */
+    if (old && old < 17)                                     /* (the new ones, from the recipes) */
         newpar(old == 16 ? NPAR16 : old == 15 ? NPAR15 : old == 14 ? NPAR14 : old == 13 ? NPAR13 : NPAR12);
     if (old == 9) {                              /* (8 and 9: the chords' slots as 10 has them) */
         gaps9(proj.par);
@@ -511,6 +524,12 @@ int project_load(void)
         groove12(proj.par);
         for (i = 0; i < NPIECES; i++)
             groove12(proj.slot[i].par);
+    }
+    if (old >= 11) {                             /* (before 18: the pieces never changed known first, by their recipes
+                                                  * then; then the noise's Density converted) */
+        for (i = 0; i < NPIECES; i++)
+            fresh[i] = (uint8_t)(fresh[i] || untouched_now(&proj.slot[i], i));
+        nz17();
     }
     if (n >= 8 && proj.magic == PROJ_MAGIC && proj.format == PROJ_FORMAT) {   /* (the ranges as they are now) */
         pars_clamp(proj.par);

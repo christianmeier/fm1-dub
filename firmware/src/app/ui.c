@@ -80,8 +80,8 @@ enum { K_LEDS = 200, K_CPU, K_NONE, K_SLOT, K_CQ, K_CX,    /* (the Chords page: 
        K_LANE, K_LCH,                                        /* (the Pattern page: the lane, and its chance) */
        K_FILTER, K_DUB, K_ENERGY, K_SPACE,                   /* the master actions (EN_MAC_*), in that order */
        K_MODE,                                               /* (the Key page: the mode, as ALGORITHM sets it) */
-       K_KSHAPE,                                             /* (1.4.0, the Drums page: the kick's shape: Four, Half, One,
-                                                              * Ghost, P_KDENS's) */
+       K_KSHAPE,                                             /* (1.4.0, the Drums page: the kick's shape: Four, Ghost, Half,
+                                                              * One, P_KDENS's) */
        K_PLAY,                                               /* (the Chords page: Endless or Loop, P_PMODE's bit 2) */
        K_SAVE };                                             /* (Setup: a turn saves; it shows whether it's saved) */
 static const char *const LANE_NAME[EN_NDRUM] = {"Kick", "Shaker", "Open", "Rim", "Clap"};
@@ -433,9 +433,9 @@ static int knob_get(int k)
         return ui.mac[k - K_FILTER];
     if (k == K_MODE)
         return mode_pos(proj.par[P_MODE]);
-    if (k == K_KSHAPE) {                         /* (the user's order, four on the floor first: Four, Half, One, Ghost;
-                                                  * P_KDENS 100, 50, 25, 75) */
-        static const int8_t POS[5] = {2, 2, 1, 3, 0};   /* (by P_KDENS to the nearest 25: 0, 25, 50, 75, 100) */
+    if (k == K_KSHAPE) {                         /* (the user's order, four on the floor first: Four, Ghost, Half, One:
+                                                  * P_KDENS 100, 75, 50, 25, the kick thinning) */
+        static const int8_t POS[5] = {3, 3, 2, 1, 0};   /* (by P_KDENS to the nearest 25: 0, 25, 50, 75, 100) */
         int q = (proj.par[P_KDENS] + 12) / 25;
         return POS[q < 0 ? 0 : q > 4 ? 4 : q];
     }
@@ -516,7 +516,7 @@ static void knob_text(int k, char *b)
         while ((*b++ = *n++))
             ;
     } else if (k == K_KSHAPE) {
-        static const char *const KN[4] = {"Four", "Half", "One", "Ghost"};
+        static const char *const KN[4] = {"Four", "Ghost", "Half", "One"};
         const char *n = KN[(unsigned)v < 4u ? v : 3];
         while ((*b++ = *n++))
             ;
@@ -585,7 +585,7 @@ static void knob_set(int k, int v)
         set_mode(MODE_ORDER[v]);
         return;
     } else if (k == K_KSHAPE) {                  /* (the kick's shape: P_KDENS 25 .. 100) */
-        static const int16_t KV[4] = {100, 50, 25, 75};
+        static const int16_t KV[4] = {100, 75, 50, 25};
         knob_set(P_KDENS, KV[(unsigned)v < 4u ? v : 0]);
         return;
     } else if (k == K_PLAY) {                    /* (the walk's character kept) */
@@ -626,6 +626,16 @@ static void turn(int role, int k, int32_t e)
         return;
     }
     knob_range(k, &lo, &hi);
+    if (hi - lo < 10 && !accel_off) {            /* (1.4.0, the user's) a switch: one position a click, the encoder's
+                                                  * double counts (a click read as two) within 35 ms as one */
+        static uint32_t sw_t[16];
+        const uint32_t now = plat_ms();
+        if (now - sw_t[role & 15] < 35u)
+            return;
+        sw_t[role & 15] = now;
+        knob_set(k, knob_get(k) + (e > 0 ? 1 : -1));
+        return;
+    }
     if (lo < 0 && hi > 0 && hi - lo >= 10) {     /* (1.3.0) a centred knob: a notch at 0, three clicks to leave it */
 #define NOTCH 2                                  /* (the clicks out of 0 held back) */
         static int8_t held[16];
@@ -1978,6 +1988,8 @@ static void ripples_take(uint32_t now)
             rip[i].on = 0;
         return;
     }
+    if (src == 4)                                /* (the Noise pages: no rings, the noise's specks alone) */
+        return;
     if (src < 0 && nb != rip_bass) {             /* (1.4.0, the user's: on the whole, the bass's notes too: a gold ring,
                                                   * no repeats) */
         rip_bass = nb;
@@ -3128,9 +3140,6 @@ static void draw_main(void)
     if (ui.view >= V_CFM && ui.view <= V_BFM) {  /* an FM page: the algorithm */
         draw_alg(layer_of(ui.view));
         moving = 0;
-    } else if (ui.view == V_NSND || ui.view == V_NSND2) {   /* the Noise pages: the spectrum, its colour as it moves */
-        draw_spec();
-        moving = 1;
     } else if (proj.screen % 3u == 1u) {         /* (HOME again: a scope, a spectrum, or the ripples) */
         draw_scope();
         moving = 1;
@@ -3139,7 +3148,9 @@ static void draw_main(void)
         moving = 1;
     } else {
         specks_take(now);
-        moving = rip_src < 0 ? (uint8_t)draw_specks(now) : 0;   /* (the noise, under the rings: on the whole only) */
+        moving = rip_src < 0 || rip_src == 4 ? (uint8_t)draw_specks(now) : 0;   /* (the noise, under the rings: on
+                                                  * the whole, and alone on the Noise pages: they follow HOME's screen
+                                                  * as the others do, 1.4.0) */
         moving |= (uint8_t)draw_ripples(now);
         if (rip_src < 0 || rip_src == 1)         /* (the ping loops: on the whole, and the Pings page) */
             draw_orbits();
@@ -3217,13 +3228,10 @@ static void draw_main(void)
     {   /* (1.3.0) top right: the page's name (PERFORM's too); to its left, LOCK and SOLO while on */
         char pn[16];
         int32_t x;
-        int k;
         caps(pn, VIEW_NAME[ui.view], sizeof pn);
         x = 232 - text_w(&FONT_B, pn);
         cv_text(x, 12, &FONT_B, pn, K_ACC);
-        for (k = 0; k < NROUND; k++)             /* (under it, the round's dots, in the panel's order: FX ENV LFO GLO
-                                                  * HOME SAVE ARP SEQ) */
-            cv_round(212 - NROUND * 6 + 2 + k * 6, 31, 4, 4, 2, PAGE_ORDER[k] == page_of(ui.view) ? K_ACC : K_LINE);
+        /* (1.4.0, the user's: the round's dots under it gone; SELECT doesn't circle the pages any more) */
         if (ui.solo) {                           /* (a solo on, in PERFORM or kept after it) */
             x -= 6 + text_w(&FONT_XS, "SOLO");
             cv_text(x, 14, &FONT_XS, "SOLO", K_CLAP);
