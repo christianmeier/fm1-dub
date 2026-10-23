@@ -621,6 +621,17 @@ today switches between Random and the slots.
 - **A future set of pieces** in the vein of the listening list's ambient electronica (Max Cooper's "Parting Ways",
   REPORT3-partingways.md): an ostinato mode, the Tempo down to 75-80, real stereo width; and re-evaluating the eight.
 
+## 1.4.0 (on the dub-1.4 branch; 1.3.0 released 2026-10-23, v1.3.0 at e6fe7b8)
+
+The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and first:
+- **The Filter on SELECT** (the user's idea, 2026-10-23: "I never use SELECT to move between pages ... second to
+  volume, the most important and frequently used is the filter"): SELECT turns the DJ filter on every page (the
+  same value as PERFORM's KNOB 1, which keeps it), a notch at Off, a big ring and "FILTER SHUT 40" while it turns
+  (the reader says it); HOME held + SELECT still the tempo; the pages by their buttons only (a modifier for
+  stepping, later, if a reader's user asks). The Dub page's KNOB 1 freed: HOME's first page the Arrangement
+  (Evolve, Motion, the dub mixer, Drift).
+- To settle: the pace (in steps, A first, or all at once).
+
 ## Now: two lines in parallel (the user, 2026-10-23)
 
 After 1.3.0's release (the docs done, e20d31b..e10ddf4; a release video being made in build/film/release-1.3.0/):
