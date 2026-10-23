@@ -394,11 +394,11 @@ int main(void)
         CHECK(n[0] == 0 && n[1] > 0 && n[2] * 2u > n[1] * 3u, "Throws: %u / %u / %u", n[0], n[1], n[2]);
     }
 
-    /* the kick's shapes, a phrase at a time: Density 100 four on the floor in every bar it plays; 90 mostly four, some
-     * half-time and the downbeat alone */
+    /* the kick's shapes (1.4.0: a switch, Four, Half, One, Ghost): Four (100) four on the floor in every bar it plays;
+     * Half (50), mostly half-time, with Evolve's wander some of the others */
     {
         int k, b, four[2] = {0, 0}, half[2] = {0, 0}, one[2] = {0, 0}, played[2] = {0, 0};
-        static const int KD[2] = {100, 90};
+        static const int KD[2] = {100, 50};
         for (k = 0; k < 2; k++) {
             fresh();
             en_seed(11);
@@ -419,11 +419,12 @@ int main(void)
                 one[k] += p == 0x0001u;
             }
         }
-        printf("  the kick, Density 100: four in %d of %d bars; 90: four %d, half %d, one %d of %d\n", four[0], played[0],
+        printf("  the kick, Four: four in %d of %d bars; Half: four %d, half %d, one %d of %d\n", four[0], played[0],
                four[1], half[1], one[1], played[1]);
-        CHECK(played[0] > 100 && four[0] == played[0], "Density 100: four in %d of %d", four[0], played[0]);
-        CHECK(played[1] > 100 && four[1] > played[1] / 3 && four[1] < played[1] * 9 / 10 && half[1] + one[1] > played[1] / 12,
-              "Density 90: four %d, half %d, one %d of %d", four[1], half[1], one[1], played[1]);
+        CHECK(played[0] > 100 && four[0] == played[0], "Four: four in %d of %d", four[0], played[0]);
+        CHECK(played[1] > 100 && half[1] > played[1] / 4 && four[1] < played[1] * 6 / 10,   /* (a piece starts on four:
+                                                  * its first three phrases, then wanders to its shape over five) */
+              "Half: four %d, half %d, one %d of %d", four[1], half[1], one[1], played[1]);
     }
 
     /* the drums' and the bass's phrase plan: A A A B A A A B, the A bars the same, the two B bars the same */

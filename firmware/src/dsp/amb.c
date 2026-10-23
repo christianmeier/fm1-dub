@@ -88,7 +88,7 @@ static const struct {
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
                     0, 0, 0, 0, 0,
                     70, 70, 90, 40,
-                    45, 97, 25, 50, 40, 50,
+                    45, 100, 25, 50, 40, 50,
                     50, 50, 50, 0,
                     25, 20}},
     {"Chamber",    {55, 20, 62, 72, 20, 35, 6, 40, 70, 4, 45, 72, 50, 55, 30, 30, 0, 1, 128, 9, 5, 0,
@@ -99,7 +99,7 @@ static const struct {
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
                     -5, -10, 10, 0, 3,
                     70, 60, 100, 55,
-                    35, 96, 50, 50, 60, 50,
+                    35, 75, 50, 50, 60, 50,
                     50, 50, 50, 0,
                     30, 15}},
     {"Steppers",   {52, 35, 80, 82, 35, 35, 6, 45, 50, 1, 30, 50, 55, 25, 50, 25, 0, 1, 126, 2, 1, 0,
@@ -110,7 +110,7 @@ static const struct {
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
                     5, 10, -10, 0, 0,
                     70, 70, 90, 60,
-                    50, 97, 30, 50, 45, 50,
+                    50, 100, 30, 50, 45, 50,
                     50, 50, 50, 0,
                     30, 25}},
     {"Fog",        {50, 34, 58, 62, 40, 55, 5, 42, 75, 2, 55, 72, 46, 80, 25, 72, 0, 1, 120, 7, 5, 0,
@@ -121,7 +121,7 @@ static const struct {
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
                     -10, 0, 30, 10, 1,
                     70, 65, 100, 50,
-                    55, 70, 50, 50, 85, 50,
+                    55, 75, 50, 50, 85, 50,
                     85, 50, 50, 0,
                     35, 30}},
     {"Concrete",   {58, 45, 70, 85, 25, 50, 4, 55, 50, 1, 25, 62, 60, 20, 60, 35, 0, 1, 136, 0, 7, 0,
@@ -132,7 +132,7 @@ static const struct {
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
                     0, 0, 0, 10, 0,
                     70, 65, 85, 65,
-                    50, 97, 20, 50, 55, 50,
+                    50, 100, 20, 50, 55, 50,
                     50, 50, 50, 0,
                     45, 40}},
     {"Night Drive", {48, 45, 68, 78, 45, 60, 3, 35, 60, 3, 35, 65, 50, 40, 45, 45, 0, 1, 120, 10, 1, 0,
@@ -143,7 +143,7 @@ static const struct {
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
                     0, -10, 0, 0, 1,
                     80, 75, 90, 58,
-                    55, 94, 50, 50, 85, 50,
+                    55, 100, 50, 50, 85, 50,
                     50, 50, 50, 0,
                     40, 25}},
     {"Pressure",   {55, 20, 75, 92, 20, 45, 6, 38, 55, 1, 20, 55, 48, 30, 35, 25, 0, 1, 126, 4, 2, 0,
@@ -154,7 +154,7 @@ static const struct {
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
                     -10, -30, 20, -10, 1,
                     70, 70, 90, 55,
-                    60, 98, 50, 50, 75, 50,
+                    60, 100, 50, 50, 75, 50,
                     85, 50, 50, 0,
                     20, 35}},
     {"Haze",       {45, 42, 58, 55, 50, 60, 4, 35, 80, 3, 60, 70, 45, 80, 25, 62, 0, 1, 116, 3, 0, 1,
@@ -165,7 +165,7 @@ static const struct {
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
                     5, 10, 10, 15, 2,
                     70, 70, 100, 50,
-                    50, 60, 50, 50, 70, 50,
+                    50, 50, 50, 50, 70, 50,
                     50, 50, 50, 0,
                     30, 10}},
 };
@@ -1703,6 +1703,7 @@ static void section_set(int s)
  * Full between departures */
 static uint8_t sec_age;                         /* phrases in Full since the last departure */
 static uint8_t ph_age, ph_reset;                /* phrases since the kick's shape or the plan last changed */
+static uint8_t kick_now;                        /* (the kick's Density turned: its shape drawn again at the next bar) */
 static int section_pick(void)
 {
     float r = frand(), m;
@@ -1840,6 +1841,12 @@ static void bar_start(void)
         }
         en_change_next = 0;
     }
+    if (kick_now && !lock) {                     /* (the kick's knob turned: its new shape from this bar) */
+        kick_now = 0;
+        kick_shape = kick_next = (uint8_t)kick_draw(sec);
+        hats_publish();
+        ph_age = 0;
+    }
     if (sec == SEC_BREAK && pb == 2)            /* two bars in, the filter starts to open */
         arc_tgt = 1.0f, arc_tau = 2.2f * 16.0f * step_len;
     fill = 0;
@@ -1894,7 +1901,7 @@ static int kick_draw(int next)
     const uint32_t phr = (bar + 1u) >> 3;       /* (the next phrase's number: 0 at the top) */
     float x = (float)v * 0.04f, lam = 1.4f - evolve, w[KS_N], t = 0.0f, r;
     int k;
-    if (v >= 100 || phr < 2u || (sec == SEC_BREAK && next != SEC_BREAK && next != SEC_THIN))
+    if (phr < 2u || (sec == SEC_BREAK && next != SEC_BREAK && next != SEC_THIN))
         return KS_FOUR;
     if (v >= 90) {                               /* (the classics pass: the dub pieces' density, four in Full and in a
                                                   * Groove; a Thin, ghosted or half) */
@@ -2619,6 +2626,8 @@ static void apply(int p, int v)
         ping_dry = 0.5f * fm_exp2f((v <= 50 ? 6.0f * (float)(50 - v) : -14.0f * (float)(v - 50)) * 0.02f * 0.16609640f);
         break;
     case P_HATSLVL: hats_lvl = fm_exp2f((float)(v - 50) * 0.04f); break;   /* x1 at 50, -12 .. +12 dB */
+    case P_KDENS: kick_now = 1; break;           /* (1.4.0, the user's) the kick's shape turned: from the next bar, not
+                                                  * the next phrase (and its hold begun again) */
     case P_RUMBLE:                               /* the kick's rumble: none (0) .. a deep roar (100), longer as it rises:
                                                   * its tail 0.8 s .. 2.5 s (rumble); (1.3.0: off, not yet to standard,
                                                   * the user: EN_RUMBLE 1 for 1.4.0's work; the value kept, saved) */

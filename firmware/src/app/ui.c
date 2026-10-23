@@ -80,6 +80,8 @@ enum { K_LEDS = 200, K_CPU, K_NONE, K_SLOT, K_CQ, K_CX,    /* (the Chords page: 
        K_LANE, K_LCH,                                        /* (the Pattern page: the lane, and its chance) */
        K_FILTER, K_DUB, K_ENERGY, K_SPACE,                   /* the master actions (EN_MAC_*), in that order */
        K_MODE,                                               /* (the Key page: the mode, as ALGORITHM sets it) */
+       K_KSHAPE,                                             /* (1.4.0, the Drums page: the kick's shape: Four, Half, One,
+                                                              * Ghost, P_KDENS's) */
        K_PLAY,                                               /* (the Chords page: Endless or Loop, P_PMODE's bit 2) */
        K_SAVE };                                             /* (Setup: a turn saves; it shows whether it's saved) */
 static const char *const LANE_NAME[EN_NDRUM] = {"Kick", "Shaker", "Open", "Rim", "Clap"};
@@ -89,7 +91,7 @@ static const uint16_t VIEW_KNOB[NVIEWS][4] = {
     {P_STABS, P_CTHROW, P_CGHOST, P_CUTOFF},
     {P_DENSITY, P_POCT, P_PGHOST, P_CLOUD},
     {P_BNOTES, P_BASSOCT, P_GROOVE, P_FIFTH},
-    {P_KDENS, P_HITS, P_HATSLVL, P_HTONE},       /* (Duck: PERFORM's, a master action) */
+    {K_KSHAPE, P_HITS, P_HATSLVL, P_HTONE},      /* (Duck: PERFORM's, a master action; the kick a switch, 1.4.0) */
     {P_ECHO, P_ETIME, P_FEEDBACK, P_REVERB},
     {P_TUNE, P_MIDI, K_LEDS, K_SAVE},
     {P_CHORD, P_PINGS, P_BASS, P_DRUMS},
@@ -113,7 +115,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Density", "Throws", "Wet", "Cutoff"},
     {"Density", "Octave", "Wet", "Cloud"},
     {"Density", "Octave", "Groove", "Fifth"},
-    {"Density", "Hits", "Hats", "Tone"},
+    {"Kick", "Hits", "Hats", "Tone"},
     {"Echo", "Echo time", "Feedback", "Reverb"},
     {"Tune", "MIDI out", "Lights", "Save"},
     {"Chord", "Pings", "Bass", "Drums"},
@@ -143,7 +145,7 @@ static const char *const KNOB_HELP[NVIEWS][4] = {
      "The reverb through the grain cloud"},
     {"How many of the groove's notes play", "The bass an octave down or up", "The pattern, from sparse to busy",
      "How often the fifth, not the root"},
-    {"The kick: none, one, half, four", "How busy the hats are", "The hats' level against the kick",
+    {"The kick's shape, Evolve its wander", "How busy the hats are", "The hats' level against the kick",
      "The hats, dark to bright"},
     {"How much goes into the echo", "The tape loop's length, in beats", "How long the repeats go on",
      "How much goes into the plate"},
@@ -431,6 +433,12 @@ static int knob_get(int k)
         return ui.mac[k - K_FILTER];
     if (k == K_MODE)
         return mode_pos(proj.par[P_MODE]);
+    if (k == K_KSHAPE) {                         /* (the user's order, four on the floor first: Four, Half, One, Ghost;
+                                                  * P_KDENS 100, 50, 25, 75) */
+        static const int8_t POS[5] = {2, 2, 1, 3, 0};   /* (by P_KDENS to the nearest 25: 0, 25, 50, 75, 100) */
+        int q = (proj.par[P_KDENS] + 12) / 25;
+        return POS[q < 0 ? 0 : q > 4 ? 4 : q];
+    }
     if (k == K_PLAY)
         return proj.par[P_PMODE] & EN_PLOOP ? 1 : 0;
     if (k == K_SAVE)
@@ -447,7 +455,7 @@ static void knob_range(int k, int *lo, int *hi)
         *hi = 50;
     } else {
         *lo = 0;
-        *hi = k == K_PLAY ? 1 : k == K_MODE ? EN_NMODES - 1 : k == K_LEDS ? 2 : k == K_CPU ? 100 : k == K_SLOT ? EN_NPROG - 1 : k == K_CQ ? EN_NCQ - 1 : k == K_CX ? EN_NCX - 1
+        *hi = k == K_PLAY ? 1 : k == K_KSHAPE ? 3 : k == K_MODE ? EN_NMODES - 1 : k == K_LEDS ? 2 : k == K_CPU ? 100 : k == K_SLOT ? EN_NPROG - 1 : k == K_CQ ? EN_NCQ - 1 : k == K_CX ? EN_NCX - 1
             : k == K_LANE ? EN_NDRUM - 1 : k == K_LCH ? 100 : 0;
     }
 }
@@ -457,7 +465,7 @@ static const char *knob_name(int k)
         return en_param_info(k)->name;
     return k == K_LEDS ? "Lights" : k == K_CPU ? "CPU" : k == K_SLOT ? "Slot" : k == K_CQ ? "Chord" : k == K_CX ? "Type"
          : k == K_LANE ? "Lane" : k == K_LCH ? "Chance" : k == K_FILTER ? "Filter" : k == K_DUB ? "Wet"
-         : k == K_ENERGY ? "Energy" : k == K_SPACE ? "Duck" : k == K_MODE ? "Mode" : k == K_PLAY ? "Play" : k == K_SAVE ? "Save" : "";
+         : k == K_ENERGY ? "Energy" : k == K_SPACE ? "Duck" : k == K_MODE ? "Mode" : k == K_KSHAPE ? "Kick" : k == K_PLAY ? "Play" : k == K_SAVE ? "Save" : "";
 }
 static void knob_text(int k, char *b)
 {
@@ -505,6 +513,11 @@ static void knob_text(int k, char *b)
         itoa_u((uint32_t)(v < 0 ? -v : v) * 2u, b);
     } else if (k == K_MODE) {
         const char *n = mode_name();
+        while ((*b++ = *n++))
+            ;
+    } else if (k == K_KSHAPE) {
+        static const char *const KN[4] = {"Four", "Half", "One", "Ghost"};
+        const char *n = KN[(unsigned)v < 4u ? v : 3];
         while ((*b++ = *n++))
             ;
     } else if (k == K_PLAY) {
@@ -570,6 +583,10 @@ static void knob_set(int k, int v)
         return;                                  /* (for playing: nothing saved) */
     } else if (k == K_MODE) {                    /* (the knob: the place in MODE_ORDER) */
         set_mode(MODE_ORDER[v]);
+        return;
+    } else if (k == K_KSHAPE) {                  /* (the kick's shape: P_KDENS 25 .. 100) */
+        static const int16_t KV[4] = {100, 50, 25, 75};
+        knob_set(P_KDENS, KV[(unsigned)v < 4u ? v : 0]);
         return;
     } else if (k == K_PLAY) {                    /* (the walk's character kept) */
         knob_set(P_PMODE, (proj.par[P_PMODE] & 3) | (v ? EN_PLOOP : 0));

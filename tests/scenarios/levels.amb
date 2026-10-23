@@ -105,17 +105,17 @@ expect par24 1
 spin K1 40
 tap SEQ
 wait 300
-said Drums page, kit Tight: Density 97, Hits 10, Hats 40, Tone 0
+said Drums page, kit Tight: Kick Four, Hits 10, Hats 40, Tone 0
 shot drums_page.png
 spin K3 10
 wait 300
 said Hats 50
 expect par114 50
-spin K1 -10
+spin K1 1
 wait 300
-said Density 87
-expect par116 87
-spin K1 10
+said Kick Half
+expect par116 50
+spin K1 -1
 tap SAVE
 wait 300
 said Noise page, character Vinyl: Density 0, Air 0, Tone 0, Decay 50
@@ -374,6 +374,6 @@ wait 1000
 expect format 17
 expect par112 80
 expect par115 45
-expect par116 97
+expect par116 100
 expect par117 25
 expect par120 50

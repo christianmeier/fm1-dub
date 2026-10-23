@@ -508,9 +508,9 @@ tone and takes a little off the reverb when it's open.
 
 **The kick, a few phrases at a time:** the kick takes a shape (none, the downbeat, one and three,
 four with two and four ghosted, four on the floor) and keeps it for two to six phrases (fewer as
-Evolve rises), drawn round the Drums page's Density: the nearer a shape is to it, the likelier.
-From Density 90 it's four on the floor in every Full or Groove phrase, ghosted or half in a Thin;
-at 100, always. Under Motion 70 it never goes silent in Full. A piece starts on four on the floor
+Evolve rises), drawn round the Drums page's Kick: the nearer a shape is to it, the likelier. On
+Four it's four on the floor in every Full or Groove phrase, ghosted or half in a Thin. Turning Kick
+takes effect from the next bar. Under Motion 70 it never goes silent in Full. A piece starts on four on the floor
 for its first three phrases, and after a Break the kick comes back whole. Evolve lets the shape
 wander further; Energy (PERFORM) moves it. With the Pattern page on Pattern, your kick lane plays instead. The
 shape is chosen in the phrase's last bar (dot 8 blinks if it changes), and Lock keeps it.
@@ -650,7 +650,7 @@ spectrum (see [The screen](#4-the-screen)). **HOME** again: the Key page (below)
   stabs and whole bars dropping out, each stab's own cutoff, the shaker's pattern and looser hats,
   the pings' notes, loops sitting out, octave jumps in the bass, how far the kick's shape wanders,
   and whether there are dub throws at all (see [The layers](#5-the-layers)). At 0, with Motion at 0
-  and the Drums page's Density at 100 too, it's a strict loop: every stab every bar, the kick four
+  and the Drums page's Kick on Four too, it's a strict loop: every stab every bar, the kick four
   on the floor, no throws, no fills, the phrase plan as it was drawn when the music started (good
   for playing along with other gear). To keep the groove at any Evolve, hold SEL: Lock. Above 40
   it also nudges the sound by itself: now and then, on a phrase's first bar, one or two of one
@@ -794,12 +794,12 @@ PERFORM's Wet moves the noise too: its dry down and its plate and echo up, or th
 
 ### SEQ: Drums
 
-![The Drums page: TIGHT, DENSITY 97, HITS 10, HATS 40, TONE 0](img/screen-drums.png "The Drums page")
+![The Drums page: TIGHT, KICK Four, HITS 10, HATS 40, TONE 0](img/screen-drums.png "The Drums page")
 
-- **Density:** the kick's shape, chosen a phrase at a time: none, the downbeat alone, one and three,
-  four with two and four ghosted (10 dB down), or four on the floor. Density is where the shapes
-  centre: about 0 none, 25 the downbeat, 50 one and three, 75 the ghosted four; each phrase draws
-  one near it, the nearest likeliest. At 100, four on the floor, always. Evolve lets it wander
+- **Kick:** the kick's shape, a switch: **Four** (four on the floor), **Half** (one and three),
+  **One** (the downbeat alone), **Ghost** (four with two and four ghosted, 10 dB down). It takes
+  effect from the next bar, and holds for a few phrases; with Evolve up it wanders now and then to a
+  neighbouring shape (on Four, a Thin phrase ghosted or half). Evolve lets it wander
   further, a Thin phrase takes it a step sparser, and Energy (PERFORM) moves it. The kick is out in
   a Break and the second half of a fill; with the Pattern page on Pattern, your kick lane plays
   instead.
@@ -1029,7 +1029,7 @@ The defaults are Basic's; each piece has its own.
 | Key | Root | C – B | F |
 | Key | Mode | 8 modes, or Custom | Dorian |
 | Key | Swing | 50%–70% | 51% |
-| Drums | Density (the kick's shapes) | 0–100 (from 90: four on the floor in Full; 100: always) | 97 |
+| Drums | Kick (its shape) | Four, Half, One, Ghost | Four |
 | Drums | Hits | 0–100 | 10 |
 | Drums | Hats | 0–100 (−12 dB – ×1 at 50 – +12 dB) | 40 |
 | Drums | Tone (the hats) | −50 – +50 | 0 |
