@@ -633,6 +633,14 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
 - The pace: in steps (the user, 2026-10-23): the Filter on SELECT (built), then A (each layer: its part, then its
   voice; Change per layer), then B (HOME: Arrangement, Song, Key) with song structure and the dub mixer, then C (the
   space together). Each step tested on the FM-1.
+- **The big ring for every knob** (the user, 2026-10-23, after the Filter on SELECT: "I like the large circle ... as
+  when we use OCT ... take it further. The screen is a bit cluttered and it's difficult to see, when you rotate a
+  knob, what / where the change is, because it is so small"). Turning any knob: its value as a big ring in the middle
+  (as the level ring and the filter's), its name under it, the value inside, in the page's colour; fading a second
+  after. Its kinds: a 0..100 knob (an arc from the start), a centred one (from the top, the notch at 0), a switch
+  (big pips or the name: Groove "Offbeat", Echo time "1/8."), a knob with marks (Motion's 40 and 70 on the big ring,
+  where they can be read). And the screen less cluttered around it: what to keep, what to drop (to look at with the
+  UI review: the lanes, the level bars, the duck meter, the knob strip's rule and help line).
 - **A MIDI follow mode** (an arranger; a user, Erich, a guitarist with a MIDI guitar: "takes the played chords as
   they are and arranges the other instruments around it"). Today MIDI in, channel 1, toggles a note in or out of the
   scale (and the clock). Ideas: the chord played (the notes within a short window) becomes the chord playing,
