@@ -2569,47 +2569,32 @@ static void draw_pings_lane(void)
     }
 }
 
-/* (1.4.0) the Drums page: its lanes alone, large. The kick (each a block, the ghosts low), the shaker (a tick each,
- * as loud as the phrase's feel has it), the open hat (a ring), and the rim and the clap under them when they play;
- * the playhead's column; A or B at the left (bars 4 and 8, the phrase's variant) */
+/* (1.4.0) the Drums page: what its knobs move, alone, large (the whole kit is the Pattern page's): the kick, a row
+ * (orange), and the hats, a row (white: the shaker filled, the open hat an outline), all the same height (a ghost
+ * kick dimmer); the playhead's column; A or B at the left (bars 4 and 8, the phrase's variant) */
 static void draw_drums_lane(void)
 {
-    const uint32_t k = en_lane[1], sh = en_lane_sh, op = en_lane_op, rim = en_lane[3], clap = en_lane[4];
+    const uint32_t k = en_lane[1], sh = en_lane_sh, op = en_lane_op;
     const int pos = en_drum_pos[0], b = en_phrase_bar == 3 || en_phrase_bar == 7;
     int i;
     if (en_playing)
-        cv_round(38 + pos * 11, 98, 10, 46, 2, K_PANEL);
-    text_c(17, 108, &FONT_C, b ? "B" : "A", K_PULSE);
+        cv_round(38 + pos * 11, 101, 10, 40, 2, K_PANEL);
+    text_c(17, 110, &FONT_C, b ? "B" : "A", K_PULSE);
     for (i = 0; i < 16; i++) {
         const int32_t x = 40 + i * 11;
         const int now = en_playing && i == pos;
-        if (k >> i & 1u) {                       /* the kick: a block, the ghosts low */
-            const int h = 4 + en_kick_v[i] * 12 / 255;
-            cv_round(x, 116 - h, 8, h, 2, now ? K_TEXT : en_kick_v[i] < 160 ? mix(K_PULSE_T, K_PULSE, 8) : K_PULSE);
+        if (k >> i & 1u)                         /* the kick */
+            cv_round(x, 106, 8, 12, 2, now ? K_TEXT : en_kick_v[i] < 160 ? mix(K_PULSE_T, K_PULSE, 7) : K_PULSE);
+        else
+            cv_rect(x + 3, 111, 2, 2, (i & 3) ? K_LINE : K_DIM);
+        if (sh >> i & 1u) {                      /* the hats: the shaker filled */
+            cv_round(x, 124, 8, 12, 2, now ? K_TEXT : mix(K_LINE, K_TEXT, 12));
+        } else if (op >> i & 1u) {               /* the open hat: an outline, the same size */
+            const uint16_t c = now ? K_TEXT : mix(K_LINE, K_TEXT, 12);
+            cv_rect(x + 1, 124, 6, 1, c), cv_rect(x + 1, 135, 6, 1, c);
+            cv_rect(x, 125, 1, 10, c), cv_rect(x + 7, 125, 1, 10, c);
         } else {
-            cv_rect(x + 3, 114, 2, 2, (i & 3) ? K_LINE : K_DIM);
-        }
-        if (sh >> i & 1u) {                      /* the shaker: a tick, as loud as it plays */
-            const int h = 2 + en_hat_v[i] * 7 / 255;
-            cv_round(x + 2, 129 - h, 4, h, 1, now ? K_TEXT : mix(K_LINE, K_TEXT, 6 + en_hat_v[i] * 10 / 255));
-        }
-        if (op >> i & 1u) {                      /* the open hat: a ring */
-            const uint16_t c = now ? K_TEXT : K_DIM;
-            cv_rect(x + 1, 131, 6, 1, c), cv_rect(x + 1, 137, 6, 1, c);
-            cv_rect(x, 132, 1, 5, c), cv_rect(x + 7, 132, 1, 5, c);
-        }
-        if (rim >> i & 1u)                        /* the rim, the clap: under them */
-            cv_round(x + 1, 140, 6, 3, 1, K_RIM);
-        if (clap >> i & 1u) {                    /* (the clap only now and then in Auto: an outline; its glow when it plays) */
-            if (now && en_drum_glow[4] > 0.5f) {
-                cv_round(x + 1, 139, 6, 4, 1, K_CLAP);
-            } else if (proj.par[P_DMODE] && proj.par[P_DCH4] >= 50) {
-                cv_round(x + 1, 140, 6, 3, 1, K_CLAP);
-            } else {
-                const uint16_t c = mix(K_BG, K_CLAP, 9);
-                cv_rect(x + 1, 139, 6, 1, c), cv_rect(x + 1, 142, 6, 1, c);
-                cv_rect(x + 1, 140, 1, 2, c), cv_rect(x + 6, 140, 1, 2, c);
-            }
+            cv_rect(x + 3, 129, 2, 2, (i & 3) ? K_LINE : K_DIM);
         }
     }
 }
