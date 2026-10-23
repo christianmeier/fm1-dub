@@ -277,6 +277,7 @@ static void msg_text(const char *a, const char *b, char *t)   /* the message as 
     t[k] = 0;
 }
 /* a message for a moment in the header; flags: how a screen reader gets it (0: the caller tells it) */
+static void caps(char *d, const char *s, int n);
 static void say_as(const char *a, const char *b, uint32_t flags)
 {
     uint32_t i;
@@ -1543,6 +1544,13 @@ static void input(void)
                 continue;                        /* (an FM page on a voice that isn't FM: the knobs rest, greyed; the
                                                   * LFO, the fourth, works on every voice) */
             turn(EN_K1 + (int)i, VIEW_KNOB[ui.view][i], e);
+            if (VIEW_KNOB[ui.view][i] != K_SAVE) {   /* (1.4.0, the user's) the header: the knob's name, in capitals,
+                                                       * and its value, for every knob (shown, not said again) */
+                char nm[16], tv[16];
+                caps(nm, KNOB_LABEL[ui.view][i], sizeof nm);
+                knob_text(VIEW_KNOB[ui.view][i], tv);
+                say_as(nm, tv, 0);
+            }
             {   /* (1.4.0) the big ring: the knob's value large over the middle (not where the page itself is the
                  * picture: the Chords and the Pattern pages; nor Save and the CPU) */
                 static const uint16_t LC[NLAYER] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE};
@@ -1551,9 +1559,6 @@ static void input(void)
                 if ((l == 2 && (k == P_GROOVE || k == P_BNOTES)) || (l == 0 && k == P_STABS) || (l == 1 && k == P_DENSITY) ||
                     (l == 3 && (k == P_KDENS || k == P_HITS))) {   /* (the bass's lane shows it: the ring steps
                                                                       * aside, the header says it) */
-                    char t[16];
-                    knob_text(k, t);
-                    say(KNOB_LABEL[ui.view][i], t);
                     big_show_help(k, KNOB_LABEL[ui.view][i], LC[l], KNOB_HELP[ui.view][i]);
                     ui.big_noring = 1;
                 } else if (ui.view != V_CHORDS && ui.view != V_PAT && k != K_SAVE && k != K_CPU && k != K_NONE)
