@@ -422,13 +422,16 @@ static void noise10(void)                       /* before 11: each piece's noise
         proj.par[p] = proj.slot[proj.piece < NPIECES ? proj.piece : 0].par[p];
 }
 
-static void nz17(void)                          /* before 18: the noise's Density, -50..50 (the character's offset on
-                                                 * it), as 0..100 */
+static void nz17(void)                          /* before 18: the noise's Density and Air, -50..50 (the character's
+                                                 * offset on them), as 0..100 */
 {
     int i;
     proj.par[P_NGRAIN] = (int16_t)en_nz_dens18(proj.par[P_NGRAIN], proj.par[P_NCHAR]);
-    for (i = 0; i < NPIECES; i++)
+    proj.par[P_NROOM] = (int16_t)en_nz_air18(proj.par[P_NROOM], proj.par[P_NCHAR]);
+    for (i = 0; i < NPIECES; i++) {
         proj.slot[i].par[P_NGRAIN] = (int16_t)en_nz_dens18(proj.slot[i].par[P_NGRAIN], proj.slot[i].par[P_NCHAR]);
+        proj.slot[i].par[P_NROOM] = (int16_t)en_nz_air18(proj.slot[i].par[P_NROOM], proj.slot[i].par[P_NCHAR]);
+    }
 }
 
 static void gaps9(int16_t *par)                  /* before 10: an empty slot is a gap (its root, left as it was, is not
@@ -501,7 +504,7 @@ int project_load(void)
         }
         from13((const project13_t *)(const void *)&buf);
     } else if (n >= 8 && buf.magic == PROJ_MAGIC && buf.format == 17u && n >= (int)sizeof(project_t)) {
-        proj = buf;                              /* (17: as 18 laid out; the noise's Density converted below) */
+        proj = buf;                              /* (17: as 18 laid out; the noise's Density and Air converted below) */
         proj.format = PROJ_FORMAT;
         old = 17;
     } else {
@@ -526,7 +529,7 @@ int project_load(void)
             groove12(proj.slot[i].par);
     }
     if (old >= 11) {                             /* (before 18: the pieces never changed known first, by their recipes
-                                                  * then; then the noise's Density converted) */
+                                                  * then; then the noise's Density and Air converted) */
         for (i = 0; i < NPIECES; i++)
             fresh[i] = (uint8_t)(fresh[i] || untouched_now(&proj.slot[i], i));
         nz17();

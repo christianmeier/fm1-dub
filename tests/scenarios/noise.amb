@@ -1,4 +1,4 @@
-# the Noise page (SAVE: a tap, the page; again, it stays): Density (the groove's hits, 0..100: 0 none), Air (the hiss under it), Tone
+# the Noise page (SAVE: a tap, the page; again, it stays): Density (the groove's hits, 0..100: 0 none), Air (the hiss under it, 0..100: 0 none), Tone
 # (-50..+50 around the piece's own) and Decay (how long the hits ring; the level on OCT-/OCT+, Drift the recipes'), ALGORITHM its character (Vinyl, Tape, Dust, Room, Machine); the spectrum in the middle; SAVE held nudges it,
 # held on shakes it (another character); kept by the piece; saving on GLO held and Setup's KNOB 4; a 1.2.0 project
 # (format 10) read, the noise from the recipes
@@ -7,7 +7,7 @@ wait 2000
 tap SAVE
 wait 400
 expect view 19
-said Noise page, character Vinyl: Density 56, Air 0, Tone 0, Decay 50
+said Noise page, character Vinyl: Density 56, Air 66, Tone 0, Decay 50
 shot noise.png
 spin K3 22
 wait 300
@@ -19,8 +19,8 @@ said Decay 35
 expect par120 35
 spin K2 -7
 wait 300
-said Air -5
-expect par108 -5
+said Air 59
+expect par108 59
 spin K1 -56
 wait 300
 said Density 0
