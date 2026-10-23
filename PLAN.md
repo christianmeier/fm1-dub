@@ -649,6 +649,12 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   thin rows (kick, shaker, open hat), the noise's 32 steps. The B bars (4 and 8) shown as they change. The Dub, Space,
   Setup pages and PERFORM keep the overview. On a pattern knob (Groove, Density, Hits) the big ring might step
   aside: the lane itself the feedback. A first piece of the declutter.
+- **A bass sequencer page** (the user, 2026-10-23, for the future): the bass's own line written by hand, as the
+  drums' Pattern page: a page after the bass's FM page (LFO a fourth time), the white keys the 16 steps (on / off), a
+  step's note (the root by default; the fifth, the octave, another degree of the scale) and its length (tied steps),
+  Auto / Pattern as the drums' Play; following the chord as it moves (the steps as degrees, not fixed notes). In dub
+  the bass seldom changes and mostly plays the root: so the root first, the rest a step further. Its lane (the Bass
+  page's own) shows it.
 - **A MIDI follow mode** (an arranger; a user, Erich, a guitarist with a MIDI guitar: "takes the played chords as
   they are and arranges the other instruments around it"). Today MIDI in, channel 1, toggles a note in or out of the
   scale (and the clock). Ideas: the chord played (the notes within a short window) becomes the chord playing,
