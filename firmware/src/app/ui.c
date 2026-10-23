@@ -1908,6 +1908,7 @@ static struct {
     uint32_t t0;
     float a[RIP_K], l1;                          /* each repeat's strength (a[0] the note), the first echo's level */
     uint8_t thr, on, nk, done;                   /* nk: the repeats measured so far; done: no more to come */
+    uint8_t lay;                                 /* (1.4.0) its layer, its colour: 0 the chord, 1 the pings, 2 the bass, 3 the drums */
     int8_t w[RIP_W];
 } rip[RIP_N];
 /* the echo's output, as measured: its peak each frame, the last few frames (a repeat's level is the peak around
@@ -1918,7 +1919,7 @@ static struct {
     float pk;
 } epk[EPK_N];
 static uint8_t epk_w;
-static uint32_t rip_stabs;
+static uint32_t rip_stabs, rip_bass;            /* (rip_bass: the overview's bass notes, 1.4.0) */
 static int8_t rip_src = -2;                      /* whose notes the ripples are: -1 the whole (the stabs), or a layer */
 static int scr_layer(int v)                      /* a layer's own page (and the Noise page): the screen that layer's */
 {
@@ -1939,17 +1940,54 @@ static const char *chord_now(char *nm)          /* the chord's name, as the scre
 
 /* a new stab: a new ripple (into the oldest slot if all are busy). On a layer's page, that layer's notes instead,
  * in its colour (the bass and the drums: a ring, no repeats; they hardly go into the echo) */
+static int rip_slot(void)                       /* a free ring, or the oldest */
+{
+    int i, k = 0;
+    for (i = 0; i < RIP_N; i++) {
+        if (!rip[i].on)
+            return i;
+        if (rip[i].t0 < rip[k].t0)
+            k = i;
+    }
+    return k;
+}
+static void rip_outline(int k)                  /* its outline: the wave as it sounds now (the last 128 of the scope's
+                                                 * samples, every other one; drawn so its ends meet), at its own peak */
+{
+    int32_t v[RIP_W], pk = 1, j;
+    uint32_t w0 = en_scope_w - 2u * RIP_W;
+    for (j = 0; j < RIP_W; j++)
+        v[j] = en_scope[(w0 + 2u * (uint32_t)j) & (EN_SCOPE_N - 1u)];
+    for (j = 0; j < RIP_W; j++) {
+        v[j] -= (v[RIP_W - 1] - v[0]) * j / (RIP_W - 1);
+        pk = v[j] > pk ? v[j] : -v[j] > pk ? -v[j] : pk;
+    }
+    for (j = 0; j < RIP_W; j++)
+        rip[k].w[j] = (int8_t)(v[j] * 127 / pk);
+}
 static void ripples_take(uint32_t now)
 {
     const int src = scr_layer(ui.view);
-    uint32_t n = src > 0 && src < 4 ? en_hits[src] : en_stabs;
-    int i, k = 0;
+    uint32_t n = src > 0 && src < 4 ? en_hits[src] : en_stabs, nb = en_hits[2];
+    int i, k;
     if (src != rip_src) {                        /* (another page: the old rings gone) */
         rip_src = (int8_t)src;
         rip_stabs = n;
+        rip_bass = nb;
         for (i = 0; i < RIP_N; i++)
             rip[i].on = 0;
         return;
+    }
+    if (src < 0 && nb != rip_bass) {             /* (1.4.0, the user's: on the whole, the bass's notes too: a gold ring,
+                                                  * no repeats) */
+        rip_bass = nb;
+        if ((ui.mutes & LAYER_MUTE[2]) != LAYER_MUTE[2]) {
+            k = rip_slot();
+            rip[k].t0 = now, rip[k].on = 1, rip[k].nk = 1, rip[k].l1 = 0.0f, rip[k].thr = 0, rip[k].done = 1;
+            rip[k].lay = 2;
+            rip[k].a[0] = fm_minf(en_hit_vel[2] * 0.8f, 1.0f);
+            rip_outline(k);
+        }
     }
     if (n == rip_stabs)
         return;
@@ -1958,18 +1996,12 @@ static void ripples_take(uint32_t now)
         return;
     if (src == 4)                                /* (the Noise page shows its spectrum) */
         return;
-    for (i = 0; i < RIP_N; i++) {
-        if (!rip[i].on) {
-            k = i;
-            break;
-        }
-        if (rip[i].t0 < rip[k].t0)
-            k = i;
-    }
+    k = rip_slot();
     rip[k].t0 = now;
     rip[k].on = 1;
     rip[k].nk = 1;
     rip[k].l1 = 0.0f;
+    rip[k].lay = (uint8_t)(src > 0 ? src : 0);
     if (src > 0) {                               /* (the pings, the bass, the drums) */
         rip[k].thr = 0;
         rip[k].a[0] = fm_minf(en_hit_vel[src] * 0.9f, 1.0f);
@@ -1980,19 +2012,7 @@ static void ripples_take(uint32_t now)
     /* repeats: from the echo as it comes out (none for the bass and the drums, hardly in it; none for a note into a
      * held echo, which plays what it holds) */
     rip[k].done = (uint8_t)(src == 2 || src == 3 || en_frozen || (src <= 0 && en_echo_in < 0.01f));
-    {   /* its outline: the wave as it sounds now (the last 128 of the scope's samples, every other one; drawn so its
-         * ends meet), at its own peak */
-        int32_t v[RIP_W], pk = 1, j;
-        uint32_t w0 = en_scope_w - 2u * RIP_W;
-        for (j = 0; j < RIP_W; j++)
-            v[j] = en_scope[(w0 + 2u * (uint32_t)j) & (EN_SCOPE_N - 1u)];
-        for (j = 0; j < RIP_W; j++) {
-            v[j] -= (v[RIP_W - 1] - v[0]) * j / (RIP_W - 1);
-            pk = v[j] > pk ? v[j] : -v[j] > pk ? -v[j] : pk;
-        }
-        for (j = 0; j < RIP_W; j++)
-            rip[k].w[j] = (int8_t)(v[j] * 127 / pk);
-    }
+    rip_outline(k);
 }
 
 /* the echo's level this frame (its peak since the last); then each ring's next repeat, once it's due and past: the
@@ -2076,7 +2096,6 @@ static int draw_ripples(uint32_t now)           /* 1: something still moves */
 {
     static const uint16_t LC[4] = {K_PAD, K_BELL, K_BASS, K_PULSE};
     const float ms = en_echo_ms > 20.0f ? en_echo_ms : 400.0f;
-    const uint16_t lc = rip_src > 0 && rip_src < 4 ? LC[rip_src] : K_PAD;
     int i, live = 0;
     for (i = 0; i < RIP_N; i++) {
         float age = (float)(now - rip[i].t0), w[RIP_W], tmp[RIP_W];
@@ -2097,7 +2116,7 @@ static int draw_ripples(uint32_t now)           /* 1: something still moves */
             if (t < 0.0f || r >= (float)RIP_R || a < 0.05f)
                 continue;
             seen = 1;
-            c = mix(K_BG, en_frozen && rip_src < 2 ? K_FROST : rip[i].thr ? K_ACC : lc, q16(a * 2.0f));
+            c = mix(K_BG, en_frozen && rip_src < 2 && rip[i].lay < 2 ? K_FROST : rip[i].thr ? K_ACC : LC[rip[i].lay & 3], q16(a * 2.0f));
             wave_ring(r, w, 4.0f * rip[i].a[k], c);   /* two pixels wide (a throw: three) */
             wave_ring(r + 1.0f, w, 4.0f * rip[i].a[k], c);
             if (rip[i].thr)
@@ -3141,6 +3160,13 @@ static void draw_main(void)
     }
     ch_age = ch_t ? now - ch_t : 1000u;
     ch_c = en_frozen ? K_FROST : ch_age < 900u ? mix(K_ACC, K_TEXT, (int)(ch_age * 16u / 900u)) : K_TEXT;
+    if (!en_frozen && ch_age >= 900u && scr_layer(ui.view) < 0) {   /* (1.4.0, the user's: the kick, on the whole: the
+                                                  * chord's name a soft grey, white with each kick, as strong as it is) */
+        const float kg = en_playing ? en_drum_glow[0] : 0.0f;
+        ch_c = mix(K_DIM, K_TEXT, q16(kg * 1.4f));
+        if (kg > 0.01f)
+            moving = 1;
+    }
     if (ch_age < 900u)
         moving = 1;
     if (named && proj.screen % 3u) {          /* the chord: over the scope or the spectrum, small */
