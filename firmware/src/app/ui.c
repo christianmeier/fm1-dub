@@ -2667,7 +2667,7 @@ static void draw_desk(void)
 #define LN_P 11
 #define LM_X 8                                   /* the meters: LM_W wide, LM_H high, in the row's middle */
 #define LM_W 22
-#define LM_H 3
+#define LM_H 4                                   /* (1.4.0, the user's: 1 px taller) */
 #define VX 50                                    /* a voice page's lane: its grid, right of the meters */
 static const uint32_t LN_MUTE[LN_ROWS] = {EN_M_CHORD, EN_M_PINGS, EN_M_BASS, EN_M_KICK, EN_M_HATS, EN_M_HATS, EN_M_NOISE};
 static uint16_t ln_col(int r) { static const uint16_t C[LN_ROWS] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_TEXT, K_RIM, K_NOISE};
