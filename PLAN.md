@@ -693,8 +693,14 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
     itself; its moves seen on the meters' markers), KNOB 3 **Wet** (the master send), KNOB 4 **Duck** (the sidechain:
     the desk's compressor). The Filter on SELECT only.
   - A part's white key (1-5) held: the knobs that channel's strip, **Level, Echo send, Plate send**, and a fourth
-    (pan or a low cut; to decide). The Chord and Pings pages' Wet move here (per-channel sends for every part). A
+    (**Low cut**: the user, 2026-10-24). The Chord and Pings pages' Wet move here (per-channel sends for every part). A
     tap still mutes, the black keys still throw and drop.
+  - **Where we are, on every page** (the user, 2026-10-24: the strips' room freed, "an important info to have
+    everywhere is an idea of where in the arrangement we are: intro, main, outro, phrase A or B"): a map in place of
+    the strips and today's section word and bar dots. The phrase's eight bars as cells (the one playing lit; the B
+    bars, 4 and 8, marked; a fill), the section (Full, Groove, Thin, Break; with song structure: Intro, Main, Outro and
+    how far through the song), and what's coming (the next section at the phrase's last bar, as the next chord is
+    shown). To design with song structure (B).
   - Not now: a three-band EQ (the voice pages have the tone), a bus compressor (the CPU).
   - After the LFO work is merged (both touch ui.c).
 
