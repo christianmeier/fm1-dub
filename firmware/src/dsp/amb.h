@@ -243,6 +243,9 @@ extern const char *const EN_LFO_SHAPE[EN_NLSHAPE];
 #define EN_LFO_DRIFT 6 /* (before 20, a rate: Drift; now its own knob, P_CLWALK) */                           /* (the rate's last: Drift) */
 extern volatile int8_t en_lfo_tr[2][EN_LFO_N];
 extern volatile uint32_t en_lfo_w;
+extern volatile float en_lfo_now, en_lfo_reach;   /* (1.4.0, the user's) the chord's LFO and drift on its Cutoff now,
+                                                   * and how far they reach either way, in octaves (the Chord page's
+                                                   * Cutoff knob shows them) */
 extern volatile uint32_t en_lfo_picks[2];        /* the drifts' new places so far (for tests) */
 int en_lfo_bars(int v);                          /* a rate's bars (0: Drift) */
 int en_nlfo18(int old);                          /* (format 19) a Noise LFO before 19 as 19's (its depth kept) */

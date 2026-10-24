@@ -2604,6 +2604,7 @@ static struct {
 } lfo_dr[2];
 volatile int8_t en_lfo_tr[2][EN_LFO_N] EN_POOL;   /* (in the pool: read only as far as written) */
 volatile uint32_t en_lfo_w, en_lfo_picks[2];
+volatile float en_lfo_now, en_lfo_reach;
 static float dr_rand(int k)
 {
     lfo_dr[k].rng = lfo_dr[k].rng * 1664525u + 1013904223u;
@@ -2685,6 +2686,8 @@ static void lfo_step(void)
     lfo_cr = fm_maxf(sc + rc, 1e-6f);
     lfo_nr = fm_maxf(dn + wn, 1e-6f);
     lfo_ch += (sc * lfo_wave(par[P_CLRATE], fr, par[P_CLSHAPE]) + rc * dr_at(0, lfo_dr[0].t + fr) - lfo_ch) * 0.2f;
+    en_lfo_now = lfo_ch;
+    en_lfo_reach = sc + rc;
     lfo_n += (dn * lfo_wave(par[P_NLRATE], fr, par[P_NLSHAPE]) + wn * dr_at(1, lfo_dr[1].t + fr) - lfo_n) * 0.2f;
                                                  /* (the noise's: a filter on the whole noise, render_crackle) */
 }

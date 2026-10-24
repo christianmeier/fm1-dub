@@ -1748,6 +1748,33 @@ static void arc(int32_t cx, int32_t cy, int32_t r, float v, uint16_t track, uint
 {
     arc_th(cx, cy, r, 3.4f, v, track, fill, bg, bipolar);
 }
+/* (1.4.0, the user's) over a knob's ring: the span f0..f1 (0..1 of its sweep) in col, and a dot at fn: what an LFO
+ * does to it, its reach and where it is now (the Chord page's Cutoff) */
+static void arc_span(int32_t cx, int32_t cy, int32_t r, float f0, float f1, float fn, uint16_t col, uint16_t dot)
+{
+    const float a0 = 0.375f, sweep = 0.75f, th = 3.4f, rm = (float)r - th * 0.5f,
+                ro = (float)r + 2.7f, ri = (float)r + 1.0f;   /* (the span just outside the ring, under 2 px: the knob's own
+                                                  * fill left to read) */
+    int32_t x, y;
+    f0 = fm_clampf(f0, 0.0f, 1.0f), f1 = fm_clampf(f1, 0.0f, 1.0f), fn = fm_clampf(fn, 0.0f, 1.0f);
+    for (y = -r - 5; y <= r + 5; y++)
+        for (x = -r - 5; x <= r + 5; x++) {
+            float dx = (float)x, dy = (float)y, d = fm_sqrtf(dx * dx + dy * dy), t, a;
+            a = fm_clampf(ro + 0.5f - d, 0.0f, 1.0f) * fm_clampf(d - ri + 0.5f, 0.0f, 1.0f);
+            if (a <= 0.0f)
+                continue;
+            t = turns(dy, dx) - a0;
+            if (t < 0.0f)
+                t += 1.0f;
+            t /= sweep;
+            if (t >= f0 && t <= f1)
+                px_blend(cx + x, cy + y, col, (uint32_t)(a * 16.0f + 0.5f));
+        }
+    {
+        const float e = (a0 + sweep * fn) * FM_TWO_PI;
+        disc((float)cx + 0.5f + fm_cosf(e) * rm - 0.5f, (float)cy + 0.5f + fm_sinf(e) * rm - 0.5f, th * 0.5f + 0.9f, dot);
+    }
+}
 /* a mark across a knob's ring at v (0..1 of its sweep), a little past both its edges: where a knob's behaviour changes
  * (Motion's regions, 40 and 70) */
 static void arc_mark_th(int32_t cx, int32_t cy, int32_t r, float th, float v, uint16_t col)
@@ -3346,8 +3373,11 @@ static void draw_knobs(void)
     if (ui.view == V_MIX)
         h = hash(h, ui.mutes);
     int now_touch = plat_ms() < ui.touch_until;
-    for (i = 0; i < 4; i++)
+    for (i = 0; i < 4; i++) {
         h = hash(h, (uint32_t)knob_get(VIEW_KNOB[ui.view][i]));
+        if (VIEW_KNOB[ui.view][i] == P_CUTOFF)   /* (the chord's LFO moving on Cutoff: redrawn as it moves) */
+            h = hash(h, (uint32_t)(int32_t)(en_lfo_now * 80.0f) ^ (uint32_t)(int32_t)(en_lfo_reach * 80.0f) << 12);
+    }
     h = hash(h, (uint32_t)now_touch);
     if (h == ui.sig[2])
         return;
@@ -3416,6 +3446,12 @@ static void draw_knobs(void)
                 cv_round(cx - w0 / 2 + j * (pw + gap), 33, pw, 8, 2, j == v - lo ? fill : K_LINE);
         } else if (k != K_CPU) {
             arc(cx, 37, 12, hi > lo ? (float)(v - lo) / (float)(hi - lo) : 0.0f, K_LINE, fill, bg, lo < 0);
+            if (k == P_CUTOFF && en_lfo_reach > 0.001f) {   /* (1.4.0, the user's) the chord's LFO and drift on it:
+                                                  * their reach a brighter teal, a dot where the filter is now (the
+                                                  * knob a step of 0.055 octave) */
+                const float c = (float)v * 0.01f, rr = en_lfo_reach * (1.0f / 5.5f), nw = en_lfo_now * (1.0f / 5.5f);
+                arc_span(cx, 37, 12, c - rr, c + rr, c + nw, mix(fill, K_TEXT, 9), en_playing ? K_TEXT : mix(fill, K_TEXT, 9));
+            }
             if (k == P_MOTION) {                 /* (Motion's three regions: the loop held, variations, Breaks) */
                 arc_mark(cx, 37, 12, 0.4f, K_TEXT);
                 arc_mark(cx, 37, 12, 0.7f, K_TEXT);

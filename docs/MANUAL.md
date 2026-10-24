@@ -737,7 +737,10 @@ again goes back to the Dub page.
   moves it (and the pings', the echo's send and the noise) on top.
 - **Cutoff:** where the low-pass sits, from 110 Hz to 5.4 kHz. Each stab opens it further for a
   moment, the arrangement's sweep moves it (with Motion), and with Evolve each stab sits a little
-  higher or lower (up to about half an octave).
+  higher or lower (up to about half an octave). The Chord LFO (its wave and its drift) moves it too, and the knob
+  shows it: a light teal arc just outside its ring spans how far they reach either way, and a white
+  dot on the ring is where the filter is now, moving as you hear it (the knob's own place is the middle
+  they swing around).
 
 How long a stab rings (Decay) is on the Chord sound page (ENV again). The stab's sound, the voice,
 comes with the piece (ALGORITHM changes it).
