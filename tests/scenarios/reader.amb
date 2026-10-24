@@ -148,7 +148,7 @@ said_none RESTING
 # OCT- / OCT+ on a layer's page: its level (here the pings', on the Pings page)
 tap ARP
 wait 300
-said Pings page, voice Blip: Density 30, Vary 50, Cloud 30
+said Pings page, voice Blip: Density 30, Vary 50
 tap OCT+
 said PINGS 35
 tap OCT-

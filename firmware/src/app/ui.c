@@ -76,6 +76,25 @@ static int lfo_knob(void)                        /* (1.4.0, the user's) the knob
 {
     return proj.par[P_CLDEST] == EN_CLD_RESO ? P_CRES : proj.par[P_CLDEST] == EN_CLD_COLOUR ? P_CCOL : P_CCUT;
 }
+static int nlfo_knob(void)                       /* (1.4.0, the user's) the noise's: Tone's or Air's; the Filter has no
+                                                  * knob (the Noise LFO page's trace shows it) */
+{
+    return proj.par[P_NLDEST] == EN_NLD_TONE ? P_NCOL : proj.par[P_NLDEST] == EN_NLD_AIR ? P_NROOM : -1;
+}
+static int lfo_on_knob(int k, float *now, float *reach)   /* an LFO moving knob k: where it is and how far it goes,
+                                                  * as shares of the knob's sweep (the chord's in octaves of its
+                                                  * Cutoff, 5.5 the sweep; the noise's a quarter a unit) */
+{
+    if (k == lfo_knob() && en_lfo_reach > 0.001f) {
+        *now = en_lfo_now * (1.0f / 5.5f), *reach = en_lfo_reach * (1.0f / 5.5f);
+        return 1;
+    }
+    if (k == nlfo_knob() && en_nlfo_reach > 0.001f) {
+        *now = 0.25f * en_nlfo_now, *reach = 0.25f * en_nlfo_reach;
+        return 1;
+    }
+    return 0;
+}
 static int page_of(int v)                        /* a sound page: its layer's; the Echo page: Space's */
 {
     return v == V_KEY ? V_DUB : v == V_ESND ? V_SPACE : noise_page(v) ? V_NSND : parent_of(v) >= 0 ? parent_of(v) : v;
@@ -116,13 +135,14 @@ enum { K_LEDS = 200, K_CPU, K_NONE, K_SLOT, K_CQ, K_CX,    /* (the Chords page: 
 static const char *const LANE_NAME[EN_NDRUM] = {"Kick", "Shaker", "Open", "Rim", "Clap"};
 _Static_assert(P_NPARAMS <= K_LEDS, "the knobs' own codes must come after the parameters");
 static const uint16_t VIEW_KNOB[NVIEWS][4] = {
-    {K_ENERGY, P_EVOLVE, P_MOTION, K_NONE},      /* (1.4.0, the user's: Energy, the Arrangement page's too; the Filter
-                                                  * on SELECT only; Drift the Chord page's Change; the fourth free) */
+    {K_ENERGY, P_EVOLVE, P_MOTION, K_NONE},      /* (1.4.0, the user's: Energy here alone (the Arrangement page's
+                                                  * until its Width); the Filter on SELECT only; Drift the Chord page's
+                                                  * Change; the fourth free) */
     {P_STABS, P_CTHROW, P_DRIFT, P_CVARY},       /* (1.4.0, the user's: the chord's part: Change, how long a chord lasts
                                                   * (Drift, from the Form page), Vary; Wet to the channel strip, to come) */
-    {P_DENSITY, P_PVARY, K_NONE, P_CLOUD},       /* (1.4.0, the user's: the layers' parts, the empty places kept: the
-                                                  * pings' Wet to the channel strip, their Octave to their voice; Cloud,
-                                                  * for now) */
+    {P_DENSITY, P_PVARY, K_NONE, K_NONE},        /* (1.4.0, the user's: the layers' parts, the empty places kept: the
+                                                  * pings' Wet to the channel strip, their Octave to their voice; Cloud
+                                                  * to the Echo page, the plate's) */
     {P_GROOVE, P_BVARY, P_BNOTES, P_FIFTH},      /* (the user's: Groove, its Vary where the LFO was, Density, Fifth) */
     {K_KSHAPE, P_HITS, P_DVARY, K_NONE},         /* (Duck: the Arrangement page's; the kick a switch, 1.4.0; the hats'
                                                   * level and tone on the Hats page) */
@@ -141,12 +161,14 @@ static const uint16_t VIEW_KNOB[NVIEWS][4] = {
     {P_BALG, P_BFRAT, P_BFB, P_BBITE},           /* (Bite on every voice, the only one on a voice not FM) */
     {K_SLOT, K_CQ, K_CX, K_PLAY},
     {K_LANE, P_DACCENT, K_LCH, P_DMODE},
-    {K_ENERGY, K_NONE, K_DUB, P_DUCK},           /* (Energy, Wet: offsets for playing; Duck the piece's own. 1.4.0, the
-                                                  * user's: the Filter on SELECT only; KNOB 2 the dub mixer, to come) */
+    {P_EWIDTH, K_NONE, K_DUB, P_DUCK},           /* (Wet: an offset for playing; Duck the piece's own. 1.4.0, the
+                                                  * user's: the Filter on SELECT only; KNOB 2 the dub mixer, to come;
+                                                  * KNOB 1 the desk's Width, the whole mix's stereo field (from the
+                                                  * Echo page), Energy on the Form page alone) */
     {P_TEMPO, P_ROOT, K_MODE, P_SWING},
     {P_NGRAIN, P_NVARY, K_NONE, K_NONE},         /* (the noise's part, its groove; the level on OCT- / OCT+, as the
                                                   * layers'; its Drift the recipes') */
-    {P_EBLUR, P_ETONE, P_EWIDTH, P_SIZE},
+    {P_EBLUR, P_ETONE, P_SIZE, P_CLOUD},         /* (1.4.0, the user's: the space together; Width to the Form page) */
     {P_NWIDTH, P_NPLATE, P_NECHO, K_NONE},       /* (the Noise page's third: SAVE again; its Change the recipes') */
     {P_CFDEC, P_CLRATE, P_CLSHAPE, P_CLWALK},    /* (1.4.0) the LFO pages: the wave's depth, rate and shape; the
                                                   * drift (the user's: the records' random walk, its own, always on) */
@@ -189,7 +211,7 @@ static const char *view_name(int v)              /* a page's name (a strip's: it
 static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Energy", "Evolve", "Motion", ""},
     {"Density", "Throws", "Change", "Vary"},
-    {"Density", "Vary", "", "Cloud"},
+    {"Density", "Vary", "", ""},
     {"Groove", "Vary", "Density", "Fifth"},
     {"Kick", "Hits", "Vary", ""},
     {"Echo", "Echo time", "Feedback", "Reverb"},
@@ -204,10 +226,10 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Algo", "Ratio", "Feedback", "Bite"},
     {"Slot", "Chord", "Type", "Play"},
     {"Lane", "Accent", "Chance", "Play"},
-    {"Energy", "Mixer", "Wet", "Duck"},
+    {"Width", "Mixer", "Wet", "Duck"},
     {"Tempo", "Root", "Mode", "Swing"},
     {"Density", "Vary", "", ""},
-    {"Blur", "Tone", "Width", "Size"},
+    {"Blur", "Tone", "Size", "Cloud"},
     {"Width", "Plate", "Echo", ""},
     {"Depth", "Rate", "Shape", "Drift"},
     {"Depth", "Rate", "Shape", "Drift"},
@@ -222,7 +244,7 @@ static const char *const KNOB_HELP[NVIEWS][4] = {
      ""},
     {"Stabs a bar, one to six", "How often a stab is thrown to the echo", "How long a chord lasts",
      "How often the stabs' pattern turns"},
-    {"How many notes each loop holds", "How often the loops change", "", "The reverb through the grain cloud"},
+    {"How many notes each loop holds", "How often the loops change", "", ""},
     {"The pattern, from sparse to busy", "How often its phrase's figure changes", "How many of the groove's notes play",
      "How often the fifth, not the root"},
     {"The kick's shape, Evolve its wander", "How busy the hats are", "How often the kick and the hats change", ""},
@@ -249,17 +271,17 @@ static const char *const KNOB_HELP[NVIEWS][4] = {
      "Endless, or the slots in a loop"},
     {"The lane you're writing", "How much quieter the other steps", "How likely the lane's steps play",
      "Auto patterns, or your own"},
-    {"Sparse and dry, to busy and bright", "The dub mixer: not yet", "The whole music dry, or drowned",
+    {"The whole mix mono, to wide", "The dub mixer: not yet", "The whole music dry, or drowned",
      "How far each beat pushes the rest down"},
     {"Beats a minute", "The key's root note", "The scale: Minor, Dorian, ...", "Off sixteenths late: the whole groove"},
     {"How many hits ring, in two bars", "How often its groove changes", "", ""},
-    {"Clean repeats, to a dissolving wash", "The repeats darker, or brighter", "The echo mono, to wide",
-     "How long the plate rings"},
+    {"Clean repeats, to a dissolving wash", "The repeats darker, or brighter", "How long the plate rings",
+     "The reverb through the grain cloud"},
     {"The noise mono, to wide", "How much of it rings in the plate", "How much of it goes into the echo", ""},
     {"How deep the wave", "How long the wave: 1 to 32 bars", "The wave's shape",
      "A slow random wander, as a hand on the knob"},
-    {"How deep the noise filter's wave", "How long the wave: 1 to 32 bars", "The wave's shape",
-     "A slow random wander, as a hand on the filter"},
+    {"How deep the noise's wave", "How long the wave: 1 to 32 bars", "The wave's shape",
+     "A slow random wander, as a hand on the knob"},
     {"The hats' level against the kick", "The hats, dark to bright", "How long the hats ring", ""},
     {"The hiss under it, softer or more", "The rings darker, or brighter", "How long each hit rings on the chord",
      "The noise mono, to wide"},
@@ -1655,7 +1677,7 @@ static void input(void)
     }
     if ((e = plat_enc(EN_ALGO)) != 0) {         /* a layer's page: its voice; the Chords page: the walk; elsewhere: the screen */
         int vp = view_voice(ui.view);
-        if (noise_page(ui.view)) {   /* the Noise pages: its character */
+        if (noise_page(ui.view) && ui.view != V_NLFO) {   /* the Noise pages: its character */
             int c = ((proj.par[P_NCHAR] + (int)(e % EN_NNCHAR)) % EN_NNCHAR + EN_NNCHAR) % EN_NNCHAR;
             knob_set(P_NCHAR, c);
             say_name("NOISE", EN_NCHAR_NAME[c]);
@@ -1669,6 +1691,12 @@ static void input(void)
                                                          "Free: goes anywhere"};
                 say("WALK", WHAT[w]);
             }
+        } else if (ui.view == V_NLFO) {          /* (1.4.0, the user's) the Noise LFO page: where its LFO and drift go
+                                                  * (Filter, Tone, Air), round; its character on the other Noise pages */
+            int d = ((proj.par[P_NLDEST] + (int)(e % EN_NNLDEST)) % EN_NNLDEST + EN_NNLDEST) % EN_NNLDEST;
+            knob_set(P_NLDEST, d);
+            say_name("DESTINATION", EN_NLDEST_NAME[d]);
+            big_show_help(P_NLDEST, "Destination", K_NOISE, "What the LFO moves");
         } else if (ui.view == V_CLFO) {          /* (1.4.0, the user's) the Chord LFO page: where the LFO and the drift go
                                                   * (Cutoff, Reso, Colour), round */
             int d = ((proj.par[P_CLDEST] + (int)(e % EN_NCLDEST)) % EN_NCLDEST + EN_NCLDEST) % EN_NCLDEST;
@@ -3083,8 +3111,8 @@ static void draw_lfo(int k)
         if (dw > 0)
             t[0] = 'D', t[1] = 'r', t[2] = 'i', t[3] = 'f', t[4] = 't', t[5] = 0;
     }
-    if (!k && t[0]) {                            /* (1.4.0, the chord's: where it goes, "4 BARS + DRIFT ON RESO") */
-        const char *w = EN_CLDEST_NAME[proj.par[P_CLDEST] % EN_NCLDEST];
+    if (t[0]) {                                  /* (1.4.0: where it goes, "4 BARS + DRIFT ON RESO", "... ON AIR") */
+        const char *w = k ? EN_NLDEST_NAME[proj.par[P_NLDEST] % EN_NNLDEST] : EN_CLDEST_NAME[proj.par[P_CLDEST] % EN_NCLDEST];
         int j = 0;
         while (t[j])
             j++;
@@ -3684,7 +3712,8 @@ static void draw_main(void)
         for (i = 0; i < 4; i++)
             h = hash(h, (uint32_t)(knob_get(vknob(ui.view, i)) + 64));   /* (1.4.0: K_NONE's too, no parameter) */
         h = hash(h, (uint32_t)proj.par[view_voice(ui.view)] | (uint32_t)proj.par[P_DECAY] << 8 | (uint32_t)proj.par[P_GROOVE] << 16 |
-                    (uint32_t)proj.par[P_CLDEST] << 24);   /* (1.4.0: the Chord LFO page's Destination) */
+                    (uint32_t)(proj.par[P_CLDEST] | proj.par[P_NLDEST] << 2) << 24);   /* (1.4.0: the LFO pages'
+                                                  * Destinations) */
     }
     h = hash(h, (uint32_t)card_on(now) | (en_phrase_bar == 7 && en_change_next ? (now / 200u & 1u) << 1 : 0u));
     if (h == ui.sig[1] && !moving && !oct_ring_on(now) && !card_on(now))
@@ -3784,14 +3813,16 @@ static void draw_knobs(void)
         h = hash(h, (uint32_t)proj.par[P_PMODE]);
     if (noise_page(ui.view))
         h = hash(h, (uint32_t)proj.par[P_NCHAR]);
-    h = hash(h, (uint32_t)proj.par[P_CLDEST]);   /* (1.4.0: the chord's LFO's knob, and the LFO page's rule) */
+    h = hash(h, (uint32_t)proj.par[P_CLDEST] | (uint32_t)proj.par[P_NLDEST] << 4);   /* (1.4.0: the LFOs' knobs, and the
+                                                  * LFO pages' rule) */
     if (ui.view == V_STRIP)
         h = hash(h, strip_part);
     int now_touch = plat_ms() < ui.touch_until;
     for (i = 0; i < 4; i++) {
         h = hash(h, (uint32_t)knob_get(vknob(ui.view, i)));
-        if (vknob(ui.view, i) == lfo_knob())   /* (the chord's LFO moving its knob: redrawn as it moves) */
-            h = hash(h, (uint32_t)(int32_t)(en_lfo_now * 80.0f) ^ (uint32_t)(int32_t)(en_lfo_reach * 80.0f) << 12);
+        float ln, lr;
+        if (lfo_on_knob(vknob(ui.view, i), &ln, &lr))   /* (an LFO moving its knob: redrawn as it moves) */
+            h = hash(h, (uint32_t)(int32_t)(ln * 440.0f) ^ (uint32_t)(int32_t)(lr * 440.0f) << 12);
     }
     h = hash(h, (uint32_t)now_touch);
     if (h == ui.sig[2])
@@ -3808,10 +3839,12 @@ static void draw_knobs(void)
             char vn[12];
             if (ui.view == V_CHORDS || noise_page(ui.view) || ui.view == V_CLFO) {
                 const char *w = ui.view == V_CLFO ? EN_CLDEST_NAME[proj.par[P_CLDEST] % EN_NCLDEST]
+                              : ui.view == V_NLFO ? EN_NLDEST_NAME[proj.par[P_NLDEST] % EN_NNLDEST]
                               : ui.view != V_CHORDS ? EN_NCHAR_NAME[proj.par[P_NCHAR] % EN_NNCHAR]
                                                     : EN_WALK_NAME[(proj.par[P_PMODE] & 3) % EN_NWALK];
                 int j = 0;
-                if (ui.view == V_CLFO)           /* (1.4.0: ALGORITHM's there, the LFO's Destination: "TO RESO") */
+                if (ui.view == V_CLFO || ui.view == V_NLFO)   /* (1.4.0: ALGORITHM's there, the LFO's Destination: "TO
+                                                  * RESO", "TO AIR") */
                     vn[j++] = 'T', vn[j++] = 'o', vn[j++] = ' ';
                 for (; j < 11 && *w; j++)
                     vn[j] = *w++;
@@ -3870,14 +3903,13 @@ static void draw_knobs(void)
             for (j = 0; j < n; j++)
                 cv_round(cx - w0 / 2 + j * (pw + gap), 33, pw, 8, 2, j == v - lo ? fill : K_LINE);
         } else if (k != K_CPU) {
-            const int lfo_on = k == lfo_knob() && en_lfo_reach > 0.001f && !off;   /* (the chord's LFO on it: its dot
-                                                  * the one) */
+            float nw, rr;
+            const int lfo_on = lfo_on_knob(k, &nw, &rr) && !off;   /* (an LFO on it: its dot the one) */
             arc(cx, 37, 12, hi > lo ? (float)(v - lo) / (float)(hi - lo) : 0.0f, K_LINE, fill, bg, (lo < 0) | (lfo_on ? 2 : 0));
             if (lfo_on) {   /* (1.4.0, the user's) the chord's LFO and drift on it (its Destination's knob):
                                                   * their reach a brighter teal, a dot where it is now (the Cutoff a
                                                   * step of 0.055 octave; Reso and Colour as far along theirs) */
-                const float c = (float)(v - lo) / (float)(hi - lo), rr = en_lfo_reach * (1.0f / 5.5f),
-                            nw = en_lfo_now * (1.0f / 5.5f);
+                const float c = (float)(v - lo) / (float)(hi - lo);
                 arc_span(cx, 37, 12, c - rr, c + rr, c + nw, mix(fill, K_TEXT, 11), en_playing ? K_TEXT : mix(fill, K_TEXT, 11));
             }
             if (k == P_MOTION) {                 /* (Motion's three regions: the loop held, variations, Breaks) */
@@ -4043,7 +4075,10 @@ static void sp_page(int all)
     sp_buf[0] = 0;
     sp_cat(view_name(ui.view));
     sp_cat(" page");
-    if (noise_page(ui.view)) {
+    if (ui.view == V_NLFO) {                     /* (1.4.0: ALGORITHM's there, where the noise's LFO goes) */
+        sp_cat(", destination ");
+        sp_cat(EN_NLDEST_NAME[proj.par[P_NLDEST] % EN_NNLDEST]);
+    } else if (noise_page(ui.view)) {
         sp_cat(", character ");
         sp_cat(EN_NCHAR_NAME[proj.par[P_NCHAR] % EN_NNCHAR]);
     } else if (ui.view == V_CLFO) {              /* (1.4.0: ALGORITHM's there, where the LFO goes) */

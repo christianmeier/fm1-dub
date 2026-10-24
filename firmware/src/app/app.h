@@ -10,7 +10,9 @@
 #define EN_VERSION "DEV"
 #endif
 #define PROJ_MAGIC 0x31425544u           /* "DUB1": AMB-1's projects ("ENO1") give the recipes */
-#define PROJ_FORMAT 24u                  /* 24: the kick and the hats apart (six parts): the Kick strip's level,
+#define PROJ_FORMAT 25u                  /* 25: the noise LFO's Destination (P_NLDEST: Filter, Tone, Air; 8-24 read,
+                                         * it from the recipes: Filter, as it was);
+                                         * 24: the kick and the hats apart (six parts): the Kick strip's level,
                                          * sends and Low cut (P_KLVL .. P_KLOW; 8-23 read, they from the recipes:
                                          * x1, none, off; a 23's drums Low cut the kick's too, as it was);
                                          * 23: the Arrangement page's channel strips: each part's Echo and Plate

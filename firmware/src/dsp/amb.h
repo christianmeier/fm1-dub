@@ -133,6 +133,9 @@ enum {
      * the two faders apart, P_DRUMS over both, the Drums pages' OCT), its Echo and Plate sends (0: none, as before;
      * 100 a full send) and its Low cut (as the others', 0 off; the rumble its own, never cut) */
     P_KLVL, P_KECHO, P_KPLATE, P_KLOW,
+    /* (1.4.0, format 25, the user's) where the noise's LFO and drift go (EN_NLDEST_NAME: Filter, its low-pass, as
+     * before; Tone; Air; ALGORITHM on the Noise LFO page) */
+    P_NLDEST,
     P_NPARAMS
 };
 typedef struct {
@@ -287,6 +290,14 @@ extern volatile float en_lfo_now, en_lfo_reach;   /* (1.4.0, the user's) the cho
 #define EN_NCLDEST 3                             /* (1.4.0) the chord's LFO's destinations: its Cutoff, Reso, Colour */
 enum { EN_CLD_CUTOFF, EN_CLD_RESO, EN_CLD_COLOUR };
 extern const char *const EN_CLDEST_NAME[EN_NCLDEST];
+#define EN_NNLDEST 3                             /* (1.4.0) the noise's LFO's destinations: its Filter, Tone, Air */
+enum { EN_NLD_FILTER, EN_NLD_TONE, EN_NLD_AIR };
+extern const char *const EN_NLDEST_NAME[EN_NNLDEST];
+extern volatile float en_nlfo_at[EN_NNLDEST];    /* (1.4.0, for tests) what the noise's LFO puts on each now: the
+                                                  * Filter its swing (0..2 of the reach), Tone -1..1 and Air 0..1 of
+                                                  * their knob */
+extern volatile float en_nlfo_now, en_nlfo_reach;   /* (1.4.0) the noise's LFO and drift now and how far they reach
+                                                  * (0..2: a quarter of Tone's or Air's sweep a unit, its moving knob) */
 extern volatile uint32_t en_stab_turns;          /* (1.4.0) the stabs' pattern's turns so far (for tests: Vary) */
 extern volatile uint32_t en_vary_turns[4];       /* (1.4.0, for tests) the pings', the bass's, the drums' and the noise's
                                                   * changes so far (their Vary) */
