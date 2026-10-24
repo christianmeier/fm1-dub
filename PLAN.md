@@ -727,6 +727,16 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
     how far through the song), and what's coming (the next section at the phrase's last bar, as the next chord is
     shown). To design with song structure (B).
   - Not now: a three-band EQ (the voice pages have the tone), a bus compressor (the CPU).
+  - **Step 1 built** (branch dub-1.4-arr, 2026-10-24): the names (Form, Dub, Arrangement; the identifiers V_DUB,
+    V_SPACE, V_PERF kept), the knobs (Energy, Mixer grey, Wet, Duck), the meters (24 segments of 2 dB, -48..0; the
+    peak held 1 s; the level's notch; mute dark, soloed out dimmed; GR under the master: the bass's duck while it
+    plays, else the rest's), the engine's peaks (en_meter: each part's dry, every 4th sample, only on the page; the
+    master into the soft clip, every sample; about 16 operations a sample on the page, 4 elsewhere), the strips and
+    the duck meter gone, the clip mark a red "!" on its own red tag (Setup's grey "!n" the dropouts, apart). Two
+    builds to try: build/dub-1.4.0-arr-classic.fwsc, build/dub-1.4.0-arr-layers.fwsc (EN_METER_CLASSIC=1 / 0).
+    Open: the cards over the meters on a mute or solo (keep them there?); the big ring over the meters while a knob
+    turns (the Mix page's notches already show it). Next: step 2, a part's white key held its channel strip; step 3,
+    the dub mixer on KNOB 2.
   - After the LFO work is merged (both touch ui.c).
 
 ## Now: two lines in parallel (the user, 2026-10-23)
