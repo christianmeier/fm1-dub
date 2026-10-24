@@ -314,7 +314,7 @@ GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
 
 ## 4. The screen
 
-![The main screen on the Form page: Basic, F Dorian, tempo 122; FULL and the phrase's eight bar cells top left, bars 4 and 8 ticked, the line to the next chord under them, the five thin level strips under it; FORM top right; the ripples with the chord's name in the middle, the six lanes below; FILTER Off, EVOLVE 55, MOTION 30 (its ring marked at 40 and 70), DRIFT 64 bars](img/screen-main.png "The Form page (HOME)")
+![The main screen on the Form page: Basic, F Dorian, tempo 122; FULL and the phrase's eight bar cells top left, bars 4 and 8 ticked, the line to the next chord under them; FORM top right; the ripples with the chord's name in the middle, the seven lanes below, each with its level meter at the left; FILTER Off, EVOLVE 55, MOTION 30 (its ring marked at 40 and 70), DRIFT 64 bars](img/screen-main.png "The Form page (HOME)")
 ![A Groove phrase: GROOVE lit top left, fewer stabs in the top lane; MOTION 80](img/screen-groove.png "A Groove")
 
 - **Top line:** the piece in a tag, its root and mode. On the right, a beat light (a play triangle
@@ -330,9 +330,6 @@ GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
   brighter, ahead and played; under Lock all eight are alike. On the phrase's last bar, cell 8 blinks
   when the next phrase brings a change: a new plan, another kick shape or another section. Under the
   cells, a thin line fills up on the way to the next chord (none when Drift is Hold, or in dub hold).
-- **At the left, under them:** five thin strips, the levels of the chord (teal), the pings (blue),
-  the bass (brass), the drums (amber) and the noise (grey), as the Arrangement page's meters measure
-  them (−48 to 0 dB): a glance at the mix. A muted part's strip is dark; soloed out, dimmed.
 - **Top right:** the page's name, in teal (ARRANGEMENT on SEL's page). SOLO, in yellow, to its left
   while a solo is on. Above it, in red: "hold" in dub hold, "lock" under Lock.
 - **The ripples:** each stab drops a ring in the middle that spreads and fades. Its outline is the
@@ -358,8 +355,8 @@ GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
   scope or the spectrum showing, the chord's name moves to the top.
 - On a layer's own page (Chord, Pings, Bass, Drums) and its sound page, the middle shows **that layer alone**: the ripples its notes, in
   its colour (the stabs on the Chord page, the pings with their loops' dots on the Pings page, a ring a bass note, a
-  ring a drum hit), and the scope or the spectrum its sound, dry. The lanes below keep showing the whole bar, the
-  layer's own in colour and the others in grey (the pings and the noise have no lane: all grey). The Noise pages
+  ring a drum hit), and the scope or the spectrum its sound, dry. Below it, that layer's own lane, large (below), with the
+  seven meters at its left, the layer's own bright and the others dimmed. The Noise pages
   follow it too, with the noise alone: its specks, or its scope or spectrum. Form, Dub, Echo and the other pages show the whole piece (the Arrangement page shows its meters).
   - The **scope** draws the output (left and right mixed) as a thick line. Each trace starts on a
     rising zero crossing so the picture stands still, and the two traces before it fade behind.
@@ -369,13 +366,25 @@ GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
     top. The columns jump up with the sound and fall back slowly. A white cap stays at each
     column's peak for a moment before it drops.
 - The levels in full and the duck are on the Arrangement page (SEL), on its meters; the other pages
-  show the five thin strips at the left (since 1.4.0; the duck meter is the Arrangement page's).
-- **The lanes:** the bar as it plays, sixteen steps, a lane a layer, each marked in its colour on
-  the left: the stabs (teal), the kick (amber), the hats (white), the rim (pink), the clap (yellow), the bass (brass).
-  A hit that only sometimes comes (the clap in Auto, a lane's Chance under 50%) is a ring, filled when it plays. The step playing
-  is lit. A layer that's out (in a Break, muted on the Arrangement page, or at level 0) has an empty lane at once.
-  In the stabs' lane, rings show where the echo's repeats land, fainter for each, as the echo's
-  time and Feedback have them; each flashes white as the playhead reaches it.
+  show a short meter at each lane's left (since 1.4.0; the duck meter is the Arrangement page's).
+- **The lanes** (Form, Dub, Echo, Setup, Key): the bar as it plays, sixteen steps, seven rows, top to
+  bottom: **CHD** the stabs (teal), **PNG** the pings (blue: the sixteenths a loop's note falls on
+  this bar, those played and those to come), **BAS** the bass (brass), **KCK** the kick (amber),
+  **HAT** the hats (white: the shaker and the open hat), **R/C** the rim (pink) and the clap
+  (yellow), side by side when both hit one step, and **NOI** the noise's hits this bar (grey, a
+  ghost dimmer). A hit that only sometimes comes (the clap in Auto, a lane's Chance under 50%) is a
+  ring, filled when it plays. The step playing is lit. A layer that's out (in a Break, muted on the
+  Arrangement page, or at level 0) has an empty row at once. In the stabs' row, rings show where the
+  echo's repeats land, fainter for each, as the echo's time and Feedback have them; each flashes white
+  as the playhead reaches it.
+- **The meters:** at each row's left, a short level meter in the row's colour, over a dim track:
+  the chord, the pings, the bass and the noise as the Arrangement page's meters measure them (−48 to
+  0 dB), the kick, the hats and the rim and clap from their own hits, jumping up with each and
+  falling back (the R/C meter yellow when the clap was the last). A glance at the mix. A muted part's
+  meter is dark; soloed out, dimmed (the kick and the hats each their own: the rim and clap follow the
+  hats). On a layer's pages and the Noise pages the same meters stand in the same place, without the
+  notes, the page's own bright (the Drums pages: KCK, HAT and R/C) and the others dimmed; its large
+  lane to their right.
 - **Bottom:** a rule (on a layer's page, the voice's name at its left: the Noise page's character,
   the Chords page's walk), then the page's four values, one for each knob: a dial (or, for a
   switch, its positions as dots) and the value. The one you're turning lights up, and while it

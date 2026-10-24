@@ -733,6 +733,17 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
     user: "both, let's see how it works in place"): five thin strips at the left (the meters', the noise too), and
     the phrase's bars as cells under the section (the one playing teal, the B bars ticked). Built; the song line to
     come with song structure.
+  - **The lanes, seven rows, their meters at the left** (the user's design, 2026-10-24; branch dub-1.4-lanes): the
+    overview's lanes (Form, Dub, Echo, Setup, Key) seven rows of 7 px, CHD the stabs, PNG the pings (new: the
+    sixteenths a loop's note falls on this bar, those rung kept, those ahead from where each loop will be; the
+    engine's en_lane_png), BAS, KCK, HAT (shaker and open hat), R/C (the rim pink, the clap yellow, side by side when
+    both hit a step), NOI (new: the noise's hits this bar, en_nz_pat's half, a ghost dimmer). In place of the colour
+    dots, a 22 px level meter a row, in its colour over a dim track: CHD, PNG, BAS, NOI the meters' (-48..0 dB, the
+    Arrangement page's ballistics), KCK, HAT, R/C from their hits (en_drum_glow, 48 dB a second down; R/C yellow when
+    the clap hit last); a mute dark, soloed out dimmed (KCK by the kick's mute, HAT and R/C the hats'). The voice
+    pages: the same block in the same place, no notes, the page's row(s) bright (Drums: KCK, HAT, R/C), the others
+    dimmed; no tags (FONT_XS's capitals taller than a row: the colours the cue); their lanes and A/B (1/2) moved right
+    (the grid at x 50). The thin strips gone. The main screen's hash: the meters' lit lengths (as the strips' were).
   - **Step 1 built** (branch dub-1.4-arr, 2026-10-24): the names (Form, Dub, Arrangement; the identifiers V_DUB,
     V_SPACE, V_PERF kept), the knobs (Energy, Mixer grey, Wet, Duck), the meters (24 segments of 2 dB, -48..0; the
     peak held 1 s; the level's notch; mute dark, soloed out dimmed; GR under the master: the bass's duck while it
