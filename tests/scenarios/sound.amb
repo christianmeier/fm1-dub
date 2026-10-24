@@ -5,9 +5,17 @@ tap ENV
 wait 300
 tap ENV
 wait 400
-said Chord sound page, voice Saws: Attack 0, Decay 25, Colour 0, Reso 0
+said Chord voice page, voice Saws: Cutoff 40, Reso 0, Attack 0, Decay 25
 expect view 8
-spin K3 32
+spin K2 -100
+wait 200
+expect par38 -50
+said Reso -50
+tap ENV
+wait 300
+expect view 12
+# (1.4.0, the user's: Colour on the Chord FM page, every voice's)
+spin K4 32
 wait 200
 expect par37 30
 said Colour +30
@@ -15,12 +23,6 @@ turn ALGO 1
 wait 300
 said VOICE Keys
 expect par37 30
-spin K4 -100
-wait 200
-expect par38 -50
-tap ENV
-wait 300
-expect view 12
 tap ENV
 wait 300
 expect view 22

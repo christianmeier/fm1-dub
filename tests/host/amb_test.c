@@ -1092,6 +1092,116 @@ int main(void)
         en_set(P_TEMPO, 122);
     }
 
+    /* (1.4.0, the user's) the chord's Vary: how often its stabs' pattern turns, Evolve over it. At 50 (the recipes') as
+     * Evolve alone turned it: the bars whose stabs differ from the last as many as before (1.3.0 to 1.4.0's LFO pages,
+     * here, the same seeds: 203, 167, 166 in 300 bars at Evolve 40); at 0 the pattern still, at any Evolve (the arrangement
+     * held: Motion 0); at 100, turning about three times as often */
+    {
+        static const int OLD[3] = {203, 167, 166};
+        int s, k, turns[3], still = 0, still_turns = 0;
+        for (s = 1; s <= 3; s++) {
+            uint32_t b, last;
+            int n = 0;
+            fresh();
+            en_seed((uint32_t)s * 7u);
+            en_set(P_TEMPO, 140);
+            en_set(P_EVOLVE, 40);
+            en_play(1);
+            b = en_bars / 16u, last = en_stab_pat;
+            for (k = 0; k < 300;) {
+                en_render(buf, 256, 2048);
+                if (en_bars / 16u != b) {
+                    b = en_bars / 16u, k++;
+                    n += en_stab_pat != last;
+                    last = en_stab_pat;
+                }
+            }
+            printf("  Vary 50, seed %d: the stabs changed in %d bars of 300 (before Vary: %d)\n", s, n, OLD[s - 1]);
+            CHECK(n * 10 >= OLD[s - 1] * 9 && n * 10 <= OLD[s - 1] * 11, "Vary 50: %d bars changed, %d before", n,
+                  OLD[s - 1]);
+        }
+        for (k = 0; k < 3; k++) {                /* the turns: Vary 0, 50, 100 at Evolve 40, 300 bars */
+            uint32_t t0;
+            fresh();
+            en_seed(9);
+            en_set(P_TEMPO, 140);
+            en_set(P_EVOLVE, 40);
+            en_set(P_CVARY, k * 50);
+            en_play(1);
+            run(1.0f);
+            t0 = en_stab_turns;
+            while (en_bars < 16u * 301u)
+                run(0.5f);
+            turns[k] = (int)(en_stab_turns - t0);
+        }
+        for (s = 0; s < 2; s++) {                /* Vary 0 at Evolve 40 and 100, Motion 0 (Full only): still */
+            uint32_t b, last, t0;
+            fresh();
+            en_seed(13);
+            en_set(P_TEMPO, 140);
+            en_set(P_EVOLVE, s ? 100 : 40);
+            en_set(P_MOTION, 0);
+            en_set(P_CVARY, 0);
+            en_play(1);
+            run(1.0f);
+            t0 = en_stab_turns;
+            b = en_bars / 16u, last = en_stab_pat;
+            for (k = 0; k < 200;) {
+                en_render(buf, 256, 2048);
+                if (en_bars / 16u != b) {
+                    b = en_bars / 16u, k++;
+                    still += en_stab_pat != last;
+                    last = en_stab_pat;
+                }
+            }
+            still_turns += (int)(en_stab_turns - t0);
+        }
+        printf("  Vary 0, 50, 100: the stabs' pattern turned %d, %d, %d times in 300 bars; at 0 (Evolve 40, 100) %d bars "
+               "changed, %d turns\n", turns[0], turns[1], turns[2], still, still_turns);
+        CHECK(turns[0] == 0 && turns[1] > 10 && turns[2] > 2 * turns[1], "Vary: turns %d %d %d", turns[0], turns[1],
+              turns[2]);
+        CHECK(still == 0 && still_turns == 0, "Vary 0: the stabs changed in %d bars, %d turns", still, still_turns);
+        en_set(P_CVARY, 50);
+        en_set(P_MOTION, 50);
+        en_set(P_TEMPO, 122);
+    }
+
+    /* (1.4.0, the user's) the chord's LFO's Destination: Reso or Colour moved (the sound differs), the Cutoff left be; on
+     * the Cutoff, the others left be */
+    {
+        int d, heard[EN_NCLDEST];
+        float mx[EN_NCLDEST][EN_NCLDEST];
+        for (d = 0; d < EN_NCLDEST; d++) {
+            int k, j;
+            fresh();
+            en_seed(4);
+            en_set(P_CFDEC, 100);
+            en_set(P_CLRATE, 0);                 /* (a bar's wave: all of it heard in the time) */
+            en_set(P_CLDEST, d);
+            en_play(1);
+            for (j = 0; j < EN_NCLDEST; j++)
+                mx[d][j] = 0.0f;
+            for (k = 0; k < 600; k++) {          /* (about 3.5 s) */
+                en_render(buf, 256, 2048);
+                for (j = 0; j < EN_NCLDEST; j++)
+                    mx[d][j] = fmaxf(mx[d][j], fabsf(en_lfo_at[j]));
+            }
+            heard[d] = d ? !same_with(P_CLDEST, d) : 1;   /* (against the Cutoff's, the same engine from here) */
+        }
+        printf("  the LFO's Destination: on the Cutoff %.2f oct (Reso %.2f, Colour %.2f); on Reso %.2f (Cutoff %.2f), on "
+               "Colour %.2f (Cutoff %.2f); Reso %s, Colour %s\n", (double)mx[0][0], (double)mx[0][1], (double)mx[0][2],
+               (double)mx[1][1], (double)mx[1][0], (double)mx[2][2], (double)mx[2][0], heard[1] ? "heard" : "unheard",
+               heard[2] ? "heard" : "unheard");
+        CHECK(mx[0][0] > 1.5f && mx[0][1] == 0.0f && mx[0][2] == 0.0f, "LFO on the Cutoff: %f %f %f", (double)mx[0][0],
+              (double)mx[0][1], (double)mx[0][2]);
+        CHECK(mx[1][1] > 0.5f && mx[1][0] == 0.0f && mx[1][2] == 0.0f, "LFO on Reso: %f %f %f", (double)mx[1][0],
+              (double)mx[1][1], (double)mx[1][2]);
+        CHECK(mx[2][2] > 0.5f && mx[2][0] == 0.0f && mx[2][1] == 0.0f, "LFO on Colour: %f %f %f", (double)mx[2][0],
+              (double)mx[2][1], (double)mx[2][2]);
+        CHECK(heard[1] && heard[2], "LFO's Destination: Reso %d, Colour %d (1: heard)", heard[1], heard[2]);
+        en_set(P_CLDEST, 0);
+    }
+
     /* every setting at its extremes: still bounded */
     {
         int p;
