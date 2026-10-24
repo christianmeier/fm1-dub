@@ -3306,7 +3306,8 @@ static void draw_slots(void)
                                         "FREE: THE WALK WRITES SLOT 8", "LOOP: THE SLOTS IN TURN"};
     int i, loop = (proj.par[P_PMODE] & EN_PLOOP) != 0, n = loop ? prog_count() : EN_NPROG;
     char nm[16];
-    text_c(120, -1, &FONT_XS, HEAD[loop ? 3 : (proj.par[P_PMODE] & 3) % EN_NWALK], K_ACC);
+    cv_text(8, 2, &FONT_XS, HEAD[loop ? 3 : (proj.par[P_PMODE] & 3) % EN_NWALK], K_ACC);   /* (at the left, as the
+                                                  * section's word elsewhere: the page's name on its line) */
     for (i = 0; i < EN_NPROG; i++) {
         int32_t x = 12 + (i & 3) * 55, y = 30 + (i >> 2) * 46;   /* (the two rows in the middle) */
         int filled = !slot_is_gap(i), now = en_playing && i == en_prog_pos && n, sel = i == ui.slot;
@@ -3515,15 +3516,17 @@ static void draw_card(uint32_t now)
 
 /* the corners of the main screen: the phrase's section and its eight bars, the way to the next chord (top left); the
  * page's name, SOLO, hold and lock (top right) */
-static void draw_page_pos(void)                  /* under the page's name, in grey: "2/3" (none on a page alone) */
+static int32_t draw_page_pos(void)               /* under the page's name, in grey, level with the bar cells: "2/3"
+                                                  * (none on a page alone); its left edge back (232: none) */
 {
     int n, m;
     char t[6];
     page_pos(ui.view, &n, &m);
     if (m < 2)
-        return;
+        return 232;
     t[0] = (char)('0' + n), t[1] = '/', t[2] = (char)('0' + m), t[3] = 0;
-    cv_text(232 - text_w(&FONT_XS, t), 32, &FONT_XS, t, K_DIM);
+    cv_text(232 - text_w(&FONT_XS, t), 16, &FONT_XS, t, K_DIM);
+    return 232 - text_w(&FONT_XS, t);
 }
 static void draw_where(uint32_t now)
 {
@@ -3557,23 +3560,25 @@ static void draw_where(uint32_t now)
         int32_t x;
         caps(pn, view_name(ui.view), sizeof pn);
         x = 232 - text_w(&FONT_B, pn);
-        cv_text(x, 12, &FONT_B, pn, K_ACC);
-        draw_page_pos();
+        cv_text(x, 1, &FONT_B, pn, K_ACC);       /* (1.4.0, the user's: level with the section's word, its baseline) */
         /* (1.4.0, the user's: the round's dots under it gone; SELECT doesn't circle the pages any more) */
         if (ui.solo) {                           /* (a solo on, in PERFORM or kept after it) */
             x -= 6 + text_w(&FONT_XS, "SOLO");
-            cv_text(x, 14, &FONT_XS, "SOLO", K_CLAP);
+            cv_text(x, 2, &FONT_XS, "SOLO", K_CLAP);
         }
     }
-    {   /* above the page's name: dub hold ("hold") and Lock ("lock"), alike, in red */
-        int32_t x = 232;
+    {   /* under the page's name, level with the bar cells: its place ("2/4"), and to its left dub hold ("hold") and
+         * Lock ("lock"), alike, in red */
+        int32_t x = draw_page_pos();
+        if (x < 232)
+            x -= 6;
         if (en_frozen) {
             x -= text_w(&FONT_XS, "hold");
-            cv_text(x, -2, &FONT_XS, "hold", K_FROST);
+            cv_text(x, 16, &FONT_XS, "hold", K_FROST);
             x -= 6;
         }
         if (ui.lock)
-            cv_text(x - text_w(&FONT_XS, "lock"), -2, &FONT_XS, "lock", K_FROST);
+            cv_text(x - text_w(&FONT_XS, "lock"), 16, &FONT_XS, "lock", K_FROST);
     }
 }
 static uint32_t where_sig(uint32_t h)            /* (what they show, for a redraw) */
@@ -3635,9 +3640,9 @@ static void draw_main(void)
             {   /* (1.4.0, the user's) its name top right, as the other pages' */
                 char pn[16];
                 caps(pn, view_name(ui.view), sizeof pn);
-                cv_text(232 - text_w(&FONT_B, pn), 12, &FONT_B, pn, K_ACC);
+                cv_text(232 - text_w(&FONT_B, pn), 1, &FONT_B, pn, K_ACC);
             }
-            draw_page_pos();
+            (void)draw_page_pos();
             draw_big(now);
             cv_blit(0, MAIN_Y);
         }
