@@ -324,8 +324,9 @@ static void say_name(const char *a, const char *b)
 }
 /* a long press's card in the middle (a nudge, a shake, the next chord, new chords, saved, a reset): what it did, in
  * big, outlined in its colour; it fades out CARD_SHOW after (draw_card) */
-#define CARD_SHOW 1500u
-#define CARD_FADE 300u
+#define CARD_SHOW 800u                   /* (1.4.0, the user's: they distract; a second, fade and all, till the aids
+                                          * can be turned off) */
+#define CARD_FADE 200u
 static int str_begins(const char *s, const char *p)   /* (the firmware's libc has no strcmp, strncmp) */
 {
     while (*p && *s == *p)
@@ -1608,7 +1609,9 @@ static void input(void)
                 static const uint16_t LC[NLAYER] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE};
                 static const uint16_t MC[4] = {K_PAD, K_BELL, K_BASS, K_PULSE};
                 const int k = VIEW_KNOB[ui.view][i], l = oct_layer(ui.view);
-                if (ui.view != V_CHORDS && ui.view != V_PAT && k != K_SAVE && k != K_CPU && k != K_NONE)
+                if (ui.view != V_CHORDS && ui.view != V_PAT && ui.view != V_PERF && ui.view != V_MIX && k != K_SAVE &&
+                    k != K_CPU && k != K_NONE)   /* (1.4.0, the user's: nor the Arrangement page, the meters its
+                                                  * picture: the notches show the change) */
                     big_show_help(k, KNOB_LABEL[ui.view][i], ui.view == V_MIX ? MC[i] : l >= 0 ? LC[l] : K_ACC,
                                   KNOB_HELP[ui.view][i]);
             }
@@ -2526,7 +2529,7 @@ static void draw_alg(int layer)
 #define MT_P 8
 #define MT_W 6
 #define MT_Y0 35                                 /* the first row; MT_ROW apart, MT_H high */
-#define MT_ROW 16
+#define MT_ROW 15
 #define MT_H 10
 static struct {
     float db[EN_NMETER], hold[EN_NMETER];        /* each meter as shown (dB), its peak held */
@@ -2623,12 +2626,13 @@ static void draw_desk(void)
             cv_rect(mx, y - 3, 2, MT_H + 6, mc);
         }
     }
-    {   /* under the master: the duck's gain reduction, from the right, a segment each MT_DB */
-        const int32_t y = mt_y(EN_MT_MASTER) + MT_H + 4;
+    {   /* under the master: the duck (its gain reduction), from the right, a segment each MT_DB; a row as the others
+         * (1.4.0, the user's: named DUCK, as tall) */
+        const int32_t y = mt_y(EN_MT_MASTER) + MT_ROW;
         const int g = (int)(mt.gr * (1.0f / MT_DB) + 0.5f);
-        cv_text(8, y - 5, &FONT_XS, "GR", proj.par[P_DUCK] ? K_DIM : K_LINE);
+        cv_text(8, y - 3, &FONT_XS, "DUCK", proj.par[P_DUCK] ? K_PULSE : K_LINE);
         for (i = 0; i < MT_SEG; i++)
-            cv_rect(MT_X0 + i * MT_P, y, MT_W, 4, i >= MT_SEG - g ? K_PULSE : mix(K_BG, K_PULSE, 3));
+            cv_rect(MT_X0 + i * MT_P, y, MT_W, MT_H, i >= MT_SEG - g ? K_PULSE : mix(K_BG, K_PULSE, 3));
     }
 }
 

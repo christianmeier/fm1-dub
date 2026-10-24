@@ -112,7 +112,7 @@ The drawing at the top shows them all; here they are in more detail.
 | SELECT | **The DJ filter**, on every page (the same one as the Form page's Filter, KNOB 1): left shuts it (a low-pass, under water), right opens it (a high-pass, thin and bright), Off in the middle, where it stops on its way through (three clicks to leave it). While it turns, a big ring in the middle shows it, and the header says it ("FILTER Shut 40"); the page stays. Hold HOME and turn it for the tempo, from any page. The pages are on their buttons; the page's name, top right, says where you are. |
 | ALGORITHM | On a layer's page (Chord, Pings, Bass, Drums): that layer's **voice** (see [The voices](#the-voices)). On the Noise pages: its character. On the Chords page: the walk's character (Home, Wander, Free). Anywhere else: the middle of the screen, as ripples, a scope or a spectrum (see [The screen](#4-the-screen)). The mode, a piece's choice, is on the Key page (HOME again). |
 | PRESETS | The piece (see [The pieces](#7-the-pieces)). |
-| KNOB 1–4 | The four values on the screen. A few clicks are always single steps; a quick turn speeds up, so half a turn sweeps the range. While a knob turns, its value shows large in the middle of the screen, in a big ring with its name and what it does under it (on the Chords and Pattern pages, which show the change themselves, the line above the knobs says what it does). A **centred** knob (0 in the middle: the sound pages' −50…+50 ones, the Noise page's Tone, the Filter, the Arrangement page's Energy and Wet) has a **notch** at 0: turning through, it stops there, and to leave it takes three clicks the same way (the first two are held back). A switch shows its positions as dots, up to ten (Drift, Mode, Algo). A grey knob does nothing there. |
+| KNOB 1–4 | The four values on the screen. A few clicks are always single steps; a quick turn speeds up, so half a turn sweeps the range. While a knob turns, its value shows large in the middle of the screen, in a big ring with its name and what it does under it (on the Chords, Pattern and Arrangement pages, which show the change themselves, the line above the knobs says what it does). A **centred** knob (0 in the middle: the sound pages' −50…+50 ones, the Noise page's Tone, the Filter, the Arrangement page's Energy and Wet) has a **notch** at 0: turning through, it stops there, and to leave it takes three clicks the same way (the first two are held back). A switch shows its positions as dots, up to ten (Drift, Mode, Algo). A grey knob does nothing there. |
 | OCT− / OCT+ | On a layer's page (Chord, Pings, Bass, Drums or Noise, and their sound, FM and Pattern pages, and Noise space): that layer's **level**, 5 down or up a press ("BASS 55" in the header, and a big ring in the middle, in the layer's colour, the level inside, until a second after the last press); held, it keeps going. **Both together**, let go within a second: the layer **muted** ("BASS MUTED"), its level kept; again, back ("BASS ON"). The drums mute the kick and the hats together. These are the Arrangement page's mutes (white 1–5): a mute made here shows there, and the other way round. Held together for five seconds: the update mode (see [Troubleshooting](#11-troubleshooting)); a long press never mutes. On the other pages they do nothing. (The pings' octave is on the Pings page, KNOB 2.) |
 | MASTER | Volume. |
 | SAVE | The **Noise page** (below); again, **Noise space** (its width and its sends; SAVE blinks); again, **Noise LFO** (its filter's wave and drift); again, back to the Noise page. Held: a nudge to the noise; held on (1.5 s): a shake (another noise character). Saving is on GLO. |
@@ -147,7 +147,7 @@ kick ducks it fully; a beat without one a little less, and less again while the 
 kick out (a Break), so the music keeps breathing (the ghost duck). The noise is ducked deeper than
 the music.
 
-![The Arrangement page: six rows of green LED segments, CHD, PNG, BAS, DRM, NOI and MST, each with a white fader marker, the drums' and the master's reaching yellow; under the master, GR, the duck's orange segments from the right; ENERGY 0, MIXER grey, WET 0, DUCK 80](img/screen-perform.png "The Arrangement page")
+![The Arrangement page: six rows of green LED segments, CHD, PNG, BAS, DRM, NOI and MST, each with a white fader marker, the drums' and the master's reaching yellow; under the master, DUCK, its orange segments from the right; ENERGY 0, MIXER grey, WET 0, DUCK 80](img/screen-perform.png "The Arrangement page")
 
 **The meters.** A row a part, top to bottom: the chord (CHD), the pings (PNG), the bass (BAS), the
 drums (DRM: the kick and the hats, the rim and the clap), the noise (NOI), and under them the master
@@ -164,13 +164,14 @@ drums (DRM: the kick and the hats, the rim and the clap), the noise (NOI), and u
   segments amber and red.
 - **A muted part's row is dark** (its notch kept, grey); with a **solo** on, the rows soloed out are
   dimmed, the one you hear bright. (The noise has no solo key: it plays on under a solo.)
-- **GR**, under the master: the duck, as a compressor's gain reduction, eating segments from the
+- **DUCK**, under the master, a row as the others: the duck, as a compressor's gain reduction, eating segments from the
   right with each kick (2 dB a segment): on the bass while it plays (the deepest, the pump you
   hear), else on the rest of the music. Duck at 0, it stays dark.
 - **Red at the top of MST** means the output is at full scale: the soft clip is squashing it, and
   a red **!** lights in the header, on every page, for a second (turn MASTER or a level down).
 
-On the Arrangement page, each key says what it did on a card in the middle for a moment: a mute ("PINGS muted",
+On the Arrangement page, each key says what it did on a card in the middle for a moment (under a second, so the
+meters under it show the effect): a mute ("PINGS muted",
 in the layer's colour), a solo, a move as you press it ("THROW: every stab into the echo"), the mix.
 
 **Hold white 6** for the **Mix** page: KNOB 1–4 the levels of the chord, the pings, the bass and the
@@ -301,8 +302,8 @@ save it (GLO held) or keep it with Lock (SEL held).
 Saving (GLO held) keeps what you like; GLO held on (1.5 s) puts the piece back to its recipe. Evolve nudges by itself too (the Dub
 page, below), but never shakes.
 
-**The cards.** Every long press says what it did on a card in the middle of the screen, for a
-second and a half: a nudge (amber) or a shake (red), the layer and what changed; EDIT held, NEXT
+**The cards.** Every long press says what it did on a card in the middle of the screen, for about a
+second: a nudge (amber) or a shake (red), the layer and what changed; EDIT held, NEXT
 CHORD (gone the moment the chord changes); EDIT held on, NEW CHORDS (red); GLO held, SAVED (teal);
 GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
 
