@@ -845,6 +845,11 @@ loop held, the kick never leaving, an echo you hear, movement by hand rather tha
 - **Smaller engine features:** hats on the four "ands" (an auto pattern); named bass figures (BCD's x.....x.x.....x.)
   as grooves; kick shapes 3+3+2 and a four leaning on 1 and 3; a dotted-half echo time; a lower chord voicing; a
   reggae offbeat chop (a stab pattern); intro and outro (for a set or a recording).
+- [ ] **A CPU audit** (the user, 2026-10-24: "at some point"): how the load splits across DUB-1's sub-systems (the
+  chord's voices, the pings, the bass, the drums, the noise, the echo, the plate and cloud, the master, the meters,
+  the effects grid), per piece, average and peak. On the host: each render stage timed per block (a profiling build,
+  en_render's blocks); on the FM-1: the same stages timed with fm1_ticks in a test build, shown on the Setup page, so
+  the host's split can be checked against the device's. Then a table, and what is worth slimming first.
 - **CPU: 1.4.0's LFO rework** (2026-10-24, the user: dropouts and clicks on Chamber and Concrete, "the CPU higher in
   general"): on the host the engine had grown 5-8% over 1.3.0's, nearly all of it the noise LFO's low-pass (two SVFs a
   sample, on in every piece since each drifts its noise), enough to take 1.3.0's peaks (80-82 on the FM-1) over.
