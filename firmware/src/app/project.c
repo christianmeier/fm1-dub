@@ -283,6 +283,23 @@ typedef struct {
     slot23_t slot[NPIECES];
     uint8_t rsv[16];
 } project23_t;
+/* DUB-1 1.4.0's six strips (format 24): today's, without the noise LFO's Destination (P_NLDEST) */
+#define NPAR24 P_NLDEST
+_Static_assert(NPAR24 == 157, "format 24 had 157 parameters");
+typedef struct {
+    int16_t par[NPAR24];
+    uint16_t pool;
+    uint8_t pings[EN_PINGS_N];
+    uint8_t pings_ok, screen;
+} slot24_t;
+typedef struct {
+    uint32_t magic, format;
+    int16_t par[NPAR24];
+    uint16_t pool;
+    uint8_t leds, piece, screen, rsv0;
+    slot24_t slot[NPIECES];
+    uint8_t rsv[16];
+} project24_t;
 _Static_assert(sizeof(project_t) <= 3840u, "the project must fit one storage sector's payload");
 
 static void take(const slot_t *s)                /* a piece's settings into play, the globals kept */
@@ -582,6 +599,23 @@ static void from23(const project23_t *o)        /* 1.4.0's channel strips (23): 
         proj.slot[i].screen = o->slot[i].screen;
     }
 }
+static void from24(const project24_t *o)        /* 1.4.0's six strips (24): everything kept */
+{
+    int i;
+    memset(&proj, 0, sizeof proj);
+    proj.magic = o->magic;
+    proj.format = PROJ_FORMAT;
+    memcpy(proj.par, o->par, sizeof o->par);
+    proj.pool = o->pool;
+    proj.leds = o->leds, proj.piece = o->piece, proj.screen = o->screen;
+    for (i = 0; i < NPIECES; i++) {
+        memcpy(proj.slot[i].par, o->slot[i].par, sizeof o->slot[i].par);
+        proj.slot[i].pool = o->slot[i].pool;
+        memcpy(proj.slot[i].pings, o->slot[i].pings, sizeof proj.slot[i].pings);
+        proj.slot[i].pings_ok = o->slot[i].pings_ok;
+        proj.slot[i].screen = o->slot[i].screen;
+    }
+}
 static void cut21(int16_t *par, int piece)      /* before 22: the chord's Cutoff the knob itself; now the knob around
                                                   * the piece's own (its recipe's, P_CUTOFF): what you'd set, kept as
                                                   * the knob's offset from it (as far as the knob goes) */
@@ -779,11 +813,18 @@ int project_load(void)
             fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR23, o->slot[i].pool, i);
         }
         from23((const project23_t *)(const void *)&buf);
+    } else if (n >= 8 && buf.magic == PROJ_MAGIC && buf.format == 24u && n >= (int)sizeof(project24_t)) {
+        old = 24;
+        for (i = 0; i < NPIECES; i++) {
+            const project24_t *o = (const project24_t *)(const void *)&buf;
+            fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR24, o->slot[i].pool, i);
+        }
+        from24((const project24_t *)(const void *)&buf);
     } else {
         proj = buf;
     }
-    if (old && old < 24)                                     /* (the new ones, from the recipes) */
-        newpar(old == 23 ? NPAR23 : old == 22 ? NPAR22 : old == 21 ? NPAR21 : old == 20 ? NPAR20 : old == 19 ? NPAR19 : old >= 17 ? NPAR18 : old == 16 ? NPAR16 : old == 15 ? NPAR15 : old == 14 ? NPAR14 : old == 13 ? NPAR13
+    if (old && old < 25)                                     /* (the new ones, from the recipes) */
+        newpar(old == 24 ? NPAR24 : old == 23 ? NPAR23 : old == 22 ? NPAR22 : old == 21 ? NPAR21 : old == 20 ? NPAR20 : old == 19 ? NPAR19 : old >= 17 ? NPAR18 : old == 16 ? NPAR16 : old == 15 ? NPAR15 : old == 14 ? NPAR14 : old == 13 ? NPAR13
                                                                                                             : NPAR12);
     if (old == 19) {                             /* (19: Drift a rate; now its own knob) */
         walk19(proj.par);

@@ -1348,6 +1348,50 @@ int main(void)
         en_set(P_CLDEST, 0);
     }
 
+    /* (1.4.0, the user's) the noise's LFO's Destination: the Filter as before; Tone or Air moved (the sound differs),
+     * within their knobs' ranges (Tone near its top, Air near its top: never past them), the others left be */
+    {
+        int d, heard[EN_NNLDEST], inr = 1;
+        float mx[EN_NNLDEST][EN_NNLDEST];
+        for (d = 0; d < EN_NNLDEST; d++) {
+            int k, j;
+            fresh();
+            en_seed(4);
+            en_set(P_CRACKLE, 80);
+            en_set(P_NLFO, 100);
+            en_set(P_NLWALK, 100);
+            en_set(P_NLRATE, 0);                 /* (a bar's wave: all of it heard in the time) */
+            en_set(P_NCOL, 40);
+            en_set(P_NROOM, 90);
+            en_set(P_NLDEST, d);
+            en_play(1);
+            for (j = 0; j < EN_NNLDEST; j++)
+                mx[d][j] = 0.0f;
+            for (k = 0; k < 600; k++) {          /* (about 3.5 s) */
+                en_render(buf, 256, 2048);
+                for (j = 0; j < EN_NNLDEST; j++)
+                    mx[d][j] = fmaxf(mx[d][j], fabsf(en_nlfo_at[j]));
+                if (0.8f + en_nlfo_at[EN_NLD_TONE] > 1.0001f || 0.8f + en_nlfo_at[EN_NLD_TONE] < -1.0001f ||
+                    0.9f + en_nlfo_at[EN_NLD_AIR] > 1.0001f || 0.9f + en_nlfo_at[EN_NLD_AIR] < -0.0001f)
+                    inr = 0;
+            }
+            heard[d] = d ? !same_with(P_NLDEST, d) : 1;   /* (against the Filter's, the same engine from here) */
+        }
+        printf("  the noise LFO's Destination: on the Filter %.2f (Tone %.2f, Air %.2f); on Tone %.2f (Filter %.2f), on Air "
+               "%.2f (Filter %.2f); Tone %s, Air %s; %s their knobs' ranges\n", (double)mx[0][0], (double)mx[0][1],
+               (double)mx[0][2], (double)mx[1][1], (double)mx[1][0], (double)mx[2][2], (double)mx[2][0],
+               heard[1] ? "heard" : "unheard", heard[2] ? "heard" : "unheard", inr ? "within" : "PAST");
+        CHECK(mx[0][0] > 0.5f && mx[0][1] == 0.0f && mx[0][2] == 0.0f, "noise LFO on the Filter: %f %f %f",
+              (double)mx[0][0], (double)mx[0][1], (double)mx[0][2]);
+        CHECK(mx[1][1] > 0.2f && mx[1][0] == 0.0f && mx[1][2] == 0.0f, "noise LFO on Tone: %f %f %f", (double)mx[1][0],
+              (double)mx[1][1], (double)mx[1][2]);
+        CHECK(mx[2][2] > 0.1f && mx[2][0] == 0.0f && mx[2][1] == 0.0f, "noise LFO on Air: %f %f %f", (double)mx[2][0],
+              (double)mx[2][1], (double)mx[2][2]);
+        CHECK(heard[1] && heard[2], "noise LFO's Destination: Tone %d, Air %d (1: heard)", heard[1], heard[2]);
+        CHECK(inr, "noise LFO's Destination: past its knob's range");
+        en_set(P_NLDEST, 0);
+    }
+
     /* every setting at its extremes: still bounded */
     {
         int p;
@@ -1397,6 +1441,10 @@ int main(void)
                 en_meter[i] = 0.0f;
             peak = 0.0f;
             run(3.0f);
+            for (i = 0; i < 17 && en_meter[k] <= 0.003f; i++)   /* (a part resting, a phrase at most: until it plays; the
+                                                  * seed XORs into the engine's state, so what rests depends on the tests
+                                                  * before) */
+                run(1.0f);
             printf("  %s alone: meters", N[k]);
             for (i = 0; i < EN_NMETER; i++)
                 printf(" %.4f", (double)en_meter[i]);
@@ -1586,29 +1634,44 @@ int main(void)
         int w;
         double e[2][2];
         for (w = 0; w < 2; w++) {
-            int t;
-            for (t = 0; t < 2; t++) {
-                fresh();
-                en_piece(0, pp, &pl);
-                for (k = 0; k < P_NPARAMS; k++)
-                    if (k != P_TUNE && k != P_MIDI)
-                        en_set((int)k, pp[k]);
-                en_pool(pl);
-                en_set(P_HITS, 90);
-                en_seed(5);
-                en_regrow();
-                en_mute(0x3Fu & ~ALONE[w]);
-                en_play(1);
-                run(4.0f);
-                en_perf(t ? EN_PF_HATTHROW : 0u);
-                run(2.0f);
-                en_perf(0);
-                run(0.05f);
-                en_mute(0x3Fu);                  /* (the tail alone: everything stopped, the echo ringing on) */
-                sum2 = 0.0f;
-                run(1.5f);
-                e[w][t] = (double)sum2;
+            int t, fd[2];
+            pid_t pid;
+            fresh();
+            en_piece(0, pp, &pl);
+            for (k = 0; k < P_NPARAMS; k++)
+                if (k != P_TUNE && k != P_MIDI)
+                    en_set((int)k, pp[k]);
+            en_pool(pl);
+            en_set(P_HITS, 90);
+            en_seed(5);
+            en_regrow();
+            en_mute(0x3Fu & ~ALONE[w]);
+            en_play(1);
+            run(4.0f);
+            fflush(stdout);                      /* (from here two ways, a fork: thrown or not, the same otherwise; the
+                                                  * seed XORs into the engine's state, so two runs would differ) */
+            if (pipe(fd))
+                break;
+            pid = fork();
+            t = pid == 0;
+            en_perf(t ? EN_PF_HATTHROW : 0u);
+            run(2.0f);
+            en_perf(0);
+            run(0.05f);
+            en_mute(0x3Fu);                      /* (the tail alone: everything stopped, the echo ringing on) */
+            sum2 = 0.0f;
+            run(1.5f);
+            e[w][t] = (double)sum2;
+            if (t) {
+                if (write(fd[1], &e[w][1], sizeof e[w][1]) != (ssize_t)sizeof e[w][1])
+                    _exit(1);
+                _exit(0);
             }
+            if (read(fd[0], &e[w][1], sizeof e[w][1]) != (ssize_t)sizeof e[w][1])
+                e[w][1] = -1.0;
+            waitpid(pid, 0, 0);
+            close(fd[0]);
+            close(fd[1]);
         }
         en_mute(0);
         printf("  the hats thrown: the hats' tail %.1f dB over not thrown; the kick's %.2f dB (none)\n",

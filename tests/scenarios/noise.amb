@@ -1,6 +1,6 @@
 # the Noise page (SAVE: a tap, the page; again, it stays): Density (the groove's hits, 0..100: 0 none), Air (the hiss under it, 0..100: 0 none), Tone
 # (-50..+50 around the piece's own) and Decay (how long the hits ring; the level on OCT-/OCT+, Drift the recipes'), ALGORITHM its character (Vinyl, Tape, Dust, Room, Machine); the spectrum in the middle; SAVE held nudges it,
-# held on shakes it (another character); kept by the piece; saving on GLO held and Setup's KNOB 4; a 1.2.0 project
+# held on shakes it (another character); kept by the piece; (1.4.0) on the Noise LFO page ALGORITHM the LFO's Destination; saving on GLO held and Setup's KNOB 4; a 1.2.0 project
 # (format 10) read, the noise from the recipes
 listen
 wait 2000
@@ -51,7 +51,7 @@ expect peak_db_max -0.5
 tap SAVE
 wait 400
 expect view 23
-said Noise LFO page, character Tape: Depth 25, Rate 4 bars, Shape Sine, Drift 20
+said Noise LFO page, destination Filter: Depth 25, Rate 4 bars, Shape Sine, Drift 20
 spin K2 9
 wait 300
 expect par128 5
@@ -59,11 +59,20 @@ said Rate 32 bars
 spin K2 -3
 wait 300
 expect par128 2
+# (1.4.0, the user's) ALGORITHM here: the LFO's Destination (Filter, Tone, Air), round; the character left be
 turn ALGO 1
 wait 300
-said NOISE Dust
-turn ALGO -1
+said DESTINATION Tone
+expect par157 1
+turn ALGO 1
 wait 300
+said DESTINATION Air
+expect par157 2
+shot nlfo_dest.png
+turn ALGO 1
+wait 300
+said DESTINATION Filter
+expect par157 0
 expect par110 1
 tap SAVE
 wait 300
@@ -108,7 +117,7 @@ wait 600
 release GLO
 reboot
 wait 1000
-expect format 24
+expect format 25
 expect par110 1
 expect par106 20
 # a 1.2.0 project (format 10): read, everything kept (Basic's chord level, set to 50 here), the noise from the
@@ -123,7 +132,7 @@ expect par0 50
 store10
 reboot
 wait 1000
-expect format 24
+expect format 25
 expect par111 70
 expect par113 100
 expect par0 50
@@ -156,7 +165,7 @@ expect par121 95
 store14
 reboot
 wait 1000
-expect format 24
+expect format 25
 expect par121 85
 expect par124 0
 # a 1.3.0 Noise space project (format 15): kept, the noise's LFO from the recipe (Fog's 0: its drift 35)
@@ -170,14 +179,14 @@ expect par121 95
 store15
 reboot
 wait 1000
-expect format 24
+expect format 25
 expect par121 95
 expect par125 0
 # a 1.3.0 noise-LFO project (format 16): kept, the kick's rumble from the recipe (Fog's 62)
 store16
 reboot
 wait 1000
-expect format 24
+expect format 25
 expect par121 95
 expect par126 62
 # (from 16: the noise's LFO as it was, Fog's 0)
@@ -197,7 +206,7 @@ expect par128 0
 store18
 reboot
 wait 1000
-expect format 24
+expect format 25
 expect par121 95
 expect par125 20
 expect par127 2
