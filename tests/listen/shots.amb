@@ -84,3 +84,14 @@ shot screen-lock.png
 press SEL
 wait 700
 release SEL
+# (1.4.0) the Chord LFO page (ENV a fourth time): deeper, its path filled (16 bars)
+tap ENV
+tap ENV
+tap ENV
+tap ENV
+wait 300
+spin K1 35
+wait 40000
+shot screen-chord-lfo.png
+spin K1 -35
+tap HOME
