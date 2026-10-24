@@ -25,10 +25,10 @@ wait 300
 said Lights Keys
 spin K3 -1
 wait 300
-# the Space page (1.4.0: SELECT turns the filter, said: below)
+# the Dub page (1.4.0: SELECT turns the filter, said: below)
 tap FX
 wait 300
-said Space page: Echo 
+said Dub page: Echo 
 # SELECT: the filter, said as it turns
 turn SELECT -3 100
 wait 300
@@ -69,10 +69,10 @@ wait 300
 said Drums page, kit Tight: Kick Four, Hits 
 tap FX
 wait 300
-said Space page: Echo 0, Echo time 1 bar, Feedback 1.5 s, Reverb 0
+said Dub page: Echo 0, Echo time 1 bar, Feedback 1.5 s, Reverb 0
 tap HOME
 wait 300
-said Dub page
+said Form page
 # Drift in bars
 spin K4 -20
 wait 300
@@ -299,7 +299,7 @@ wait 1000
 said Tempo 92
 tap HOME
 wait 300
-said Dub page
+said Form page
 # Drift Hold, and Evolve and Motion to known values
 spin K4 20
 wait 300
@@ -312,6 +312,6 @@ wait 300
 said Motion 100
 # WHERE: everything again (the chord held now)
 where
-said Dub page: Filter Off, Evolve 0, Motion 100, Drift Hold. Piece Basic, F Dorian, tempo 92, resting
+said Form page: Filter Off, Evolve 0, Motion 100, Drift Hold. Piece Basic, F Dorian, tempo 92, resting
 where
 said , held. Section 

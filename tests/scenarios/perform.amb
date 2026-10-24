@@ -1,11 +1,11 @@
-# PERFORM (SEL): white 1-5 mute the layers, black 1-5 solo them, white 7-11 held make the dub moves, white 6 held
-# puts the mix on the knobs (else the master actions: Filter, Dub, Energy, Space); SEL again stays (one page); a page's button or SELECT gives the scale back
+# the Arrangement page (SEL; PERFORM's that was): white 1-5 mute the layers, black 1-5 solo them, white 7-11 held make
+# the dub moves, white 6 held puts the mix on the knobs (else Energy, Mixer, Wet, Duck); SEL again stays (one page); a page's button or SELECT gives the scale back
 listen
 wait 3000
 expect pool 0x6AD
 tap SEL
 wait 200
-said PERFORM ON
+said ARRANGEMENT ON
 tapkey w3
 wait 200
 said KICK OFF
@@ -31,27 +31,22 @@ said MIX
 key w5 up
 wait 200
 expect view 17
-# the master actions: the Filter (it stops at the middle on the way through), Throws, Energy, Duck
-spin K1 -22
-wait 300
-said Filter Shut 40
-spin K1 30
-wait 300
-said Filter Off
-spin K1 12
-wait 300
-said Filter Open 20
-spin K1 -10
-wait 300
-spin K2 27
-wait 300
-said Wet +50
-spin K2 -25
-wait 300
-spin K3 -27
+# (1.4.0) the Arrangement page's knobs: Energy, Mixer (to come: it rests, said nothing), Wet, Duck (the Filter on
+# SELECT only, every page's)
+spin K1 -27
 wait 300
 said Energy -50
-spin K3 25
+spin K1 25
+wait 300
+said Energy 0
+spin K2 10
+wait 300
+said_none Mixer
+expect view 17
+spin K3 27
+wait 300
+said Wet +50
+spin K3 -25
 wait 300
 spin K4 52
 wait 300
@@ -84,7 +79,7 @@ wait 200
 expect view 17
 tap HOME
 wait 200
-said PERFORM OFF
+said ARRANGEMENT OFF
 # the keys are the scale again (key b0 is F#: added)
 tapkey b0
 wait 200

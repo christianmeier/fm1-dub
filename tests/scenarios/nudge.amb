@@ -51,7 +51,7 @@ release LFO
 wait 300
 said BASS SHAKE
 expect view 10
-# FX, the space: a nudge, then held on a shake (a new echo time); the Space page
+# FX, the space: a nudge, then held on a shake (a new echo time); the Dub page
 press FX
 wait 700
 release FX

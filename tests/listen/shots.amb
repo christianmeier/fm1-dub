@@ -56,12 +56,18 @@ tap REC
 wait 2500
 shot screen-hold.png
 tap REC
+# (1.4.0) the Arrangement page (SEL): the meters, Duck up (the GR pumping); then a mute (the pings) and a solo (the bass)
 tap SEL
+spin K4 30
 wait 18000
-key w6 down
-wait 2000
 shot screen-perform.png
-key w6 up
+tapkey w1
+tapkey b2
+wait 2500
+shot screen-arrangement-solo.png
+tapkey b2
+tapkey w1
+spin K4 -30
 tap HOME
 turn K3 50
 wait 166000

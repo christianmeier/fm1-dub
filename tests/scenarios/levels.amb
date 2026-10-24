@@ -44,13 +44,13 @@ expect filter 1
 turn SELECT -1 100
 expect filter 0
 tap HOME
-said PERFORM OFF
+said ARRANGEMENT OFF
 tap SEL
 wait 200
 expect view 17
 tap ARP
 wait 300
-said PERFORM OFF
+said ARRANGEMENT OFF
 expect view 2
 tap HOME
 wait 300
@@ -308,7 +308,7 @@ wait 100
 said_none MUTED
 expect mutes 0
 expect par2 63
-# elsewhere (the Dub page, the Chords page) OCT does nothing for now
+# elsewhere (the Form page, the Chords page) OCT does nothing for now
 tap HOME
 wait 300
 tap OCT+

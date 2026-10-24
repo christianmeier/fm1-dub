@@ -1113,6 +1113,52 @@ int main(void)
         CHECK(!bad, "all at min: NaN");
     }
 
+    /* (1.4.0) the Arrangement page's meters: each part's alone (the others muted) moves its own meter only; the master
+     * follows the output (its peak going into the soft clip: the output's own, a little more where it squashes) */
+    {
+        static const uint32_t M[5] = {EN_M_CHORD, EN_M_PINGS, EN_M_BASS, EN_M_KICK | EN_M_HATS, EN_M_NOISE};
+        static const char *const N[5] = {"chord", "pings", "bass", "drums", "noise"};
+        int k, i;
+        fresh();
+        en_play(1);
+        en_set(P_CRACKLE, 60);
+        en_meter_on = 1;
+        run(4.0f);
+        for (i = 0; i < EN_NMETER; i++)
+            en_meter[i] = 0.0f;
+        peak = 0.0f;
+        run(4.0f);
+        for (i = 0; i < EN_NMETER; i++)
+            CHECK(en_meter[i] > 0.003f, "meter %d moves with all playing (%f)", i, (double)en_meter[i]);
+        CHECK(en_meter[EN_MT_MASTER] >= peak * 0.99f && en_meter[EN_MT_MASTER] < peak * 1.6f,
+              "the master meter %f, the output %f", (double)en_meter[EN_MT_MASTER], (double)peak);
+        for (k = 0; k < 5; k++) {
+            en_mute(0x3Fu & ~M[k]);
+            run(1.0f);
+            for (i = 0; i < EN_NMETER; i++)
+                en_meter[i] = 0.0f;
+            peak = 0.0f;
+            run(3.0f);
+            printf("  %s alone: meters", N[k]);
+            for (i = 0; i < EN_NMETER; i++)
+                printf(" %.4f", (double)en_meter[i]);
+            printf("\n");
+            CHECK(en_meter[k] > 0.003f, "%s alone: its meter %f", N[k], (double)en_meter[k]);
+            for (i = 0; i < 5; i++)
+                if (i != k)
+                    CHECK(en_meter[i] < 1e-4f, "%s alone: meter %d at %f", N[k], i, (double)en_meter[i]);
+            CHECK(en_meter[EN_MT_MASTER] >= peak * 0.99f, "%s alone: the master %f, the output %f", N[k],
+                  (double)en_meter[EN_MT_MASTER], (double)peak);
+        }
+        en_mute(0);
+        en_meter_on = 0;
+        for (i = 0; i < EN_MT_MASTER; i++)
+            en_meter[i] = 0.0f;
+        run(1.0f);
+        for (i = 0; i < EN_MT_MASTER; i++)
+            CHECK(en_meter[i] == 0.0f, "meter %d measured while off", i);
+    }
+
     /* stop: the tails die away (but the vinyl turns on) */
     fresh();
     en_play(1);

@@ -54,7 +54,7 @@ release GLO
 wait 300
 expect par37 0
 expect par48 0
-# FX again: the Echo page (Blur, Tone, Width, Size); again, back to Space
+# FX again: the Echo page (Blur, Tone, Width, Size); again, back to Dub (the Space page that was)
 tap FX
 wait 300
 expect view 5

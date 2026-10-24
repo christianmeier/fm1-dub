@@ -557,6 +557,8 @@ volatile uint8_t en_view_layer;
 volatile uint32_t en_hits[5];
 volatile float en_hit_vel[5];
 volatile float en_echo_pk;
+volatile float en_meter[EN_NMETER], en_duck_lo[2] = {1.0f, 1.0f};
+volatile uint8_t en_meter_on;
 volatile uint8_t en_load;
 static int32_t shed_left;                        /* samples the shedding lasts (a heavy block: half a second) */
 #define SHED (shed_left > 0)
@@ -3239,6 +3241,33 @@ static void widen(uint32_t n)
 }
 
 static float tapb[BLK];                          /* the layer the screen listens to, alone (en_view_layer) */
+/* (1.4.0) the meters: a part's peak, every 4th sample (a buffer of its own; or the mix's difference across its render,
+ * against a snapshot of the mix before it) */
+static float mt_l[BLK / 4] EN_POOL, mt_r[BLK / 4] EN_POOL;   /* (the pool: the RAM near full) */
+static float mt_pk(const float *a, const float *b, uint32_t n)
+{
+    float p = 0.0f;
+    uint32_t j;
+    for (j = 0; j < n; j += 4)
+        p = fm_maxf(p, fm_maxf(fm_fabsf(a[j]), fm_fabsf(b[j])));
+    return p;
+}
+static void mt_snap(uint32_t n)
+{
+    uint32_t j;
+    for (j = 0; j < n; j += 4)
+        mt_l[j >> 2] = mixl[j], mt_r[j >> 2] = mixr[j];
+}
+static float mt_diff(uint32_t n, const float *c)  /* (c: a mono bus of the part's own, added to both sides; or 0) */
+{
+    float p = 0.0f;
+    uint32_t j;
+    for (j = 0; j < n; j += 4) {
+        const float k = c ? c[j] : 0.0f;
+        p = fm_maxf(p, fm_maxf(fm_fabsf(mixl[j] - mt_l[j >> 2] + k), fm_fabsf(mixr[j] - mt_r[j >> 2] + k)));
+    }
+    return p;
+}
 /* (bassb: the bass, mono, on its own so the duck takes it deeper than the rest) */
 
 static void render_stabs(uint32_t n)
@@ -4104,7 +4133,7 @@ static float ms_lp1, ms_lp2;                     /* the side's lows (mono below 
 static void render_chunk(int32_t *out, uint32_t n, float gain)
 {
     uint32_t j;
-    float epk;
+    float epk, mpk[EN_NMETER] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, dlo = 1.0f, dlob = 1.0f;
     const float rg = rev_send * rev_in_gain * (1.0f - 0.2f * arcm);
     /* (the cloud listens as if Reverb were at 63 at least, so Cloud works with little reverb too) */
     const float cl_in = rev_send > 0.0001f ? fm_maxf(rev_send, 0.4f) / rev_send : 0.0f;
@@ -4123,8 +4152,10 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         mixl[j] = mixr[j] = rsend[j] = esend[j] = kickb[j] = bassb[j] = 0.0f;
     lfo_step();
     {   /* (a layer's own part of the dry mix: what its render adds; the bass, the kick and the noise their own) */
-        const int tl = en_view_layer;
+        const int tl = en_view_layer, mo = en_meter_on;
         render_stabs(n);
+        if (mo)                                  /* (the meters: the mix is the chord's alone here) */
+            mpk[EN_MT_CHORD] = mt_pk(mixl, mixr, n), mt_snap(n);
         if (tl == 1)
             for (j = 0; j < n; j++)
                 tapb[j] = mixl[j] + mixr[j];
@@ -4133,6 +4164,8 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
             for (j = 0; j < n; j++)
                 tapb[j] = -(mixl[j] + mixr[j]);
         render_bells(n);
+        if (mo)
+            mpk[EN_MT_BASS] = mt_pk(bassb, bassb, n), mpk[EN_MT_PINGS] = mt_diff(n, 0);
         widen(n);                                /* (the chord's and the pings' dry, wider) */
         if (tl == 2)
             for (j = 0; j < n; j++)
@@ -4140,7 +4173,11 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         if (tl == 4)
             for (j = 0; j < n; j++)
                 tapb[j] = -(mixl[j] + mixr[j]);
+        if (mo)
+            mt_snap(n);
         render_drums(n);
+        if (mo)
+            mpk[EN_MT_DRUMS] = mt_diff(n, kickb);
         if (tl == 4)
             for (j = 0; j < n; j++)
                 tapb[j] += mixl[j] + mixr[j] + 2.0f * kickb[j];
@@ -4151,6 +4188,8 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         if (tl == 5)
             for (j = 0; j < n; j++)
                 tapb[j] = crl[j] + crr[j];
+        if (mo)
+            mpk[EN_MT_NOISE] = mt_pk(crl, crr, n);
     }
     if (fxm || sir_amp > 0.0005f || ris_amp > 0.0005f)
         render_fx(n);
@@ -4165,6 +4204,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         duck_db += (duck_xb - duck_db) * 0.08f;
         duck_xb *= duck_relb;
         dgb = 1.0f - fm_minf(2.0f * duck_depth, 0.9f) * duck_db;
+        dlo = fm_minf(dlo, dg), dlob = fm_minf(dlob, dgb);   /* (the meters' GR) */
         echoes(esend[j] * eg, &el, &er, &xl, &xr);
         {   /* (a strike: the returns down by up to 6 dB, back over ~150 ms; not a throw's, which rides over) */
             float ge;
@@ -4257,6 +4297,8 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
             r += stt_mix * (v - r);
         }
 
+        mpk[EN_MT_MASTER] = fm_maxf(mpk[EN_MT_MASTER], fm_maxf(fm_fabsf(l), fm_fabsf(r)));   /* (the master meter, the
+                                                  * clip light: going into the soft clip) */
         l = soft(l);                             /* (1.3.0: a rational curve, not tanh: the same below the clip,
                                                   * a fraction of the time) */
         r = soft(r);
@@ -4280,6 +4322,19 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         }
     }
     en_echo_pk = epk;
+    {   /* (the meters: in the output's units, the parts' with the master's gain; each the highest since taken) */
+        const float og = 0.75f * gain;
+        int i;
+        for (i = 0; i < EN_MT_MASTER; i++)
+            if (mpk[i] * og > en_meter[i])
+                en_meter[i] = mpk[i] * og;
+        if (mpk[EN_MT_MASTER] > en_meter[EN_MT_MASTER])
+            en_meter[EN_MT_MASTER] = mpk[EN_MT_MASTER];
+        if (dlo < en_duck_lo[0])
+            en_duck_lo[0] = dlo;
+        if (dlob < en_duck_lo[1])
+            en_duck_lo[1] = dlob;
+    }
     duck_x = fm_flush(duck_x);
     duck_d = fm_flush(duck_d);
     duck_xb = fm_flush(duck_xb);
