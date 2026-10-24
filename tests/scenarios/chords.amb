@@ -115,6 +115,7 @@ tap HOME
 tap SEQ
 tap SEQ
 tap SEQ
+tap SEQ
 wait 300
 expect view 16
 press REC

@@ -3,6 +3,7 @@ wait 3000
 tap SEQ
 tap SEQ
 tap SEQ
+tap SEQ
 wait 400
 shot pat_auto.png
 key b0 down

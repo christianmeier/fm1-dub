@@ -1166,6 +1166,100 @@ int main(void)
         en_set(P_TEMPO, 122);
     }
 
+    /* (1.4.0, the user's: the layers' pages) each layer's Vary, as the chord's: how often its part changes, Evolve over
+     * it. At 0 still, at any Evolve: no loop note moved, no new plan, the shaker's steps kept, the noise's groove the
+     * same (the arrangement held: Motion 0); at 100 more often than at 50 (the probabilities saturate a little: the
+     * plan's and the noise's at Evolve 40 near 1 already, so 1.5x at least). (At 50 the music as before, bit for bit:
+     * every piece, checked against 1.4.0's Chord pages while building it) */
+    {
+        static const int VP[4] = {P_PVARY, P_BVARY, P_DVARY, P_NVARY};
+        static const char *const VN[4] = {"pings'", "bass's", "drums'", "noise's"};
+        int l, k, e, turns[4][3], still[4];
+        for (l = 0; l < 4; l++) {
+            for (k = 0; k < 3; k++) {            /* Vary 0, 50, 100 at Evolve 40, 200 bars */
+                uint32_t t0;
+                fresh();
+                en_seed(17);
+                en_set(P_TEMPO, 140);
+                en_set(P_EVOLVE, 40);
+                en_set(P_MOTION, 0);
+                en_set(VP[l], k * 50);
+                en_play(1);
+                run(1.0f);
+                t0 = en_vary_turns[l];
+                while (en_bars < 16u * 201u)
+                    run(0.5f);
+                turns[l][k] = (int)(en_vary_turns[l] - t0);
+            }
+            still[l] = 0;
+            for (e = 0; e < 2; e++) {            /* Vary 0 at Evolve 100 too */
+                uint32_t t0;
+                fresh();
+                en_seed(23);
+                en_set(P_TEMPO, 140);
+                en_set(P_EVOLVE, 100);
+                en_set(P_MOTION, 0);
+                en_set(VP[l], 0);
+                en_play(1);
+                run(1.0f);
+                t0 = en_vary_turns[l];
+                while (en_bars < 16u * 101u)
+                    run(0.5f);
+                still[l] += (int)(en_vary_turns[l] - t0);
+            }
+            printf("  the %s Vary 0, 50, 100: %d, %d, %d changes in 200 bars (at 0, Evolve 100: %d)\n", VN[l], turns[l][0],
+                   turns[l][1], turns[l][2], still[l]);
+            CHECK(turns[l][0] == 0 && still[l] == 0 && turns[l][1] > 3 && 2 * turns[l][2] >= 3 * turns[l][1],
+                  "the %s Vary: %d %d %d, at 0 (Evolve 100) %d", VN[l], turns[l][0], turns[l][1], turns[l][2], still[l]);
+            en_set(VP[l], 50);
+        }
+        en_set(P_EVOLVE, 40);
+        en_set(P_MOTION, 50);
+        en_set(P_TEMPO, 122);
+    }
+
+    /* (1.4.0, the user's) the chord's Cutoff a knob around the piece's own: its base (the recipe's, P_CUTOFF) and the
+     * knob's offset (P_CCUT) as one: 40 and +10 sound as 50 and 0, bit for bit; and the knob heard */
+    {
+        uint32_t h0, h1 = 0;
+        int fd[2];
+        pid_t pid;
+        fresh();
+        en_seed(5);
+        en_set(P_CUTOFF, 45);
+        en_play(1);
+        run(1.0f);
+        fflush(stdout);
+        if (pipe(fd))
+            return 1;
+        pid = fork();
+        if (pid == 0) {                          /* (from the same state: 40 and +10 here, 50 and 0 there) */
+            en_set(P_CUTOFF, 40);
+            en_set(P_CCUT, 10);
+            h1 = out_hash(6.0f);
+            if (write(fd[1], &h1, sizeof h1) != (ssize_t)sizeof h1)
+                _exit(1);
+            _exit(0);
+        }
+        en_set(P_CUTOFF, 50);
+        en_set(P_CCUT, 0);
+        h0 = out_hash(6.0f);
+        if (read(fd[0], &h1, sizeof h1) != (ssize_t)sizeof h1)
+            h1 = ~h0;
+        waitpid(pid, 0, 0);
+        close(fd[0]);
+        close(fd[1]);
+        CHECK(h0 == h1, "Cutoff: 40 and +10 not as 50");
+        fresh();
+        en_seed(5);
+        en_set(P_CUTOFF, 50);
+        en_play(1);
+        CHECK(same_with(P_CCUT, -30) == 0, "Cutoff's knob not heard");
+        printf("  the chord's Cutoff knob: around the piece's own, 40 and +10 as 50 (heard)\n");
+        en_set(P_CUTOFF, 45);
+        en_set(P_CCUT, 0);
+    }
+
     /* (1.4.0, the user's) the chord's LFO's Destination: Reso or Colour moved (the sound differs), the Cutoff left be; on
      * the Cutoff, the others left be */
     {
@@ -1230,6 +1324,7 @@ int main(void)
         static const char *const N[5] = {"chord", "pings", "bass", "drums", "noise"};
         int k, i;
         fresh();
+        en_seed(3);                              /* (its own seed: not what the tests before it left) */
         en_play(1);
         en_set(P_CRACKLE, 60);
         en_meter_on = 1;

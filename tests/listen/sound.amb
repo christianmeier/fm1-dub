@@ -29,6 +29,8 @@ turn K2 20
 wait 300
 shot snd_drum.png
 tap SEQ
+tap SEQ
+tap SEQ
 wait 300
 shot back_drums.png
 press ENV

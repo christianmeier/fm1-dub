@@ -2,7 +2,9 @@
 # (1.4.0) The chord's fourth press: its LFO page (Depth, Rate: 1 to 32 bars, Shape; Drift, the random walk); then back. The pings' and the
 # bass's FM pages: their fourth knob none now (their LFO gone). (1.4.0, the user's) The Chord FM page for every voice,
 # its fourth knob Colour (on a voice not FM the only one); ALGORITHM on the Chord LFO page its Destination (Cutoff,
-# Reso, Colour), the big ring naming it, the moving knob on its page
+# Reso, Colour), the big ring naming it, the moving knob on its page. (1.4.0, the user's: the layers' pages) the Pings FM
+# page: Algo, Ratio (the modulator's), Feedback, Upper (operators 3 and 4's); the Bass FM page: Algo, Ratio, Feedback,
+# Bite (every voice's: on Sub, not FM, the only one)
 listen
 wait 3000
 tap ENV
@@ -103,17 +105,50 @@ tap ARP
 tap ARP
 wait 300
 expect view 13
+said Pings FM page, voice Blip: Algo Voice, Ratio 0, Feedback 0
+said_none Upper
 spin K1 9
 wait 3000
 expect par56 9
 expect peak_db_max -0.5
-# (the pings' fourth knob none now: turned, nothing; ARP again: back to Pings)
+# (1.4.0, the user's: the pings' Ratio here, the modulator's; Upper, operators 3 and 4's, grey on a two-operator
+# algorithm (the 9th): turned, nothing; ARP again: back to Pings)
+spin K2 12
+wait 300
+expect par41 10
+said Ratio +10
 spin K4 20
 wait 300
-expect par59 0
+expect par57 0
+spin K1 -1
+wait 300
+spin K4 22
+wait 300
+expect par57 20
+said Upper +20
+spin K4 -20
+spin K2 -10
 tap ARP
 wait 300
 expect view 2
+# the bass's FM page on Sub (not FM): its Bite alone, every voice's (1.4.0, the user's)
+tap LFO
+tap LFO
+tap LFO
+wait 300
+expect view 14
+said Bass FM page, voice Sub, not FM: Bite 0
+spin K4 12
+wait 300
+expect par44 10
+said Bite +10
+spin K1 3
+wait 300
+expect par60 0
+spin K4 -10
+tap LFO
+wait 300
+expect view 3
 # the chord's LFO works on every voice: on Saws (not FM) its page as on Keys
 tap HOME
 tap ENV

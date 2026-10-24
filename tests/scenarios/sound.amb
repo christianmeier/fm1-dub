@@ -5,7 +5,7 @@ tap ENV
 wait 300
 tap ENV
 wait 400
-said Chord voice page, voice Saws: Cutoff 40, Reso 0, Attack 0, Decay 25
+said Chord voice page, voice Saws: Cutoff 0, Reso 0, Attack 0, Decay 25
 expect view 8
 spin K2 -100
 wait 200
@@ -37,7 +37,7 @@ expect view 11
 spin K1 7
 wait 200
 expect par48 5
-said Kick tune +5
+said Tune +5
 tap ARP
 wait 300
 expect view 2

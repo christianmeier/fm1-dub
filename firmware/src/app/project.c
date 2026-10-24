@@ -232,6 +232,23 @@ typedef struct {
     slot20_t slot[NPIECES];
     uint8_t rsv[16];
 } project20_t;
+/* DUB-1 1.4.0's Chord pages (format 21): today's, without the layers' Vary and the chord's Cutoff knob */
+#define NPAR21 P_PVARY
+_Static_assert(NPAR21 == 135, "format 21 had 135 parameters");
+typedef struct {
+    int16_t par[NPAR21];
+    uint16_t pool;
+    uint8_t pings[EN_PINGS_N];
+    uint8_t pings_ok, screen;
+} slot21_t;
+typedef struct {
+    uint32_t magic, format;
+    int16_t par[NPAR21];
+    uint16_t pool;
+    uint8_t leds, piece, screen, rsv0;
+    slot21_t slot[NPIECES];
+    uint8_t rsv[16];
+} project21_t;
 _Static_assert(sizeof(project_t) <= 3840u, "the project must fit one storage sector's payload");
 
 static void take(const slot_t *s)                /* a piece's settings into play, the globals kept */
@@ -480,6 +497,35 @@ static void from20(const project20_t *o)        /* 1.4.0's LFO pages (20): every
         proj.slot[i].screen = o->slot[i].screen;
     }
 }
+static void from21(const project21_t *o)        /* 1.4.0's Chord pages (21): everything kept */
+{
+    int i;
+    memset(&proj, 0, sizeof proj);
+    proj.magic = o->magic;
+    proj.format = PROJ_FORMAT;
+    memcpy(proj.par, o->par, sizeof o->par);
+    proj.pool = o->pool;
+    proj.leds = o->leds, proj.piece = o->piece, proj.screen = o->screen;
+    for (i = 0; i < NPIECES; i++) {
+        memcpy(proj.slot[i].par, o->slot[i].par, sizeof o->slot[i].par);
+        proj.slot[i].pool = o->slot[i].pool;
+        memcpy(proj.slot[i].pings, o->slot[i].pings, sizeof proj.slot[i].pings);
+        proj.slot[i].pings_ok = o->slot[i].pings_ok;
+        proj.slot[i].screen = o->slot[i].screen;
+    }
+}
+static void cut21(int16_t *par, int piece)      /* before 22: the chord's Cutoff the knob itself; now the knob around
+                                                  * the piece's own (its recipe's, P_CUTOFF): what you'd set, kept as
+                                                  * the knob's offset from it (as far as the knob goes) */
+{
+    int16_t rec[P_NPARAMS];
+    uint16_t pool;
+    int d;
+    en_piece(piece, rec, &pool);
+    d = par[P_CUTOFF] - rec[P_CUTOFF];
+    par[P_CCUT] = (int16_t)(d < -50 ? -50 : d > 50 ? 50 : d);
+    par[P_CUTOFF] = rec[P_CUTOFF];
+}
 static void groove11(int16_t *par)              /* before 12: the groove a pattern (0..4: Drone, Offbeat, Dotted,
                                                  * Roller, Sync), now the knob's (Drone, Offbeat, Dotted, Sync, Roller) */
 {
@@ -644,11 +690,18 @@ int project_load(void)
             fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR20, o->slot[i].pool, i);
         }
         from20((const project20_t *)(const void *)&buf);
+    } else if (n >= 8 && buf.magic == PROJ_MAGIC && buf.format == 21u && n >= (int)sizeof(project21_t)) {
+        old = 21;
+        for (i = 0; i < NPIECES; i++) {
+            const project21_t *o = (const project21_t *)(const void *)&buf;
+            fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR21, o->slot[i].pool, i);
+        }
+        from21((const project21_t *)(const void *)&buf);
     } else {
         proj = buf;
     }
-    if (old && old < 21)                                     /* (the new ones, from the recipes) */
-        newpar(old == 20 ? NPAR20 : old == 19 ? NPAR19 : old >= 17 ? NPAR18 : old == 16 ? NPAR16 : old == 15 ? NPAR15 : old == 14 ? NPAR14 : old == 13 ? NPAR13
+    if (old && old < 22)                                     /* (the new ones, from the recipes) */
+        newpar(old == 21 ? NPAR21 : old == 20 ? NPAR20 : old == 19 ? NPAR19 : old >= 17 ? NPAR18 : old == 16 ? NPAR16 : old == 15 ? NPAR15 : old == 14 ? NPAR14 : old == 13 ? NPAR13
                                                                                                             : NPAR12);
     if (old == 19) {                             /* (19: Drift a rate; now its own knob) */
         walk19(proj.par);
@@ -681,6 +734,17 @@ int project_load(void)
     if (old >= 16)                               /* (before 19, the noise's LFO saved: as deep as it was; the pieces
                                                   * never changed take today's recipe below) */
         nlfo18();
+    if (old && old < 22) {                       /* (before 22: the chord's Cutoff as an offset from the piece's own;
+                                                  * the pieces never changed known first, by their recipes then: they
+                                                  * take today's below) */
+        for (i = 0; i < NPIECES; i++) {
+            if (old >= 11)
+                fresh[i] = (uint8_t)(fresh[i] || untouched_now(&proj.slot[i], i));
+            if (!fresh[i])
+                cut21(proj.slot[i].par, i);
+        }
+        cut21(proj.par, proj.piece < NPIECES ? proj.piece : 0);
+    }
     if (n >= 8 && proj.magic == PROJ_MAGIC && proj.format == PROJ_FORMAT) {   /* (the ranges as they are now) */
         pars_clamp(proj.par);
         for (i = 0; i < NPIECES; i++)

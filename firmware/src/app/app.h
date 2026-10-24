@@ -10,7 +10,10 @@
 #define EN_VERSION "DEV"
 #endif
 #define PROJ_MAGIC 0x31425544u           /* "DUB1": AMB-1's projects ("ENO1") give the recipes */
-#define PROJ_FORMAT 21u                  /* 21: the Chord's pages: its Vary, its LFO's Destination (P_CVARY,
+#define PROJ_FORMAT 22u                  /* 22: the layers' pages: their Vary (P_PVARY, P_BVARY, P_DVARY, P_NVARY),
+                                         * the chord's Cutoff a knob around the piece's own (P_CCUT; 8-21 read, the
+                                         * Varys from the recipes, a Cutoff you'd set its offset from the recipe's);
+                                         * 21: the Chord's pages: its Vary, its LFO's Destination (P_CVARY,
                                          * P_CLDEST; 8-20 read, they from the recipes);
                                          * 20: the LFOs' waves (P_CLSHAPE, P_NLSHAPE; 8-19 read, they Sine);
                                          * 19: the chord's and the noise's LFO rates (P_CLRATE, P_NLRATE; 8-18 read,

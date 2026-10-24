@@ -2,6 +2,7 @@ wait 3000
 tap SEQ
 tap SEQ
 tap SEQ
+tap SEQ
 spin K1 4
 tapkey w4
 tapkey w12

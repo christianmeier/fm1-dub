@@ -28,7 +28,8 @@ wait 700
 release SEQ
 wait 300
 said DRUMS NUDGE
-expect view 11
+# (1.4.0: the page whose knob moved most: the Kick page, or the Hats page)
+expect view >10
 # held on (1.5 s): a shake, a new voice (Basic's chord: Saws, 0) and every value a big step
 press ENV
 wait 1800

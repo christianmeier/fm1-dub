@@ -26,6 +26,8 @@
  *   store8                       save the project as DUB-1 1.0.0 did (format 8): reboot then reads it
  *   store10                      save it as 1.2.0 did (format 10, without the noise's five)
  *   storefile PATH               a saved project from a file (tests/host/proj-*.bin)
+ *   store21                      save it as 1.4.0's Chord pages did (format 21, without the layers' Vary, the
+ *                                chord's Cutoff the knob itself: its base and offset as one)
  *   store20                      save it as 1.4.0's LFO pages did (format 20, without the chord's Vary and its LFO's
  *                                Destination)
  *   store18                      save it as 1.4.0's test builds did (format 18, without the LFOs' rates)
@@ -169,6 +171,12 @@ int plat_usb_power(void) { return getenv("AMB_USB") != 0; }
 #include "../firmware/src/app/app.h"
 #define ANN_NAME "DUB-1 " EN_VERSION
 #include "ann_words.h"                                  /* the words file's link (tools/gen_words.py) */
+/* (an older format's save: the chord's Cutoff the knob itself, before 22: its base and the knob's offset as one) */
+static int16_t cut_abs(const int16_t *par)
+{
+    const int c = par[P_CUTOFF] + par[P_CCUT];
+    return (int16_t)(c < 0 ? 0 : c > 100 ? 100 : c);
+}
 #include "../firmware/src/announce.c"
 /* what the reader is told: every SAY to stdout with "said:" (listen), and kept for the "said" check */
 static char said_last[ANN_MAX + 1], said_log[16384];   /* said_log: every SAY since the last "said" check */
@@ -752,9 +760,11 @@ int main(int argc, char **argv)
             memset(&o, 0, sizeof o);
             o.magic = PROJ_MAGIC, o.format = 8u;
             memcpy(o.par, proj.par, sizeof o.par);
+            o.par[P_CUTOFF] = cut_abs(proj.par);
             o.pool = proj.pool, o.leds = proj.leds, o.piece = proj.piece, o.screen = proj.screen;
             for (i = 0; i < NPIECES; i++) {
                 memcpy(o.slot[i].par, proj.slot[i].par, sizeof o.slot[i].par);
+                o.slot[i].par[P_CUTOFF] = cut_abs(proj.slot[i].par);
                 o.slot[i].pool = proj.slot[i].pool;
             }
             plat_store_save(OBJ_PROJ, &o, sizeof o);
@@ -765,9 +775,11 @@ int main(int argc, char **argv)
             memset(&o, 0, sizeof o);
             o.magic = PROJ_MAGIC, o.format = 10u;
             memcpy(o.par, proj.par, sizeof o.par);
+            o.par[P_CUTOFF] = cut_abs(proj.par);
             o.pool = proj.pool, o.leds = proj.leds, o.piece = proj.piece, o.screen = proj.screen;
             for (i = 0; i < NPIECES; i++) {
                 memcpy(o.slot[i].par, proj.slot[i].par, sizeof o.slot[i].par);
+                o.slot[i].par[P_CUTOFF] = cut_abs(proj.slot[i].par);
                 o.slot[i].pool = proj.slot[i].pool;
                 memcpy(o.slot[i].pings, proj.slot[i].pings, sizeof o.slot[i].pings);
                 o.slot[i].pings_ok = proj.slot[i].pings_ok;
@@ -782,10 +794,12 @@ int main(int argc, char **argv)
             memset(&o, 0, sizeof o);
             o.magic = PROJ_MAGIC, o.format = 12u;
             memcpy(o.par, proj.par, sizeof o.par);
+            o.par[P_CUTOFF] = cut_abs(proj.par);
             o.par[P_GROOVE] = a[0] ? (int16_t)atoi(a) : LAD[proj.par[P_GROOVE] % 5];
             o.pool = proj.pool, o.leds = proj.leds, o.piece = proj.piece, o.screen = proj.screen;
             for (i = 0; i < NPIECES; i++) {
                 memcpy(o.slot[i].par, proj.slot[i].par, sizeof o.slot[i].par);
+                o.slot[i].par[P_CUTOFF] = cut_abs(proj.slot[i].par);
                 o.slot[i].par[P_GROOVE] = a[0] && i == proj.piece ? (int16_t)atoi(a) : LAD[proj.slot[i].par[P_GROOVE] % 5];
                 o.slot[i].pool = proj.slot[i].pool;
                 memcpy(o.slot[i].pings, proj.slot[i].pings, sizeof o.slot[i].pings);
@@ -804,6 +818,24 @@ int main(int argc, char **argv)
                 return 2;
             }
             plat_store_save(OBJ_PROJ, fb, (uint32_t)got);
+        } else if (!strcmp(cmd, "store21")) {    /* the project as 1.4.0's Chord pages saved it (format 21) */
+            static project21_t o;
+            int i;
+            keep();
+            memset(&o, 0, sizeof o);
+            o.magic = PROJ_MAGIC, o.format = 21u;
+            memcpy(o.par, proj.par, sizeof o.par);
+            o.par[P_CUTOFF] = cut_abs(proj.par);
+            o.pool = proj.pool, o.leds = proj.leds, o.piece = proj.piece, o.screen = proj.screen;
+            for (i = 0; i < NPIECES; i++) {
+                memcpy(o.slot[i].par, proj.slot[i].par, sizeof o.slot[i].par);
+                o.slot[i].par[P_CUTOFF] = cut_abs(proj.slot[i].par);
+                o.slot[i].pool = proj.slot[i].pool;
+                memcpy(o.slot[i].pings, proj.slot[i].pings, sizeof o.slot[i].pings);
+                o.slot[i].pings_ok = proj.slot[i].pings_ok;
+                o.slot[i].screen = proj.slot[i].screen;
+            }
+            plat_store_save(OBJ_PROJ, &o, sizeof o);
         } else if (!strcmp(cmd, "store20")) {    /* the project as 1.4.0's LFO pages saved it (format 20) */
             static project20_t o;
             int i;
@@ -811,9 +843,11 @@ int main(int argc, char **argv)
             memset(&o, 0, sizeof o);
             o.magic = PROJ_MAGIC, o.format = 20u;
             memcpy(o.par, proj.par, sizeof o.par);
+            o.par[P_CUTOFF] = cut_abs(proj.par);
             o.pool = proj.pool, o.leds = proj.leds, o.piece = proj.piece, o.screen = proj.screen;
             for (i = 0; i < NPIECES; i++) {
                 memcpy(o.slot[i].par, proj.slot[i].par, sizeof o.slot[i].par);
+                o.slot[i].par[P_CUTOFF] = cut_abs(proj.slot[i].par);
                 o.slot[i].pool = proj.slot[i].pool;
                 memcpy(o.slot[i].pings, proj.slot[i].pings, sizeof o.slot[i].pings);
                 o.slot[i].pings_ok = proj.slot[i].pings_ok;
@@ -827,9 +861,11 @@ int main(int argc, char **argv)
             memset(&o, 0, sizeof o);
             o.magic = PROJ_MAGIC, o.format = 18u;
             memcpy(o.par, proj.par, sizeof o.par);
+            o.par[P_CUTOFF] = cut_abs(proj.par);
             o.pool = proj.pool, o.leds = proj.leds, o.piece = proj.piece, o.screen = proj.screen;
             for (i = 0; i < NPIECES; i++) {
                 memcpy(o.slot[i].par, proj.slot[i].par, sizeof o.slot[i].par);
+                o.slot[i].par[P_CUTOFF] = cut_abs(proj.slot[i].par);
                 o.slot[i].pool = proj.slot[i].pool;
                 memcpy(o.slot[i].pings, proj.slot[i].pings, sizeof o.slot[i].pings);
                 o.slot[i].pings_ok = proj.slot[i].pings_ok;
@@ -843,9 +879,11 @@ int main(int argc, char **argv)
             memset(&o, 0, sizeof o);
             o.magic = PROJ_MAGIC, o.format = 16u;
             memcpy(o.par, proj.par, sizeof o.par);
+            o.par[P_CUTOFF] = cut_abs(proj.par);
             o.pool = proj.pool, o.leds = proj.leds, o.piece = proj.piece, o.screen = proj.screen;
             for (i = 0; i < NPIECES; i++) {
                 memcpy(o.slot[i].par, proj.slot[i].par, sizeof o.slot[i].par);
+                o.slot[i].par[P_CUTOFF] = cut_abs(proj.slot[i].par);
                 o.slot[i].pool = proj.slot[i].pool;
                 memcpy(o.slot[i].pings, proj.slot[i].pings, sizeof o.slot[i].pings);
                 o.slot[i].pings_ok = proj.slot[i].pings_ok;
@@ -859,9 +897,11 @@ int main(int argc, char **argv)
             memset(&o, 0, sizeof o);
             o.magic = PROJ_MAGIC, o.format = 15u;
             memcpy(o.par, proj.par, sizeof o.par);
+            o.par[P_CUTOFF] = cut_abs(proj.par);
             o.pool = proj.pool, o.leds = proj.leds, o.piece = proj.piece, o.screen = proj.screen;
             for (i = 0; i < NPIECES; i++) {
                 memcpy(o.slot[i].par, proj.slot[i].par, sizeof o.slot[i].par);
+                o.slot[i].par[P_CUTOFF] = cut_abs(proj.slot[i].par);
                 o.slot[i].pool = proj.slot[i].pool;
                 memcpy(o.slot[i].pings, proj.slot[i].pings, sizeof o.slot[i].pings);
                 o.slot[i].pings_ok = proj.slot[i].pings_ok;
@@ -875,9 +915,11 @@ int main(int argc, char **argv)
             memset(&o, 0, sizeof o);
             o.magic = PROJ_MAGIC, o.format = 14u;
             memcpy(o.par, proj.par, sizeof o.par);
+            o.par[P_CUTOFF] = cut_abs(proj.par);
             o.pool = proj.pool, o.leds = proj.leds, o.piece = proj.piece, o.screen = proj.screen;
             for (i = 0; i < NPIECES; i++) {
                 memcpy(o.slot[i].par, proj.slot[i].par, sizeof o.slot[i].par);
+                o.slot[i].par[P_CUTOFF] = cut_abs(proj.slot[i].par);
                 o.slot[i].pool = proj.slot[i].pool;
                 memcpy(o.slot[i].pings, proj.slot[i].pings, sizeof o.slot[i].pings);
                 o.slot[i].pings_ok = proj.slot[i].pings_ok;
@@ -891,9 +933,11 @@ int main(int argc, char **argv)
             memset(&o, 0, sizeof o);
             o.magic = PROJ_MAGIC, o.format = 13u;
             memcpy(o.par, proj.par, sizeof o.par);
+            o.par[P_CUTOFF] = cut_abs(proj.par);
             o.pool = proj.pool, o.leds = proj.leds, o.piece = proj.piece, o.screen = proj.screen;
             for (i = 0; i < NPIECES; i++) {
                 memcpy(o.slot[i].par, proj.slot[i].par, sizeof o.slot[i].par);
+                o.slot[i].par[P_CUTOFF] = cut_abs(proj.slot[i].par);
                 o.slot[i].pool = proj.slot[i].pool;
                 memcpy(o.slot[i].pings, proj.slot[i].pings, sizeof o.slot[i].pings);
                 o.slot[i].pings_ok = proj.slot[i].pings_ok;

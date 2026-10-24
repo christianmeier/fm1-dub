@@ -113,6 +113,13 @@ enum {
      * Evolve over it (50: as Evolve alone turned it; 0: still, the stabs all played; 100: three times as often); and
      * where its LFO and drift go (EN_CLDEST_NAME: Cutoff, Reso, Colour; ALGORITHM on the Chord LFO page) */
     P_CVARY, P_CLDEST,
+    /* (1.4.0, format 22, the user's: the layers' pages) each layer's Vary, as the chord's: how often its part changes,
+     * Evolve over it (50: as Evolve alone changed it; 0: still; 100: about three times as often): the pings' loops
+     * (their notes moving, a pass sat out), the bass's plan (its phrase's figure, the octave note), the drums' (the
+     * kick's shape, the shaker's steps, the clap), the noise's groove (the recipe's Change under it). And the chord's
+     * Cutoff as a knob around the piece's own (-50..+50: 0 its recipe's, P_CUTOFF, now the base, on no knob; a step
+     * 0.055 octave, as P_CUTOFF's) */
+    P_PVARY, P_BVARY, P_DVARY, P_NVARY, P_CCUT,
     P_NPARAMS
 };
 typedef struct {
@@ -265,6 +272,8 @@ extern volatile float en_lfo_now, en_lfo_reach;   /* (1.4.0, the user's) the cho
 enum { EN_CLD_CUTOFF, EN_CLD_RESO, EN_CLD_COLOUR };
 extern const char *const EN_CLDEST_NAME[EN_NCLDEST];
 extern volatile uint32_t en_stab_turns;          /* (1.4.0) the stabs' pattern's turns so far (for tests: Vary) */
+extern volatile uint32_t en_vary_turns[4];       /* (1.4.0, for tests) the pings', the bass's, the drums' and the noise's
+                                                  * changes so far (their Vary) */
 extern volatile float en_lfo_at[EN_NCLDEST];     /* (1.4.0, for tests) what the chord's LFO puts on each destination
                                                   * now: the Cutoff in octaves, Reso and Colour -1..1 of their knob */
 extern volatile uint32_t en_lfo_picks[2];        /* the drifts' new places so far (for tests) */

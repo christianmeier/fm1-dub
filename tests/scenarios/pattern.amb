@@ -5,6 +5,7 @@ wait 3000
 tap SEQ
 tap SEQ
 tap SEQ
+tap SEQ
 wait 400
 expect view 16
 said Pattern page, kit Tight: Lane Kick, Accent 50, Chance 100%, Play Auto
