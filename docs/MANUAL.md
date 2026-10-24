@@ -314,7 +314,7 @@ GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
 
 ## 4. The screen
 
-![The main screen on the Form page: Basic, F Dorian, tempo 122; FULL and the phrase's eight dots top left, bars 4 and 8 brighter, the line to the next chord under them; FORM top right; the ripples with the chord's name in the middle, the six lanes below; FILTER Off, EVOLVE 55, MOTION 30 (its ring marked at 40 and 70), DRIFT 64 bars](img/screen-main.png "The Form page (HOME)")
+![The main screen on the Form page: Basic, F Dorian, tempo 122; FULL and the phrase's eight bar cells top left, bars 4 and 8 ticked, the line to the next chord under them, the five thin level strips under it; FORM top right; the ripples with the chord's name in the middle, the six lanes below; FILTER Off, EVOLVE 55, MOTION 30 (its ring marked at 40 and 70), DRIFT 64 bars](img/screen-main.png "The Form page (HOME)")
 ![A Groove phrase: GROOVE lit top left, fewer stabs in the top lane; MOTION 80](img/screen-groove.png "A Groove")
 
 - **Top line:** the piece in a tag, its root and mode. On the right, a beat light (a play triangle
@@ -324,12 +324,15 @@ GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
   the audio's dropouts, beside the CPU's load); three bars (the outline red when it's nearly empty), or the bars filling
   in turn while USB powers and charges it. Messages ("ADDED F#", "NEXT CHORD ON THE BAR", "DUB HOLD ON", "KICK OFF") show here for
   a moment.
-- **Top left:** the section playing (FULL in grey; BREAK, GROOVE and THIN lit up) and eight dots,
-  the phrase's bars, lit up to the bar playing. Bars 4 and 8, the B bars of the phrase plan (see
-  [The arrangement](#6-the-arrangement)), are brighter, ahead and played; under Lock all eight are
-  alike. On the phrase's last bar, dot 8 blinks when the next phrase brings a change: a new plan,
-  another kick shape or another section. Under the dots, a thin line fills up on the way to the
-  next chord (none when Drift is Hold, or in dub hold).
+- **Top left:** the section playing (FULL in grey; BREAK, GROOVE and THIN lit up) and the phrase's
+  eight bars, a cell each, lit up to the bar playing, the one playing in teal. Bars 4 and 8, the B
+  bars of the phrase plan (see [The arrangement](#6-the-arrangement)), have a tick over them and are
+  brighter, ahead and played; under Lock all eight are alike. On the phrase's last bar, cell 8 blinks
+  when the next phrase brings a change: a new plan, another kick shape or another section. Under the
+  cells, a thin line fills up on the way to the next chord (none when Drift is Hold, or in dub hold).
+- **At the left, under them:** five thin strips, the levels of the chord (teal), the pings (blue),
+  the bass (brass), the drums (amber) and the noise (grey), as the Arrangement page's meters measure
+  them (−48 to 0 dB): a glance at the mix. A muted part's strip is dark; soloed out, dimmed.
 - **Top right:** the page's name, in teal (ARRANGEMENT on SEL's page). SOLO, in yellow, to its left
   while a solo is on. Above it, in red: "hold" in dub hold, "lock" under Lock.
 - **The ripples:** each stab drops a ring in the middle that spreads and fades. Its outline is the
@@ -365,8 +368,8 @@ GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
     (11 kHz, right). Each band is a column of segments: teal, then brass, amber and red at the
     top. The columns jump up with the sound and fall back slowly. A white cap stays at each
     column's peak for a moment before it drops.
-- The levels and the duck are on the Arrangement page (SEL), on its meters; the other pages have
-  no level strips any more (since 1.4.0), the middle theirs.
+- The levels in full and the duck are on the Arrangement page (SEL), on its meters; the other pages
+  show the five thin strips at the left (since 1.4.0; the duck meter is the Arrangement page's).
 - **The lanes:** the bar as it plays, sixteen steps, a lane a layer, each marked in its colour on
   the left: the stabs (teal), the kick (amber), the hats (white), the rim (pink), the clap (yellow), the bass (brass).
   A hit that only sometimes comes (the clap in Auto, a lane's Chance under 50%) is a ring, filled when it plays. The step playing

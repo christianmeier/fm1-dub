@@ -729,8 +729,10 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   - Not now: a three-band EQ (the voice pages have the tone), a bus compressor (the CPU).
   - **After step 1** (the user, 2026-10-24): the classic green / yellow / red meters chosen; the duck's row named
     DUCK and as tall as the others; the cards under a second everywhere (they distract; they go with the aids' off
-    switch later); no big ring on the Arrangement page (the notches show the change). Open: what to put in the
-    strips' freed room (the user: perhaps the strips back, reduced).
+    switch later); no big ring on the Arrangement page (the notches show the change). The strips' freed room (the
+    user: "both, let's see how it works in place"): five thin strips at the left (the meters', the noise too), and
+    the phrase's bars as cells under the section (the one playing teal, the B bars ticked). Built; the song line to
+    come with song structure.
   - **Step 1 built** (branch dub-1.4-arr, 2026-10-24): the names (Form, Dub, Arrangement; the identifiers V_DUB,
     V_SPACE, V_PERF kept), the knobs (Energy, Mixer grey, Wet, Duck), the meters (24 segments of 2 dB, -48..0; the
     peak held 1 s; the level's notch; mute dark, soloed out dimmed; GR under the master: the bass's duck while it

@@ -2546,7 +2546,8 @@ static void meter_take(uint32_t now)             /* every frame: the engine's pe
     const float dt = mt.t ? (float)(now - mt.t) * 0.001f : 0.0f;
     int i;
     mt.t = now;
-    en_meter_on = ui.view == V_PERF || ui.view == V_MIX;   /* (the parts measured on this page only: the master always) */
+    en_meter_on = 1;                             /* (1.4.0, the user's: the parts measured on every page now, the strips at
+                                                  * the left theirs) */
     for (i = 0; i < EN_NMETER; i++) {
         const float pk = en_meter[i], d = mt_db(pk);
         en_meter[i] = 0.0f;
@@ -3274,6 +3275,32 @@ static void draw_card(uint32_t now)
     text_c(CX, y + 28, &FONT_XS, ui.card_text, tc);
 }
 
+/* (1.4.0, the user's) at the left, under the phrase: the parts' levels, five thin strips (the chord, the pings, the
+ * bass, the drums, the noise), their meters' (the Arrangement page's), -48..0 dB; a muted part's dark */
+#define ST_Y 36
+#define ST_H 48
+static int strip_h(int r) { return mt_state(r) == 2 ? 0 : (int)(fm_clampf((mt.db[r] + 48.0f) * (1.0f / 48.0f), 0.0f, 1.0f) * ST_H + 0.5f); }
+static void draw_strips(void)
+{
+    static const uint16_t C[NLAYER] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE};
+    int r;
+    for (r = 0; r < NLAYER; r++) {
+        const int32_t x = 9 + r * 8, h = strip_h(r);
+        const uint16_t c = mt_state(r) == 1 ? mix(K_BG, C[r], 8) : C[r];
+        cv_round(x, ST_Y, 3, ST_H, 1, mix(K_BG, C[r], 3));
+        if (h > 0)
+            cv_round(x, ST_Y + ST_H - h, 3, h, 1, c);
+    }
+}
+static uint32_t strips_sig(void)
+{
+    uint32_t h = 2166136261u;
+    int r;
+    for (r = 0; r < NLAYER; r++)
+        h = hash(h, (uint32_t)strip_h(r) | (uint32_t)mt_state(r) << 8);
+    return h;
+}
+
 /* the corners of the main screen: the phrase's section and its eight bars, the way to the next chord (top left); the
  * page's name, SOLO, hold and lock (top right) */
 static void draw_where(uint32_t now)
@@ -3285,17 +3312,22 @@ static void draw_where(uint32_t now)
         cv_text(8, 2, &FONT_XS, t, en_section == SEC_FULL ? K_DIM : K_ACC);
         for (b = 0; b < 8; b++) {                /* (1.3.0: bars 4 and 8, the B bars, whiter; the 8th blinking on its
                                                   * bar when the next phrase brings a change) */
-            const int bb = (b == 3 || b == 7) && !ui.lock, lit = en_playing && b <= en_phrase_bar;   /* (Lock: all alike) */
-            uint16_t c = lit ? (bb ? K_TEXT : K_DIM) : (bb ? K_DIM : K_LINE);   /* (B bars: ahead, as bright as one played) */
+            const int bb = (b == 3 || b == 7) && !ui.lock, lit = en_playing && b <= en_phrase_bar,   /* (Lock: all alike) */
+                      now_b = en_playing && b == en_phrase_bar;
+            uint16_t c = now_b ? K_ACC : lit ? (bb ? K_TEXT : K_DIM) : (bb ? K_DIM : K_LINE);   /* (B bars: ahead, as
+                                                  * bright as one played; 1.4.0, the user's: a cell a bar, the one
+                                                  * playing lit) */
             if (b == 7 && en_playing && en_phrase_bar == 7 && en_change_next)
                 c = (now / 200u) & 1u ? K_ACC : K_LINE;
-            cv_round(9 + b * 5, 22, 3, 3, 1, c);
+            cv_round(9 + b * 5, 21, 4, 6, 1, c);
+            if (bb)                              /* (the B bars: a tick over them) */
+                cv_rect(9 + b * 5, 19, 4, 1, lit ? K_TEXT : K_DIM);
         }
         if (!en_frozen && en_drift_bars(proj.par[P_DRIFT])) {   /* under them, the way to the next chord (Drift) */
-            int32_t f = (int32_t)(en_drift * 38.0f + 0.5f);
-            cv_rect(9, 27, 38, 1, K_LINE);
+            int32_t f = (int32_t)(en_drift * 39.0f + 0.5f);
+            cv_rect(9, 29, 39, 1, K_LINE);
             if (f > 0)
-                cv_rect(9, 27, f, 1, K_PAD);
+                cv_rect(9, 29, f, 1, K_PAD);
         }
     }
     {   /* (1.3.0) top right: the page's name (PERFORM's too); to its left, LOCK and SOLO while on */
@@ -3400,7 +3432,8 @@ static void draw_main(void)
         h = hash(h, en_chord[i]);
     for (i = 0; i < 6; i++)
         h = hash(h, en_lane[i] | (uint32_t)proj.par[i < 4 ? i : 0] << 16);
-    h = hash(h, en_drum_pos[0]);                 /* (1.4.0: the level strips and the duck meter gone, their redraws too) */
+    h = hash(h, en_drum_pos[0]);                 /* (1.4.0: the duck meter gone; the strips thin, at the left) */
+    h = hash(h, strips_sig());
     h = hash(h, (uint32_t)(en_prog_pos + 1) << 12);
     h = hash(h, (uint32_t)(en_drift * 40.0f) | en_section << 8 | (uint32_t)en_phrase_bar << 12 | (uint32_t)ui.perf << 16 | ui.solo << 20 |
                 (uint32_t)ui.lock << 28);
@@ -3493,6 +3526,7 @@ static void draw_main(void)
             text_c(CX, CY + 11, &FONT_XS, t, K_DIM);
         }
     }
+    draw_strips();
     draw_where(now);
     draw_lanes();
     draw_oct(now);
