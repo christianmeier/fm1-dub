@@ -28,7 +28,7 @@ tap ARP
 wait 1500
 shot screen-pings.png
 # (1.4.0, the user's: the layers' pages) each its part, then its voice: the Pings voice (ARP again); the Noise voice
-# (SAVE again); the Bass FM page on Sub, its Bite alone (LFO a third time); the Kick and the Hats pages (SEQ again, again)
+# (SAVE again; its Width there now, the Noise space page gone); the Bass FM page on Sub, its Bite alone (LFO a third time); the Kick and the Hats pages (SEQ again, again)
 tap ARP
 wait 1500
 shot screen-pings-voice.png
@@ -38,9 +38,6 @@ shot screen-noise.png
 tap SAVE
 wait 1500
 shot screen-noise-voice.png
-tap SAVE
-wait 1500
-shot screen-noise-space.png
 tap SAVE
 tap LFO
 wait 1500
@@ -85,6 +82,15 @@ wait 2500
 shot screen-arrangement-solo.png
 tapkey b2
 tapkey w1
+# (1.4.0, the user's) a channel strip: white 1 held, the chord's; its Echo turned (the big ring names it)
+wait 1500
+key w0 down
+wait 600
+spin K2 10
+wait 300
+shot screen-strip.png
+spin K2 -10
+key w0 up
 spin K4 -30
 tap HOME
 turn K3 50

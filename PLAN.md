@@ -754,6 +754,21 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
     Open: the cards over the meters on a mute or solo (keep them there?); the big ring over the meters while a knob
     turns (the Mix page's notches already show it). Next: step 2, a part's white key held its channel strip; step 3,
     the dub mixer on KNOB 2.
+  - **Step 2 built** (branch dub-1.4-strips, 2026-10-24; the user: "yes, go ahead"): white 1-5 held (from 300 ms, or
+    at once with a knob turned) a part's channel strip, V_STRIP: Level, Echo send, Plate send, Low cut; the parts as
+    the meters' rows (white 4, the kick's key, the drums; white 5, the hats', the noise); its row lit behind, its
+    knobs in its colour, the big ring "CHORD ECHO", the reader "Chord strip page: ..."; let go, back; a tap still
+    mutes, on its release now. The sends (P_CECHO .. P_DPLATE; the noise's P_NECHO, P_NPLATE): the part's own
+    sends times v / 50, 50 bit for bit as before on all eight pieces; the bass's echo 0 (none before); the drums'
+    the hats', the rim's, the clap's (the kick none); a throw whatever the send. The Low cuts (P_CLOW .. P_NLOW): a
+    one-pole high-pass before the sends, off at 0 (not run), ~20 Hz at 1 to ~600 Hz at 100; the chord's after its
+    own ~160 Hz; the noise's on its rings (their quarter rate) and its clicks; the rumble its own. The chord's and
+    the pings' Wet (P_CGHOST, P_PGHOST) kept as each piece's dry balance, on no knob, Arrangement's Wet still
+    moving them (a split into the sends would have been lossy; the sends over them are the strip's). The Noise
+    space page gone: its Plate and Echo the noise's strip, its Width the Noise voice's KNOB 4. Format 23. Host CPU
+    at the defaults ~+1% (the Low cuts' branches, spread over the parts; within the timings' noise), all at 50
+    ~+1.5%. RAM 93,052 of 98,304. Open: white 5 taps the hats' mute but holds the noise's strip (the meters' rows;
+    the noise has no mute key here): to see on the FM-1.
   - After the LFO work is merged (both touch ui.c).
 
 - **Song structure, the user's answers** (2026-10-24; the records' intros and outros in REPORT9: 3-37% of the bars,
@@ -805,8 +820,7 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   channel strip, as the chord's). Nudges open the page whose knob moved most among the layer's (voice, FM, Hats, the
   Noise page). Format 22 (a Cutoff you'd set kept as its offset from the recipe's). Host CPU: the pages' change
   nothing; the rumble on +1-2%. RAM 93,792 of 98,304 (the rumble's buffer back, 1.4 KB).
-  **Pending:** Cloud to the space pages (with Width to the master: proposal C); the pings' Wet, like the chord's,
-  to the channel strip; the noise's LFO Destination (its free slots: the Noise page's two, the Noise voice's fourth).
+  **Pending:** Cloud to the space pages (with Width to the master: proposal C); the noise's LFO Destination (its free slots: the Noise page's two, the Noise voice's fourth).
 - **Bigger visualisations** (the user, 2026-10-24; a plan, after the song structure's own display is decided): with
   the strips gone and the header freed, the middle's pictures can grow. The ripples further up and to the sides,
   the deepest layer (whatever is on top covers them: the section and bar cells, the page's name, the big ring, the
@@ -817,8 +831,7 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
     sends by itself.
   - **The LFO's Destination:** the chord's built (Cutoff, Reso, Colour; dub-1.4-chord); the noise's still to do
     (its filter has no knob yet: give it one, or a Destination among Filter, Tone, Air).
-  - The Arrangement page's channel strip (step 2: Level, Echo send, Plate send, Low cut on a held white key); the
-    chord's Wet, off its page since the Chord's pages, its home there.
+  - ~~The Arrangement page's channel strip~~ (step 2: built, dub-1.4-strips).
 
 - **An install stalled** (the user, 2026-10-24, dub-1.4.0zc.fwsc, tools/fm1_install.py): "the loader stopped
   answering after 562 requests" (about half the package), the screen blank (the loader's), then "FM-1 not found";
