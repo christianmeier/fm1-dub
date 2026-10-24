@@ -1723,6 +1723,162 @@ int main(void)
         }
     }
 
+    /* (1.4.0, the user's: song structure) Endless as ever, the song's knobs heard nowhere; a song: its intro, main
+     * and outro their bars, the parts in in the Kind's order and out in the outro's, the kick One, Half, Four, then
+     * the grid stopped (PLAY off) and quiet; the outro now (from the next phrase, in Endless too) and back */
+    {
+        static uint8_t ph_at[96];
+        static uint16_t kl_at[96];
+        static const char *const PN[EN_NPART] = {"chord", "pings", "bass", "kick", "hats", "noise"};
+        int kind, first_in[EN_NPART], last_in[EN_NPART], i, k, ok;
+        fresh();
+        en_seed(5);
+        en_play(1);
+        run(1.0f);
+        ok = same_with(P_SINTRO, 16) && same_with(P_SKIND, 1) && same_with(P_SMAIN, 64) && same_with(P_SOUTRO, 16);
+        CHECK(ok, "Endless: the song's knobs changed the sound");
+        printf("  Endless: the song's knobs heard nowhere\n");
+        for (kind = 0; kind < 2; kind++) {
+            uint32_t nb = 0;
+            fresh();
+            en_seed(9 + (uint32_t)kind);
+            en_set(P_SMODE, 1);
+            en_set(P_SINTRO, 2);
+            en_set(P_SMAIN, 4);
+            en_set(P_SOUTRO, 2);
+            en_set(P_SKIND, kind);
+            en_set(P_TEMPO, 140);
+            en_play(1);
+            memset(ph_at, 0xFF, sizeof ph_at);
+            for (i = 0; i < EN_NPART; i++)
+                first_in[i] = -1, last_in[i] = -1;
+            for (i = 0; i < 30000 && nb < 90u; i++) {
+                en_render(buf, 256, 2048);
+                if (!en_playing)
+                    break;
+                if (en_bars) {
+                    const uint32_t b = (en_bars - 1u) / 16u;
+                    nb = b;
+                    if (b < 96u) {
+                        ph_at[b] = en_song_ph;
+                        if ((en_bars - 1u) % 16u == 8u)
+                            kl_at[b] = en_lane[1];
+                    }
+                    for (k = 0; k < EN_NPART; k++)
+                        if (en_fader[k] > 0.01f) {
+                            if (first_in[k] < 0)
+                                first_in[k] = (int)b;
+                            last_in[k] = (int)b;
+                        }
+                }
+            }
+            ok = 1;
+            for (i = 0; i < 64; i++)
+                if (ph_at[i] != (i < 16 ? EN_SG_INTRO : i < 48 ? EN_SG_MAIN : EN_SG_OUTRO) && ok)
+                    printf("  (bar %d: place %d)\n", i, ph_at[i]), ok = 0;
+            CHECK(ok, "the song's places by bar (kind %d)", kind);
+            CHECK(!en_playing && en_song_ph == EN_SG_END && en_bars == 64u * 16u,
+                  "the song over: PLAY off at bar 64 (playing %d, place %d, %u sixteenths)", en_playing, en_song_ph, en_bars);
+            printf("  a song (16, 32, 16 bars, %s first): in at bars", kind ? "the pulse" : "ambient");
+            for (k = 0; k < EN_NPART; k++)
+                printf(" %s %d", PN[k], first_in[k]);
+            printf("; out after");
+            for (k = 0; k < EN_NPART; k++)
+                printf(" %s %d", PN[k], last_in[k]);
+            printf("\n");
+            if (!kind)
+                CHECK(first_in[5] == 0 && first_in[5] <= first_in[0] && first_in[0] < first_in[3] &&
+                          first_in[3] < first_in[2] && first_in[2] < first_in[1] && first_in[1] < first_in[4],
+                      "ambient first: the order in");
+            else
+                CHECK(first_in[3] == 0 && first_in[2] == 0 && first_in[0] < first_in[1] && first_in[1] < first_in[5] &&
+                          first_in[5] < first_in[4],
+                      "pulse first: the order in");
+            CHECK(first_in[4] >= 10 && first_in[4] < 16, "the hats last, in the intro (%d)", first_in[4]);
+            CHECK(last_in[4] < last_in[1] && last_in[1] <= last_in[2] && last_in[2] < last_in[3] &&
+                      last_in[3] < last_in[0] && last_in[3] < last_in[5] && last_in[0] >= 60 && last_in[5] >= 60,
+                  "the outro's order out: the hats first, the chord and the noise last");
+            {   /* the kick in the intro: One, then Half, then Four (its A bars; the B bars, 4 and 8, sparser) */
+                int prev = 0, grow = 1, last4 = 1;
+                for (i = 0; i < 16; i++) {
+                    const int n = popcount(kl_at[i]);
+                    if ((i & 3) == 3 || (i & 7) == 7 || !n)
+                        continue;
+                    grow &= n >= prev;
+                    prev = n;
+                }
+                last4 = popcount(kl_at[14]) == 4;  /* (Four by the intro's last A bar) */
+                if (!grow || !last4)
+                    for (i = 0; i < 16; i++)
+                        printf("  (bar %d: the kick %04X)\n", i, kl_at[i]);
+                CHECK(grow && last4 && popcount(kl_at[first_in[3] + 1 < 16 ? first_in[3] + 1 : 15]) <= 2,
+                      "the intro's kick: One, Half, Four");
+            }
+            peak = 0.0f;
+            run(40.0f);
+            peak = 0.0f;
+            run(1.0f);
+            en_set(P_CRACKLE, 0);
+            CHECK(!en_playing && peak < 0.05f, "after the song, the tails gone (%f)", (double)peak);
+        }
+        printf("  a song's places and parts, the kick One, Half, Four, the end\n");
+        /* the outro now: in Endless, from the next phrase; again in it: back, playing on; and once more, to the end */
+        fresh();
+        en_seed(3);
+        en_set(P_SOUTRO, 2);
+        en_play(1);
+        while (en_bars < 10u * 16u + 2u)
+            run(0.05f);
+        en_outro();
+        run(0.05f);
+        CHECK(en_song_bo == 16u && en_song_be == 32u && en_song_ph == EN_SG_MAIN, "outro now: from bar 16 (%u, %u, %d)",
+              en_song_bo, en_song_be, en_song_ph);
+        while (en_bars < 17u * 16u + 2u)
+            run(0.05f);
+        CHECK(en_song_ph == EN_SG_OUTRO, "outro now: in it at bar 17 (%d)", en_song_ph);
+        while (en_bars < 22u * 16u + 2u)
+            run(0.05f);
+        CHECK(en_fader[4] < 0.01f, "outro now: the hats gone (%f)", (double)en_fader[4]);
+        en_outro();
+        run(0.05f);
+        CHECK(en_song_ph == EN_SG_OFF && en_playing, "outro now, again: back to Endless (%d)", en_song_ph);
+        run(12.0f);
+        for (k = 0, ok = 1; k < EN_NPART; k++)
+            ok &= en_fader[k] > 0.999f;
+        CHECK(ok, "back: every part up again");
+        en_outro();
+        run(0.05f);
+        while (en_playing && en_bars < 200u * 16u)
+            run(0.5f);
+        CHECK(!en_playing && en_song_ph == EN_SG_END, "outro now: played to its end, stopped");
+        /* a song: the outro asked early, then let go: the outro as planned (or four phrases on, at least) */
+        fresh();
+        en_seed(4);
+        en_set(P_SMODE, 1);
+        en_set(P_SINTRO, 0);
+        en_set(P_SMAIN, 8);
+        en_set(P_SOUTRO, 2);
+        en_play(1);
+        run(0.05f);
+        CHECK(en_song_ph == EN_SG_MAIN && en_song_bo == 64u, "no intro: the main from bar 1, the outro at 64 (%d, %u)",
+              en_song_ph, en_song_bo);
+        while (en_bars < 9u * 16u + 2u)
+            run(0.05f);
+        en_outro();
+        run(0.05f);
+        CHECK(en_song_bo == 16u, "a song's outro now: from bar 16 (%u)", en_song_bo);
+        en_outro();
+        run(0.05f);
+        CHECK(en_song_bo == 64u && en_song_ph == EN_SG_MAIN, "let go: the outro as planned, bar 64 (%u)", en_song_bo);
+        en_set(P_SMAIN, 4);                      /* (Main turned as it plays: the outro moves) */
+        run(0.05f);
+        CHECK(en_song_bo == 32u, "Main turned while it plays: the outro at 32 (%u)", en_song_bo);
+        en_set(P_SMODE, 0);                      /* (to Endless: the song let go, it plays on) */
+        run(0.05f);
+        CHECK(en_song_ph == EN_SG_OFF && en_playing, "Endless again: no outro (%d)", en_song_ph);
+        printf("  the outro now, in Endless and in a song, and back\n");
+    }
+
     /* stop: the tails die away (but the vinyl turns on) */
     fresh();
     en_play(1);

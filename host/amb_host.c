@@ -26,6 +26,7 @@
  *   store8                       save the project as DUB-1 1.0.0 did (format 8): reboot then reads it
  *   store10                      save it as 1.2.0 did (format 10, without the noise's five)
  *   storefile PATH               a saved project from a file (tests/host/proj-*.bin)
+ *   store25                      save it as 1.4.0's noise LFO Destination did (format 25, without song structure)
  *   store24                      save it as 1.4.0's six strips did (format 24, without the noise LFO's Destination)
  *   store23                      save it as 1.4.0's channel strips did (format 23, the drums one strip: no Kick
  *                                strip's level, sends, Low cut)
@@ -519,6 +520,11 @@ static int expect(const char *what, const char *val)
     }
     else if (!strcmp(what, "section"))            /* the phrase's section (0 Full, 1 Break, 2 Groove, 3 Thin) */
         got = en_section;
+    else if (!strcmp(what, "song"))               /* (1.4.0) the song's place (EN_SG_*: 0 Endless, 1 intro, 2 main, 3 outro,
+                                                   * 4 its end) */
+        got = (int)en_song_ph;
+    else if (!strcmp(what, "songbo"))             /* the bar its outro starts on (0: none coming) */
+        got = (int)en_song_bo;
     else if (!strcmp(what, "card"))               /* a nudge's card in the middle: 1 a nudge's, 2 a shake's (0: none) */
         got = card_on(plat_ms()) ? 1 + ui.card_shake : 0;
     else if (!strcmp(what, "lock"))               /* PERFORM's Lock (SEL held) */
@@ -823,6 +829,22 @@ int main(int argc, char **argv)
                 return 2;
             }
             plat_store_save(OBJ_PROJ, fb, (uint32_t)got);
+        } else if (!strcmp(cmd, "store25")) {    /* the project as 1.4.0's noise LFO Destination saved it (25) */
+            static project25_t o;
+            int i;
+            keep();
+            memset(&o, 0, sizeof o);
+            o.magic = PROJ_MAGIC, o.format = 25u;
+            memcpy(o.par, proj.par, sizeof o.par);
+            o.pool = proj.pool, o.leds = proj.leds, o.piece = proj.piece, o.screen = proj.screen;
+            for (i = 0; i < NPIECES; i++) {
+                memcpy(o.slot[i].par, proj.slot[i].par, sizeof o.slot[i].par);
+                o.slot[i].pool = proj.slot[i].pool;
+                memcpy(o.slot[i].pings, proj.slot[i].pings, sizeof o.slot[i].pings);
+                o.slot[i].pings_ok = proj.slot[i].pings_ok;
+                o.slot[i].screen = proj.slot[i].screen;
+            }
+            plat_store_save(OBJ_PROJ, &o, sizeof o);
         } else if (!strcmp(cmd, "store24")) {    /* the project as 1.4.0's six strips saved it (format 24) */
             static project24_t o;
             int i;

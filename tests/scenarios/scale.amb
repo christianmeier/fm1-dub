@@ -1,7 +1,11 @@
 # the keys are the scale: toggles, the root stays, three notes at least; modes and the root
 wait 300
-# the first piece is in Dorian; its root to C (HOME on the Form page, the Key page: KNOB 2, down to its lowest)
+# the first piece is in Dorian; its root to C (HOME on the Form page, the Song page, then the Key page: KNOB 2, down
+# to its lowest)
 expect par20 1
+tap HOME
+wait 200
+expect view 27
 tap HOME
 wait 200
 expect view 18

@@ -75,6 +75,8 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     {"Noise low cut", 0, 100, 0},
     {"Kick level", 0, 100, 50}, {"Kick echo", 0, 100, 0}, {"Kick plate", 0, 100, 0}, {"Kick low cut", 0, 100, 0},
     {"Noise LFO to", 0, EN_NNLDEST - 1, 0},
+    {"Song mode", 0, EN_NSMODE - 1, 0}, {"Intro", 0, 16, 4}, {"Main", 4, 64, 20}, {"Outro", 0, 16, 4},
+    {"Intro kind", 0, EN_NSKIND - 1, 0},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
 
@@ -94,7 +96,9 @@ const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PAR
  *                  then the channel strips' sends (the chord's, the pings', the bass's, the drums' Echo and Plate: 50 as
  *                  they sent before, the bass's echo 0, none before) and their Low cuts (0, off; 1.4.0);
  *                  then the Kick strip's: its level (50: x1), its Echo and Plate (0: none, as before), its Low cut (0);
- *                  then the noise's LFO's destination (0: Filter, as before; 1.4.0)
+ *                  then the noise's LFO's destination (0: Filter, as before; 1.4.0);
+ *                  then Song mode (0, Endless: the player's, as Tune), the song's Intro, Main and Outro in phrases (4,
+ *                  20, 4: 32, 160 and 32 bars) and its intro's Kind (0 Ambient first, 1 Pulse first; 1.4.0)
  * (Dri: Drift, 2 4 8 16 32 64 bars or Hold; ET: Echo time, 1/8 1/8. 1/4 1/4. 1/2 1 bar; Grv: the knob's, Drone,
  *  Offbeat, Dotted, Sync, Roller (GROOVE_NAME); CV, PV, BV, Kit: the voices, EN_CV_NAME ...) */
 static const struct {
@@ -120,7 +124,8 @@ static const struct {
                     50, 50, 50, 50, 0, 50, 50, 50,
                     0, 0, 0, 0, 0,
                     50, 0, 0, 0,
-                    0}},
+                    0,
+                    0, 4, 20, 4, 1}},
     {"Chamber",    {55, 20, 62, 72, 20, 35, 6, 40, 70, 4, 45, 72, 50, 55, 30, 30, 0, 1, 128, 9, 5, 0,
                     2, 0, 0, 10, 0, 40, 5, 12, 45, 70, 45, 2, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -140,7 +145,8 @@ static const struct {
                     50, 50, 50, 50, 0, 50, 50, 50,
                     0, 0, 0, 0, 0,
                     50, 0, 0, 0,
-                    0}},
+                    0,
+                    0, 4, 20, 4, 0}},
     {"Steppers",   {52, 35, 80, 82, 35, 35, 6, 45, 50, 1, 30, 50, 55, 25, 50, 25, 0, 1, 126, 2, 1, 0,
                     0, 0, 2, 35, 45, 60, 25, 5, 60, 50, 20, 1, 1, 2,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -160,7 +166,8 @@ static const struct {
                     50, 50, 50, 50, 0, 50, 50, 50,
                     0, 0, 0, 0, 0,
                     50, 0, 0, 0,
-                    0}},
+                    0,
+                    0, 4, 20, 4, 1}},
     {"Fog",        {50, 34, 58, 62, 40, 55, 5, 42, 75, 2, 55, 72, 46, 80, 25, 72, 0, 1, 120, 7, 5, 0,
                     3, -1, 0, 15, 0, 30, 5, 30, 35, 80, 60, 0, 0, 3,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -180,7 +187,8 @@ static const struct {
                     50, 50, 50, 50, 0, 50, 50, 50,
                     0, 0, 0, 0, 0,
                     50, 0, 0, 0,
-                    0}},
+                    0,
+                    0, 4, 20, 4, 0}},
     {"Concrete",   {58, 45, 70, 85, 25, 50, 4, 55, 50, 1, 25, 62, 60, 20, 60, 35, 0, 1, 136, 0, 7, 0,
                     6, 0, 4, 30, 10, 75, 30, 5, 50, 45, 15, 2, 3, 2,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -200,7 +208,8 @@ static const struct {
                     50, 50, 50, 50, 0, 50, 50, 50,
                     0, 0, 0, 0, 0,
                     50, 0, 0, 0,
-                    0}},
+                    0,
+                    0, 4, 20, 4, 1}},
     {"Night Drive", {48, 45, 68, 78, 45, 60, 3, 35, 60, 3, 35, 65, 50, 40, 45, 45, 0, 1, 120, 10, 1, 0,
                     1, 0, 1, 25, 13, 55, 20, 15, 50, 60, 35, 4, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -220,7 +229,8 @@ static const struct {
                     50, 50, 50, 50, 0, 50, 50, 50,
                     0, 0, 0, 0, 0,
                     50, 0, 0, 0,
-                    0}},
+                    0,
+                    0, 4, 20, 4, 0}},
     {"Pressure",   {55, 20, 75, 92, 20, 45, 6, 38, 55, 1, 20, 55, 48, 30, 35, 25, 0, 1, 126, 4, 2, 0,
                     5, 0, 1, 10, 5, 65, 25, 30, 70, 40, 40, 3, 4, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -240,7 +250,8 @@ static const struct {
                     50, 50, 50, 50, 0, 50, 50, 50,
                     0, 0, 0, 0, 0,
                     50, 0, 0, 0,
-                    0}},
+                    0,
+                    0, 4, 20, 4, 1}},
     {"Haze",       {45, 42, 58, 55, 50, 60, 4, 35, 80, 3, 60, 70, 45, 80, 25, 62, 0, 1, 116, 3, 0, 1,
                     3, 0, 0, 20, 10, 35, 5, 20, 30, 85, 70, 2, 0, 4,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -260,7 +271,8 @@ static const struct {
                     50, 50, 50, 50, 0, 50, 50, 50,
                     0, 0, 0, 0, 0,
                     50, 0, 0, 0,
-                    0}},
+                    0,
+                    0, 4, 20, 4, 0}},
 };
 
 const char *en_piece_name(int i) { return PIECES[(unsigned)i < EN_NPIECES ? i : 0].name; }
@@ -277,6 +289,8 @@ const char *const EN_CV_NAME[EN_NCV] = {"Saws", "Keys", "Organ", "Pad", "Bell", 
 const char *const EN_LFO_SHAPE[EN_NLSHAPE] = {"Sine", "Triangle", "Ramp up", "Ramp down"};
 const char *const EN_CLDEST_NAME[EN_NCLDEST] = {"Cutoff", "Reso", "Colour"};
 const char *const EN_NLDEST_NAME[EN_NNLDEST] = {"Filter", "Tone", "Air"};
+const char *const EN_SMODE_NAME[EN_NSMODE] = {"Endless", "Song", "Set"};
+const char *const EN_SKIND_NAME[EN_NSKIND] = {"Ambient", "Pulse"};
 const char *const EN_PV_NAME[EN_NPV] = {"Blip", "Marimba", "Glass", "Wood", "Drop"};
 const char *const EN_BV_NAME[EN_NBV] = {"Sub", "Punch", "Rubber", "Pluck", "Growl"};
 const char *const EN_KIT_NAME[EN_NKIT] = {"Tight", "Deep", "Punch", "Soft", "Dusty"};
@@ -368,6 +382,12 @@ void en_param_text(int i, int v, char *b)
         s = EN_CLDEST_NAME[(unsigned)v < EN_NCLDEST ? v : 0];   /* (1.4.0: where the chord's LFO goes) */
     else if (i == P_NLDEST)
         s = EN_NLDEST_NAME[(unsigned)v < EN_NNLDEST ? v : 0];   /* (1.4.0: where the noise's LFO goes) */
+    else if (i == P_SMODE)
+        s = EN_SMODE_NAME[(unsigned)v < EN_NSMODE ? v : 0];   /* (1.4.0: song structure) */
+    else if (i == P_SKIND)
+        s = EN_SKIND_NAME[(unsigned)v < EN_NSKIND ? v : 0];
+    else if ((i == P_SINTRO || i == P_SOUTRO) && !v)
+        s = "None";
     if (s) {
         int k = 0;
         while (s[k] && k < 9) {
@@ -377,8 +397,9 @@ void en_param_text(int i, int v, char *b)
         b[k] = 0;
         return;
     }
-    if (i == P_DRIFT || i == P_CLRATE || i == P_NLRATE) {
-        b = itoa_s(i == P_DRIFT ? en_drift_bars(v) : en_lfo_bars(v), b);
+    if (i == P_DRIFT || i == P_CLRATE || i == P_NLRATE || i == P_SINTRO || i == P_SMAIN || i == P_SOUTRO) {
+        b = itoa_s(i == P_DRIFT ? en_drift_bars(v) : i >= P_SINTRO ? 8 * v : en_lfo_bars(v), b);   /* (the song's:
+                                                  * phrases, shown as bars) */
         *b++ = ' ';
         *b++ = 'b';
         *b++ = 'a';
@@ -554,7 +575,7 @@ const char *en_chord_name(const int *pcs, int n, char *buf)
 }
 
 /* ------------------------------------------------------------ commands --- */
-enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_MUTE, C_PERF, C_FX, C_PINGS, C_MACRO, C_PROT, C_REWALK, C_PNUDGE, C_LOCK };
+enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_MUTE, C_PERF, C_FX, C_PINGS, C_MACRO, C_PROT, C_REWALK, C_PNUDGE, C_LOCK, C_OUTRO };
 #define QN 512u                                 /* (a piece is every parameter at once: room for twice over and more) */
 _Static_assert(QN >= 2u * (P_NPARAMS + 8), "the command queue can't hold a piece's parameters twice over");
 static uint32_t q[QN];
@@ -582,6 +603,7 @@ void en_perf(uint32_t f) { post(C_PERF, (int)(f & 0xFFu), 0); }
 void en_fx(uint32_t m) { post(C_FX, 0, (int)(m & 0xFFFFu)); }
 void en_macro(int i, int v) { post(C_MACRO, i, v + 50); }   /* (sent as 0..100) */
 void en_lock(int on) { post(C_LOCK, on != 0, 0); }
+void en_outro(void) { post(C_OUTRO, 0, 0); }
 void en_prog_rotate(void) { post(C_PROT, 0, 0); }
 void en_prog_rewalk(void) { post(C_REWALK, 0, 0); }
 void en_ping_nudge(void) { post(C_PNUDGE, 0, 0); }
@@ -1811,6 +1833,202 @@ static void bass_hit(int first, int up, int st)
     midi(0x92, (uint32_t)n, 90);
 }
 
+/* ------------------------------------------------------------- the song --- */
+/* (1.4.0, the user's: build/design/SONG.md) Song structure. Endless (Song mode 0) as ever: it starts full and plays
+ * on. Song: PLAY starts an intro, then the main, an outro, and silence (the grid stops, the tails ring on); Set the
+ * same, the app then starting the next piece. The intro: the parts come in one by one in the piece's order (its Kind:
+ * Ambient first, the noise and the chord's wash; Pulse first, the kick and the bass from the first bar), spread over
+ * it, off the phrase lines, each faded in over two to four bars; the kick One, then Half, then Four; the hats last,
+ * their hits growing; the chord's filter an octave under, opening; the echo a little wetter; no sections till the
+ * main. The outro the mirror: the hats out first, then the pings and the bass, the kick thinning (Half, One) and
+ * gone, the chord and the noise last, thrown into the echo and fading: it ends on the echo's tails and the hiss.
+ * Outro now (en_outro): the outro from the next phrase, in any mode; again, in it or waiting: back to the main. The
+ * knobs go on working: the song's moves are around them (the parts' faders, offsets), never on their values */
+/* the parts' faders (the chord, the pings, the bass, the kick, the hats with the rim and the clap, the noise; EN_M_*'s
+ * order): a gain each, 0..1, heard squared, moved to its target at most a whole fade in two bars (render_chunk): the
+ * song's moves, and the dub mixer's next. All 1 in Endless: the music as it was, bit for bit */
+static float fd_pos[EN_NPART] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f}, fd_tgt[EN_NPART] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f},
+             fd_g[EN_NPART] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
+static uint32_t fd_quiet;                        /* (the parts out, EN_M_* bits: the lanes hide them, as a mute) */
+volatile float en_fader[EN_NPART] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
+static void fader_step(uint32_t n)
+{
+    const float mx = (float)n / (32.0f * step_len);
+    int i;
+    for (i = 0; i < EN_NPART; i++) {
+        const float d = fd_tgt[i] - fd_pos[i];
+        if (d != 0.0f) {
+            fd_pos[i] += fm_clampf(d, -mx, mx);
+            fd_g[i] = fd_pos[i] * fd_pos[i];
+            en_fader[i] = fd_g[i];
+        }
+    }
+}
+static void faders_full(void)                    /* (all up, at once: Endless, a new start) */
+{
+    int i;
+    for (i = 0; i < EN_NPART; i++)
+        fd_pos[i] = fd_tgt[i] = fd_g[i] = en_fader[i] = 1.0f;
+    fd_quiet = 0;
+}
+static uint8_t song_mode, song_ph;               /* Song mode (P_SMODE); where the song is (EN_SG_*) */
+static uint8_t song_bo_on, song_fixed, song_ask, song_end_now;   /* (an outro coming; its bar set by hand; asked by
+                                                  * hand, waiting for its phrase; the end reached) */
+static uint32_t song_b0, song_bo, song_be;       /* the bars the main, the outro and the silence start on */
+static float song_ent[EN_NPART], song_fd[EN_NPART], song_cap[EN_NPART];   /* each part's entry and fade (bars); its
+                                                  * fader as the outro began (a part not in yet stays out) */
+static float song_co, song_wet = 1.0f, song_hits = 1.0f, song_nthr;   /* the chord's cutoff (octaves), the echo's send
+                                                  * (x), the hats' share of their hits, the noise into the echo (0..1) */
+static uint8_t song_thr;                         /* the outro's last bars: every stab thrown */
+volatile uint8_t en_song_ph;
+volatile uint32_t en_song_b0, en_song_bo, en_song_be;
+/* each part's entry into the intro (a share of it) and its exit from the outro (where it starts, how long it takes,
+ * shares of it): Ambient first (Fog, Haze, Chamber, Night Drive) and Pulse first (Steppers, Pressure, Concrete, Basic) */
+static const float SONG_IN[2][EN_NPART] = {{0.06f, 0.60f, 0.45f, 0.30f, 0.78f, 0.0f},
+                                           {0.25f, 0.45f, 0.0f, 0.0f, 0.78f, 0.58f}};
+static const float SONG_OUT[EN_NPART][2] = {{0.78f, 0.22f}, {0.25f, 0.2f}, {0.4f, 0.2f}, {0.55f, 0.15f}, {0.0f, 0.15f},
+                                            {0.72f, 0.28f}};
+float en_song_in(int kind, int part) { return SONG_IN[kind ? 1 : 0][(unsigned)part < EN_NPART ? part : 0]; }
+float en_song_out(int part) { return SONG_OUT[(unsigned)part < EN_NPART ? part : 0][0]; }
+static void song_publish(void)
+{
+    en_song_ph = song_ph;
+    en_song_b0 = song_b0, en_song_bo = song_bo_on ? song_bo : 0u, en_song_be = song_bo_on ? song_be : 0u;
+}
+static void song_plan(void)                      /* (the main's and the outro's lengths, as the knobs have them now) */
+{
+    if (song_fixed || song_ph == EN_SG_OUTRO || song_ph == EN_SG_END || !song_bo_on)
+        return;
+    song_bo = song_b0 + 8u * (uint32_t)par[P_SMAIN];
+    if (song_bo < bar)                           /* (Main turned down past where it is: the outro from the next phrase) */
+        song_bo = (bar + 7u) & ~7u;
+    song_be = song_bo + 8u * (uint32_t)par[P_SOUTRO];
+}
+static void song_back(void)                      /* (the song's offsets off, the faders up: the main, or Endless) */
+{
+    int i;
+    for (i = 0; i < EN_NPART; i++)
+        fd_tgt[i] = 1.0f;
+    song_co = 0.0f, song_wet = 1.0f, song_hits = 1.0f, song_thr = 0, song_nthr = 0.0f;
+}
+static void song_start(void)                     /* PLAY from the top: Endless as ever, or a song from its intro */
+{
+    int i;
+    song_end_now = song_fixed = song_ask = 0;
+    song_co = 0.0f, song_wet = 1.0f, song_hits = 1.0f, song_nthr = 0.0f, song_thr = 0;
+    song_b0 = 0u;
+    if (!song_mode) {
+        song_ph = EN_SG_OFF, song_bo_on = 0;
+        faders_full();
+        song_publish();
+        return;
+    }
+    song_b0 = 8u * (uint32_t)par[P_SINTRO];
+    song_bo_on = 1;
+    song_ph = song_b0 ? EN_SG_INTRO : EN_SG_MAIN;
+    song_plan();
+    for (i = 0; i < EN_NPART; i++) {             /* (each part's entry, off the phrase lines; its fade, 2-4 bars, done by
+                                                  * the intro's end) */
+        const float e = SONG_IN[par[P_SKIND] ? 1 : 0][i] * (float)song_b0;
+        song_ent[i] = e > 0.0f ? fm_clampf(e + 2.0f * frand() - 1.0f, 1.0f, (float)song_b0 - 1.0f) : 0.0f;
+        song_fd[i] = fm_clampf(fm_minf(2.0f + 2.0f * frand(), (float)song_b0 - song_ent[i]), 1.0f, 4.0f);
+        fd_pos[i] = fd_tgt[i] = fd_g[i] = en_fader[i] = song_b0 ? 0.0f : 1.0f;
+    }
+    fd_quiet = song_b0 ? 0x3Fu : 0u;
+    song_publish();
+}
+/* the kick's shape the song gives this bar (-1: the piece's own): the intro's One, Half, Four; the outro's thinning */
+static int song_kick(void)
+{
+    const float b = (float)bar;
+    if (song_ph == EN_SG_INTRO) {
+        const float x = (b - song_ent[3]) / fm_maxf((float)song_b0 - song_ent[3], 1.0f);
+        return x < 0.4f ? KS_ONE : x < 0.75f ? KS_HALF : KS_FOUR;
+    }
+    if (song_ph == EN_SG_OUTRO && song_be > song_bo) {
+        const float o = (b - (float)song_bo) / (float)(song_be - song_bo);
+        return o < 0.25f ? -1 : o < 0.42f ? KS_HALF : KS_ONE;
+    }
+    return -1;
+}
+static void song_bar(void)                       /* a bar's start: the song's places (before the phrase is set) */
+{
+    int i;
+    if (song_ph == EN_SG_INTRO && bar >= song_b0)
+        song_ph = EN_SG_MAIN;
+    if (song_bo_on && song_ph != EN_SG_OUTRO && song_ph != EN_SG_END && bar >= song_bo) {
+        song_ph = EN_SG_OUTRO, song_ask = 0;
+        for (i = 0; i < EN_NPART; i++)
+            song_cap[i] = fd_tgt[i];
+    }
+    if (song_ph == EN_SG_OUTRO && bar >= song_be) {
+        song_ph = EN_SG_END;
+        song_end_now = 1;
+    }
+    song_publish();
+}
+static void song_tick(void)                      /* each sixteenth: the faders' targets and the song's offsets */
+{
+    const float t = (float)sixteenth * (1.0f / 16.0f);
+    uint32_t q = 0u;
+    int i;
+    if (song_ph == EN_SG_OFF)
+        return;
+    if (song_ph == EN_SG_INTRO) {
+        const float u = t / fm_maxf((float)song_b0, 1.0f);
+        for (i = 0; i < EN_NPART; i++)
+            fd_tgt[i] = fm_clampf((t - song_ent[i]) / song_fd[i], 0.0f, 1.0f);
+        song_co = -(1.0f - u);                   /* (the chord's filter an octave under, opening) */
+        song_wet = 1.0f + 0.35f * (1.0f - u);
+        song_hits = fm_clampf(0.3f + 0.7f * (t - song_ent[4]) / fm_maxf((float)song_b0 - song_ent[4], 1.0f), 0.3f, 1.0f);
+    } else if (song_ph == EN_SG_MAIN) {
+        song_back();
+    } else if (song_ph == EN_SG_OUTRO) {
+        const float o = song_be > song_bo ? (t - (float)song_bo) / (float)(song_be - song_bo) : 1.0f;
+        for (i = 0; i < EN_NPART; i++)
+            fd_tgt[i] = fm_minf(song_cap[i], 1.0f - fm_clampf((o - SONG_OUT[i][0]) / SONG_OUT[i][1], 0.0f, 1.0f));
+        song_co = 0.0f, song_wet = 1.0f, song_hits = 1.0f;
+        song_thr = (uint8_t)(o >= 0.6f);         /* (the last bars: the chord thrown, the noise into the echo) */
+        song_nthr = fm_clampf((o - 0.6f) * 5.0f, 0.0f, 1.0f);
+    } else {
+        for (i = 0; i < EN_NPART; i++)
+            fd_tgt[i] = 0.0f;
+    }
+    for (i = 0; i < EN_NPART; i++)
+        if (fd_tgt[i] <= 0.0f && fd_pos[i] < 0.001f)
+            q |= 1u << i;
+    fd_quiet = q;
+}
+static void song_outro(void)                     /* HOME held + PLAY: the outro from the next phrase; again: the main */
+{
+    const uint32_t nb = (bar + 7u) & ~7u;        /* (the next phrase's first bar: the next to start, if it's one) */
+    if (!en_playing || song_ph == EN_SG_END)
+        return;
+    if (song_ph == EN_SG_OUTRO || song_ask) {      /* (in it, or asked: back) */
+        song_ask = 0;
+        if (!song_mode) {
+            song_ph = EN_SG_OFF, song_bo_on = 0, song_fixed = 0;
+            song_back();
+        } else {
+            if (song_ph == EN_SG_OUTRO)
+                song_ph = EN_SG_MAIN;
+            song_fixed = 0;
+            song_plan();
+            if (song_bo < nb + 32u)              /* (four phrases of the main at least, then the outro as planned) */
+                song_bo = nb + 32u, song_be = song_bo + 8u * (uint32_t)par[P_SOUTRO], song_fixed = 1;
+        }
+    } else {                                     /* (asked: from the next phrase, in any mode) */
+        if (song_ph == EN_SG_INTRO)
+            song_b0 = nb;                        /* (the intro cut short: those not in yet stay out) */
+        if (song_ph == EN_SG_OFF)
+            song_ph = EN_SG_MAIN;
+        song_bo_on = 1, song_fixed = 1, song_ask = 1;
+        song_bo = nb;
+        song_be = nb + 8u * (uint32_t)par[P_SOUTRO];
+    }
+    song_publish();
+}
+
 /* ------------------------------------------------------- the arrangement --- */
 static void section_set(int s)
 {
@@ -1973,6 +2191,7 @@ static void ph_bar(int pb)
 static void bar_start(void)
 {
     int pb = (int)(bar & 7u), db = en_drift_bars(par[P_DRIFT]);
+    song_bar();                                  /* (1.4.0: the song's places: intro, main, outro, the end) */
     en_phrase_bar = (uint8_t)pb;
     if (cr_dbars > 0)                            /* (the noise's drifts: their next targets on a barline) */
         cr_dbars--;
@@ -1998,6 +2217,13 @@ static void bar_start(void)
         hats_publish();
         ph_age = 0;
     }
+    {   /* (1.4.0) the song's kick: the intro's One, Half, Four; the outro's thinner, never fuller */
+        const int ks = song_kick();
+        if (ks >= 0 && ks != kick_shape && (song_ph == EN_SG_INTRO || ks < kick_shape)) {
+            kick_shape = (uint8_t)ks;
+            hats_publish();
+        }
+    }
     if (sec == SEC_BREAK && pb == 2)            /* two bars in, the filter starts to open */
         arc_tgt = 1.0f, arc_tau = 2.2f * 16.0f * step_len;
     fill = 0;
@@ -2015,6 +2241,8 @@ static void bar_start(void)
             sec_next = SEC_THIN;
         else if (mac[EN_MAC_ENERGY] >= 25)
             sec_next = SEC_FULL, fill = 1;
+        if (song_ph != EN_SG_OFF && (bar + 1u < song_b0 || (song_bo_on && bar + 1u >= song_bo)))
+            sec_next = SEC_FULL;                 /* (1.4.0: the song's intro and outro, Full: no sections) */
         /* (1.3.0) the next phrase's kick and plan, decided now, so the screen can say a change is coming */
         /* (the classics pass: both held for a few phrases, 2 at Evolve 100 to 6 at 0; a change of section draws the
          * kick anew) */
@@ -2043,6 +2271,11 @@ static void bar_start(void)
         hats_evolve();
     stabs_bar();
     ph_bar(pb);                                  /* (this bar's drums and bass, from the plan) */
+    if (song_hits < 1.0f) {                      /* (1.4.0: the song's intro, the hats coming in: few, growing) */
+        bar_sh = ph_thin(bar_sh, (int)((float)pcount(bar_sh) * song_hits + 0.5f), 0u, 5u);
+        if (song_hits < 0.7f)
+            bar_op = 0u;
+    }
     bar++;
 }
 
@@ -2053,7 +2286,8 @@ static void bar_start(void)
 static int kick_draw(int next)
 {
     const int v = pe(P_KDENS);
-    const uint32_t phr = (bar + 1u) >> 3;       /* (the next phrase's number: 0 at the top) */
+    const uint32_t phr = (bar + 1u >= song_b0 ? bar + 1u - song_b0 : 0u) >> 3;   /* (the next phrase's number: 0 at
+                                                  * the top, the song's main's: 1.4.0) */
     float x = (float)v * 0.04f, lam = 1.4f - fm_minf(ev_of(VY_DRUMS), 1.0f), w[KS_N], t = 0.0f, r;
     int k;
     if (!kick_hand && (phr < 2u || (sec == SEC_BREAK && next != SEC_BREAK && next != SEC_THIN)))
@@ -2088,14 +2322,15 @@ static uint32_t dpat(int d) { return par[P_DMODE] ? (uint32_t)(uint16_t)par[P_DP
 /* the screen's lanes, the bar as it plays: what is muted or at level 0, gone at once */
 static void lanes(void)
 {
-    const int kick = lay_kick && !(mutes & EN_M_KICK) && !(perf & EN_PF_KICKDROP) && par[P_DRUMS] > 0,
-              hats = !(mutes & EN_M_HATS) && par[P_DRUMS] > 0;
-    en_lane[0] = (uint16_t)(mutes & EN_M_CHORD || !par[P_CHORD] ? 0u : en_stab_pat);
+    const uint32_t mu = mutes | fd_quiet;   /* (1.4.0: a part the song has out, as muted) */
+    const int kick = lay_kick && !(mu & EN_M_KICK) && !(perf & EN_PF_KICKDROP) && par[P_DRUMS] > 0,
+              hats = !(mu & EN_M_HATS) && par[P_DRUMS] > 0;
+    en_lane[0] = (uint16_t)(mu & EN_M_CHORD || !par[P_CHORD] ? 0u : en_stab_pat);
     en_lane[1] = (uint16_t)(kick ? bar_k & (fill ? 0x00FFu : 0xFFFFu) : 0u);
     en_lane[2] = (uint16_t)(hats ? (lay_hats ? bar_sh : 0u) | (lay_open || fill ? bar_op : 0u) : 0u);
     en_lane[3] = (uint16_t)(hats && lay_hats ? dpat(3) : 0u);
     en_lane[4] = (uint16_t)(hats && (sec == SEC_FULL || sec == SEC_GROOVE || par[P_DMODE]) ? dpat(4) : 0u);
-    en_lane[5] = (uint16_t)(lay_bass && !(mutes & EN_M_BASS) && !(perf & EN_PF_KICKDROP) && par[P_BASS] > 0 ? bar_bass : 0u);
+    en_lane[5] = (uint16_t)(lay_bass && !(mu & EN_M_BASS) && !(perf & EN_PF_KICKDROP) && par[P_BASS] > 0 ? bar_bass : 0u);
     en_bass_gate = fm_minf(GROOVE_GATE[gpat()] * fm_exp2f(rel(P_BLEN)), 15.8f);   /* (the bass's page: its notes' length) */
     en_bass_octn = (int8_t)(ph.oct >= 0 ? ph.oct % (pcount(bar_bass) > 1 ? pcount(bar_bass) : 1) : -1);
     en_lane_sh = (uint16_t)(hats && lay_hats ? bar_sh : 0u);   /* (the Drums page: the hats apart, and how loud) */
@@ -2131,6 +2366,7 @@ static int dhit(int d, int st, float *vel)
 }
 
 static void lfo_tick(void);
+static void play_stop(void);
 /* the grid: one call a sixteenth (MIDI clock: 6 ticks) */
 static void tick(void)
 {
@@ -2142,7 +2378,13 @@ static void tick(void)
         en_stab_thr = 0;                         /* (the chord's page: a new bar's stabs) */
         for (l = 0; l < 16; l++)
             en_stab_v[l] = 0;
+        if (song_end_now) {                      /* (1.4.0: the song's end: the grid stops, the tails ring on) */
+            song_end_now = 0;
+            play_stop();
+            return;
+        }
     }
+    song_tick();
     const int kick = lay_kick && !(mutes & EN_M_KICK) && !(perf & EN_PF_KICKDROP), hats = !(mutes & EN_M_HATS);
     lanes();
     {
@@ -2185,7 +2427,7 @@ static void tick(void)
         int last = !later, thr = (fill && last) || frand() < fm_minf(0.12f * loose() * (sec == SEC_BREAK ? 1.5f : 1.0f) * throw_mul, 0.6f);
         float vel = st == (int)__builtin_ctz(en_stab_pat) ? 0.9f + 0.1f * frand() : 0.65f + 0.25f * frand();
         if (!(mutes & EN_M_CHORD))
-            stab_fire(vel, thr || (perf & EN_PF_THROW) || (fxm >> EN_FX_THROW & 1u));
+            stab_fire(vel, thr || (perf & EN_PF_THROW) || (fxm >> EN_FX_THROW & 1u) || song_thr);
         en_stab_v[st] = (uint8_t)(fm_minf(vel, 1.0f) * 255.0f);   /* (the chord's page: as struck) */
         if (en_stab_thrown)
             en_stab_thr |= (uint16_t)(1u << st);
@@ -2202,10 +2444,10 @@ static void tick(void)
             m = 0u;
         if ((sixteenth & 1u) == 0u) {           /* (this step's: what rings, below) */
             for (l = 0; l < EN_NLOOP; l++)
-                if (loop_note[l][loop_pos[l]] >= 0 && !loop_rest[l] && !(mutes & EN_M_PINGS) && par[P_PINGS] > 0)
+                if (loop_note[l][loop_pos[l]] >= 0 && !loop_rest[l] && !((mutes | fd_quiet) & EN_M_PINGS) && par[P_PINGS] > 0)
                     m |= 1u << st;
         }
-        if (!(mutes & EN_M_PINGS) && par[P_PINGS] > 0)
+        if (!((mutes | fd_quiet) & EN_M_PINGS) && par[P_PINGS] > 0)
             for (q = (st + 2) & ~1; q < 16; q += 2)
                 for (l = 0; l < EN_NLOOP; l++) {
                     const int k = loop_pos[l] + (q - ((st + 2) & ~1)) / 2 + ((sixteenth & 1u) == 0u ? 1 : 0),
@@ -2948,6 +3190,26 @@ static void apply(int p, int v)
                                                   * as the rim's into the echo, the clap's into the plate) */
         kick_snd[p - P_KECHO] = (float)v * (p == P_KECHO ? 0.008f : 0.006f);
         break;
+    case P_SMODE:                                /* (1.4.0) song structure: Endless now, the song let go (a song's
+                                                  * from the next PLAY) */
+        song_mode = (uint8_t)v;
+        if (!v && song_ph != EN_SG_OFF && song_ph != EN_SG_END) {
+            song_ph = EN_SG_OFF, song_bo_on = 0, song_ask = 0, song_fixed = 0;
+            song_back();
+            song_publish();
+        }
+        break;
+    case P_SMAIN: song_plan(); song_publish(); break;   /* (the main's length as it goes: the outro moved) */
+    case P_SOUTRO:
+        if (song_ph == EN_SG_OUTRO || song_fixed) {
+            song_be = song_bo + 8u * (uint32_t)v;
+            if (song_ph == EN_SG_OUTRO && song_be < bar)
+                song_be = bar;
+        } else {
+            song_plan();
+        }
+        song_publish();
+        break;
     case P_KDENS: kick_now = 1; break;           /* (1.4.0, the user's) the kick's shape turned: from the next bar, not
                                                   * the next phrase (and its hold begun again) */
     case P_RUMBLE:                               /* the kick's rumble: none (0) .. heavy (100), longer as it rises: its
@@ -3163,6 +3425,7 @@ static void play_start(int from_top)
         sixteenth = 0;
         en_bars = 0;
         bar = 0;
+        song_start();                            /* (1.4.0: Endless as ever, or a song from its intro) */
         for (i = 0; i < EN_NLOOP; i++)
             loop_pos[i] = 0;
         section_set(SEC_FULL);
@@ -3234,10 +3497,13 @@ static void drain(void)
             break;
         case C_POOL: pool_set((uint32_t)b & 0xFFFu); break;
         case C_PLAY:
-            if (a && !en_playing)
+            if (a && !en_playing) {
                 play_start(1);
-            else if (!a && en_playing)
+            } else if (!a && en_playing) {
                 play_stop();
+                if (song_ph != EN_SG_END)        /* (stopped by hand: no song now; the next PLAY a new one) */
+                    song_ph = EN_SG_OFF, song_bo_on = 0, song_ask = 0, song_publish();
+            }
             break;
         case C_NEXT:
             if (en_playing)
@@ -3299,6 +3565,7 @@ static void drain(void)
             break;
         }
         case C_LOCK: lock = (uint8_t)a; break;
+        case C_OUTRO: song_outro(); break;
         case C_PNUDGE: {                         /* a nudge on the pings: one note of one loop, another */
             int l = irand(EN_NLOOP), k = loop_pick(l);
             if (k >= 0)
@@ -3501,7 +3768,7 @@ static void render_stabs(uint32_t n)
     const float xa = (float)par[P_CATT] * 0.01f, xc = cc_col(), up = fm_clampf(1.0f + xc, 0.0f, 2.0f), fx = fm_exp2f(1.5f * xc),
                 lco = dst == EN_CLD_CUTOFF ? lfo_ch : 0.0f,
                 xr = dst == EN_CLD_RESO ? fm_clampf(rel(P_CRES) + LFO_KNOB * lfo_ch, -1.0f, 1.0f) : rel(P_CRES);
-    const float g = chord_vol * 0.5f * CV[cv].gain,
+    const float g = chord_vol * 0.5f * CV[cv].gain * fd_g[0],
                 k = fm_clampf(1.1f - 0.6f * fm_clampf(0.5f + 0.5f * arcm, 0.0f, 1.0f) - 0.55f * xr -
                                  0.22f * fm_maxf(perf_sw, 0.0f), 0.12f, 2.0f);   /* (Open: it sings) */
     en_lfo_at[EN_CLD_CUTOFF] = lco;              /* (for tests: what the LFO puts on each, now) */
@@ -3541,7 +3808,8 @@ static void render_stabs(uint32_t n)
     for (j = 0; j < n; j++) {
         float l = 0.0f, r = 0.0f, v1, v2, v3, yl, yr, e;
         if (!(j & 31u)) {                        /* the filter: its base, its envelope, the sweep */
-            float fc = cut_base * fm_exp2f(fe * st_fenv + 1.6f * arcm + st_cofs + lco + perf_sw + 0.3f * motion * mod[0].v);
+            float fc = cut_base * fm_exp2f(fe * st_fenv + 1.6f * arcm + st_cofs + lco + perf_sw + 0.3f * motion * mod[0].v +
+                                           song_co);   /* (the song's intro: darker, opening) */
             svf_coefs(st_c, fm_clampf(fc, 90.0f, 12000.0f), k);
             st_fenv *= st_fdec;
             pc = st_fenv * st_fenv;              /* (Tonewheel: the percussion, quicker still) */
@@ -3663,7 +3931,7 @@ static void render_bass(uint32_t n)
 {
     uint32_t j;
     const int bv = (unsigned)par[P_BVOICE] < EN_NBV ? par[P_BVOICE] : 0;
-    const float g = bass_vol * 0.5f * BV_GAIN[bv] * GROOVE_LVL[gpat()],
+    const float g = bass_vol * 0.5f * BV_GAIN[bv] * GROOVE_LVL[gpat()] * fd_g[2],
                 xb = rel(P_BBITE), xs = rel(P_BSHAPE),   /* (1.4.0: no LFO on the bass) */
                 drv = 1.2f * fm_exp2f(1.2f * xb), bi = fm_maxf(1.0f + xb, 0.0f);   /* Bite: the drive, the FM bite */
     const int balg = BV_PATCH[bv] ? fm_alg_of(P_BALG, BV_PATCH[bv]) : 0;
@@ -3734,7 +4002,7 @@ static void render_bass(uint32_t n)
 static void render_bells(uint32_t n)
 {
     int i;
-    const float g = bell_vol * 1.4f, arate = 0.004f + 0.02f * fm_minf(btone * 2.0f, 1.0f),
+    const float g = bell_vol * 1.4f * fd_g[1], arate = 0.004f + 0.02f * fm_minf(btone * 2.0f, 1.0f),
                 lc = lcut[1], pp = 0.4f * sx[1][1], pe1 = 1.1f * sx[1][0];   /* (the strip: Low cut, sends) */
     for (i = 0; i < NBELL; i++) {
         bell_t *v = &bell[i];
@@ -3834,13 +4102,14 @@ static void render_drums(uint32_t n)
     /* (1.4.0, the user's: the kick and the hats apart) the Hats strip's: its Low cut, its sends' shares, the throw
      * (the hats, the rim and the clap into the echo while held, whatever their send: ht, added to each one's) */
     const float g = pulse_vol * KIT[kit].gain, fall = KIT[kit].fall, drive = KIT[kit].drive,
-                lc = lcut[3], de = sx[3][0], dp = sx[3][1], ht = hat_thr;
+                lc = lcut[3], de = sx[3][0], dp = sx[3][1], ht = hat_thr, gh = g * fd_g[4];   /* (gh: the hats' part,
+                                                  * its fader) */
     drum_t *v = &drum[0];
     kick_cut = 0;
     if (v->on) {                                 /* the kick: its own bus, ducked by nothing; the Kick strip's level,
                                                   * Low cut and sends (none unless turned up) */
         float ph = v->ph, inc = v->inc, amp = v->amp, att = v->att, clk = v->clk, cl = v->x1, l1 = v->lc;
-        const float gk = g * kick_lvl, kc = lcut[5], ke = kick_snd[0], kp = kick_snd[1];
+        const float gk = g * kick_lvl * fd_g[3], kc = lcut[5], ke = kick_snd[0], kp = kick_snd[1];
         kick_cut = kc > 0.0f;
         for (j = 0; j < n; j++) {
             float x;
@@ -3877,8 +4146,8 @@ static void render_drums(uint32_t n)
     }
     {   /* (Energy: the hats -6 dB down to +6 dB up) */
         const float hl = fm_exp2f((float)mac[EN_MAC_ENERGY] * (1.0f / 50.0f)) * hats_lvl;   /* (and Hats: +-12 dB) */
-        render_hat(&drum[1], n, g * 0.16f * hl, 0.6f, 1.0f, 0.2f * de + 0.9f * ht, 0.6f, 0.02f);   /* shaker: a little right, soft, into the echo */
-        render_hat(&drum[2], n, g * 0.17f * hl, 1.0f, 0.7f, 0.2f * de + 0.9f * ht, 1.0f, 0.3f);   /* open: a little left, some echo */
+        render_hat(&drum[1], n, gh * 0.16f * hl, 0.6f, 1.0f, 0.2f * de + 0.9f * ht, 0.6f, 0.02f);   /* shaker: a little right, soft, into the echo */
+        render_hat(&drum[2], n, gh * 0.17f * hl, 1.0f, 0.7f, 0.2f * de + 0.9f * ht, 1.0f, 0.3f);   /* open: a little left, some echo */
     }
     v = &drum[3];                                /* the rim: two tones (~520 Hz, ~1.7 kHz) and a click of noise */
     if (v->on) {
@@ -3894,7 +4163,7 @@ static void render_drums(uint32_t n)
                 v->mph[0] -= 1.0f;
             noise = noise * 1664525u + 1013904223u;
             x = (sine(v->ph) * 0.55f + sine(v->mph[0]) * 0.45f + (float)(int32_t)noise * (1.0f / 2147483648.0f) * clk) *
-                amp * att * g * 0.3f;
+                amp * att * gh * 0.3f;
             if (lc > 0.0f) {
                 l1 += lc * (x - l1);
                 x -= l1;
@@ -3930,7 +4199,7 @@ static void render_drums(uint32_t n)
             e = tb < 1e8f ? (1.0f - fm_expf(-tb * (1.0f / 6.0f))) * fm_expf(-tb * (1.0f / 130.0f)) : 0.0f;
             if (t >= 1200.0f)
                 e = amp * 0.9f;
-            x = bp * e * g * 1.1f;
+            x = bp * e * gh * 1.1f;
             if (lc > 0.0f) {
                 l1 += lc * (x - l1);
                 x -= l1;
@@ -4126,7 +4395,7 @@ static void render_crackle(uint32_t n)
     cr_gate += ((en_playing ? 1.0f : 0.0f) - cr_gate) * fm_minf((float)n / (0.5f * EN_SR), 1.0f);
     if (cr_gate < 1e-4f)
         cr_gate = 0.0f;
-    g = mutes & EN_M_NOISE ? 0.0f : crackle_vol * cr_gate;   /* (muted: its level kept) */
+    g = mutes & EN_M_NOISE ? 0.0f : crackle_vol * cr_gate * fd_g[5];   /* (muted: its level kept; the song's fader) */
     if (g <= 0.0f) {
         for (j = 0; j < n; j++)
             crl[j] = crr[j] = 0.0f;
@@ -4209,7 +4478,7 @@ static void render_crackle(uint32_t n)
         /* (the second page: Width, Plate, Echo; PERFORM's Wet, -50..+50: the dry x2 .. x0.5, the sends x0.5 .. x2) */
         const float wv = (float)par[P_NWIDTH] * 0.02f, wa = 0.6f + 0.25f * wv, wb = 0.6f - 0.25f * wv,
                     wm = (float)mac[EN_MAC_DUB] * (1.0f / 50.0f), nw = fm_exp2f(-wm),
-                    np = (float)par[P_NPLATE] * 0.02f * fm_exp2f(wm), ne = (float)par[P_NECHO] * 0.02f * fm_exp2f(wm);
+                    np = (float)par[P_NPLATE] * 0.02f * fm_exp2f(wm), ne = (float)par[P_NECHO] * 0.02f * fm_exp2f(wm) * (1.0f + 3.0f * song_nthr);
         int ph = nz_ph, w = nz_w;
 #define CRU() (cn = cn * 1664525u + 1013904223u, (float)(cn >> 8) * (1.0f / 16777216.0f))
         for (j = 0; j < n; j++) {
@@ -4477,7 +4746,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     /* (the cloud listens as if Reverb were at 63 at least, so Cloud works with little reverb too) */
     const float cl_in = rev_send > 0.0001f ? fm_maxf(rev_send, 0.4f) / rev_send : 0.0f;
     const float push = perf_echo;
-    float eg = (echo_send + (1.0f - echo_send) * push) * ein_gain, ca = cloud_amt * (sec == SEC_BREAK ? 1.4f : 1.0f);   /* more in a Break */
+    float eg = (echo_send + (1.0f - echo_send) * push) * ein_gain * song_wet, ca = cloud_amt * (sec == SEC_BREAK ? 1.4f : 1.0f);   /* more in a Break */
     /* PERFORM's Open and Shut on the music, the kick left out on top: Shut a low-pass down to ~230 Hz, Open a
      * resonant high-pass up to ~400 Hz (thin and bright), both swept with perf_sw */
     const float shut = fm_maxf(-perf_sw, 0.0f), open = fm_maxf(perf_sw, 0.0f);
@@ -4489,6 +4758,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         mb_s[0] = mb_s[1] = mb_s[2] = mb_s[3] = 0.0f;
     for (j = 0; j < n; j++)
         mixl[j] = mixr[j] = rsend[j] = esend[j] = kickb[j] = bassb[j] = 0.0f;
+    fader_step(n);                               /* (1.4.0: the parts' faders, the song's) */
     lfo_step();
     {   /* (a layer's own part of the dry mix: what its render adds; the bass, the kick and the noise their own) */
         const int tl = en_view_layer, mo = en_meter_on;

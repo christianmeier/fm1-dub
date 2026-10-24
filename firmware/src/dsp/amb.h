@@ -136,6 +136,12 @@ enum {
     /* (1.4.0, format 25, the user's) where the noise's LFO and drift go (EN_NLDEST_NAME: Filter, its low-pass, as
      * before; Tone; Air; ALGORITHM on the Noise LFO page) */
     P_NLDEST,
+    /* (1.4.0, format 26, the user's: song structure, build/design/SONG.md) Song mode, the player's as Tune (global, on
+     * GLO's second page; EN_SMODE_NAME: Endless, as ever; Song, an intro, the main, an outro, then silence; Set, the
+     * same, then the next piece, to the last); and each piece's song: its Intro, Main and Outro in phrases (eight bars a
+     * step: the knobs show bars), and its intro's Kind (EN_SKIND_NAME: Ambient first, the noise and the chord's wash;
+     * Pulse first, the kick and the bass) */
+    P_SMODE, P_SINTRO, P_SMAIN, P_SOUTRO, P_SKIND,
     P_NPARAMS
 };
 typedef struct {
@@ -174,6 +180,22 @@ void en_perf(uint32_t flags);
  * echo's send and feedback; Energy: Density, Hits and Stabs; Space: the reverb, the cloud and the plate's size */
 enum { EN_MAC_FILTER, EN_MAC_DUB, EN_MAC_ENERGY, EN_MAC_SPACE, EN_NMAC };
 void en_macro(int i, int v);
+/* (1.4.0) song structure: HOME held + PLAY, the outro from the next phrase (in any Song mode: a way to land a piece by
+ * hand); again, in it or while it waits: back to the main (Endless: on as ever). The song's place for the screen and
+ * the app: EN_SG_*, and the bars its main, outro and silence start on (since PLAY; 0 0: no outro coming). The parts
+ * (EN_NPART: the chord, the pings, the bass, the kick, the hats with the rim and the clap, the noise: EN_M_*'s order):
+ * where each comes into an intro (a share of it, by Kind) and starts to leave an outro */
+#define EN_NPART 6
+enum { EN_SG_OFF, EN_SG_INTRO, EN_SG_MAIN, EN_SG_OUTRO, EN_SG_END };
+#define EN_NSMODE 3
+#define EN_NSKIND 2
+extern const char *const EN_SMODE_NAME[EN_NSMODE], *const EN_SKIND_NAME[EN_NSKIND];
+void en_outro(void);
+extern volatile uint8_t en_song_ph;
+extern volatile uint32_t en_song_b0, en_song_bo, en_song_be;
+extern volatile float en_fader[EN_NPART];       /* each part's fader as heard now, 0..1 (for tests and the screen) */
+float en_song_in(int kind, int part);
+float en_song_out(int part);
 void en_lock(int on);                          /* PERFORM's Lock: each phrase keeps the kick's shape, the noise's groove,
                                                 * the drums' and the bass's plan, the shaker's pattern */
 /* the effects grid (REC held): the effects held now, a bit each (EN_FX_*), in the grid's order */

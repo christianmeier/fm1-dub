@@ -28,8 +28,10 @@
  * pages, the layer's button pressed again) */
 enum { V_DUB, V_CHORD, V_TEXTURE, V_BASS, V_DRUMS, V_SPACE, V_SETUP, NPAGES, V_MIX = NPAGES, V_CSND, V_PSND, V_BSND,
        V_DSND, V_CFM, V_PFM, V_BFM, V_CHORDS, V_PAT, V_PERF, V_KEY, V_NSND, V_ESND, V_NSND2, V_CLFO, V_NLFO, V_HATS, V_NVOX,
-       V_STRIP, NVIEWS };
+       V_STRIP, V_SONG, V_SMODE, NVIEWS };
 /* (V_PERF: PERFORM's knobs, the Arrangement page; V_STRIP a part's white key held (V_MIX, white 6 held, gone).
+ * V_SONG (1.4.0, the user's: song structure): HOME again, the piece's song (its Intro, Main, Outro, Kind), HOME's
+ * second; V_SMODE: GLO again, Song mode (Endless, Song, Set), the Setup page's second (the player's, as Tune).
  * V_KEY: HOME again, the key and the tempo, the Form page's second. V_CLFO, V_NLFO (1.4.0): the chord's LFO, ENV a fourth time (after its FM page), and
  * the noise's, SAVE a third time; for now, till the big redesign) */
 /* (1.4.0, the user's: the names; the identifiers kept: V_DUB the Form page, HOME's; V_SPACE the Dub page, FX's, the echo
@@ -39,11 +41,11 @@ static const char *const VIEW_NAME[NVIEWS] = {"Form", "Chord", "Pings", "Bass", 
                                               "Chord voice", "Pings voice", "Bass voice", "Kick",
                                               "Chord FM", "Pings FM", "Bass FM", "Chords", "Pattern", "Arrangement", "Key", "Noise",
                                               "Echo", "Noise space", "Chord LFO", "Noise LFO", "Hats", "Noise voice",
-                                              "Strip"};
+                                              "Strip", "Song", "Song mode"};
 #define B_NONE 0xFFu
 static const uint8_t VIEW_BTN[NVIEWS] = {B_HOME, B_ENV, B_ARP, B_LFO, B_SEQ, B_FX, B_GLO, B_NONE, B_NONE, B_NONE, B_NONE,
                                          B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_SAVE, B_NONE, B_NONE,
-                                         B_NONE, B_NONE, B_NONE, B_NONE, B_NONE};
+                                         B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE};
 static int sound_of(int v) { return v == V_CHORD ? V_CSND : v == V_TEXTURE ? V_PSND : v == V_BASS ? V_BSND : v == V_DRUMS ? V_DSND : -1; }
 static int fm_of(int v) { return v == V_CHORD ? V_CFM : v == V_TEXTURE ? V_PFM : v == V_BASS ? V_BFM : -1; }
 static int parent_of(int v)
@@ -97,7 +99,8 @@ static int lfo_on_knob(int k, float *now, float *reach)   /* an LFO moving knob 
 }
 static int page_of(int v)                        /* a sound page: its layer's; the Echo page: Space's */
 {
-    return v == V_KEY ? V_DUB : v == V_ESND ? V_SPACE : noise_page(v) ? V_NSND : parent_of(v) >= 0 ? parent_of(v) : v;
+    return v == V_KEY || v == V_SONG ? V_DUB : v == V_SMODE ? V_SETUP : v == V_ESND ? V_SPACE : noise_page(v) ? V_NSND
+         : parent_of(v) >= 0 ? parent_of(v) : v;
 }
 /* SELECT's round and the dots, as the buttons sit on the panel: FX ENV LFO GLO, then HOME SAVE ARP SEQ */
 #define NROUND 8
@@ -177,6 +180,9 @@ static const uint16_t VIEW_KNOB[NVIEWS][4] = {
     {P_NROOM, P_NCOL, P_NTUNE, P_NWIDTH},        /* (1.4.0) the Noise voice: SAVE again; its Width from the Noise space
                                                   * page (gone: its sends the noise's channel strip) */
     {P_CHORD, P_CECHO, P_CPLATE, P_CLOW},        /* (1.4.0) a strip: the chord's here; vknob() the part's (STRIP_PAR) */
+    {P_SINTRO, P_SMAIN, P_SOUTRO, P_SKIND},      /* (1.4.0, the user's) the Song page: the song's lengths in its order,
+                                                  * in bars (a phrase a click), and which parts come first */
+    {P_SMODE, K_NONE, K_NONE, K_NONE},           /* (the Song mode page: GLO again; the player's, global) */
 };
 static const uint16_t STRIP_PAR[NSTRIP][4] = {
     {P_CHORD, P_CECHO, P_CPLATE, P_CLOW}, {P_PINGS, P_PECHO, P_PPLATE, P_PLOW}, {P_BASS, P_BECHO, P_BPLATE, P_BLOW},
@@ -189,12 +195,12 @@ static int vknob(int v, int i)                   /* a page's knob i: VIEW_KNOB's
 }
 static void page_pos(int v, int *n, int *m)     /* (1.4.0, the user's) a page's place among its button's: n of m (m 1: alone) */
 {
-    static const uint8_t SEQ[7][4] = {{V_DUB, V_KEY}, {V_CHORD, V_CSND, V_CFM, V_CLFO}, {V_TEXTURE, V_PSND, V_PFM},
+    static const uint8_t SEQ[8][4] = {{V_DUB, V_SONG, V_KEY}, {V_CHORD, V_CSND, V_CFM, V_CLFO}, {V_TEXTURE, V_PSND, V_PFM},
                                       {V_BASS, V_BSND, V_BFM}, {V_DRUMS, V_DSND, V_HATS, V_PAT}, {V_SPACE, V_ESND},
-                                      {V_NSND, V_NVOX, V_NLFO}};
-    static const uint8_t LEN[7] = {2, 4, 3, 3, 4, 2, 3};
+                                      {V_NSND, V_NVOX, V_NLFO}, {V_SETUP, V_SMODE}};
+    static const uint8_t LEN[8] = {3, 4, 3, 3, 4, 2, 3, 2};   /* (1.4.0: HOME's Song page, GLO's Song mode) */
     int s, i;
-    for (s = 0; s < 7; s++)
+    for (s = 0; s < 8; s++)
         for (i = 0; i < LEN[s]; i++)
             if (SEQ[s][i] == v) {
                 *n = i + 1, *m = LEN[s];
@@ -236,6 +242,8 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Level", "Tone", "Length", ""},
     {"Air", "Tone", "Decay", "Width"},
     {"Level", "Echo", "Plate", "Low cut"},
+    {"Intro", "Main", "Outro", "Kind"},
+    {"Mode", "", "", ""},
 };
 /* what each knob does, a line: on the rule above the knobs while it's being turned (in capitals; each fits the
  * rule's 228 px: the host's expect helpfit) */
@@ -287,6 +295,9 @@ static const char *const KNOB_HELP[NVIEWS][4] = {
      "The noise mono, to wide"},
     {"The part's level", "How much it sends into the echo", "How much it sends into the plate",
      "Its lows thinned, before the sends"},
+    {"The parts coming in, a phrase a click", "The piece itself, before the outro", "The parts leaving, then silence",
+     "Ambient first, or the kick and the bass"},
+    {"Endless, a song, or a set of the pieces", "", "", ""},
 };
 
 /* the screen's colours: a dark room, as a dub techno sleeve (grey on black, a cold blue). The chord and
@@ -1160,8 +1171,13 @@ static void button(int b)
         set_view(ui.view == V_SPACE ? V_ESND : V_SPACE);
         return;
     }
-    if (b == B_HOME && ui.view == V_DUB) {       /* HOME again: the Key page (the key and the tempo); again: back */
-        set_view(V_KEY);
+    if (b == B_HOME && (ui.view == V_DUB || ui.view == V_SONG)) {   /* HOME again: the Song page (1.4.0), then the
+                                                  * Key page (the key and the tempo); again: back */
+        set_view(ui.view == V_DUB ? V_SONG : V_KEY);
+        return;
+    }
+    if (b == B_GLO && ui.view == V_SETUP) {      /* (1.4.0) GLO again: Song mode; again: back */
+        set_view(V_SMODE);
         return;
     }
     for (v = 0; v < NPAGES; v++)                 /* a page's button: its page */
@@ -1180,6 +1196,19 @@ static void button(int b)
     case B_EDIT:                                 /* (its release: edit_released, in input) */
         break;
     case B_PLAY:
+        if (ui.btn >> B_HOME & 1u) {             /* (1.4.0, the user's) HOME held + PLAY: the outro from the next
+                                                  * phrase, in any Song mode; again, in it or while it waits: back to
+                                                  * the main */
+            const int back = en_song_ph == EN_SG_OUTRO ||
+                             (en_song_bo && en_song_bo * 16u > en_bars && en_song_bo * 16u - en_bars <= 128u);
+            ui.btn_used |= 1u << B_HOME;
+            if (!en_playing)
+                break;
+            en_outro();
+            say("OUTRO", back ? "OFF" : "NEXT PHRASE");
+            card_show(back ? "BACK TO THE MAIN" : "OUTRO", back ? "the outro left" : "from the next phrase", K_ACC, 0);
+            break;
+        }
         sp_tp.playing = !en_playing;
         sp_tp.play_t = plat_ms();
         if (en_playing) {
@@ -3151,9 +3180,47 @@ static void draw_lfo(int k)
         cv_disc(x0 + w - 1, yc - (int32_t)en_lfo_tr[k][(wn - 1u) % EN_LFO_N] * rr / 127, 4, en_playing ? K_TEXT : col);
 }
 
+/* (1.4.0, the user's: song structure) the Song pages' picture, in the lanes' place: the song as set, its intro,
+ * main and outro in proportion (a band over the rows, the intro and the outro in the accent), each part's row from
+ * where it comes in to where it leaves, in its colour (the Kind's order; brighter once in, fading out), and while a
+ * song plays, where it is; in Endless the same, dimmed (the song it would be) */
+static void draw_song_lane(void)
+{
+    static const int8_t PART[LN_ROWS] = {0, 1, 2, 3, 4, 4, 5};   /* (R/C: the hats' part) */
+    const int kind = proj.par[P_SKIND] != 0, on = proj.par[P_SMODE] != 0,
+              live = en_song_ph != EN_SG_OFF && en_song_be > 0u;
+    const float b0 = live ? (float)en_song_b0 : 8.0f * (float)proj.par[P_SINTRO],
+                bo = live ? (float)en_song_bo : b0 + 8.0f * (float)proj.par[P_SMAIN],
+                be = live ? (float)en_song_be : bo + 8.0f * (float)proj.par[P_SOUTRO], w = (float)(232 - LN_X0),
+                k = w / fm_maxf(be, 1.0f);
+    int r;
+#define SGX(b) (LN_X0 + (int32_t)((b) * k + 0.5f))
+    cv_rect(SGX(0.0f), LN_Y0 - 7, SGX(b0) - SGX(0.0f), 3, mix(K_BG, K_ACC, on ? 10 : 5));
+    cv_rect(SGX(b0), LN_Y0 - 7, SGX(bo) - SGX(b0), 3, mix(K_BG, K_LINE, on ? 14 : 8));
+    cv_rect(SGX(bo), LN_Y0 - 7, SGX(be) - SGX(bo), 3, mix(K_BG, K_ACC, on ? 10 : 5));
+    for (r = 0; r < LN_ROWS; r++) {
+        const int pt = PART[r];
+        const int32_t y = LN_Y0 + r * LN_ROW;
+        const float in = en_song_in(kind, pt) * b0, out = bo + en_song_out(pt) * (be - bo);
+        const uint16_t c = ln_col(r);
+        const int32_t x1 = SGX(in), x2 = SGX(fm_minf(in + 3.0f, bo)), x3 = SGX(out), x4 = SGX(fm_minf(out + 0.2f * (be - bo), be));
+        cv_rect(x1, y + 1, x2 - x1, LN_H - 2, mix(K_BG, c, on ? 7 : 4));   /* (fading in) */
+        cv_rect(x2, y, x3 - x2, LN_H, mix(K_BG, c, on ? 13 : 6));
+        cv_rect(x3, y + 1, x4 - x3, LN_H - 2, mix(K_BG, c, on ? 7 : 4));   /* (leaving) */
+    }
+    if (live) {                                  /* (where the song is: a line down through it) */
+        const float at = fm_minf((float)en_bars * (1.0f / 16.0f), be);
+        cv_rect(SGX(at), LN_Y0 - 9, 1, LN_ROWS * LN_ROW + 9, en_song_ph == EN_SG_END ? K_DIM : K_TEXT);
+    }
+#undef SGX
+}
 static void draw_lanes(void)
 {
     draw_lmeters();                              /* (1.4.0, the user's: the meters at the left, on every page with lanes) */
+    if (ui.view == V_SONG || ui.view == V_SMODE) {   /* (1.4.0) the Song pages: the song's shape */
+        draw_song_lane();
+        return;
+    }
     if (noise_page(ui.view)) {   /* (1.4.0) the Noise pages: its groove alone */
         draw_noise_lane();
         return;
@@ -3561,8 +3628,10 @@ static void draw_where(uint32_t now)
     {   /* top left: the phrase's section and its eight bars; under it, the mode the keys are in */
         char t[12];
         int b;
-        caps(t, EN_SEC_NAME[en_section], sizeof t);
-        cv_text(8, 2, &FONT_XS, t, en_section == SEC_FULL ? K_DIM : K_ACC);
+        caps(t, en_song_ph == EN_SG_INTRO ? "Intro" : en_song_ph == EN_SG_OUTRO ? "Outro" : EN_SEC_NAME[en_section],
+             sizeof t);                          /* (1.4.0: a song's intro and outro, by name) */
+        cv_text(8, 2, &FONT_XS, t, en_section == SEC_FULL && (en_song_ph != EN_SG_INTRO && en_song_ph != EN_SG_OUTRO)
+                                       ? K_DIM : K_ACC);
         for (b = 0; b < 8; b++) {                /* (1.3.0: bars 4 and 8, the B bars, whiter; the 8th blinking on its
                                                   * bar when the next phrase brings a change) */
             const int bb = (b == 3 || b == 7) && !ui.lock, lit = en_playing && b <= en_phrase_bar,   /* (Lock: all alike) */
@@ -3581,6 +3650,17 @@ static void draw_where(uint32_t now)
             cv_rect(9, 29, 39, 1, K_LINE);
             if (f > 0)
                 cv_rect(9, 29, f, 1, K_PAD);
+        }
+        if (en_song_ph != EN_SG_OFF && en_song_be) {   /* (1.4.0, the user's) under them, the song: its whole length a
+                                                  * thin line, the intro and the outro marked, a dot where it is */
+            const float k = 39.0f / (float)en_song_be, at = (float)en_bars * (1.0f / 16.0f);
+            const int32_t xi = 9 + (int32_t)((float)en_song_b0 * k + 0.5f), xo = 9 + (int32_t)((float)en_song_bo * k + 0.5f),
+                          xd = 9 + (int32_t)(fm_minf(at, (float)en_song_be) * k + 0.5f);
+            cv_rect(9, 33, xi - 9, 1, mix(K_BG, K_ACC, 9));
+            cv_rect(xi, 33, xo - xi, 1, K_LINE);
+            cv_rect(xo, 33, 48 - xo, 1, mix(K_BG, K_ACC, 9));
+            cv_rect(xi, 32, 1, 3, K_DIM), cv_rect(xo, 32, 1, 3, K_DIM);
+            cv_rect(xd - 1, 32, 3, 3, en_song_ph == EN_SG_END ? K_DIM : K_TEXT);
         }
     }
     {   /* (1.3.0) top right: the page's name (PERFORM's too); to its left, LOCK and SOLO while on */
@@ -3611,6 +3691,7 @@ static void draw_where(uint32_t now)
 }
 static uint32_t where_sig(uint32_t h)            /* (what they show, for a redraw) */
 {
+    h = hash(h, (uint32_t)en_song_ph | (en_bars >> 4) << 4 | en_song_be << 20);   /* (1.4.0: the song line) */
     return hash(h, (uint32_t)(en_drift * 40.0f) | en_section << 8 | (uint32_t)en_phrase_bar << 12 | (uint32_t)en_playing << 16 |
                        ui.solo << 20 | (uint32_t)ui.lock << 28 | (uint32_t)en_frozen << 29 | (uint32_t)ui.view << 30);
 }
@@ -3708,6 +3789,10 @@ static void draw_main(void)
     h = hash(h, ui.view | (uint32_t)oct_ring_on(now) << 8 | (uint32_t)strip_part << 12);
     if (lfo_page(ui.view))                       /* (the LFO pages: the trace, a sixteenth at a time) */
         h = hash(h, en_lfo_w);
+    h = hash(h, (uint32_t)en_song_ph | en_song_be << 4 | (uint32_t)(proj.par[P_SINTRO] | proj.par[P_SMAIN] << 5 |
+                                                                     proj.par[P_SOUTRO] << 12 | proj.par[P_SKIND] << 17 |
+                                                                     proj.par[P_SMODE] << 18) << 4);   /* (1.4.0: the
+                                                  * song line, the Song pages) */
     if (parent_of(ui.view) >= 0) {               /* a sound or FM page: redrawn as its values move */
         for (i = 0; i < 4; i++)
             h = hash(h, (uint32_t)(knob_get(vknob(ui.view, i)) + 64));   /* (1.4.0: K_NONE's too, no parameter) */
@@ -4093,6 +4178,10 @@ static void sp_page(int all)
                                                   * chord's Colour) */
             sp_cat(", not FM");
     }
+    if (ui.view == V_SONG) {                     /* (1.4.0: the Song mode it plays in) */
+        sp_cat(", ");
+        sp_cat(EN_SMODE_NAME[proj.par[P_SMODE] % EN_NSMODE]);
+    }
     if (ui.view == V_CHORDS) {
         sp_cat(", walk ");
         sp_cat(EN_WALK_NAME[(proj.par[P_PMODE] & 3) % EN_NWALK]);
@@ -4438,11 +4527,34 @@ void ui_init(void)
     sp_tp.play_t = plat_ms();
 }
 
+/* (1.4.0, the user's) Set: a song over, the next piece from its intro as the tails die (6 s on); after the last
+ * piece, it rests */
+static void set_tick(void)
+{
+    static uint32_t end_t;
+    const uint32_t now = plat_ms();
+    if (proj.par[P_SMODE] != 2 || en_song_ph != EN_SG_END || en_playing) {
+        end_t = 0;
+        return;
+    }
+    if (!end_t) {
+        end_t = now | 1u;
+    } else if (now - end_t >= 6000u && proj.piece + 1 < NPIECES) {
+        end_t = 0;
+        set_piece(proj.piece + 1);
+        sp_tp.playing = 1;
+        sp_tp.play_t = now;
+        en_play(1);
+        card_show("SET", piece_name(proj.piece), K_ACC, 0);
+    }
+}
+
 void ui_frame(void)
 {
     prog_take();
     nudge_tick();
     input();
+    set_tick();
     autosave();
     if (grid_up()) {                             /* REC held: the effects, the whole screen */
         if (!(ui.frame % 3u))

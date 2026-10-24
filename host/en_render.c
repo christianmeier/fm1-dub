@@ -1,11 +1,13 @@
 /* SPDX-License-Identifier: GPL-3.0-only */
 /* The engine alone, to a WAV: for listening to changes quickly (no UI, no screen).
  *
- *   en_render OUT.wav SECS [piece=N] [NAME=V ...] [freeze=T0-T1] [seed=S] [log]
+ *   en_render OUT.wav SECS [piece=N] [NAME=V ...] [freeze=T0-T1] [seed=S] [outro=T] [log]
  *
  * piece=N takes piece N's recipe (0..7) first; NAME=V sets a parameter by its name as amb.c's table
  * has it, spaces as underscores (Echo_time=2, Cutoff=60); freeze=T0-T1 holds from T0 to T1 seconds;
- * NAME=V@T sets it at T seconds instead; fx=N@T0-T1 holds the effects grid's effect N (0..15) from T0 to T1; log prints each bar's section and stabs, and the chord as it moves.
+ * NAME=V@T sets it at T seconds instead; fx=N@T0-T1 holds the effects grid's effect N (0..15) from T0 to T1; outro=T asks
+ * for the outro at T seconds (HOME held + PLAY; a song: Song_mode=1 Intro=2 Main=4 Outro=2, in phrases); log prints each
+ * bar's section and stabs, the song's place, the kick's and the hats' lanes, and the chord as it moves.
  *   cc -O2 -ffp-contract=off -DEN_HOST -Ifirmware/src/dsp -o build/host/en_render host/en_render.c \
  *      firmware/src/dsp/amb.c -lm */
 #define EN_HOST 1
@@ -43,7 +45,7 @@ int main(int argc, char **argv)
     double secs;
     uint32_t frames, done = 0, last16 = 0;
     int i, logit = 0, piece = 0, sec_was = -1;
-    double fz0 = -1, fz1 = -1, fx0[16], fx1[16];
+    double fz0 = -1, fz1 = -1, fx0[16], fx1[16], outro_t = -1;
     int nfx = 0, fxn[16];
     uint32_t fxwas = 0;
     unsigned seed = 0;
@@ -72,6 +74,8 @@ int main(int argc, char **argv)
         } else if (!strncmp(a, "fx=", 3) && nfx < 16) {
             sscanf(a + 3, "%d@%lf-%lf", &fxn[nfx], &fx0[nfx], &fx1[nfx]);
             nfx++;
+        } else if (!strncmp(a, "outro=", 6)) {
+            outro_t = atof(a + 6);
         } else if (!strncmp(a, "seed=", 5)) {
             seed = (unsigned)atoi(a + 5);
         } else if (eq && strncmp(a, "piece=", 6)) {
@@ -121,6 +125,10 @@ int main(int argc, char **argv)
                 en_set(ev[e].p, ev[e].v);
                 ev[e].t = -1;
             }
+        if (outro_t >= 0 && t >= outro_t) {
+            en_outro();
+            outro_t = -1;
+        }
         en_render(buf, n, 2048);
         for (j = 0; j < 2 * n; j++)
             wr16(f, (uint32_t)(uint16_t)(int16_t)(buf[j] >> 8));
@@ -131,8 +139,15 @@ int main(int argc, char **argv)
             for (k = 0; k < 4; k++)
                 pcs[k] = en_chord[k] % 12;
             pcs[0] = en_chord_root;
-            printf("%6.1fs bar %3u %-6s%s stabs ", t, en_bars / 16u, EN_SEC_NAME[en_section],
-                   en_section != sec_was ? "*" : " ");
+            static const char *const SG[5] = {"", "INTRO", "MAIN", "OUTRO", "END"};
+            printf("%6.1fs bar %3u %-6s%s %-5s kick ", t, en_bars / 16u, EN_SEC_NAME[en_section],
+                   en_section != sec_was ? "*" : " ", SG[en_song_ph % 5u]);
+            for (k = 0; k < 16; k++)
+                putchar(en_lane[1] >> k & 1u ? 'x' : '.');
+            printf(" hats ");
+            for (k = 0; k < 16; k++)
+                putchar(en_lane[2] >> k & 1u ? 'x' : '.');
+            printf(" stabs ");
             for (k = 0; k < 16; k++)
                 putchar(en_stab_pat >> k & 1u ? 'x' : '.');
             printf("  chord %s (%d %d %d %d) arc %+.2f throws %u%s\n", en_chord_name(pcs, en_chord_n, nm), en_chord[0],

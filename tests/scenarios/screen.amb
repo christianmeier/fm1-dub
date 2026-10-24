@@ -34,7 +34,11 @@ wait 200
 expect screen 2
 turn ALGO 1
 wait 200
-# HOME again: the Key page (the tempo, the root, the mode, swing), and again: back to Dub
+# HOME again: the Song page (1.4.0), again the Key page (the tempo, the root, the mode, swing), and again: back to Form
+tap HOME
+wait 200
+expect view 27
+said Song page, Endless: Intro 32 bars, Main 160 bars, Outro 32 bars, Kind Pulse
 tap HOME
 wait 200
 expect view 18

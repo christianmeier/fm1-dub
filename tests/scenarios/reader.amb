@@ -89,7 +89,10 @@ wait 300
 said Change 2 bars
 tap HOME
 wait 300
-# HOME again: the Key page
+# HOME again: the Song page (1.4.0), its knobs in bars; again: the Key page
+tap HOME
+wait 300
+said Song page, Endless: Intro 32 bars, Main 160 bars, Outro 32 bars, Kind Pulse
 tap HOME
 wait 300
 said Key page: Tempo

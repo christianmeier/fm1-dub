@@ -3,12 +3,13 @@
  * defaults. Part of the unity build, after app.h.
  *
  * The pieces (their recipes are the engine's, en_piece): each keeps its own settings as you leave it;
- * Tune and MIDI out are global. */
+ * Tune, MIDI out and Song mode are global. */
 project_t proj;
 
 const char *piece_name(int i) { return en_piece_name(i); }
 
-static int global_par(int p) { return p == P_TUNE || p == P_MIDI; }
+static int global_par(int p) { return p == P_TUNE || p == P_MIDI || p == P_SMODE; }   /* (1.4.0: Song mode, the
+                                                  * player's: GLO's second page) */
 
 /* (1.3.0) a piece never changed takes today's recipe on an upgrade: one that matches one of its own recipes as they
  * have been (recipe_prints.h, from git: a hash over their values, Tune and MIDI out left out), on the scale its mode
@@ -300,6 +301,24 @@ typedef struct {
     slot24_t slot[NPIECES];
     uint8_t rsv[16];
 } project24_t;
+/* DUB-1 1.4.0's noise LFO Destination (format 25): today's, without song structure (Song mode, Intro, Main, Outro,
+ * Kind) */
+#define NPAR25 P_SMODE
+_Static_assert(NPAR25 == 158, "format 25 had 158 parameters");
+typedef struct {
+    int16_t par[NPAR25];
+    uint16_t pool;
+    uint8_t pings[EN_PINGS_N];
+    uint8_t pings_ok, screen;
+} slot25_t;
+typedef struct {
+    uint32_t magic, format;
+    int16_t par[NPAR25];
+    uint16_t pool;
+    uint8_t leds, piece, screen, rsv0;
+    slot25_t slot[NPIECES];
+    uint8_t rsv[16];
+} project25_t;
 _Static_assert(sizeof(project_t) <= 3840u, "the project must fit one storage sector's payload");
 
 static void take(const slot_t *s)                /* a piece's settings into play, the globals kept */
@@ -616,6 +635,23 @@ static void from24(const project24_t *o)        /* 1.4.0's six strips (24): ever
         proj.slot[i].screen = o->slot[i].screen;
     }
 }
+static void from25(const project25_t *o)        /* 1.4.0's noise LFO Destination (25): everything kept */
+{
+    int i;
+    memset(&proj, 0, sizeof proj);
+    proj.magic = o->magic;
+    proj.format = PROJ_FORMAT;
+    memcpy(proj.par, o->par, sizeof o->par);
+    proj.pool = o->pool;
+    proj.leds = o->leds, proj.piece = o->piece, proj.screen = o->screen;
+    for (i = 0; i < NPIECES; i++) {
+        memcpy(proj.slot[i].par, o->slot[i].par, sizeof o->slot[i].par);
+        proj.slot[i].pool = o->slot[i].pool;
+        memcpy(proj.slot[i].pings, o->slot[i].pings, sizeof proj.slot[i].pings);
+        proj.slot[i].pings_ok = o->slot[i].pings_ok;
+        proj.slot[i].screen = o->slot[i].screen;
+    }
+}
 static void cut21(int16_t *par, int piece)      /* before 22: the chord's Cutoff the knob itself; now the knob around
                                                   * the piece's own (its recipe's, P_CUTOFF): what you'd set, kept as
                                                   * the knob's offset from it (as far as the knob goes) */
@@ -820,11 +856,18 @@ int project_load(void)
             fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR24, o->slot[i].pool, i);
         }
         from24((const project24_t *)(const void *)&buf);
+    } else if (n >= 8 && buf.magic == PROJ_MAGIC && buf.format == 25u && n >= (int)sizeof(project25_t)) {
+        old = 25;
+        for (i = 0; i < NPIECES; i++) {
+            const project25_t *o = (const project25_t *)(const void *)&buf;
+            fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR25, o->slot[i].pool, i);
+        }
+        from25((const project25_t *)(const void *)&buf);
     } else {
         proj = buf;
     }
-    if (old && old < 25)                                     /* (the new ones, from the recipes) */
-        newpar(old == 24 ? NPAR24 : old == 23 ? NPAR23 : old == 22 ? NPAR22 : old == 21 ? NPAR21 : old == 20 ? NPAR20 : old == 19 ? NPAR19 : old >= 17 ? NPAR18 : old == 16 ? NPAR16 : old == 15 ? NPAR15 : old == 14 ? NPAR14 : old == 13 ? NPAR13
+    if (old && old < 26)                                     /* (the new ones, from the recipes) */
+        newpar(old == 25 ? NPAR25 : old == 24 ? NPAR24 : old == 23 ? NPAR23 : old == 22 ? NPAR22 : old == 21 ? NPAR21 : old == 20 ? NPAR20 : old == 19 ? NPAR19 : old >= 17 ? NPAR18 : old == 16 ? NPAR16 : old == 15 ? NPAR15 : old == 14 ? NPAR14 : old == 13 ? NPAR13
                                                                                                             : NPAR12);
     if (old == 19) {                             /* (19: Drift a rate; now its own knob) */
         walk19(proj.par);

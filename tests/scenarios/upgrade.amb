@@ -4,7 +4,7 @@
 storefile tests/host/proj-1.2.0.bin
 reboot
 wait 500
-expect format 25
+expect format 26
 expect piece 0
 # Basic as 1.3.0 has it (Stabs 30, Feedback 62; 1.2.0's were 30 and 60), its noise Vinyl
 expect par28 30
@@ -31,7 +31,7 @@ expect par0 50
 storefile tests/host/proj-1.3.0-test14.bin
 reboot
 wait 500
-expect format 25
+expect format 26
 expect par11 62
 expect par29 8
 storefile tests/host/proj-1.3.0-test14-resaved15.bin
@@ -45,7 +45,7 @@ expect par29 8
 storefile tests/host/proj-1.4.0-test18.bin
 reboot
 wait 500
-expect format 25
+expect format 26
 expect piece 0
 expect par125 25
 expect par127 2
@@ -69,7 +69,7 @@ expect par6 3
 store20
 reboot
 wait 500
-expect format 25
+expect format 26
 expect piece 3
 expect par6 3
 expect par133 50
@@ -95,7 +95,7 @@ expect par139 8
 store21
 reboot
 wait 500
-expect format 25
+expect format 26
 expect piece 3
 expect par6 3
 expect par12 46
@@ -127,7 +127,7 @@ expect par157 2
 store24
 reboot
 wait 500
-expect format 25
+expect format 26
 expect piece 3
 expect par6 3
 expect par157 0
@@ -135,4 +135,44 @@ turn PRESET -3
 wait 300
 expect piece 0
 expect par157 0
+expect par6 5
+# (1.4.0, the user's: song structure) a 1.4.0 noise LFO Destination save (format 25): a piece changed kept (Fog's
+# Change, 16 bars, its Destination Air), its song from the recipe (Intro 32, Main 160, Outro 32 bars, Ambient first;
+# 25 had none, so the Outro set here is not kept); Song mode Endless (the player's, global); one never changed (Basic),
+# today's recipe
+turn PRESET 3
+wait 300
+expect piece 3
+tap SAVE
+tap SAVE
+tap SAVE
+wait 300
+expect view 23
+turn ALGO 2
+wait 300
+expect par157 2
+tap HOME
+wait 200
+tap HOME
+wait 300
+expect view 27
+spin K3 3
+wait 300
+expect par161 7
+store25
+reboot
+wait 500
+expect format 26
+expect piece 3
+expect par6 3
+expect par157 2
+expect par158 0
+expect par159 4
+expect par160 20
+expect par161 4
+expect par162 0
+turn PRESET -3
+wait 300
+expect piece 0
+expect par162 1
 expect par6 5
