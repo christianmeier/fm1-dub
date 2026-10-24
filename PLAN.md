@@ -786,6 +786,27 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   ("IS NOT FM: ITS COLOUR ALONE"). Form: Energy, Evolve, Motion, the fourth free. Format 21. A nudge shows the page
   whose knob moved most (Colour: Chord FM). **Pending:** the chord's Wet (P_CGHOST) has no knob now: each piece
   keeps its own (the Arrangement page's Wet still moves it); it goes to the channel strip (step 2).
+- **The layers' pages** (the user, 2026-10-24: as the Chord's; the empty places kept, "for coherence"; the pings'
+  Octave on their voice page, as the bass's; the rumble back for a second try; the chord's Cutoff centred, "a filter
+  cutoff, so it should sit at zero, negative and positive, like the main filter"). **Built** (branch dub-1.4-layers):
+  Pings (Density, Vary, -, Cloud for now) / Pings voice (Octave, Tone, Length, Bend) / Pings FM (Algo, Ratio: the
+  sound page's, the modulator's; Feedback; Upper: the FM page's Ratio, operators 3-4, grey on two-op); Bass (Groove,
+  Vary, Density, Fifth) / Bass voice (Octave, Shape, Gate, Glide) / Bass FM (Algo, Ratio, Feedback, Bite: every
+  voice's, on Sub the only one, "IS NOT FM: ITS BITE ALONE"); Drums (Kick, Hits, Vary, -) / Kick (Tune, Length,
+  Punch, Rumble: EN_RUMBLE 1, its sound still to work on) / Hats (Level, Tone, Length, -: V_HATS, SEQ a third time) /
+  Pattern (a fourth); Noise (Density, Vary, -, -) / Noise voice (Air, Tone, Decay, -: V_NVOX, SAVE again) / Noise
+  space / Noise LFO. **Vary** per layer (P_PVARY, P_BVARY, P_DVARY, P_NVARY; 50 every recipe's), as the chord's:
+  Evolve as that layer feels it (ev_of: Evolve times 0 .. 1 at 50 .. 3 at 100): the pings' loop moves (their rests
+  capped at Evolve's, as the stabs' gaps), the bass's plan (its own hold, holdb; its octave note), the drums' (the
+  kick's hold and its wander, kick_draw's lam; hats_evolve; the clap's odds), the noise's groove (its keep-or-draw
+  odds times Vary, the recipe's Change and Evolve its 50). At 50 bit for bit as before (all eight pieces, Evolve 80,
+  400 s, the rumble off for the comparison). The chord's **Cutoff** knob P_CCUT (-50..+50, a step 0.055 octave, as
+  P_CUTOFF's), P_CUTOFF the recipe's base on no knob; the LFO's reach on it. The pings' Wet off the page (for the
+  channel strip, as the chord's). Nudges open the page whose knob moved most among the layer's (voice, FM, Hats, the
+  Noise page). Format 22 (a Cutoff you'd set kept as its offset from the recipe's). Host CPU: the pages' change
+  nothing; the rumble on +1-2%. RAM 93,792 of 98,304 (the rumble's buffer back, 1.4 KB).
+  **Pending:** Cloud to the space pages (with Width to the master: proposal C); the pings' Wet, like the chord's,
+  to the channel strip; the noise's LFO Destination (its free slots: the Noise page's two, the Noise voice's fourth).
 - **Bigger visualisations** (the user, 2026-10-24; a plan, after the song structure's own display is decided): with
   the strips gone and the header freed, the middle's pictures can grow. The ripples further up and to the sides,
   the deepest layer (whatever is on top covers them: the section and bar cells, the page's name, the big ring, the

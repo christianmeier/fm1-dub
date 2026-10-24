@@ -27,9 +27,17 @@ shot screen-chord.png
 tap ARP
 wait 1500
 shot screen-pings.png
+# (1.4.0, the user's: the layers' pages) each its part, then its voice: the Pings voice (ARP again); the Noise voice
+# (SAVE again); the Bass FM page on Sub, its Bite alone (LFO a third time); the Kick and the Hats pages (SEQ again, again)
+tap ARP
+wait 1500
+shot screen-pings-voice.png
 tap SAVE
 wait 1500
 shot screen-noise.png
+tap SAVE
+wait 1500
+shot screen-noise-voice.png
 tap SAVE
 wait 1500
 shot screen-noise-space.png
@@ -37,9 +45,19 @@ tap SAVE
 tap LFO
 wait 1500
 shot screen-bass.png
+tap LFO
+tap LFO
+wait 1500
+shot screen-bass-fm.png
 tap SEQ
 wait 1500
 shot screen-drums.png
+tap SEQ
+wait 1500
+shot screen-kick.png
+tap SEQ
+wait 1500
+shot screen-hats.png
 tap GLO
 wait 1500
 shot screen-setup.png
