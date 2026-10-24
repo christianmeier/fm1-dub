@@ -745,6 +745,11 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
     the dub mixer on KNOB 2.
   - After the LFO work is merged (both touch ui.c).
 
+- **An install stalled** (the user, 2026-10-24, dub-1.4.0zc.fwsc, tools/fm1_install.py): "the loader stopped
+  answering after 562 requests" (about half the package), the screen blank (the loader's), then "FM-1 not found";
+  unplugging and replugging the USB and installing again finished it. To look into: why the loader stopped
+  mid-write (a USB drop? the loader's USB poll, its retries), and whether the installer could reconnect by itself.
+
 ## Now: two lines in parallel (the user, 2026-10-23)
 
 After 1.3.0's release (the docs done, e20d31b..e10ddf4; a release video being made in build/film/release-1.3.0/):
