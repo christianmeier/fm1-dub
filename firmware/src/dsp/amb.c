@@ -63,7 +63,9 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     {"Width", 0, 100, 50},    {"Noise decay", 0, 100, 50},
     {"Noise width", 0, 100, 50}, {"Noise plate", 0, 100, 50}, {"Noise echo", 0, 100, 50}, {"Hat len", -50, 50, 0},
     {"Noise LFO", 0, 100, 0}, {"Rumble", 0, 100, 0},
-    {"Chord rate", 0, EN_LFO_DRIFT, 2}, {"Noise rate", 0, EN_LFO_DRIFT, 2},
+    {"Chord rate", 0, EN_LFO_DRIFT - 1, 2}, {"Noise rate", 0, EN_LFO_DRIFT - 1, 2},
+    {"Chord shape", 0, EN_NLSHAPE - 1, 0}, {"Noise shape", 0, EN_NLSHAPE - 1, 0},
+    {"Chord drift", 0, 100, 0}, {"Noise wander", 0, 100, 0},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
 
@@ -75,6 +77,7 @@ const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PAR
  *                  then Throws, Ghost, Notes, Hats level (50, 50, 100, 50: the pieces as they were);
  *                  then the chord's Ghost, the kick's density, the echo's Blur, Tone and Width, the noise's Decay;
  *                  then the noise's Width, Plate and Echo, the hats' length; then the noise's LFO, the kick's rumble;
+ *                  then the chord's and the noise's LFO rates, their waves (0 Sine), their drifts (the random walk);
  *                  then the chord's LFO's rate and the noise's (0..5: 1 2 4 8 16 32 bars, 6: Drift; 1.4.0)
  * (Dri: Drift, 2 4 8 16 32 64 bars or Hold; ET: Echo time, 1/8 1/8. 1/4 1/4. 1/2 1 bar; Grv: the knob's, Drone,
  *  Offbeat, Dotted, Sync, Roller (GROOVE_NAME); CV, PV, BV, Kit: the voices, EN_CV_NAME ...) */
@@ -93,11 +96,13 @@ static const struct {
                     45, 100, 25, 50, 40, 50,
                     50, 50, 50, 0,
                     25, 20,
-                    2, 2}},
+                    2, 2,
+                    0, 0,
+                    30, 20}},
     {"Chamber",    {55, 20, 62, 72, 20, 35, 6, 40, 70, 4, 45, 72, 50, 55, 30, 30, 0, 1, 128, 9, 5, 0,
                     2, 0, 0, 10, 0, 40, 5, 12, 45, 70, 45, 2, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 45, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
                     -5, 44, 78, 0, 3,
@@ -105,7 +110,9 @@ static const struct {
                     35, 75, 50, 50, 60, 50,
                     50, 50, 50, 0,
                     30, 15,
-                    6, 3}},
+                    2, 3,
+                    0, 0,
+                    45, 25}},
     {"Steppers",   {52, 35, 80, 82, 35, 35, 6, 45, 50, 1, 30, 50, 55, 25, 50, 25, 0, 1, 126, 2, 1, 0,
                     0, 0, 2, 35, 45, 60, 25, 5, 60, 50, 20, 1, 1, 2,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -117,19 +124,23 @@ static const struct {
                     50, 100, 30, 50, 45, 50,
                     50, 50, 50, 0,
                     30, 25,
-                    1, 2}},
+                    1, 2,
+                    0, 0,
+                    25, 20}},
     {"Fog",        {50, 34, 58, 62, 40, 55, 5, 42, 75, 2, 55, 72, 46, 80, 25, 72, 0, 1, 120, 7, 5, 0,
                     3, -1, 0, 15, 0, 30, 5, 30, 35, 80, 60, 0, 0, 3,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 45, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
                     -10, 44, 75, 10, 1,
                     70, 65, 100, 50,
                     55, 75, 50, 50, 85, 50,
                     85, 50, 50, 0,
-                    35, 30,
-                    6, 6}},
+                    0, 30,
+                    2, 2,
+                    0, 0,
+                    45, 35}},
     {"Concrete",   {58, 45, 70, 85, 25, 50, 4, 55, 50, 1, 25, 62, 60, 20, 60, 35, 0, 1, 136, 0, 7, 0,
                     6, 0, 4, 30, 10, 75, 30, 5, 50, 45, 15, 2, 3, 2,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -141,7 +152,9 @@ static const struct {
                     50, 100, 20, 50, 55, 50,
                     50, 50, 50, 0,
                     45, 40,
-                    2, 1}},
+                    2, 1,
+                    0, 0,
+                    35, 25}},
     {"Night Drive", {48, 45, 68, 78, 45, 60, 3, 35, 60, 3, 35, 65, 50, 40, 45, 45, 0, 1, 120, 10, 1, 0,
                     1, 0, 1, 25, 13, 55, 20, 15, 50, 60, 35, 4, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -153,7 +166,9 @@ static const struct {
                     55, 100, 50, 50, 85, 50,
                     50, 50, 50, 0,
                     40, 25,
-                    3, 3}},
+                    3, 3,
+                    0, 0,
+                    40, 25}},
     {"Pressure",   {55, 20, 75, 92, 20, 45, 6, 38, 55, 1, 20, 55, 48, 30, 35, 25, 0, 1, 126, 4, 2, 0,
                     5, 0, 1, 10, 5, 65, 25, 30, 70, 40, 40, 3, 4, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -165,19 +180,23 @@ static const struct {
                     60, 100, 50, 50, 75, 50,
                     85, 50, 50, 0,
                     20, 35,
-                    2, 2}},
+                    2, 2,
+                    0, 0,
+                    25, 20}},
     {"Haze",       {45, 42, 58, 55, 50, 60, 4, 35, 80, 3, 60, 70, 45, 80, 25, 62, 0, 1, 116, 3, 0, 1,
                     3, 0, 0, 20, 10, 35, 5, 20, 30, 85, 70, 2, 0, 4,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 45, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
                     5, 69, 72, 15, 2,
                     70, 70, 100, 50,
                     50, 50, 50, 50, 70, 50,
                     50, 50, 50, 0,
-                    30, 10,
-                    6, 6}},
+                    0, 10,
+                    2, 2,
+                    0, 0,
+                    45, 30}},
 };
 
 const char *en_piece_name(int i) { return PIECES[(unsigned)i < EN_NPIECES ? i : 0].name; }
@@ -191,6 +210,7 @@ void en_piece(int i, int16_t *par, uint16_t *pool)
 }
 
 const char *const EN_CV_NAME[EN_NCV] = {"Saws", "Keys", "Organ", "Pad", "Bell", "Tonewheel", "Noise"};
+const char *const EN_LFO_SHAPE[EN_NLSHAPE] = {"Sine", "Triangle", "Ramp up", "Ramp down"};
 const char *const EN_PV_NAME[EN_NPV] = {"Blip", "Marimba", "Glass", "Wood", "Drop"};
 const char *const EN_BV_NAME[EN_NBV] = {"Sub", "Punch", "Rubber", "Pluck", "Growl"};
 const char *const EN_KIT_NAME[EN_NKIT] = {"Tight", "Deep", "Punch", "Soft", "Dusty"};
@@ -276,6 +296,8 @@ void en_param_text(int i, int v, char *b)
         s = "Drift";                             /* (1.4.0: the LFOs' rates, the last a wander) */
     else if ((i == P_CLRATE || i == P_NLRATE) && en_lfo_bars(v) == 1)
         s = "1 bar";
+    else if (i == P_CLSHAPE || i == P_NLSHAPE)
+        s = EN_LFO_SHAPE[(unsigned)v < EN_NLSHAPE ? v : 0];
     if (s) {
         int k = 0;
         while (s[k] && k < 9) {
@@ -2566,12 +2588,14 @@ static int pulse;
  * filter: a new place within the depth every 8-32 bars (anywhere in the bar), glided to over most of the wait, eased
  * at both ends; never the same path twice. (The pings' and the bass's gone: their knobs' places kept, unread) */
 static float lfo_ch, lfo_n;                      /* the chord's, in octaves on its cutoff (the sine 2.5 d sqrt(d) at
-                                                  * most, Drift 0.6 sqrt(d)); the noise's on its rings' tone (0.27 d
-                                                  * either way, about +-0.4 octave at 100; 1.4.0: was 0.67, shallower)
+                                                  * most, Drift 0.6 sqrt(d)); the noise's -d..d, a low-pass on the
+                                                  * whole noise (1.4.0, the user's: open at the crest, closing up to 3.5
+                                                  * octaves at 100 at the trough; it was its rings' tone, hardly heard)
                                                   * (the sines' crests: the noise's on beat 2, the chord's on beat 3).
                                                   * (1.4.0: the chord's was lfo_c, the plate's own name too: one
                                                   * variable, the chord's LFO pulling the plate's wobble about) */
-static float lfo_cr = 1.0f;                      /* (the chord's reach now, octaves at its depth: the trace's scale) */
+static float lfo_cr = 1.0f, lfo_nr = 1.0f;       /* (the reach now, the wave's and the walk's together: the chord's in
+                                                  * octaves, the noise's 0..2; the traces' scale) */
 static struct {
     float from, to, t, len;                      /* (where it glides from and to, -1..1 of the depth; how far on and
                                                   * how long, in sixteenths) */
@@ -2623,38 +2647,46 @@ static void lfo_tick(void)
         }
     }
     {
-        const float dc = (float)par[P_CFDEC] * 0.01f, c = dc > 0.0f ? 127.0f * dc * lfo_ch / lfo_cr : 0.0f,
-                    nn = 127.0f * lfo_n * (1.0f / 0.27f);
+        const float c = 127.0f * lfo_ch / lfo_cr, nn = 127.0f * lfo_n / lfo_nr;   /* (the trace: its own reach)
+                                                  */
         en_lfo_tr[0][en_lfo_w % EN_LFO_N] = (int8_t)fm_clampf(c + (c < 0.0f ? -0.5f : 0.5f), -127.0f, 127.0f);
         en_lfo_tr[1][en_lfo_w % EN_LFO_N] = (int8_t)fm_clampf(nn + (nn < 0.0f ? -0.5f : 0.5f), -127.0f, 127.0f);
         en_lfo_w++;
     }
 }
-int en_nlfo18(int old)                           /* (format 19) a Noise LFO before 19 (0.67 of the tone at 100) as 19's */
+int en_nlfo18(int old)                           /* (format 19) a Noise LFO before 19 as 19's: (1.4.0, a filter now,
+                                                  * the depth as it was) */
 {
-    const int v = (int)((float)old * (0.67f / 0.27f) + 0.5f);
-    return v < 0 ? 0 : v > 100 ? 100 : v;
+    return old < 0 ? 0 : old > 100 ? 100 : old;
 }
-static float lfo_wave(int rate, float fr, int k)   /* the place now, -1..1: a sine from the grid's, or the drift's */
+static float lfo_wave(int rate, float fr, int shape)   /* the wave's place now, -1..1, from the grid's (its shape:
+                                                  * Sine, Triangle, Ramp up, Ramp down; the sine's and the triangle's
+                                                  * crest a quarter in) */
 {
-    if (rate >= EN_LFO_DRIFT)
-        return dr_at(k, lfo_dr[k].t + fr);
     {
         const uint32_t n = 16u << (rate < 0 ? 0 : rate);   /* (the cycle, in sixteenths) */
-        return fm_sinf(6.2831853f * ((float)((sixteenth - 1u) & (n - 1u)) + fr) / (float)n);
+        const float ph = ((float)((sixteenth - 1u) & (n - 1u)) + fr) / (float)n;   /* (0..1) */
+        switch (shape) {
+        case 1: return ph < 0.25f ? 4.0f * ph : ph < 0.75f ? 2.0f - 4.0f * ph : 4.0f * ph - 4.0f;
+        case 2: return 2.0f * ph - 1.0f;
+        case 3: return 1.0f - 2.0f * ph;
+        default: return fm_sinf(6.2831853f * ph);
+        }
     }
 }
 static void lfo_step(void)
 {
     /* (where the grid is: the step playing and how far into it, smooth across the tick) */
     const float fr = (float)(pulse ? pulse - 1 : 5) * (1.0f / 6.0f);
-    const float dc = (float)par[P_CFDEC] * 0.01f, dn = (float)par[P_NLFO] * 0.01f;
-    const int dr = par[P_CLRATE] >= EN_LFO_DRIFT;
-    lfo_cr = dr ? 0.6f * fm_sqrtf(dc) : 2.5f * dc * fm_sqrtf(dc);
-    if (lfo_cr < 1e-6f)
-        lfo_cr = 1e-6f;
-    lfo_ch += (lfo_cr * lfo_wave(par[P_CLRATE], fr, 0) - lfo_ch) * 0.2f;
-    lfo_n += (0.27f * dn * lfo_wave(par[P_NLRATE], fr, 1) - lfo_n) * 0.2f;
+    const float dc = (float)par[P_CFDEC] * 0.01f, dn = (float)par[P_NLFO] * 0.01f,
+                wc = (float)par[P_CLWALK] * 0.01f, wn = (float)par[P_NLWALK] * 0.01f;
+    /* (1.4.0, the user's: the drift its own knob, always on, as the records move: the wave, if any, over it) */
+    const float sc = 2.5f * dc * fm_sqrtf(dc), rc = 0.6f * fm_sqrtf(wc);   /* (octaves: the wave's, the walk's) */
+    lfo_cr = fm_maxf(sc + rc, 1e-6f);
+    lfo_nr = fm_maxf(dn + wn, 1e-6f);
+    lfo_ch += (sc * lfo_wave(par[P_CLRATE], fr, par[P_CLSHAPE]) + rc * dr_at(0, lfo_dr[0].t + fr) - lfo_ch) * 0.2f;
+    lfo_n += (dn * lfo_wave(par[P_NLRATE], fr, par[P_NLSHAPE]) + wn * dr_at(1, lfo_dr[1].t + fr) - lfo_n) * 0.2f;
+                                                 /* (the noise's: a filter on the whole noise, render_crackle) */
 }
 static uint32_t ext_age;
 
@@ -3746,6 +3778,8 @@ static void noise_step(int s)
     nz_wait = (int32_t)fm_maxf(gap - lead, 0.0f);
     nz_due = 1;
 }
+static float nzf_s[4];                           /* (the noise's LFO filter's state, l and r) */
+static inline float svf_lp(const float *c, float *s, float x, float *bp);
 static void render_crackle(uint32_t n)
 {
     uint32_t j, thr;
@@ -3783,7 +3817,7 @@ static void render_crackle(uint32_t n)
         cg = 0.8f + 0.18f * dec;
         en_nz_t60 = NCHAR[c].res > 0.0f ? 0.07f * fm_exp2f(4.1f * dec) : 0.02f;   /* (the Noise page: ~70 ms .. ~1.2 s;
                                                   * Dust's dry bursts short) */
-        t = fm_clampf(nc + 0.7f * (cr_dv[1] - 1.0f) + 0.4f * arcm + lfo_n, -1.0f, 1.0f);   /* (and its LFO) */
+        t = fm_clampf(nc + 0.7f * (cr_dv[1] - 1.0f) + 0.4f * arcm, -1.0f, 1.0f);
         bf = 2.0f * fm_sinf(FM_PI * fm_minf(700.0f * fm_exp2f(1.5f * t), 2400.0f) / TAPE_SR);
         lpk = fm_clampf(0.72f + 0.22f * t, 0.3f, 0.97f);
     }
@@ -3904,6 +3938,23 @@ static void render_crackle(uint32_t n)
             crr[j] = r;
         }
 #undef CRU
+        if (par[P_NLFO] > 0 || par[P_NLWALK] > 0 || nzf_s[0] != 0.0f || nzf_s[1] != 0.0f) {   /* (1.4.0, the
+                                                  * user's) the LFO and the drift: a low-pass on the whole noise, its
+                                                  * hits and its hiss; open at the top of their reach, closing towards
+                                                  * the bottom, 3.5 octaves at 100 (15 kHz .. ~1.3 kHz) */
+            const float dn0 = (float)(par[P_NLFO] + par[P_NLWALK]) * 0.01f;
+            float cf[4], bp;
+            svf_coefs(cf, 15000.0f * fm_exp2f(-1.75f * fm_minf(dn0 - lfo_n, 2.0f)), 1.2f);
+            for (j = 0; j < n; j++) {
+                crl[j] = svf_lp(cf, nzf_s, crl[j], &bp);
+                crr[j] = svf_lp(cf, nzf_s + 2, crr[j], &bp);
+            }
+            for (i = 0; i < 4; i++)
+                nzf_s[i] = fm_flush(nzf_s[i]);
+            if (dn0 <= 0.0f)
+                for (i = 0; i < 4; i++)
+                    nzf_s[i] = 0.0f;             /* (off: out of the way, at once) */
+        }
         cnoise = cn;
         cr_lp = fm_flush(lp1), cr_lp2 = fm_flush(lp2), cr_hp = fm_flush(hp1);
         cr_cl = fm_flush(cl), cr_cr = fm_flush(cr), cr_fl = fm_flush(fl), cr_fr = fm_flush(fr), cr_cc = cc;

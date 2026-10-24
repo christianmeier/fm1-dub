@@ -686,6 +686,12 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   noise; the others 2-8 bars. Found on the way: the chord's LFO and the plate's wobble shared one variable (lfo_c),
   the LFO pulling the plate's modulation about since 1.3.0: separated (bfb8e9d). Not done: a free rate (4-60 s),
   other shapes (triangle, ramp), the per-stab scatter (still ±0.4 octave at full Evolve).
+  **Then (the user, 2026-10-24):** the drift its own knob, always on, the wave over it ("in the analysis the
+  brightness was following a random walk instead of a sine attached to the grid"): the LFO pages Depth, Rate (1-32
+  bars), **Shape** (Sine, Triangle, Ramp up, Ramp down), **Drift**; every piece drifts (chord 25-45, noise 20-35),
+  Chamber, Fog, Haze's chords on the drift alone. The noise's LFO a **low-pass on the whole noise** (hits and hiss;
+  it moved the rings' tone, hardly heard): open at the top, closing up to 3.5 octaves. The trace bolder; the Noise
+  lane's wave gone. Format 20 (P_CLSHAPE, P_NLSHAPE, P_CLWALK, P_NLWALK; a 19's Rate on Drift becomes the Drift knob).
 - **The noise's LFO seen** (the user's idea): a sine moving behind the Noise page's two rows of hits, its crest
   where the rings are brightest. (Built, fb2fb65; 1.4.0's rates: a bar's slice of the cycle, none on Drift, whose path
   the Noise LFO page draws.)

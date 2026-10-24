@@ -1004,10 +1004,10 @@ int main(void)
         fresh();
         en_seed(11);
         en_set(P_TEMPO, 140);
-        en_set(P_CFDEC, 50);
-        en_set(P_NLFO, 50);
-        en_set(P_CLRATE, EN_LFO_DRIFT);
-        en_set(P_NLRATE, EN_LFO_DRIFT);
+        en_set(P_CFDEC, 0);                      /* (1.4.0: the drift its own knob, the wave off) */
+        en_set(P_NLFO, 0);
+        en_set(P_CLWALK, 50);
+        en_set(P_NLWALK, 50);
         en_play(1);
         lfo_rec(LFO_REC);
         for (i = 0; i < LFO_REC; i++) {
@@ -1032,26 +1032,26 @@ int main(void)
         }
         for (same = 0, i = 0; i < LFO_REC; i++)
             same += lfo_v[0][i] == lfo_v[1][i];
-        printf("  Drift at 50: %d..%d (of +-64), its biggest step a sixteenth %d, %d new places %d..%d sixteenths apart\n",
+        printf("  Drift at 50: %d..%d (of +-127, its reach), its biggest step a sixteenth %d, %d new places %d..%d sixteenths apart\n",
                lo, hi, step, iv_n + 1, iv_min, iv_max);
-        CHECK(lo >= -64 && hi <= 64 && hi - lo > 50, "Drift: %d..%d at depth 50", lo, hi);
-        CHECK(step <= 4, "Drift: a step of %d in a sixteenth", step);
+        CHECK(lo >= -127 && hi <= 127 && hi - lo > 100, "Drift: %d..%d at 50", lo, hi);
+        CHECK(step <= 8, "Drift: a step of %d in a sixteenth", step);
         CHECK(iv_ok && iv_n >= 8 && iv_max > iv_min, "Drift: places %d..%d sixteenths apart (%d)", iv_min, iv_max, iv_n);
         CHECK(per == 0, "Drift: like itself at %d lags", per);
         CHECK(same < LFO_REC / 3, "Drift: the noise's the chord's (%d of %d alike)", same, LFO_REC);
         fresh();
         en_seed(11);
         en_set(P_TEMPO, 140);
-        en_set(P_CFDEC, 50);
-        en_set(P_CLRATE, EN_LFO_DRIFT);
+        en_set(P_CFDEC, 0);
+        en_set(P_CLWALK, 50);
         en_play(1);
         lfo_rec(600);
         memcpy(a, lfo_v[0], sizeof a);
         fresh();
         en_seed(11);
         en_set(P_TEMPO, 140);
-        en_set(P_CFDEC, 50);
-        en_set(P_CLRATE, EN_LFO_DRIFT);
+        en_set(P_CFDEC, 0);
+        en_set(P_CLWALK, 50);
         en_play(1);
         lfo_rec(600);
         memcpy(c, lfo_v[0], sizeof c);
@@ -1059,8 +1059,8 @@ int main(void)
         fresh();
         en_seed(12);
         en_set(P_TEMPO, 140);
-        en_set(P_CFDEC, 50);
-        en_set(P_CLRATE, EN_LFO_DRIFT);
+        en_set(P_CFDEC, 0);
+        en_set(P_CLWALK, 50);
         en_play(1);
         lfo_rec(600);
         other = memcmp(a, lfo_v[0], sizeof a) != 0;
@@ -1070,7 +1070,7 @@ int main(void)
     /* the bass's and the pings' LFO gone: their old knobs (P_BFDEC, P_PFDEC) change nothing; the chord's does (the test
      * hears a change) */
     {
-        int b, pg, ch;
+        int b, pg, ch, nz, cw, nw;
         fresh();
         en_seed(3);
         en_set(P_BASS, 100);
@@ -1080,9 +1080,15 @@ int main(void)
         b = same_with(P_BFDEC, 100);
         pg = same_with(P_PFDEC, 100);
         ch = same_with(P_CFDEC, 100);
-        printf("  the old LFO knobs: the bass's %s, the pings' %s; the chord's %s\n", b ? "nothing" : "heard",
-               pg ? "nothing" : "heard", ch ? "nothing" : "heard");
-        CHECK(b == 1 && pg == 1 && ch == 0, "LFOs: the bass's %d, the pings' %d, the chord's %d (1: unheard)", b, pg, ch);
+        nz = same_with(P_NLFO, 100);             /* (1.4.0: the noise's, a filter on the whole noise: heard) */
+        cw = same_with(P_CLWALK, 100);           /* (the drifts too) */
+        nw = same_with(P_NLWALK, 100);
+        printf("  the old LFO knobs: the bass's %s, the pings' %s; the chord's %s, the noise's %s; the drifts %s, %s\n",
+               b ? "nothing" : "heard", pg ? "nothing" : "heard", ch ? "nothing" : "heard", nz ? "nothing" : "heard",
+               cw ? "nothing" : "heard", nw ? "nothing" : "heard");
+        CHECK(b == 1 && pg == 1 && ch == 0 && nz == 0 && cw == 0 && nw == 0,
+              "LFOs: the bass's %d, the pings' %d, the chord's %d, the noise's %d, the drifts %d %d (1: unheard)", b, pg,
+              ch, nz, cw, nw);
         en_set(P_TEMPO, 122);
     }
 

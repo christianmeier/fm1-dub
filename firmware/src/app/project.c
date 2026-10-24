@@ -198,6 +198,23 @@ typedef struct {
     slot18_t slot[NPIECES];
     uint8_t rsv[16];
 } project18_t;
+/* DUB-1 1.4.0's test builds (format 19): today's, without the LFOs' waves */
+#define NPAR19 P_CLSHAPE
+_Static_assert(NPAR19 == 129, "format 19 had 129 parameters");
+typedef struct {
+    int16_t par[NPAR19];
+    uint16_t pool;
+    uint8_t pings[EN_PINGS_N];
+    uint8_t pings_ok, screen;
+} slot19_t;
+typedef struct {
+    uint32_t magic, format;
+    int16_t par[NPAR19];
+    uint16_t pool;
+    uint8_t leds, piece, screen, rsv0;
+    slot19_t slot[NPIECES];
+    uint8_t rsv[16];
+} project19_t;
 _Static_assert(sizeof(project_t) <= 3840u, "the project must fit one storage sector's payload");
 
 static void take(const slot_t *s)                /* a piece's settings into play, the globals kept */
@@ -412,6 +429,23 @@ static void from18(const project18_t *o)        /* 1.4.0's test builds (17, 18):
         proj.slot[i].screen = o->slot[i].screen;
     }
 }
+static void from19(const project19_t *o)        /* 1.4.0's test builds (19): everything kept */
+{
+    int i;
+    memset(&proj, 0, sizeof proj);
+    proj.magic = o->magic;
+    proj.format = PROJ_FORMAT;
+    memcpy(proj.par, o->par, sizeof o->par);
+    proj.pool = o->pool;
+    proj.leds = o->leds, proj.piece = o->piece, proj.screen = o->screen;
+    for (i = 0; i < NPIECES; i++) {
+        memcpy(proj.slot[i].par, o->slot[i].par, sizeof o->slot[i].par);
+        proj.slot[i].pool = o->slot[i].pool;
+        memcpy(proj.slot[i].pings, o->slot[i].pings, sizeof proj.slot[i].pings);
+        proj.slot[i].pings_ok = o->slot[i].pings_ok;
+        proj.slot[i].screen = o->slot[i].screen;
+    }
+}
 static void groove11(int16_t *par)              /* before 12: the groove a pattern (0..4: Drone, Offbeat, Dotted,
                                                  * Roller, Sync), now the knob's (Drone, Offbeat, Dotted, Sync, Roller) */
 {
@@ -475,6 +509,14 @@ static void nlfo18(void)                        /* before 19: the noise's LFO de
     proj.par[P_NLFO] = (int16_t)en_nlfo18(proj.par[P_NLFO]);
     for (i = 0; i < NPIECES; i++)
         proj.slot[i].par[P_NLFO] = (int16_t)en_nlfo18(proj.slot[i].par[P_NLFO]);
+}
+
+static void walk19(int16_t *par)                 /* before 20: Drift a rate (6); now its own knob, the wave over it */
+{
+    if (par[P_CLRATE] >= EN_LFO_DRIFT)
+        par[P_CLWALK] = par[P_CFDEC], par[P_CFDEC] = 0, par[P_CLRATE] = 2;
+    if (par[P_NLRATE] >= EN_LFO_DRIFT)
+        par[P_NLWALK] = par[P_NLFO], par[P_NLFO] = 0, par[P_NLRATE] = 2;
 }
 
 static void gaps9(int16_t *par)                  /* before 10: an empty slot is a gap (its root, left as it was, is not
@@ -554,12 +596,24 @@ int project_load(void)
             fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR18, o->slot[i].pool, i);
         }
         from18((const project18_t *)(const void *)&buf);
+    } else if (n >= 8 && buf.magic == PROJ_MAGIC && buf.format == 19u && n >= (int)sizeof(project19_t)) {
+        old = 19;
+        for (i = 0; i < NPIECES; i++) {
+            const project19_t *o = (const project19_t *)(const void *)&buf;
+            fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR19, o->slot[i].pool, i);
+        }
+        from19((const project19_t *)(const void *)&buf);
     } else {
         proj = buf;
     }
-    if (old && old < 19)                                     /* (the new ones, from the recipes) */
-        newpar(old >= 17 ? NPAR18 : old == 16 ? NPAR16 : old == 15 ? NPAR15 : old == 14 ? NPAR14 : old == 13 ? NPAR13
+    if (old && old < 20)                                     /* (the new ones, from the recipes) */
+        newpar(old == 19 ? NPAR19 : old >= 17 ? NPAR18 : old == 16 ? NPAR16 : old == 15 ? NPAR15 : old == 14 ? NPAR14 : old == 13 ? NPAR13
                                                                                                             : NPAR12);
+    if (old == 19) {                             /* (19: Drift a rate; now its own knob) */
+        walk19(proj.par);
+        for (i = 0; i < NPIECES; i++)
+            walk19(proj.slot[i].par);
+    }
     if (old == 9) {                              /* (8 and 9: the chords' slots as 10 has them) */
         gaps9(proj.par);
         for (i = 0; i < NPIECES; i++)

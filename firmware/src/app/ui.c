@@ -113,8 +113,9 @@ static const uint16_t VIEW_KNOB[NVIEWS][4] = {
     {P_NGRAIN, P_NROOM, P_NCOL, P_NTUNE},     /* (the level on OCT- / OCT+, as the layers'; Drift the recipes') */
     {P_EBLUR, P_ETONE, P_EWIDTH, P_SIZE},
     {P_NWIDTH, P_NPLATE, P_NECHO, K_NONE},       /* (the Noise page's second: SAVE again; its Change the recipes') */
-    {P_CFDEC, P_CLRATE, K_NONE, K_NONE},         /* (1.4.0) the LFO pages: the depth, the rate */
-    {P_NLFO, P_NLRATE, K_NONE, K_NONE},
+    {P_CFDEC, P_CLRATE, P_CLSHAPE, P_CLWALK},    /* (1.4.0) the LFO pages: the wave's depth, rate and shape; the
+                                                  * drift (the user's: the records' random walk, its own, always on) */
+    {P_NLFO, P_NLRATE, P_NLSHAPE, P_NLWALK},
 };
 static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Filter", "Evolve", "Motion", "Drift"},
@@ -139,8 +140,8 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Density", "Air", "Tone", "Decay"},
     {"Blur", "Tone", "Width", "Size"},
     {"Width", "Plate", "Echo", ""},
-    {"Depth", "Rate", "", ""},
-    {"Depth", "Rate", "", ""},
+    {"Depth", "Rate", "Shape", "Drift"},
+    {"Depth", "Rate", "Shape", "Drift"},
 };
 /* what each knob does, a line: on the rule above the knobs while it's being turned (in capitals; each fits the
  * rule's 228 px: the host's expect helpfit) */
@@ -182,8 +183,10 @@ static const char *const KNOB_HELP[NVIEWS][4] = {
     {"Clean repeats, to a dissolving wash", "The repeats darker, or brighter", "The echo mono, to wide",
      "How long the plate rings"},
     {"The noise mono, to wide", "How much of it rings in the plate", "How much of it goes into the echo", ""},
-    {"How deep the filter's sweep", "How fast: bars, or Drift's slow wander", "", ""},
-    {"How deep the rings' tone sweeps", "How fast: bars, or Drift's slow wander", "", ""},
+    {"How deep the filter's wave", "How long the wave: 1 to 32 bars", "The wave's shape",
+     "A slow random wander, as a hand on the filter"},
+    {"How deep the noise filter's wave", "How long the wave: 1 to 32 bars", "The wave's shape",
+     "A slow random wander, as a hand on the filter"},
 };
 
 /* the screen's colours: a dark room, as a dub techno sleeve (grey on black, a cold blue). The chord and
@@ -2675,30 +2678,11 @@ static void draw_noise_lane(void)
     const int st = en_nz_step, bar2 = st >= 16;
     const float step_s = proj.par[P_TEMPO] > 0 ? 15.0f / (float)proj.par[P_TEMPO] : 0.12f;
     const int tail = (int)(en_nz_t60 * 0.5f / step_s + 0.5f);   /* (to about -30 dB, in sixteenths) */
-    const int nb = en_lfo_bars(proj.par[P_NLRATE]);   /* (1.4.0: its rate; Drift none here, the LFO page shows it) */
-    const int amp = nb ? proj.par[P_NLFO] * 16 / 100 : 0;   /* (the LFO's wave: 16 px either way at 100, the two rows'
-                                                  * height) */
-    const float cb = nb > 1 ? (float)(((en_bars ? en_bars - 1u : 0u) >> 4) % (uint32_t)nb) : 0.0f;   /* (the bar playing,
-                                                  * in the cycle: a rate over bars, its slice) */
-    const uint16_t wave = mix(K_BG, K_NOISE, 6);
     int r, i, k;
     text_c(17, 99, &FONT_C, "1", bar2 ? K_LINE : K_NOISE);
     text_c(17, 119, &FONT_C, "2", bar2 ? K_NOISE : K_LINE);
     if (en_playing)                              /* (the step playing, in its bar's row) */
         cv_round(38 + (st & 15) * 11, (bar2 ? 126 : 106) - 5, 10, 20, 2, K_PANEL);
-    if (amp > 0) {                               /* (1.4.0, the user's) behind the hits, the LFO: one wave, the rings'
-                                                  * tone over a bar (a row's width), brightest (up) on beat 2; as tall
-                                                  * as deep, across both rows (1.4.0: a cycle a row at 1 bar; slower,
-                                                  * the bar's slice of it) */
-        int32_t x, y0 = 0;
-        for (x = 36; x <= 214; x++) {
-            const int32_t yy = 121 - (int32_t)((float)amp * fm_sinf(6.2831853f * (cb + (float)(x - 43) * (1.0f / 176.0f)) /
-                                                                    (float)nb) + 0.5f);
-            const int32_t a0 = x == 36 ? yy : y0 < yy ? y0 : yy, a1 = x == 36 ? yy : y0 > yy ? y0 : yy;
-            cv_rect(x, a0, 1, a1 - a0 + 1, wave);
-            y0 = yy;
-        }
-    }
     for (r = 0; r < 2; r++) {
         const int32_t y = r ? 126 : 106;
         for (i = 0; i < 16; i++) {
@@ -2714,11 +2698,6 @@ static void draw_noise_lane(void)
             }
         }
     }
-    if (amp > 0 && en_playing)                   /* (on the wave, over the hits: where the sound is now) */
-        cv_round(43 + (st & 15) * 11 - 2,
-                 121 - (int32_t)((float)amp * fm_sinf(6.2831853f * (cb + (float)(st & 15) * (1.0f / 16.0f)) / (float)nb) +
-                                 0.5f) - 2, 5, 5, 2,
-                 K_TEXT);                        /* (white: seen on a hit too) */
 }
 
 /* (1.4.0) an LFO page: the modulation's path, as heard, the last 16 bars (en_lfo_tr), in the layer's colour, older
@@ -2730,10 +2709,23 @@ static void draw_lfo(int k)
                                                   * over the lane; 127: rr pixels) */
     const uint16_t col = k ? K_NOISE : K_PAD;
     const uint32_t wn = en_lfo_w, n = wn < EN_LFO_N ? wn : EN_LFO_N, b16 = en_bars ? en_bars - 1u : 0u;
-    const int d = proj.par[k ? P_NLFO : P_CFDEC], reach = d * rr / 100;
+    const int d = proj.par[k ? P_NLFO : P_CFDEC], dw = proj.par[k ? P_NLWALK : P_CLWALK],
+              reach = d > 0 || dw > 0 ? rr : 0;  /* (the trace at its own reach: the wave's and the drift's) */
     int32_t x, y0 = yc, yy;
-    char t[12], tt[12];
-    en_param_text(k ? P_NLRATE : P_CLRATE, proj.par[k ? P_NLRATE : P_CLRATE], t);
+    char t[24], tt[24];
+    if (d > 0) {                                 /* (what moves it: "4 BARS", "4 BARS + DRIFT", "DRIFT") */
+        int j = 0;
+        en_param_text(k ? P_NLRATE : P_CLRATE, proj.par[k ? P_NLRATE : P_CLRATE], t);
+        while (t[j])
+            j++;
+        if (dw > 0)
+            t[j++] = ' ', t[j++] = '+', t[j++] = ' ', t[j++] = 'D', t[j++] = 'r', t[j++] = 'i', t[j++] = 'f', t[j++] = 't';
+        t[j] = 0;
+    } else {
+        t[0] = 0;
+        if (dw > 0)
+            t[0] = 'D', t[1] = 'r', t[2] = 'i', t[3] = 'f', t[4] = 't', t[5] = 0;
+    }
     caps(tt, t, sizeof tt);
     text_c(120, -1, &FONT_XS, tt, K_DIM);
     cv_rect(x0, yc, w, 1, mix(K_BG, K_LINE, 10));
@@ -2756,11 +2748,12 @@ static void draw_lfo(int k)
         if (x == 0 || age + 1u >= n)
             y0 = yy;
         a0 = y0 < yy ? y0 : yy, a1 = y0 > yy ? y0 : yy;
-        cv_rect(x0 + x, a0, 1, a1 - a0 + 1, mix(K_BG, col, 5 + (int)(11u - age * 11u / EN_LFO_N)));
+        cv_rect(x0 + x, a0 - 1, 1, a1 - a0 + 3, mix(K_BG, col, 5 + (int)(11u - age * 11u / EN_LFO_N)));   /* (the
+                                                  * user's: a tad bolder, 3 px) */
         y0 = yy;
     }
     if (n)                                       /* (now: a dot at the right) */
-        cv_disc(x0 + w - 1, yc - (int32_t)en_lfo_tr[k][(wn - 1u) % EN_LFO_N] * rr / 127, 3, en_playing ? K_TEXT : col);
+        cv_disc(x0 + w - 1, yc - (int32_t)en_lfo_tr[k][(wn - 1u) % EN_LFO_N] * rr / 127, 4, en_playing ? K_TEXT : col);
 }
 
 static void draw_lanes(void)
@@ -3202,12 +3195,8 @@ static void draw_main(void)
     for (i = 0; i < EN_NDRUM; i++)
         h = hash(h, (uint32_t)q16(en_drum_glow[i]));
     h = hash(h, ui.view | (uint32_t)oct_ring_on(now) << 8);
-    h = hash(h, (uint32_t)proj.par[P_NLFO] | (uint32_t)proj.par[P_NLRATE] << 8);   /* (the Noise pages' wave: as deep
-                                                  * as the LFO, at its rate) */
-    if (ui.view == V_NSND || ui.view == V_NSND2 || ui.view == V_NLFO)
-        h = hash(h, en_bars >> 4);                /* (a rate over bars: each bar its slice) */
     if (lfo_page(ui.view))                       /* (the LFO pages: the trace, a sixteenth at a time) */
-        h = hash(h, en_lfo_w | (uint32_t)proj.par[P_CFDEC] << 16 | (uint32_t)proj.par[P_CLRATE] << 24);
+        h = hash(h, en_lfo_w);
     if (parent_of(ui.view) >= 0) {               /* a sound or FM page: redrawn as its values move */
         for (i = 0; i < 4; i++)
             h = hash(h, (uint32_t)(knob_get(VIEW_KNOB[ui.view][i]) + 64));   /* (1.4.0: K_NONE's too, no parameter) */

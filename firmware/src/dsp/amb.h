@@ -104,6 +104,11 @@ enum {
      * slow random wander, a new place every 8-32 bars, glided to); their depth the Chord LFO and Noise LFO knobs.
      * (The pings' and the bass's LFO gone: P_PFDEC and P_BFDEC kept in the format, the engine leaves them be) */
     P_CLRATE, P_NLRATE,
+    P_CLSHAPE, P_NLSHAPE,                             /* (1.4.0, format 20, the user's) their wave: Sine, Triangle, Ramp
+                                                       * up, Ramp down */
+    P_CLWALK, P_NLWALK,                               /* (1.4.0, format 20, the user's: REPORT10's drift its own knob,
+                                                       * always on, the LFO's wave over it) how far the slow random walk
+                                                       * wanders: the chord's filter, the noise's */
     P_NPARAMS
 };
 typedef struct {
@@ -233,7 +238,9 @@ int en_nz_dens18(int old, int character);         /* (format 18) the noise's Den
  * each -127..127 of its depth's reach (its knob: 127 at 100, a sine or a drift alike); en_lfo_w the sixteenths
  * written so far (the next goes at en_lfo_w % EN_LFO_N) */
 #define EN_LFO_N 256
-#define EN_LFO_DRIFT 6                           /* (the rate's last: Drift) */
+#define EN_NLSHAPE 4                             /* (the LFOs' waves: EN_LFO_SHAPE) */
+extern const char *const EN_LFO_SHAPE[EN_NLSHAPE];
+#define EN_LFO_DRIFT 6 /* (before 20, a rate: Drift; now its own knob, P_CLWALK) */                           /* (the rate's last: Drift) */
 extern volatile int8_t en_lfo_tr[2][EN_LFO_N];
 extern volatile uint32_t en_lfo_w;
 extern volatile uint32_t en_lfo_picks[2];        /* the drifts' new places so far (for tests) */
