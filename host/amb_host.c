@@ -26,6 +26,8 @@
  *   store8                       save the project as DUB-1 1.0.0 did (format 8): reboot then reads it
  *   store10                      save it as 1.2.0 did (format 10, without the noise's five)
  *   storefile PATH               a saved project from a file (tests/host/proj-*.bin)
+ *   store23                      save it as 1.4.0's channel strips did (format 23, the drums one strip: no Kick
+ *                                strip's level, sends, Low cut)
  *   store22                      save it as 1.4.0's layers' pages did (format 22, without the channel strips' sends
  *                                and Low cuts)
  *   store21                      save it as 1.4.0's Chord pages did (format 21, without the layers' Vary, the
@@ -820,6 +822,22 @@ int main(int argc, char **argv)
                 return 2;
             }
             plat_store_save(OBJ_PROJ, fb, (uint32_t)got);
+        } else if (!strcmp(cmd, "store23")) {    /* the project as 1.4.0's channel strips saved it (format 23) */
+            static project23_t o;
+            int i;
+            keep();
+            memset(&o, 0, sizeof o);
+            o.magic = PROJ_MAGIC, o.format = 23u;
+            memcpy(o.par, proj.par, sizeof o.par);
+            o.pool = proj.pool, o.leds = proj.leds, o.piece = proj.piece, o.screen = proj.screen;
+            for (i = 0; i < NPIECES; i++) {
+                memcpy(o.slot[i].par, proj.slot[i].par, sizeof o.slot[i].par);
+                o.slot[i].pool = proj.slot[i].pool;
+                memcpy(o.slot[i].pings, proj.slot[i].pings, sizeof o.slot[i].pings);
+                o.slot[i].pings_ok = proj.slot[i].pings_ok;
+                o.slot[i].screen = proj.slot[i].screen;
+            }
+            plat_store_save(OBJ_PROJ, &o, sizeof o);
         } else if (!strcmp(cmd, "store22")) {    /* the project as 1.4.0's layers' pages saved it (format 22) */
             static project22_t o;
             int i;

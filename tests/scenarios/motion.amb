@@ -18,12 +18,12 @@ tap ARP
 tap ARP
 spin K1 1
 expect par21 1
-# the chord's level, on PERFORM's mix (white 6 held)
+# the chord's level, on its channel strip (1.4.0: white 1 held on the Arrangement page; the Mix gone)
 tap SEL
-key w5 down
+key w0 down
 spin K1 -100
 spin K1 40
-key w5 up
+key w0 up
 tap SEL
 expect par0 40
 tap PLAY

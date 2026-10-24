@@ -5,13 +5,13 @@ tap SEL
 wait 300
 tapkey w3
 wait 2000
-key w5 down
+key w7 down
 wait 2500
 shot perform.png
-key w5 up
-key w9 down
+key w7 up
+key w10 down
 wait 3000
-key w9 up
+key w10 up
 tapkey w3
 leds
 tap REC

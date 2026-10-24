@@ -266,6 +266,23 @@ typedef struct {
     slot22_t slot[NPIECES];
     uint8_t rsv[16];
 } project22_t;
+/* DUB-1 1.4.0's channel strips (format 23): today's, the drums one strip (no Kick strip: its level, sends, Low cut) */
+#define NPAR23 P_KLVL
+_Static_assert(NPAR23 == 153, "format 23 had 153 parameters");
+typedef struct {
+    int16_t par[NPAR23];
+    uint16_t pool;
+    uint8_t pings[EN_PINGS_N];
+    uint8_t pings_ok, screen;
+} slot23_t;
+typedef struct {
+    uint32_t magic, format;
+    int16_t par[NPAR23];
+    uint16_t pool;
+    uint8_t leds, piece, screen, rsv0;
+    slot23_t slot[NPIECES];
+    uint8_t rsv[16];
+} project23_t;
 _Static_assert(sizeof(project_t) <= 3840u, "the project must fit one storage sector's payload");
 
 static void take(const slot_t *s)                /* a piece's settings into play, the globals kept */
@@ -548,6 +565,23 @@ static void from22(const project22_t *o)        /* 1.4.0's layers' pages (22): e
         proj.slot[i].screen = o->slot[i].screen;
     }
 }
+static void from23(const project23_t *o)        /* 1.4.0's channel strips (23): everything kept */
+{
+    int i;
+    memset(&proj, 0, sizeof proj);
+    proj.magic = o->magic;
+    proj.format = PROJ_FORMAT;
+    memcpy(proj.par, o->par, sizeof o->par);
+    proj.pool = o->pool;
+    proj.leds = o->leds, proj.piece = o->piece, proj.screen = o->screen;
+    for (i = 0; i < NPIECES; i++) {
+        memcpy(proj.slot[i].par, o->slot[i].par, sizeof o->slot[i].par);
+        proj.slot[i].pool = o->slot[i].pool;
+        memcpy(proj.slot[i].pings, o->slot[i].pings, sizeof proj.slot[i].pings);
+        proj.slot[i].pings_ok = o->slot[i].pings_ok;
+        proj.slot[i].screen = o->slot[i].screen;
+    }
+}
 static void cut21(int16_t *par, int piece)      /* before 22: the chord's Cutoff the knob itself; now the knob around
                                                   * the piece's own (its recipe's, P_CUTOFF): what you'd set, kept as
                                                   * the knob's offset from it (as far as the knob goes) */
@@ -738,11 +772,18 @@ int project_load(void)
             fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR22, o->slot[i].pool, i);
         }
         from22((const project22_t *)(const void *)&buf);
+    } else if (n >= 8 && buf.magic == PROJ_MAGIC && buf.format == 23u && n >= (int)sizeof(project23_t)) {
+        old = 23;
+        for (i = 0; i < NPIECES; i++) {
+            const project23_t *o = (const project23_t *)(const void *)&buf;
+            fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR23, o->slot[i].pool, i);
+        }
+        from23((const project23_t *)(const void *)&buf);
     } else {
         proj = buf;
     }
-    if (old && old < 23)                                     /* (the new ones, from the recipes) */
-        newpar(old == 22 ? NPAR22 : old == 21 ? NPAR21 : old == 20 ? NPAR20 : old == 19 ? NPAR19 : old >= 17 ? NPAR18 : old == 16 ? NPAR16 : old == 15 ? NPAR15 : old == 14 ? NPAR14 : old == 13 ? NPAR13
+    if (old && old < 24)                                     /* (the new ones, from the recipes) */
+        newpar(old == 23 ? NPAR23 : old == 22 ? NPAR22 : old == 21 ? NPAR21 : old == 20 ? NPAR20 : old == 19 ? NPAR19 : old >= 17 ? NPAR18 : old == 16 ? NPAR16 : old == 15 ? NPAR15 : old == 14 ? NPAR14 : old == 13 ? NPAR13
                                                                                                             : NPAR12);
     if (old == 19) {                             /* (19: Drift a rate; now its own knob) */
         walk19(proj.par);
@@ -785,6 +826,12 @@ int project_load(void)
                 cut21(proj.slot[i].par, i);
         }
         cut21(proj.par, proj.piece < NPIECES ? proj.piece : 0);
+    }
+    if (old == 23) {                             /* (23: the drums' Low cut on the kick too; now the Hats strip's alone:
+                                                  * the kick keeps it, as its own strip's) */
+        proj.par[P_KLOW] = proj.par[P_DLOW];
+        for (i = 0; i < NPIECES; i++)
+            proj.slot[i].par[P_KLOW] = proj.slot[i].par[P_DLOW];
     }
     if (n >= 8 && proj.magic == PROJ_MAGIC && proj.format == PROJ_FORMAT) {   /* (the ranges as they are now) */
         pars_clamp(proj.par);

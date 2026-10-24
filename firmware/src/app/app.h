@@ -10,7 +10,10 @@
 #define EN_VERSION "DEV"
 #endif
 #define PROJ_MAGIC 0x31425544u           /* "DUB1": AMB-1's projects ("ENO1") give the recipes */
-#define PROJ_FORMAT 23u                  /* 23: the Arrangement page's channel strips: each part's Echo and Plate
+#define PROJ_FORMAT 24u                  /* 24: the kick and the hats apart (six parts): the Kick strip's level,
+                                         * sends and Low cut (P_KLVL .. P_KLOW; 8-23 read, they from the recipes:
+                                         * x1, none, off; a 23's drums Low cut the kick's too, as it was);
+                                         * 23: the Arrangement page's channel strips: each part's Echo and Plate
                                          * sends, its Low cut (P_CECHO .. P_NLOW; 8-22 read, they from the recipes:
                                          * the sends as each piece sent, the Low cuts off);
                                          * 22: the layers' pages: their Vary (P_PVARY, P_BVARY, P_DVARY, P_NVARY),

@@ -70,9 +70,10 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     {"Pings vary", 0, 100, 50}, {"Bass vary", 0, 100, 50}, {"Drums vary", 0, 100, 50}, {"Noise vary", 0, 100, 50},
     {"Cutoff ofs", -50, 50, 0},
     {"Chord echo", 0, 100, 50}, {"Chord plate", 0, 100, 50}, {"Pings echo", 0, 100, 50}, {"Pings plate", 0, 100, 50},
-    {"Bass echo", 0, 100, 0},   {"Bass plate", 0, 100, 50},  {"Drums echo", 0, 100, 50}, {"Drums plate", 0, 100, 50},
-    {"Chord low cut", 0, 100, 0}, {"Pings low cut", 0, 100, 0}, {"Bass low cut", 0, 100, 0}, {"Drums low cut", 0, 100, 0},
+    {"Bass echo", 0, 100, 0},   {"Bass plate", 0, 100, 50},  {"Hats echo", 0, 100, 50},  {"Hats plate", 0, 100, 50},
+    {"Chord low cut", 0, 100, 0}, {"Pings low cut", 0, 100, 0}, {"Bass low cut", 0, 100, 0}, {"Hats low cut", 0, 100, 0},
     {"Noise low cut", 0, 100, 0},
+    {"Kick level", 0, 100, 50}, {"Kick echo", 0, 100, 0}, {"Kick plate", 0, 100, 0}, {"Kick low cut", 0, 100, 0},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
 
@@ -90,7 +91,8 @@ const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PAR
  *                  then the pings', the bass's, the drums' and the noise's Vary (50: as Evolve alone), the chord's
  *                  Cutoff knob (0: the piece's own, Cut above; 1.4.0);
  *                  then the channel strips' sends (the chord's, the pings', the bass's, the drums' Echo and Plate: 50 as
- *                  they sent before, the bass's echo 0, none before) and their Low cuts (0, off; 1.4.0)
+ *                  they sent before, the bass's echo 0, none before) and their Low cuts (0, off; 1.4.0);
+ *                  then the Kick strip's: its level (50: x1), its Echo and Plate (0: none, as before), its Low cut (0)
  * (Dri: Drift, 2 4 8 16 32 64 bars or Hold; ET: Echo time, 1/8 1/8. 1/4 1/4. 1/2 1 bar; Grv: the knob's, Drone,
  *  Offbeat, Dotted, Sync, Roller (GROOVE_NAME); CV, PV, BV, Kit: the voices, EN_CV_NAME ...) */
 static const struct {
@@ -114,7 +116,8 @@ static const struct {
                     50, 0,
                     50, 50, 50, 50, 0,
                     50, 50, 50, 50, 0, 50, 50, 50,
-                    0, 0, 0, 0, 0}},
+                    0, 0, 0, 0, 0,
+                    50, 0, 0, 0}},
     {"Chamber",    {55, 20, 62, 72, 20, 35, 6, 40, 70, 4, 45, 72, 50, 55, 30, 30, 0, 1, 128, 9, 5, 0,
                     2, 0, 0, 10, 0, 40, 5, 12, 45, 70, 45, 2, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -132,7 +135,8 @@ static const struct {
                     50, 0,
                     50, 50, 50, 50, 0,
                     50, 50, 50, 50, 0, 50, 50, 50,
-                    0, 0, 0, 0, 0}},
+                    0, 0, 0, 0, 0,
+                    50, 0, 0, 0}},
     {"Steppers",   {52, 35, 80, 82, 35, 35, 6, 45, 50, 1, 30, 50, 55, 25, 50, 25, 0, 1, 126, 2, 1, 0,
                     0, 0, 2, 35, 45, 60, 25, 5, 60, 50, 20, 1, 1, 2,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -150,7 +154,8 @@ static const struct {
                     50, 0,
                     50, 50, 50, 50, 0,
                     50, 50, 50, 50, 0, 50, 50, 50,
-                    0, 0, 0, 0, 0}},
+                    0, 0, 0, 0, 0,
+                    50, 0, 0, 0}},
     {"Fog",        {50, 34, 58, 62, 40, 55, 5, 42, 75, 2, 55, 72, 46, 80, 25, 72, 0, 1, 120, 7, 5, 0,
                     3, -1, 0, 15, 0, 30, 5, 30, 35, 80, 60, 0, 0, 3,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -168,7 +173,8 @@ static const struct {
                     50, 0,
                     50, 50, 50, 50, 0,
                     50, 50, 50, 50, 0, 50, 50, 50,
-                    0, 0, 0, 0, 0}},
+                    0, 0, 0, 0, 0,
+                    50, 0, 0, 0}},
     {"Concrete",   {58, 45, 70, 85, 25, 50, 4, 55, 50, 1, 25, 62, 60, 20, 60, 35, 0, 1, 136, 0, 7, 0,
                     6, 0, 4, 30, 10, 75, 30, 5, 50, 45, 15, 2, 3, 2,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -186,7 +192,8 @@ static const struct {
                     50, 0,
                     50, 50, 50, 50, 0,
                     50, 50, 50, 50, 0, 50, 50, 50,
-                    0, 0, 0, 0, 0}},
+                    0, 0, 0, 0, 0,
+                    50, 0, 0, 0}},
     {"Night Drive", {48, 45, 68, 78, 45, 60, 3, 35, 60, 3, 35, 65, 50, 40, 45, 45, 0, 1, 120, 10, 1, 0,
                     1, 0, 1, 25, 13, 55, 20, 15, 50, 60, 35, 4, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -204,7 +211,8 @@ static const struct {
                     50, 0,
                     50, 50, 50, 50, 0,
                     50, 50, 50, 50, 0, 50, 50, 50,
-                    0, 0, 0, 0, 0}},
+                    0, 0, 0, 0, 0,
+                    50, 0, 0, 0}},
     {"Pressure",   {55, 20, 75, 92, 20, 45, 6, 38, 55, 1, 20, 55, 48, 30, 35, 25, 0, 1, 126, 4, 2, 0,
                     5, 0, 1, 10, 5, 65, 25, 30, 70, 40, 40, 3, 4, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -222,7 +230,8 @@ static const struct {
                     50, 0,
                     50, 50, 50, 50, 0,
                     50, 50, 50, 50, 0, 50, 50, 50,
-                    0, 0, 0, 0, 0}},
+                    0, 0, 0, 0, 0,
+                    50, 0, 0, 0}},
     {"Haze",       {45, 42, 58, 55, 50, 60, 4, 35, 80, 3, 60, 70, 45, 80, 25, 62, 0, 1, 116, 3, 0, 1,
                     3, 0, 0, 20, 10, 35, 5, 20, 30, 85, 70, 2, 0, 4,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -240,7 +249,8 @@ static const struct {
                     50, 0,
                     50, 50, 50, 50, 0,
                     50, 50, 50, 50, 0, 50, 50, 50,
-                    0, 0, 0, 0, 0}},
+                    0, 0, 0, 0, 0,
+                    50, 0, 0, 0}},
 };
 
 const char *en_piece_name(int i) { return PIECES[(unsigned)i < EN_NPIECES ? i : 0].name; }
@@ -642,7 +652,11 @@ static float chord_dry = 0.5f, chord_snd = 1.5f;   /* the chord's Ghost: its dry
 /* (1.4.0, the Arrangement page's channel strips) each part's sends, the chord's, the pings', the bass's and the drums'
  * Echo and Plate: what each sent before, times this (1 at 50); each part's Low cut, a one-pole's coefficient (0 off:
  * the chord, the pings, the bass, the drums, the noise; lcut4 the noise's rings', at their quarter rate) */
-static float sx[4][2] = {{1.0f, 1.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}, {1.0f, 1.0f}}, lcut[5], lcut4;
+static float sx[4][2] = {{1.0f, 1.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}, {1.0f, 1.0f}}, lcut[6], lcut4;
+/* (1.4.0, format 24, the user's: the kick and the hats apart) sx[3] and lcut[3] the Hats strip's (the shaker, the open hat,
+ * the rim, the clap); lcut[5] the Kick strip's Low cut, kick_lvl its level (x1 at 50), kick_snd its Echo and Plate
+ * (absolute: the kick sent nothing before); hat_thr the hats' throw, eased (PERFORM's, EN_PF_HATTHROW) */
+static float kick_lvl = 1.0f, kick_snd[2], hat_thr;
 static float ec_g = 0.6f, ec_lpc = 0.68f, ec_wide = 1.0f;   /* the echo's Blur, Tone, Width (and the chord's and the
                                                              * pings': widen) */
 static int gpat(void) { return GROOVE_PAT[(unsigned)par[P_GROOVE] < NGROOVE ? par[P_GROOVE] : 0]; }   /* the pattern */
@@ -2480,7 +2494,8 @@ static inline void echoes(float in, float *el, float *er, float *xl, float *xr)
                 tape_w = 0;
             tape[tape_w] = s;
         } else {
-            float g = fm_minf(echo_fb + 0.15f * st_throw + 0.12f * perf_echo + 0.1f * dub_up, fb_cap);   /* (Dub: past the knob) */
+            float g = fm_minf(echo_fb + 0.15f * st_throw + 0.12f * perf_echo + 0.1f * dub_up + 0.08f * hat_thr, fb_cap);   /* (Dub:
+                                                  * past the knob; the hats' throw, a little longer, as the stabs') */
             tape_lp += tape_lpc * (f1 + fb_lean * st_throw * (f2 - f1) - tape_lp);   /* each time round: thinner, darker */
             tape_hp += tape_hpc * (tape_lp - tape_hp);
             fb = ec_fb(tape_lp - tape_hp);       /* (and more dissolved) */
@@ -2858,12 +2873,13 @@ static void apply(int p, int v)
         sx[(p - P_CECHO) >> 1][(p - P_CECHO) & 1] = (float)v * 0.02f;   /* (1.4.0, the strips: the part's own sends times
                                                   * v / 50, as the noise's Echo and Plate were already: 50 exactly 1) */
         break;
-    case P_CLOW: case P_PLOW: case P_BLOW: case P_DLOW: case P_NLOW:   /* (1.4.0, the strips) Low cut: a one-pole's
-                                                  * coefficient (0: off, the filter not run), ~20 Hz at 1 .. ~600 Hz at
-                                                  * 100, an octave each ~20; the noise's rings at their quarter rate */
+    case P_CLOW: case P_PLOW: case P_BLOW: case P_DLOW: case P_NLOW: case P_KLOW:   /* (1.4.0, the strips) Low cut: a
+                                                  * one-pole's coefficient (0: off, the filter not run), ~20 Hz at 1 ..
+                                                  * ~600 Hz at 100, an octave each ~20; the noise's rings at their
+                                                  * quarter rate; the kick's lcut[5] */
         {
             const float fc = 20.0f * fm_exp2f((float)(v - 1) * (4.907f / 99.0f));
-            lcut[p - P_CLOW] = v > 0 ? 1.0f - fm_expf(-2.0f * FM_PI * fc * (1.0f / EN_SR)) : 0.0f;
+            lcut[p == P_KLOW ? 5 : p - P_CLOW] = v > 0 ? 1.0f - fm_expf(-2.0f * FM_PI * fc * (1.0f / EN_SR)) : 0.0f;
             if (p == P_NLOW)
                 lcut4 = v > 0 ? 1.0f - fm_expf(-2.0f * FM_PI * fc * (1.0f / TAPE_SR)) : 0.0f;
         }
@@ -2907,6 +2923,12 @@ static void apply(int p, int v)
         ping_dry = 0.5f * fm_exp2f((v <= 50 ? 6.0f * (float)(50 - v) : -14.0f * (float)(v - 50)) * 0.02f * 0.16609640f);
         break;
     case P_HATSLVL: hats_lvl = fm_exp2f((float)(v - 50) * 0.04f); break;   /* x1 at 50, -12 .. +12 dB */
+    case P_KLVL: kick_lvl = v == 50 ? 1.0f : fm_exp2f((float)(v - 50) * 0.04f); break;   /* (1.4.0: the Kick strip's, as
+                                                  * Hats level; 50 exactly x1) */
+    case P_KECHO: case P_KPLATE:                 /* (1.4.0: the Kick strip's sends: 0 none, as before; 100 a full send,
+                                                  * as the rim's into the echo, the clap's into the plate) */
+        kick_snd[p - P_KECHO] = (float)v * (p == P_KECHO ? 0.008f : 0.006f);
+        break;
     case P_KDENS: kick_now = 1; break;           /* (1.4.0, the user's) the kick's shape turned: from the next bar, not
                                                   * the next phrase (and its hold begun again) */
     case P_RUMBLE:                               /* the kick's rumble: none (0) .. heavy (100), longer as it rises: its
@@ -3290,6 +3312,9 @@ static void drain(void)
 /* --------------------------------------------------------------- render --- */
 #define BLK 256
 static float mixl[BLK], mixr[BLK], rsend[BLK], esend[BLK], kickb[BLK], bassb[BLK], crl[BLK], crr[BLK];
+static float kickr[BLK];                         /* (1.4.0: the kick before its strip's Low cut, for the rumble's ear, while
+                                                  * the cut is on: the rumble the Kick page's, never cut) */
+static uint8_t kick_cut;                         /* (this block's kick went through a Low cut: kickr filled) */
 
 /* (1.4.0, the user's: the second try) the kick's rumble: dub techno's "rumble kick", the kick into a long dark
  * reverb, its return low-passed and high-passed, ducked by the next kick, so a low bed breathes between the beats
@@ -3338,7 +3363,7 @@ static void rumble_block(uint32_t n)
     uint32_t j;
     for (j = 0; j < n; j++) {
         const float k = kickb[j];
-        acc += fm_fabsf(k);
+        acc += fm_fabsf(kick_cut ? kickr[j] : k);   /* (its ear: the kick before its strip's Low cut) */
         kickb[j] = k + (p + d * (float)ph * (1.0f / 16.0f)) * g;   /* (a line between) */
         if (++ph >= 16) {                        /* a sixteenth of the time */
             const float x = acc * (1.0f / 16.0f);
@@ -3787,23 +3812,33 @@ static void render_hat(drum_t *v, uint32_t n, float g, float pl, float pr, float
 static void render_drums(uint32_t n)
 {
     uint32_t j;
+    /* (1.4.0, the user's: the kick and the hats apart) the Hats strip's: its Low cut, its sends' shares, the throw
+     * (the hats, the rim and the clap into the echo while held, whatever their send: ht, added to each one's) */
     const float g = pulse_vol * KIT[kit].gain, fall = KIT[kit].fall, drive = KIT[kit].drive,
-                lc = lcut[3], de = sx[3][0], dp = sx[3][1];   /* (the drums' strip: Low cut, its sends' shares; the
-                                                  * kick sends nothing, as before) */
+                lc = lcut[3], de = sx[3][0], dp = sx[3][1], ht = hat_thr;
     drum_t *v = &drum[0];
-    if (v->on) {                                 /* the kick: its own bus, ducked by nothing */
+    kick_cut = 0;
+    if (v->on) {                                 /* the kick: its own bus, ducked by nothing; the Kick strip's level,
+                                                  * Low cut and sends (none unless turned up) */
         float ph = v->ph, inc = v->inc, amp = v->amp, att = v->att, clk = v->clk, cl = v->x1, l1 = v->lc;
+        const float gk = g * kick_lvl, kc = lcut[5], ke = kick_snd[0], kp = kick_snd[1];
+        kick_cut = kc > 0.0f;
         for (j = 0; j < n; j++) {
             float x;
             noise = noise * 1664525u + 1013904223u;
             cl += 0.5f * ((float)(int32_t)noise * (1.0f / 2147483648.0f) - cl);   /* the click: noise, softened */
             x = (sine(ph) * att + 0.5f * cl * clk) * amp;
-            x = sat(x * drive) * g * (0.89f / drive);   /* (-2 dB from 1.2.0: -5 in 1.3.0, the drums as spice; +3 back, the user: hear the drums) */
-            if (lc > 0.0f) {                     /* (the strip's Low cut: the kick thinned; its rumble its own) */
-                l1 += lc * (x - l1);
+            x = sat(x * drive) * gk * (0.89f / drive);   /* (-2 dB from 1.2.0: -5 in 1.3.0, the drums as spice; +3 back, the user: hear the drums) */
+            if (kc > 0.0f) {                     /* (the strip's Low cut: the kick thinned; its rumble its own) */
+                kickr[j] = x;
+                l1 += kc * (x - l1);
                 x -= l1;
             }
             kickb[j] += x;
+            if (ke > 0.0f || kp > 0.0f) {        /* (its sends: none before 1.4.0's Kick strip) */
+                esend[j] += x * ke;
+                rsend[j] += x * kp;
+            }
             ph += inc;
             if (ph >= 1.0f)
                 ph -= 1.0f;
@@ -3818,18 +3853,18 @@ static void render_drums(uint32_t n)
         v->att = att;
         v->clk = clk;
         v->x1 = fm_flush(cl);
-        v->lc = lc > 0.0f ? fm_flush(l1) : 0.0f;
+        v->lc = kc > 0.0f ? fm_flush(l1) : 0.0f;
         v->on = amp > 0.0005f;
     }
     {   /* (Energy: the hats -6 dB down to +6 dB up) */
         const float hl = fm_exp2f((float)mac[EN_MAC_ENERGY] * (1.0f / 50.0f)) * hats_lvl;   /* (and Hats: +-12 dB) */
-        render_hat(&drum[1], n, g * 0.16f * hl, 0.6f, 1.0f, 0.2f * de, 0.6f, 0.02f);   /* shaker: a little right, soft, into the echo */
-        render_hat(&drum[2], n, g * 0.17f * hl, 1.0f, 0.7f, 0.2f * de, 1.0f, 0.3f);   /* open: a little left, some echo */
+        render_hat(&drum[1], n, g * 0.16f * hl, 0.6f, 1.0f, 0.2f * de + 0.9f * ht, 0.6f, 0.02f);   /* shaker: a little right, soft, into the echo */
+        render_hat(&drum[2], n, g * 0.17f * hl, 1.0f, 0.7f, 0.2f * de + 0.9f * ht, 1.0f, 0.3f);   /* open: a little left, some echo */
     }
     v = &drum[3];                                /* the rim: two tones (~520 Hz, ~1.7 kHz) and a click of noise */
     if (v->on) {
         float amp = v->amp, att = v->att, clk = v->clk, l1 = v->lc;
-        const float re = 1.2f * de, rp = 0.5f * dp;
+        const float re = 1.2f * de + 1.8f * ht, rp = 0.5f * dp;
         for (j = 0; j < n; j++) {
             float x;
             v->ph += 520.0f / EN_SR;
@@ -3862,7 +3897,7 @@ static void render_drums(uint32_t n)
     v = &drum[4];                                /* the clap: noise through a band-pass (~1.1 kHz), its envelope */
     if (v->on) {                                 /* three bursts 9 ms apart, then the tail */
         float amp = v->amp, t = v->ph, x1 = v->x1, x2 = v->x2, l1 = v->lc;
-        const float ke = 0.5f * de, kp = 1.4f * dp;
+        const float ke = 0.5f * de + 1.2f * ht, kp = 1.4f * dp;
         for (j = 0; j < n; j++) {
             float w, hp, bp, e, x, tb = t < 1200.0f ? (t - 400.0f * (float)(int)(t * (1.0f / 400.0f))) : 1e9f;
             noise = noise * 1664525u + 1013904223u;
@@ -4407,7 +4442,7 @@ static float ms_lp1, ms_lp2;                     /* the side's lows (mono below 
 static void render_chunk(int32_t *out, uint32_t n, float gain)
 {
     uint32_t j;
-    float epk, mpk[EN_NMETER] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, dlo = 1.0f, dlob = 1.0f;
+    float epk, mpk[EN_NMETER] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, dlo = 1.0f, dlob = 1.0f;
     const float rg = rev_send * rev_in_gain * (1.0f - 0.2f * arcm);
     /* (the cloud listens as if Reverb were at 63 at least, so Cloud works with little reverb too) */
     const float cl_in = rev_send > 0.0001f ? fm_maxf(rev_send, 0.4f) / rev_send : 0.0f;
@@ -4451,7 +4486,8 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
             mt_snap(n);
         render_drums(n);
         if (mo)
-            mpk[EN_MT_DRUMS] = mt_diff(n, kickb);
+            mpk[EN_MT_KICK] = mt_pk(kickb, kickb, n), mpk[EN_MT_HATS] = mt_diff(n, 0);   /* (1.4.0: the kick its bus, the
+                                                  * hats, the rim and the clap the mix's rest) */
         if (tl == 4)
             for (j = 0; j < n; j++)
                 tapb[j] += mixl[j] + mixr[j] + 2.0f * kickb[j];
@@ -4641,6 +4677,12 @@ static void control(uint32_t n)                 /* once a chunk: the slow things
                             (perf & EN_PF_OPEN ? 3.0f : 0.0f) - (perf & EN_PF_CLOSE ? 3.0f : 0.0f), -3.6f, 4.2f);
         perf_sw += (t - perf_sw) * fm_minf((float)n / ((perf & (EN_PF_OPEN | EN_PF_CLOSE) ? 0.4f : 0.12f) * EN_SR), 1.0f);
         perf_echo += ((perf & EN_PF_ECHO || fxm >> EN_FX_SWELL & 1u ? 1.0f : 0.0f) - perf_echo) * fm_minf((float)n / (0.04f * EN_SR), 1.0f);
+        /* (1.4.0, the user's) the hats thrown: in over ~15 ms, out over ~60 ms (the send let go, the echo's tails left
+         * to ring); off, 0 exactly (the hats' sends as before, to the bit) */
+        hat_thr += ((perf & EN_PF_HATTHROW ? 1.0f : 0.0f) - hat_thr) *
+                   fm_minf((float)n / ((perf & EN_PF_HATTHROW ? 0.015f : 0.06f) * EN_SR), 1.0f);
+        if (!(perf & EN_PF_HATTHROW) && hat_thr < 1e-4f)
+            hat_thr = 0.0f;
     }
     if (echo_len > 0.0f)                        /* for the screen's ripples */
         en_echo_ms = echo_len * (1000.0f / TAPE_SR);

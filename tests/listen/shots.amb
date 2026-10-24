@@ -91,6 +91,31 @@ wait 300
 shot screen-strip.png
 spin K2 -10
 key w0 up
+# (1.4.0, the user's: the kick and the hats apart, the noise its own key) the Kick, the Hats and the Noise strips
+wait 1500
+key w3 down
+wait 600
+spin K4 20
+wait 300
+shot screen-strip-kick.png
+spin K4 -20
+key w3 up
+wait 1500
+key w4 down
+wait 600
+spin K2 10
+wait 300
+shot screen-strip-hats.png
+spin K2 -10
+key w4 up
+wait 1500
+key w5 down
+wait 600
+spin K3 10
+wait 300
+shot screen-strip-noise.png
+spin K3 -10
+key w5 up
 spin K4 -30
 tap HOME
 turn K3 50

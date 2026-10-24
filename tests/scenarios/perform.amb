@@ -1,5 +1,8 @@
-# the Arrangement page (SEL; PERFORM's that was): white 1-5 mute the layers, black 1-5 solo them, white 7-11 held make
-# the dub moves, white 6 held puts the mix on the knobs (else Energy, Mixer, Wet, Duck); SEL again stays (one page); a page's button or SELECT gives the scale back
+# the Arrangement page (SEL; PERFORM's that was): white 1-6 mute the parts (1.4.0, the user's: the chord, the pings,
+# the bass, the kick, the hats, the noise; held, a part's strip: strips.amb), black 1-5 solo them (the noise with the
+# rest), white 7 none (the gap), white 8-12 held make the dub moves, black F#4 (beside THROW) the hats thrown; the
+# knobs Energy, Mixer, Wet, Duck (the Mix, white 6 held, gone: the levels the strips'); SEL again stays (one page); a
+# page's button or SELECT gives the scale back
 listen
 wait 3000
 expect pool 0x6AD
@@ -12,24 +15,37 @@ said KICK OFF
 tapkey w0
 wait 200
 said CHORD OFF
-key w6 down
+# white 7: none (the gap between the parts and the moves; dark)
+tapkey w6
+wait 200
+expect mutes 9
+expect view 17
+key w7 down
 wait 200
 said THROW
 wait 1500
-key w6 up
-key w10 down
+key w7 up
+key w11 down
 wait 200
 said ECHO
 wait 1000
-key w10 up
-# white 6 held: the mix on the knobs; let go: the master actions
-expect view 17
-key w5 down
+key w11 up
+# (the hats thrown: black F#4, beside THROW; the kick never with them)
+key b5 down
 wait 200
-expect view 7
-said MIX
-key w5 up
+said HATS THROW
+wait 1500
+key b5 up
 wait 200
+# white 6: the noise, a tap a mute (its level kept), as the others
+tapkey w5
+wait 200
+said NOISE OFF
+expect mutes 41
+tapkey w5
+wait 200
+said NOISE ON
+expect mutes 9
 expect view 17
 # (1.4.0) the Arrangement page's knobs: Energy, Mixer (to come: it rests, said nothing), Wet, Duck (the Filter on
 # SELECT only, every page's)
@@ -85,23 +101,23 @@ tapkey b0
 wait 200
 said ADDED F#
 expect dirty 1
-# the mixer: PERFORM puts the four levels on the knobs; SEL off goes back to the page
+# the levels: a part's strip (its white key held: KNOB 1 its Level); SEL off goes back to the page
 expect view 0
 tap SEL
 wait 200
 expect view 17
-key w5 down
-wait 200
-expect view 7
-spin K2 -100
+key w1 down
+wait 400
+expect view 26
+spin K1 -100
 wait 200
 expect par1 0
-key w5 up
+key w1 up
 wait 200
 tap HOME
 wait 200
 expect view 0
-# keys 1-5 are true mutes, the levels kept (the mixer above left Pings at 0: it stays there)
+# keys 1-6 are true mutes, the levels kept (the strip above left Pings at 0: it stays there)
 tap SEL
 wait 200
 tapkey w1

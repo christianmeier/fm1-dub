@@ -1,7 +1,8 @@
-# (1.4.0, the user's) the Arrangement page's channel strips: a part's white key held (white 1-5: the chord, the pings,
-# the bass, the drums, the noise, as the meters' rows), the knobs that part's Level, Echo send, Plate send and Low cut;
-# let go, back to the page, no mute; a tap still mutes (on its release); the sends and Low cuts kept by the piece,
-# saved; a 1.4.0 layers' pages project (format 22) read, the strips from the recipes
+# (1.4.0, the user's) the Arrangement page's channel strips: a part's white key held (white 1-6: the chord, the pings,
+# the bass, the kick, the hats (with the rim and the clap), the noise, as the meters' rows), the knobs that part's
+# Level, Echo send, Plate send and Low cut; let go, back to the page, no mute; a tap still mutes (on its release); the
+# sends and Low cuts kept by the piece, saved; a 1.4.0 layers' pages project (format 22) read, the strips from the
+# recipes; a 1.4.0 strips project (format 23, the drums one strip) read, the kick keeping the drums' Low cut
 listen
 wait 2000
 tap SEL
@@ -47,26 +48,59 @@ key w1 up
 wait 300
 expect view 17
 expect mutes 0
-# white 4 held: the drums' strip; white 5: the noise's (its sends the Noise space page's were)
+# white 4 held: the kick's strip (its own level, x1 at 50; its sends none, as before); white 5: the hats' (the Hats
+# page's Level; the drums' sends, the rim's and the clap's in them); white 6: the noise's (its sends the Noise space
+# page's were)
 key w3 down
 wait 700
 expect view 26
-said Drums strip page
+said Kick strip page: Level 50, Echo 0, Plate 0, Low cut 0
 spin K2 20
 wait 300
-expect par146 70
+expect par154 20
+said Echo 20
+spin K1 -5
+wait 300
+expect par153 45
+spin K1 5
+wait 300
 key w3 up
 wait 200
 key w4 down
+wait 700
+said Hats strip page: Level 40, Echo 50, Plate 50, Low cut 0
+spin K2 20
+wait 300
+expect par146 70
+expect par154 20
+spin K1 5
+wait 300
+expect par114 45
+shot strip_hats.png
+spin K1 -5
+wait 300
+key w4 up
+wait 200
+key w5 down
 wait 700
 said Noise strip page
 spin K3 -10
 wait 300
 expect par122 40
 shot strip_noise.png
-key w4 up
+key w5 up
 wait 300
 expect view 17
+expect mutes 0
+# (the kick's strip seen, its Echo turned up, for the manual)
+key w3 down
+wait 700
+shot strip_kick.png
+spin K2 -20
+wait 300
+expect par154 0
+key w3 up
+wait 300
 expect mutes 0
 # the bass's echo: none in a piece (0); turned up, heard
 key w2 down
@@ -84,7 +118,7 @@ wait 600
 release GLO
 reboot
 wait 1000
-expect format 23
+expect format 24
 expect par140 60
 expect par148 30
 expect par144 30
@@ -93,9 +127,28 @@ expect par144 30
 store22
 reboot
 wait 1000
-expect format 23
+expect format 24
 expect par0 50
 expect par140 50
 expect par148 0
 expect par144 0
 expect par146 50
+# a 1.4.0 channel strips project (format 23: the drums one strip, its Low cut on the kick too): the Hats strip's Low
+# cut kept, the kick's the same (as it sounded); its level x1, its sends none
+tap SEL
+wait 300
+key w4 down
+wait 700
+spin K4 25
+wait 300
+expect par151 25
+key w4 up
+wait 300
+store23
+reboot
+wait 1000
+expect format 24
+expect par151 25
+expect par156 25
+expect par153 50
+expect par154 0

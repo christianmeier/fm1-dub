@@ -1372,8 +1372,9 @@ int main(void)
     /* (1.4.0) the Arrangement page's meters: each part's alone (the others muted) moves its own meter only; the master
      * follows the output (its peak going into the soft clip: the output's own, a little more where it squashes) */
     {
-        static const uint32_t M[5] = {EN_M_CHORD, EN_M_PINGS, EN_M_BASS, EN_M_KICK | EN_M_HATS, EN_M_NOISE};
-        static const char *const N[5] = {"chord", "pings", "bass", "drums", "noise"};
+        static const uint32_t M[6] = {EN_M_CHORD, EN_M_PINGS, EN_M_BASS, EN_M_KICK, EN_M_HATS, EN_M_NOISE};
+        static const char *const N[6] = {"chord", "pings", "bass", "kick", "hats", "noise"};   /* (1.4.0, the user's: the
+                                                  * kick and the hats apart, as the meters' rows) */
         int k, i;
         fresh();
         en_seed(3);                              /* (its own seed: not what the tests before it left) */
@@ -1389,7 +1390,7 @@ int main(void)
             CHECK(en_meter[i] > 0.003f, "meter %d moves with all playing (%f)", i, (double)en_meter[i]);
         CHECK(en_meter[EN_MT_MASTER] >= peak * 0.99f && en_meter[EN_MT_MASTER] < peak * 1.6f,
               "the master meter %f, the output %f", (double)en_meter[EN_MT_MASTER], (double)peak);
-        for (k = 0; k < 5; k++) {
+        for (k = 0; k < 6; k++) {
             en_mute(0x3Fu & ~M[k]);
             run(1.0f);
             for (i = 0; i < EN_NMETER; i++)
@@ -1401,7 +1402,7 @@ int main(void)
                 printf(" %.4f", (double)en_meter[i]);
             printf("\n");
             CHECK(en_meter[k] > 0.003f, "%s alone: its meter %f", N[k], (double)en_meter[k]);
-            for (i = 0; i < 5; i++)
+            for (i = 0; i < 6; i++)
                 if (i != k)
                     CHECK(en_meter[i] < 1e-4f, "%s alone: meter %d at %f", N[k], i, (double)en_meter[i]);
             CHECK(en_meter[EN_MT_MASTER] >= peak * 0.99f, "%s alone: the master %f, the output %f", N[k],
@@ -1506,8 +1507,8 @@ int main(void)
      * the renders); a Low cut takes a part's lows (the bass alone: under ~120 Hz, 100 against 0) */
     {
         static const uint8_t SP[] = {P_CECHO, P_CPLATE, P_PECHO, P_PPLATE, P_BECHO, P_BPLATE, P_DECHO, P_DPLATE,
-                                     P_NECHO, P_NPLATE};
-        static const uint8_t LP[] = {P_CLOW, P_PLOW, P_BLOW, P_DLOW, P_NLOW};
+                                     P_NECHO, P_NPLATE, P_KECHO, P_KPLATE, P_KLVL};   /* (1.4.0: the Kick strip's too) */
+        static const uint8_t LP[] = {P_CLOW, P_PLOW, P_BLOW, P_DLOW, P_NLOW, P_KLOW};
         int16_t pp[P_NPARAMS];
         uint16_t pl;
         unsigned k;
@@ -1570,6 +1571,92 @@ int main(void)
                    10.0 * log10((lo[1] + 1e-20) / (lo[0] + 1e-20)));
             CHECK(lo[0] > 1e-3 && lo[1] < 0.25 * lo[0], "the bass's Low cut at 100: its lows %.1f dB (want under -6)",
                   10.0 * log10((lo[1] + 1e-20) / (lo[0] + 1e-20)));
+        }
+    }
+
+    /* (1.4.0, the user's: "I can throw the hats to the echo") the hats thrown (EN_PF_HATTHROW, black F#4 held): the hats,
+     * the rim and the clap into the echo, their tails ringing after it's let go (the hats alone: the second after it,
+     * well over the same without); the kick never with them (the kick alone: the same, to a hair: the echo's feedback
+     * a little up while held, on nothing). And the Kick strip's Low cut leaves the rumble be (the kick's ear before it) */
+    {
+        static const uint32_t ALONE[2] = {EN_M_HATS, EN_M_KICK};
+        int16_t pp[P_NPARAMS];
+        uint16_t pl;
+        unsigned k;
+        int w;
+        double e[2][2];
+        for (w = 0; w < 2; w++) {
+            int t;
+            for (t = 0; t < 2; t++) {
+                fresh();
+                en_piece(0, pp, &pl);
+                for (k = 0; k < P_NPARAMS; k++)
+                    if (k != P_TUNE && k != P_MIDI)
+                        en_set((int)k, pp[k]);
+                en_pool(pl);
+                en_set(P_HITS, 90);
+                en_seed(5);
+                en_regrow();
+                en_mute(0x3Fu & ~ALONE[w]);
+                en_play(1);
+                run(4.0f);
+                en_perf(t ? EN_PF_HATTHROW : 0u);
+                run(2.0f);
+                en_perf(0);
+                run(0.05f);
+                en_mute(0x3Fu);                  /* (the tail alone: everything stopped, the echo ringing on) */
+                sum2 = 0.0f;
+                run(1.5f);
+                e[w][t] = (double)sum2;
+            }
+        }
+        en_mute(0);
+        printf("  the hats thrown: the hats' tail %.1f dB over not thrown; the kick's %.2f dB (none)\n",
+               10.0 * log10((e[0][1] + 1e-20) / (e[0][0] + 1e-20)), 10.0 * log10((e[1][1] + 1e-20) / (e[1][0] + 1e-20)));
+        CHECK(e[0][1] > 2.0 * e[0][0] && e[0][1] > 1e-3, "the hats thrown: their tail %g against %g", e[0][1], e[0][0]);
+        CHECK(e[1][1] < 1.05 * e[1][0] + 1e-6 && e[1][1] > 0.95 * e[1][0] - 1e-6, "the kick not thrown: %g against %g",
+              e[1][1], e[1][0]);
+    }
+    {   /* the rumble's bed the same with the kick's Low cut on: the kick alone, under ~60 Hz, the rumble's share (on less
+         * off) with the cut at 100 as without it */
+        int16_t pp[P_NPARAMS];
+        uint16_t pl;
+        unsigned k;
+        double rb[4];
+        int t;
+        for (t = 0; t < 4; t++) {                /* (t: bit 0 the rumble on, bit 1 the Low cut) */
+            fresh();
+            en_piece(6, pp, &pl);                /* (Pressure: its rumble) */
+            for (k = 0; k < P_NPARAMS; k++)
+                if (k != P_TUNE && k != P_MIDI)
+                    en_set((int)k, pp[k]);
+            en_pool(pl);
+            en_set(P_RUMBLE, t & 1 ? 60 : 0);
+            en_set(P_KLOW, t & 2 ? 100 : 0);
+            en_seed(5);
+            en_regrow();
+            en_mute(0x3Fu & ~(uint32_t)EN_M_KICK);
+            en_play(1);
+            run(6.0f);
+            {
+                int b, j;
+                float l1 = 0.0f;
+                rb[t] = 0.0;
+                for (b = 0; b < 4 * 172; b++) {
+                    en_render(buf, 256, 2048);
+                    for (j = 0; j < 256; j++) {
+                        l1 += 0.0085f * ((float)(buf[2 * j] + buf[2 * j + 1]) * (0.5f / 8388608.0f) - l1);   /* (~60 Hz) */
+                        rb[t] += (double)(l1 * l1);
+                    }
+                }
+            }
+        }
+        en_mute(0);
+        {
+            const double r0 = rb[1] - rb[0], r1 = rb[3] - rb[2];
+            printf("  the kick's Low cut at 100: the rumble's lows %.1f dB against the cut off (the kick's own %.1f dB)\n",
+                   10.0 * log10((fabs(r1) + 1e-20) / (fabs(r0) + 1e-20)), 10.0 * log10((rb[2] + 1e-20) / (rb[0] + 1e-20)));
+            CHECK(r0 > 1e-6 && r1 > 0.5 * r0 && r1 < 2.0 * r0, "the kick's Low cut moved the rumble: %g against %g", r1, r0);
         }
     }
 

@@ -9,9 +9,10 @@
  *                  on the white keys while they're held
  *   OCT- / OCT+    on a layer's page (Chord, Pings, Bass, Drums, Noise, and their sound pages): its level -5 / +5
  *                  (held: on); both together, quickly: the layer muted or back (held 5 s: the update mode)
- *   SEL            the ARRANGEMENT page (PERFORM's that was): the keys mute (white 1-5) and solo (black 1-5) the
- *                  layers and, held, make the dub moves (white 7-11); the knobs Energy, Mixer (to come), Wet, Duck,
- *                  with white 6 held the mix; the screen the parts' meters
+ *   SEL            the ARRANGEMENT page (PERFORM's that was): the keys mute (white 1-6; held, a part's channel
+ *                  strip) and solo (black 1-5) the parts, throw the hats (black 6) and, held, make the dub moves
+ *                  (white 8-12; white 7 the gap); the knobs Energy, Mixer (to come), Wet, Duck; the screen the
+ *                  parts' meters
  *   SELECT         the DJ filter, on every page (1.4.0; with HOME held: the tempo)   ALGORITHM the voice, the walk
  *                  (Chords), the noise's character, else the screen   PRESETS the piece
  *   FX ENV LFO GLO / HOME SAVE ARP SEQ   the pages: DUB, CHORD, BASS, SETUP / FORM, NOISE, PINGS, DRUMS (1.4.0's
@@ -23,13 +24,13 @@
 
 /* the pages, one a layer (a button each, NPAGES; the Noise page, V_NSND, SAVE's); SELECT steps through them in the
  * panel's order, PAGE_ORDER below (the view numbers stay as they were: the tests use them) */
-/* (past NPAGES, on no button of their own: V_MIX, PERFORM's knobs, the four layers' levels; the layers' sound
+/* (past NPAGES, on no button of their own: V_MIX (1.4.0: gone, its number kept: the tests use them); the layers' sound
  * pages, the layer's button pressed again) */
 enum { V_DUB, V_CHORD, V_TEXTURE, V_BASS, V_DRUMS, V_SPACE, V_SETUP, NPAGES, V_MIX = NPAGES, V_CSND, V_PSND, V_BSND,
        V_DSND, V_CFM, V_PFM, V_BFM, V_CHORDS, V_PAT, V_PERF, V_KEY, V_NSND, V_ESND, V_NSND2, V_CLFO, V_NLFO, V_HATS, V_NVOX,
        V_STRIP, NVIEWS };
-/* (V_PERF: PERFORM's knobs, the Arrangement page; V_MIX while white 6 is held. V_KEY: HOME again, the key and the
- * tempo, the Form page's second. V_CLFO, V_NLFO (1.4.0): the chord's LFO, ENV a fourth time (after its FM page), and
+/* (V_PERF: PERFORM's knobs, the Arrangement page; V_STRIP a part's white key held (V_MIX, white 6 held, gone).
+ * V_KEY: HOME again, the key and the tempo, the Form page's second. V_CLFO, V_NLFO (1.4.0): the chord's LFO, ENV a fourth time (after its FM page), and
  * the noise's, SAVE a third time; for now, till the big redesign) */
 /* (1.4.0, the user's: the names; the identifiers kept: V_DUB the Form page, HOME's; V_SPACE the Dub page, FX's, the echo
  * and the plate; V_PERF the Arrangement page, SEL's, PERFORM's that was. The layers' pages: each its part, then its
@@ -52,11 +53,12 @@ static int parent_of(int v)
 }
 static int noise_page(int v) { return v == V_NSND || v == V_NVOX || v == V_NSND2 || v == V_NLFO; }   /* (SAVE's) */
 /* (1.4.0, the user's) the Arrangement page's channel strips: a part's white key held, V_STRIP, the knobs that part's
- * Level, Echo send, Plate send and Low cut; the part (0..4: the chord, the pings, the bass, the drums, the noise, as
- * the meters' rows) */
+ * Level, Echo send, Plate send and Low cut; the part (0..5: the chord, the pings, the bass, the kick, the hats (with
+ * the rim and the clap), the noise: white 1-6, the meters' rows; the user's: the kick and the hats apart, the noise its
+ * own key) */
 static uint8_t strip_part;
-#define NSTRIP 5
-static const char *const STRIP_NAME[NSTRIP] = {"Chord", "Pings", "Bass", "Drums", "Noise"};
+#define NSTRIP 6
+static const char *const STRIP_NAME[NSTRIP] = {"Chord", "Pings", "Bass", "Kick", "Hats", "Noise"};
 static int layer_of(int v) { v = parent_of(v) >= 0 ? parent_of(v) : v; return v == V_CHORD ? 0 : v == V_TEXTURE ? 1 : v == V_BASS ? 2 : 3; }
 static int fm_off(int v) { return v >= V_CFM && v <= V_BFM && !en_voice_fm(v - V_CFM); }   /* an FM page, not FM */
 static int fm_knob_off(int v, int i)             /* a knob there doing nothing: the voice not FM, or operators 3 and 4's
@@ -92,11 +94,14 @@ static int round_pos(int v)                      /* a page's place in the round 
 /* the layer a page is (OCT- / OCT+: its level and its mute): the Chord, Pings, Bass, Drums and Noise pages and
  * their sound, FM and Pattern pages; -1 elsewhere (the Chords page too) */
 #define NLAYER 5
+#define NOCT 7                                   /* (OCT's: the five layers, then the Kick and the Hats strips') */
 static int oct_layer(int v)
 {
+    static const int8_t SL[NSTRIP] = {0, 1, 2, 5, 6, 4};
     v = parent_of(v) >= 0 ? parent_of(v) : v;
-    if (v == V_STRIP)                            /* (a strip: its part's, OCT- / OCT+ its level too) */
-        return strip_part;
+    if (v == V_STRIP)                            /* (a strip: its part's, OCT- / OCT+ its level too: the kick's and the
+                                                  * hats' their own, 5 and 6) */
+        return SL[strip_part];
     return v == V_CHORD ? 0 : v == V_TEXTURE ? 1 : v == V_BASS ? 2 : v == V_DRUMS ? 3 : noise_page(v) ? 4 : -1;
 }
 /* the four knobs of each page: a parameter, or one of these; and what the knob is called there */
@@ -153,14 +158,17 @@ static const uint16_t VIEW_KNOB[NVIEWS][4] = {
 };
 static const uint16_t STRIP_PAR[NSTRIP][4] = {
     {P_CHORD, P_CECHO, P_CPLATE, P_CLOW}, {P_PINGS, P_PECHO, P_PPLATE, P_PLOW}, {P_BASS, P_BECHO, P_BPLATE, P_BLOW},
-    {P_DRUMS, P_DECHO, P_DPLATE, P_DLOW}, {P_CRACKLE, P_NECHO, P_NPLATE, P_NLOW}};
+    {P_KLVL, P_KECHO, P_KPLATE, P_KLOW}, {P_HATSLVL, P_DECHO, P_DPLATE, P_DLOW}, {P_CRACKLE, P_NECHO, P_NPLATE, P_NLOW}};
+/* (the Kick strip's level its own, x1 at 50; the Hats strip's the Hats page's Level, the shaker's and the open hat's
+ * (the rim and the clap in its sends and its Low cut, their level the kit's: P_DRUMS, the Drums pages' OCT, over both)) */
 static int vknob(int v, int i)                   /* a page's knob i: VIEW_KNOB's, a strip's its part's */
 {
     return v == V_STRIP ? STRIP_PAR[strip_part][i] : VIEW_KNOB[v][i];
 }
 static const char *view_name(int v)              /* a page's name (a strip's: its part's, "Chord strip") */
 {
-    static const char *const SN[NSTRIP] = {"Chord strip", "Pings strip", "Bass strip", "Drums strip", "Noise strip"};
+    static const char *const SN[NSTRIP] = {"Chord strip", "Pings strip", "Bass strip", "Kick strip", "Hats strip",
+                                           "Noise strip"};
     return v == V_STRIP ? SN[strip_part] : VIEW_NAME[v];
 }
 static const char *const KNOB_LABEL[NVIEWS][4] = {
@@ -789,32 +797,39 @@ static void set_piece(int i)                    /* the piece playing kept as it 
 }
 
 /* ----------------------------------------------------------- PERFORM --- */
-/* SEL's mode, on the keys from F3 up, in three sets, a dark key between:
- *   white 1-5    the layers, a press each: muted and back, their levels kept (chord, pings, bass, kick, hats: the
- *                mutes OCT- + OCT+ make on a layer's page, the same)
- *   black 1-5    the same layers soloed, a press each (more than one: they play together; the rest muted)
- *   white 7-11   dub moves, held as long as the key is: every stab thrown into the echo, the filter pushed
+/* SEL's mode, on the keys from F3 up (1.4.0, the user's: six parts, the noise its own key; an empty white key between
+ * the parts and the moves, to tell them apart; the Mix, white 6 held, gone: each part's Level its strip's):
+ *   white 1-6    the parts, a tap each: muted and back, their levels kept (chord, pings, bass, kick, hats, noise: the
+ *                mutes OCT- + OCT+ make on a layer's page, the same); held, the part's channel strip on the knobs
+ *   black 1-5    the chord, pings, bass, kick and hats soloed, a press each (more than one: they play together; the
+ *                rest muted, the noise too)
+ *   white 7      none: dark, the gap
+ *   white 8-12   dub moves, held as long as the key is: every stab thrown into the echo, the filter pushed
  *                open, pushed shut, the floor dropped (the kick and the bass out), the echo pushed (all in, feeding back)
- * Each key that does something is lit: a layer while it sounds, a solo (blinking while on), a move (dark
+ *   black 6      (F#4, beside THROW) the hats thrown: the hats, the rim and the clap into the echo while held, the
+ *                kick never; their tails left to ring
+ * Each key that does something is lit: a part while it sounds, a solo (blinking while on), a move (dark
  * while held). The rest do nothing; MIDI notes in still change the scale */
-#define PERF_N 15
-static const uint8_t PERF_KEY[PERF_N] = {0, 2, 4, 6, 7,          /* white 1-5: the layers */
-                                         11, 12, 14, 16, 18,     /* white 7-11: the moves */
-                                         1, 3, 5, 8, 10};        /* black 1-5: the solos */
-static const char *const PERF_NAME[PERF_N] = {"CHORD", "PINGS", "BASS", "KICK", "HATS", "THROW", "OPEN", "SHUT",
-                                              "DROP", "ECHO", "CHORD", "PINGS", "BASS", "KICK", "HATS"};
+#define PERF_N 17
+#define PERF_NP 6                                /* the parts: 0..5; the moves 6..11; the solos 12..16 */
+#define PERF_NM 6
+static const uint8_t PERF_KEY[PERF_N] = {0, 2, 4, 6, 7, 9,           /* white 1-6: the parts */
+                                         12, 14, 16, 18, 19, 13,     /* white 8-12: the moves; black F#4: the hats'
+                                                                      * throw */
+                                         1, 3, 5, 8, 10};            /* black 1-5: the solos */
+static const char *const PERF_NAME[PERF_N] = {"CHORD", "PINGS", "BASS", "KICK", "HATS", "NOISE", "THROW", "OPEN", "SHUT",
+                                              "DROP", "ECHO", "HATS THROW", "CHORD", "PINGS", "BASS", "KICK", "HATS"};
 static void perf_mutes(void)                     /* to the engine: the mutes, and with a solo, all but it */
 {
-    en_mute(ui.mutes | (ui.solo ? 0x1Fu & ~ui.solo : 0u));
+    en_mute(ui.mutes | (ui.solo ? 0x3Fu & ~ui.solo : 0u));
 }
-static int perf_sounds(int i)                    /* layer i (0..4) heard: not muted, not soloed out */
+static int perf_sounds(int i)                    /* part i (0..5) heard: not muted, not soloed out */
 {
     if (ui.solo && !(ui.solo >> i & 1u))
         return 0;
     return !(ui.mutes >> i & 1u);
 }
 static void set_view(int v);
-#define PERF_SHIFT 9u                            /* white 6 (D4), held: the knobs the mix */
 static void lock_toggle(void)                    /* SEL held: Lock, on or off: the phrases keep their kick, groove and plan,
                                                   * Evolve's own moves rest (not saved; off at boot) */
 {
@@ -823,39 +838,29 @@ static void lock_toggle(void)                    /* SEL held: Lock, on or off: t
     say("LOCK", ui.lock ? "ON" : "OFF");
     card_show("LOCK", ui.lock ? "the groove kept" : "the groove free", K_ACC, 0);
 }
-/* (1.4.0, the user's) PERFORM's keys said in the middle too, on a card: a mute, a solo, a move, the mix */
-static const uint16_t PERF_COL[5] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_PULSE};
-static const char *const PERF_WHAT[5] = {"every stab into the echo", "the filter pushed open", "the filter pushed shut",
-                                         "the kick and the bass out", "the echo pushed, feeding back"};
+/* (1.4.0, the user's) PERFORM's keys said in the middle too, on a card: a mute, a solo, a move */
+static const uint16_t PERF_COL[PERF_NP] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_TEXT, K_NOISE};
+static const char *const PERF_WHAT[PERF_NM] = {"every stab into the echo", "the filter pushed open", "the filter pushed shut",
+                                               "the kick and the bass out", "the echo pushed, feeding back",
+                                               "the hats into the echo"};
 static const char *const PERF_LOW[5] = {"chord", "pings", "bass", "kick", "hats"};
 static void perf_key(uint32_t key, int down)
 {
     int i;
-    if (key == PERF_SHIFT) {
-        set_view(down ? V_MIX : V_PERF);
-        if (down) {
-            say("MIX", 0);
-            card_show("MIX", "the knobs: the four levels", K_ACC, 0);
-        }
-        return;
-    }
     for (i = 0; i < PERF_N && PERF_KEY[i] != key; i++)
         ;
     if (i >= PERF_N)
         return;
-    if (i >= 10) {                               /* a solo: on or off, a press each */
-        uint32_t m = 1u << (i - 10);
+    if (i >= PERF_NP + PERF_NM) {                /* a solo: on or off, a press each */
+        const int s0 = i - PERF_NP - PERF_NM;
+        uint32_t m = 1u << s0;
         if (!down)
             return;
         ui.solo ^= m;
         perf_mutes();
-        if (ui.view == V_MIX) {                  /* (the mix's knob lit, as for a mute) */
-            ui.touched = (int8_t)(i - 10 < 3 ? i - 10 : 3);
-            ui.touch_until = plat_ms() + 1200u;
-        }
         if (ui.solo & m) {
             say("SOLO", PERF_NAME[i]);
-            card_show("SOLO", PERF_LOW[i - 10], K_CLAP, 0);
+            card_show("SOLO", PERF_LOW[s0], K_CLAP, 0);
         } else if (ui.solo) {                    /* (one let go, others still soloed) */
             say(PERF_NAME[i], "SOLO OFF");
             card_show(PERF_NAME[i], "solo off", K_CLAP, 0);
@@ -865,9 +870,9 @@ static void perf_key(uint32_t key, int down)
         }
         return;
     }
-    if (i < 5) {                                 /* the chord, pings, bass, kick, hats: a tap, a mute (the levels kept);
-                                                  * (1.4.0, the user's) held, the part's channel strip (strip_tick):
-                                                  * the mute then on the key's release, if it was a tap */
+    if (i < PERF_NP) {                           /* the chord, pings, bass, kick, hats, noise: a tap, a mute (the levels
+                                                  * kept); (1.4.0, the user's) held, the part's channel strip
+                                                  * (strip_tick): the mute then on the key's release, if it was a tap */
         if (down) {
             ui.strip_key = (uint8_t)(i + 1);
             ui.strip_t = plat_ms();
@@ -881,32 +886,28 @@ static void perf_key(uint32_t key, int down)
             set_view(V_PERF);
             return;
         }
-        ui.mutes ^= 1u << i;
+        ui.mutes ^= 1u << i;                     /* (bit i: EN_M_CHORD .. EN_M_NOISE, in this order) */
         perf_mutes();
-        if (ui.view == V_MIX) {                  /* the layer's Mix knob lit (the kick and the hats: Drums) */
-            ui.touched = (int8_t)(i < 3 ? i : 3);
-            ui.touch_until = plat_ms() + 1200u;
-        }
         say(PERF_NAME[i], ui.mutes >> i & 1u ? "OFF" : "ON");
         card_show(PERF_NAME[i], ui.mutes >> i & 1u ? "muted" : "on", ui.mutes >> i & 1u ? K_DIM : PERF_COL[i], 0);
         return;
     }
+    i -= PERF_NP;                                /* a move: bit i, EN_PF_THROW .. EN_PF_HATTHROW */
     if (down)
-        ui.moves |= 1u << (i - 5);
+        ui.moves |= 1u << i;
     else
-        ui.moves &= ~(1u << (i - 5));
+        ui.moves &= ~(1u << i);
     en_perf(ui.moves);
     if (down) {
-        say(PERF_NAME[i], 0);
-        card_show(PERF_NAME[i], PERF_WHAT[i - 5], K_FROST, 0);
+        say(PERF_NAME[PERF_NP + i], 0);
+        card_show(PERF_NAME[PERF_NP + i], PERF_WHAT[i], K_FROST, 0);
     }
 }
 
 static void set_view(int v);
 #define STRIP_HOLD 300u                          /* ms a part's white key is held before its strip shows */
-static void strip_open(void)                     /* the held key's part's strip on the knobs (white 1-5: the chord, the
-                                                  * pings, the bass; the drums (the kick's key), the noise (the hats'):
-                                                  * the meters' rows) */
+static void strip_open(void)                     /* the held key's part's strip on the knobs (white 1-6: the chord, the
+                                                  * pings, the bass, the kick, the hats, the noise: the meters' rows) */
 {
     strip_part = (uint8_t)(ui.strip_key - 1);
     set_view(V_STRIP);                           /* (the reader: the page, "Chord strip page: Level 52, ...") */
@@ -920,7 +921,7 @@ static void perf_set(int on)                     /* on: the mixer on the knobs; 
 {
     ui.perf = (uint8_t)on;
     if (on) {
-        if (ui.view != V_MIX && ui.view != V_PERF && ui.view != V_STRIP)
+        if (ui.view != V_PERF && ui.view != V_STRIP)
             ui.perf_from = ui.view;
         set_view(V_PERF);
     } else {
@@ -929,7 +930,7 @@ static void perf_set(int on)                     /* on: the mixer on the knobs; 
             en_perf(0);
         }
         ui.strip_key = 0;
-        if (ui.view == V_MIX || ui.view == V_PERF || ui.view == V_STRIP)
+        if (ui.view == V_PERF || ui.view == V_STRIP)
             set_view(ui.perf_from);
     }
     say("ARRANGEMENT", on ? "ON" : "OFF");
@@ -1136,7 +1137,7 @@ static void button(int b)
                                                   * SELECT leaves it) */
         if (!ui.perf)
             perf_set(1);
-        else if (ui.view == V_MIX || ui.view == V_STRIP)
+        else if (ui.view == V_STRIP)
             set_view(V_PERF);
         break;
     case B_EDIT:                                 /* (its release: edit_released, in input) */
@@ -1184,9 +1185,10 @@ static void button(int b)
 #define OCT_QUICK 1000u
 #define OCT_SHOW 1200u                           /* the ring up after the last press, then OCT_FADE fading */
 #define OCT_FADE 250u
-static const uint8_t LAYER_LEVEL[NLAYER] = {P_CHORD, P_PINGS, P_BASS, P_DRUMS, P_CRACKLE};
-static const char *const LAYER_NAME[NLAYER] = {"CHORD", "PINGS", "BASS", "DRUMS", "NOISE"};
-static const uint32_t LAYER_MUTE[NLAYER] = {EN_M_CHORD, EN_M_PINGS, EN_M_BASS, EN_M_KICK | EN_M_HATS, EN_M_NOISE};
+static const uint8_t LAYER_LEVEL[NOCT] = {P_CHORD, P_PINGS, P_BASS, P_DRUMS, P_CRACKLE, P_KLVL, P_HATSLVL};
+static const char *const LAYER_NAME[NOCT] = {"CHORD", "PINGS", "BASS", "DRUMS", "NOISE", "KICK", "HATS"};
+static const uint32_t LAYER_MUTE[NOCT] = {EN_M_CHORD, EN_M_PINGS, EN_M_BASS, EN_M_KICK | EN_M_HATS, EN_M_NOISE, EN_M_KICK,
+                                          EN_M_HATS};
 static void oct_show(int l)                      /* the ring up (from where it was, if it was: it glides) */
 {
     uint32_t now = plat_ms();
@@ -1659,7 +1661,7 @@ static void input(void)
             say_name("DESTINATION", EN_CLDEST_NAME[d]);
             big_show_help(P_CLDEST, "Destination", K_PAD, "What the LFO moves");
         } else if (vp >= 0) {
-            static const uint16_t LC[NLAYER] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE};
+            static const uint16_t LC[NOCT] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE, K_PULSE, K_TEXT};
             const int l = oct_layer(ui.view);
             set_voice(vp, proj.par[vp] + (int)e);   /* (every detent: a quick turn comes as several at once) */
             big_show(vp, vp == P_KIT ? "Kit" : "Voice", l >= 0 ? LC[l] : K_ACC);   /* (1.4.0: big in the centre) */
@@ -1707,13 +1709,9 @@ static void input(void)
              * the piece's) */
             {   /* (1.4.0) the big ring: the knob's value large over the middle (not where the page itself is the
                  * picture: the Chords and the Pattern pages; nor Save and the CPU) */
-                static const uint16_t LC[NLAYER] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE};
-                static const uint16_t MC[4] = {K_PAD, K_BELL, K_BASS, K_PULSE};
+                static const uint16_t LC[NOCT] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE, K_PULSE, K_TEXT};
                 const int k = vknob(ui.view, i), l = oct_layer(ui.view);
-                if (ui.view != V_CHORDS && ui.view != V_PAT && ui.view != V_MIX && k != K_SAVE && k != K_CPU &&
-                    k != K_NONE)                 /* (1.4.0, the user's: nor the Mix, white 6 held, the meters its
-                                                  * picture: the notches show the change; Arrangement's own knobs keep
-                                                  * the ring) */
+                if (ui.view != V_CHORDS && ui.view != V_PAT && k != K_SAVE && k != K_CPU && k != K_NONE)
                 {
                     char sn[24];                 /* (a strip's: its part's name first, "CHORD ECHO") */
                     const char *nm = KNOB_LABEL[ui.view][i];
@@ -1727,7 +1725,7 @@ static void input(void)
                         sn[a] = 0;
                         nm = sn;
                     }
-                    big_show_help(k, nm, ui.view == V_MIX ? MC[i] : l >= 0 ? LC[l] : K_ACC, KNOB_HELP[ui.view][i]);
+                    big_show_help(k, nm, l >= 0 ? LC[l] : K_ACC, KNOB_HELP[ui.view][i]);
                 }
             }
             ui.touched = (int8_t)i;
@@ -2629,9 +2627,9 @@ static void draw_alg(int layer)
 }
 
 /* (1.4.0, the user's: "the levels are of course the most important part") the Arrangement page: a desk's meters, a
- * row a part (the chord, the pings, the bass, the drums, the noise) and the master under them, LED segments left to
- * right, -48 .. 0 dB, 2 dB a segment; the peak held a second, then falling back; the part's level (its knob: OCT on its
- * page, the mix's) a fader's marker on its row; a part muted dark, soloed out dimmed; under the master the duck, as a
+ * row a part (the chord, the pings, the bass, the kick, the hats, the noise: white 1-6) and the master under them, LED
+ * segments left to right, -48 .. 0 dB, 2 dB a segment; the peak held a second, then falling back; the part's level
+ * (its strip's Level; OCT on its page) a fader's marker on its row; a part muted dark, soloed out dimmed; under the master the duck, as a
  * compressor's gain reduction, eating segments from the right. The other pages' level strips and duck meter gone (a
  * red dot in the header if the master clips). Two builds to try on the FM-1, the colours apart (EN_METER_CLASSIC):
  * 1 green, yellow, red on every row; 0 each row its layer's colour, its top two amber and red */
@@ -2643,8 +2641,9 @@ static void draw_alg(int layer)
 #define MT_X0 40                                 /* the first segment's left; MT_P apart, MT_W wide */
 #define MT_P 8
 #define MT_W 6
-#define MT_Y0 35                                 /* the first row; MT_ROW apart, MT_H high */
-#define MT_ROW 15
+#define MT_Y0 32                                 /* the first row; MT_ROW apart, MT_H high (1.4.0: six parts, the
+                                                  * master and the duck: a little closer) */
+#define MT_ROW 14
 #define MT_H 10
 static struct {
     float db[EN_NMETER], hold[EN_NMETER];        /* each meter as shown (dB), its peak held */
@@ -2708,22 +2707,26 @@ static uint16_t mt_col(int row, int i)           /* a segment's colour, lit */
     (void)row;
     return i >= MT_SEG - 2 ? RGB(236, 64, 56) : i >= MT_SEG - 6 ? RGB(236, 210, 80) : RGB(84, 204, 108);
 #else
-    static const uint16_t C[EN_NMETER] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE, K_TEXT};
+    static const uint16_t C[EN_NMETER] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_TEXT, K_NOISE, K_TEXT};
     return i == MT_SEG - 1 ? RGB(236, 64, 56) : i == MT_SEG - 2 ? RGB(248, 196, 56) : C[row];
 #endif
 }
-static const char *const MT_TAG[EN_NMETER] = {"CHD", "PNG", "BAS", "DRM", "NOI", "MST"};
-static const uint16_t MT_TAGC[EN_NMETER] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE, K_TEXT};
+static const char *const MT_TAG[EN_NMETER] = {"CHD", "PNG", "BAS", "KCK", "HAT", "NOI", "MST"};
+static const uint16_t MT_TAGC[EN_NMETER] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_TEXT, K_NOISE, K_TEXT};
+/* (1.4.0, the user's: six parts, as white 1-6 and the strips: each row its part's mute and level, OCT's tables' 0, 1, 2,
+ * the Kick and the Hats strips' 5, 6, the noise's 4) */
+static const int8_t MT_OCT[EN_NMETER] = {0, 1, 2, 5, 6, 4, -1};
 static int mute_state(uint32_t m)                /* 0 heard, 1 soloed out (dimmed), 2 muted (dark): the parts m */
 {
-    const uint32_t eng = ui.mutes | (ui.solo ? 0x1Fu & ~ui.solo : 0u);
+    const uint32_t eng = ui.mutes | (ui.solo ? 0x3Fu & ~ui.solo : 0u);
     return !m ? 0 : (ui.mutes & m) == m ? 2 : (eng & m) == m ? 1 : 0;
 }
-static int mt_state(int row) { return mute_state(row < NLAYER ? LAYER_MUTE[row] : 0u); }
+static int mt_state(int row) { return mute_state(MT_OCT[row] >= 0 ? LAYER_MUTE[MT_OCT[row]] : 0u); }
 static int32_t mt_y(int row) { return MT_Y0 + row * MT_ROW + (row == EN_MT_MASTER ? 4 : 0); }
 static int32_t mt_mark(int row)                  /* the level's marker: its x (-1: none, the master's on its pot) */
 {
-    return row < NLAYER ? MT_X0 + (proj.par[LAYER_LEVEL[row]] * (MT_SEG * MT_P - MT_P + MT_W - 2) + 50) / 100 : -1;
+    return MT_OCT[row] >= 0 ? MT_X0 + (proj.par[LAYER_LEVEL[MT_OCT[row]]] * (MT_SEG * MT_P - MT_P + MT_W - 2) + 50) / 100
+                            : -1;
 }
 static uint32_t desk_sig(void)                   /* what the meters show, for the redraw */
 {
@@ -2741,8 +2744,8 @@ static void draw_desk(void)
         const int32_t y = mt_y(r), mx = mt_mark(r);
         const int st = mt_state(r), n = st == 2 ? 0 : mt_lit(mt.db[r]), hs = st == 2 ? -1 : mt_lit(mt.hold[r]) - 1;
         if (ui.view == V_STRIP && r == strip_part) {   /* (1.4.0) a strip on the knobs: its part's row lit behind */
-            cv_round(3, y - 3, MT_X0 + MT_SEG * MT_P - 1, MT_H + 6, 3, K_PANEL);
-            cv_rect(3, y - 3, 2, MT_H + 6, MT_TAGC[r]);
+            cv_round(3, y - 2, MT_X0 + MT_SEG * MT_P - 1, MT_H + 4, 3, K_PANEL);
+            cv_rect(3, y - 2, 2, MT_H + 4, MT_TAGC[r]);
         }
         cv_text(8, y - 3, &FONT_XS, MT_TAG[r], st == 2 ? K_LINE : st == 1 ? mix(K_BG, MT_TAGC[r], 8) : MT_TAGC[r]);
         for (i = 0; i < MT_SEG; i++) {
@@ -2758,8 +2761,8 @@ static void draw_desk(void)
         }
         if (mx >= 0) {                           /* the fader's marker: a notch through the row, out above and below */
             const uint16_t mc = st == 2 ? K_DIM : K_TEXT;
-            cv_rect(mx - 1, y - 3, 4, MT_H + 6, K_BG);
-            cv_rect(mx, y - 3, 2, MT_H + 6, mc);
+            cv_rect(mx - 1, y - 2, 4, MT_H + 4, K_BG);
+            cv_rect(mx, y - 2, 2, MT_H + 4, mc);
         }
     }
     {   /* under the master: the duck (its gain reduction), from the right, a segment each MT_DB; a row as the others
@@ -3360,7 +3363,7 @@ static int help_lines(const char *h, char *a, char *b, int n)
 }
 static void draw_oct(uint32_t now)
 {
-    static const uint16_t C[NLAYER] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE};
+    static const uint16_t C[NOCT] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE, K_PULSE, K_TEXT};
     const int32_t r = BIG_R, cy = BIG_CY;   /* (1.4.0: as large as the big ring, and as high) */
     int l = oct_ring_on(now) - 1, f;
     int32_t f2;
@@ -3611,7 +3614,7 @@ static void draw_main(void)
         }
         return;
     }
-    if (ui.view == V_PERF || ui.view == V_MIX || ui.view == V_STRIP) {   /* (1.4.0) the Arrangement page: the meters */
+    if (ui.view == V_PERF || ui.view == V_STRIP) {   /* (1.4.0) the Arrangement page: the meters */
         h = hash(where_sig(hash(desk_sig(), ui.view)), (uint32_t)card_on(now) | (uint32_t)big_on(now) << 1 |
                  (en_phrase_bar == 7 && en_change_next ? (now / 200u & 1u) << 2 : 0u) | (uint32_t)en_drift_bars(proj.par[P_DRIFT]) << 3);
         if (h != ui.sig[1] || big_on(now) || card_on(now)) {
@@ -3748,8 +3751,8 @@ static void draw_knobs(void)
     if (noise_page(ui.view))
         h = hash(h, (uint32_t)proj.par[P_NCHAR]);
     h = hash(h, (uint32_t)proj.par[P_CLDEST]);   /* (1.4.0: the chord's LFO's knob, and the LFO page's rule) */
-    if (ui.view == V_MIX)
-        h = hash(h, ui.mutes);
+    if (ui.view == V_STRIP)
+        h = hash(h, strip_part);
     int now_touch = plat_ms() < ui.touch_until;
     for (i = 0; i < 4; i++) {
         h = hash(h, (uint32_t)knob_get(vknob(ui.view, i)));
@@ -3802,15 +3805,11 @@ static void draw_knobs(void)
     }
     for (i = 0; i < 4; i++) {
         const int off = fm_knob_off(ui.view, (int)i);   /* (a voice not FM: all grey; Ratio on two ops) */
-        const int moff = ui.view == V_MIX && (ui.mutes & LAYER_MUTE[i]) == LAYER_MUTE[i];   /* (the mix: a muted
-                                                                                       * layer grey, its level kept) */
         int k = vknob(ui.view, i), lo, hi, v, hot = now_touch && ui.touched == (int)i && !off;
         int32_t x = (int32_t)i * 60, cx = x + 30;
         char t[16];
-        static const uint16_t MIXC[4] = {K_PAD, K_BELL, K_BASS, K_PULSE};   /* (the Mix page: the layers' colours) */
-        static const uint16_t STC[NSTRIP] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE};   /* (a strip: its part's) */
-        uint16_t bg = hot ? K_PANEL : K_BG, fill = off || moff ? K_LINE : ui.view == V_MIX ? MIXC[i]
-                                                  : ui.view == V_STRIP ? STC[strip_part] : hot ? K_ACC : K_PAD;
+        static const uint16_t STC[NSTRIP] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_TEXT, K_NOISE};   /* (a strip: its part's) */
+        uint16_t bg = hot ? K_PANEL : K_BG, fill = off ? K_LINE : ui.view == V_STRIP ? STC[strip_part] : hot ? K_ACC : K_PAD;
         if (k == K_NONE && KNOB_LABEL[ui.view][i][0]) {   /* (1.4.0: a knob to come, the Arrangement page's Mixer:
                                                   * its name greyed, its ring empty) */
             caps(t, KNOB_LABEL[ui.view][i], sizeof t);
@@ -3856,7 +3855,7 @@ static void draw_knobs(void)
             en_param_text(k, 0, t);
         else
             knob_text(k, t);
-        text_c(cx, 50, &FONT_B, t, off || moff ? K_DIM : hot ? K_ACC : K_TEXT);
+        text_c(cx, 50, &FONT_B, t, off ? K_DIM : hot ? K_ACC : K_TEXT);
     }
     cv_blit(0, KNB_Y);
 }
@@ -3892,16 +3891,13 @@ static void leds(void)
     } else if (ui.perf) {                        /* PERFORM: the layers heard, the solos, the moves (dark while held) */
         const int blink = (plat_ms() / 250u) & 1u;
         b |= 1u << B_SEL;
-        if (ui.view != V_MIX && (plat_ms() / 450u) & 1u)   /* white 6: blinking, slower than a solo, to be found;
-                                                          * dark while held (the mix on the knobs) */
-            k |= 1u << PERF_SHIFT;
-        for (i = 0; i < 5; i++) {
+        for (i = 0; i < PERF_NP; i++) {          /* (white 7, the gap: dark) */
             if (perf_sounds((int)i))
                 k |= 1u << PERF_KEY[i];
             if (!(ui.moves >> i & 1u))
-                k |= 1u << PERF_KEY[5 + i];
-            if (!(ui.solo >> i & 1u) || blink)
-                k |= 1u << PERF_KEY[10 + i];
+                k |= 1u << PERF_KEY[PERF_NP + i];
+            if (i < 5 && (!(ui.solo >> i & 1u) || blink))
+                k |= 1u << PERF_KEY[PERF_NP + PERF_NM + i];
         }
 
     } else if (proj.leds) {
@@ -4315,7 +4311,7 @@ static void speak_dump(void)
         msg_text("REMOVED", EN_NOTE_NAME[x], t);
         sp_print("MSG", t);
     }
-    for (x = 10; x < PERF_N; x++) {
+    for (x = PERF_NP + PERF_NM; x < PERF_N; x++) {
         msg_text("SOLO", PERF_NAME[x], t);
         sp_print("MSG", t);
         msg_text(PERF_NAME[x], "SOLO OFF", t);
@@ -4323,10 +4319,10 @@ static void speak_dump(void)
     }
     msg_text("SOLO", "OFF", t);
     sp_print("MSG", t);
-    for (x = 0; x < 10; x++) {
-        msg_text(PERF_NAME[x], x < 5 ? "OFF" : 0, t);
+    for (x = 0; x < PERF_NP + PERF_NM; x++) {
+        msg_text(PERF_NAME[x], x < PERF_NP ? "OFF" : 0, t);
         sp_print("MSG", t);
-        if (x < 5) {
+        if (x < PERF_NP) {
             msg_text(PERF_NAME[x], "ON", t);
             sp_print("MSG", t);
         }

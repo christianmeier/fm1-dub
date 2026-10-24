@@ -127,6 +127,12 @@ enum {
      * gentle high-pass (6 dB an octave) before its sends, 0 off, ~20 Hz at 1 to ~600 Hz at 100 */
     P_CECHO, P_CPLATE, P_PECHO, P_PPLATE, P_BECHO, P_BPLATE, P_DECHO, P_DPLATE,
     P_CLOW, P_PLOW, P_BLOW, P_DLOW, P_NLOW,
+    /* (1.4.0, format 24, the user's: the kick and the hats apart, six parts on white 1-6) the Drums strip split: P_DECHO,
+     * P_DPLATE and P_DLOW now the Hats strip's (the shaker, the open hat, the rim and the clap: what the drums' were,
+     * the kick never in them); the Kick strip's own: its level (x1 at 50, about +-12 dB at the ends, as Hats level:
+     * the two faders apart, P_DRUMS over both, the Drums pages' OCT), its Echo and Plate sends (0: none, as before;
+     * 100 a full send) and its Low cut (as the others', 0 off; the rumble its own, never cut) */
+    P_KLVL, P_KECHO, P_KPLATE, P_KLOW,
     P_NPARAMS
 };
 typedef struct {
@@ -155,7 +161,9 @@ void en_pings(const uint8_t *b);
 /* performance (SEL's mode): layers muted (EN_M_*, a mask: set = muted), and the moves held now (EN_PF_*) */
 enum { EN_M_CHORD = 1, EN_M_PINGS = 2, EN_M_BASS = 4, EN_M_KICK = 8, EN_M_HATS = 16, EN_M_NOISE = 32 };   /* (the noise:
                                                 * OCT- + OCT+ on its page; its level kept) */
-enum { EN_PF_THROW = 1, EN_PF_OPEN = 2, EN_PF_CLOSE = 4, EN_PF_KICKDROP = 8, EN_PF_ECHO = 16 };   /* (KICKDROP: Drop, the kick and the bass) */
+enum { EN_PF_THROW = 1, EN_PF_OPEN = 2, EN_PF_CLOSE = 4, EN_PF_KICKDROP = 8, EN_PF_ECHO = 16, EN_PF_HATTHROW = 32 };
+/* (KICKDROP: Drop, the kick and the bass. HATTHROW, 1.4.0, the user's: the hats, the rim and the clap thrown into the
+ * echo while held, the kick never; their tails left to ring) */
 void en_mute(uint32_t mask);
 void en_perf(uint32_t flags);
 /* the master actions (HOME's and PERFORM's knobs), -50..50 each, 0: the piece as it is; for playing, never saved.
@@ -236,11 +244,12 @@ extern volatile uint32_t en_hits[5];
 extern volatile float en_hit_vel[5];
 extern volatile float en_echo_pk;               /* the echo's output, its peak since the screen last took it */
 /* (1.4.0, the Arrangement page's meters) each part's peak since the screen last took it (it sets them back to 0): the
- * chord's, the pings', the bass's, the drums' (the kick and the hats), the noise's, each its dry as it goes into the
+ * chord's, the pings', the bass's, the kick's, the hats' (the shaker, the open hat, the rim, the clap), the noise's
+ * (1.4.0: the drums' split, the user's six parts), each its dry as it goes into the
  * mix (before the duck), every 4th sample, only while en_meter_on; and the master's, every sample, always (the clip
  * light): after the gain, going into the output's soft clip (1.0: full scale; over it, squashed). In the output's
  * units, the MASTER pot's gain in. And the duck's deepest gain since taken (set back to 1): on the music, on the bass */
-enum { EN_MT_CHORD, EN_MT_PINGS, EN_MT_BASS, EN_MT_DRUMS, EN_MT_NOISE, EN_MT_MASTER, EN_NMETER };
+enum { EN_MT_CHORD, EN_MT_PINGS, EN_MT_BASS, EN_MT_KICK, EN_MT_HATS, EN_MT_NOISE, EN_MT_MASTER, EN_NMETER };
 extern volatile float en_meter[EN_NMETER];
 extern volatile uint8_t en_meter_on;
 extern volatile float en_duck_lo[2];
