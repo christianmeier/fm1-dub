@@ -666,16 +666,29 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   structure of each voice, and I would put its knob next to the groove one." The Bass's pages, the user's layout:
   first (structure) **Groove, LFO, Density, Fifth**; second (its sound) **Octave, Shape, Gate, Glide**; third (the
   FM voice) **Algo, Ratio, Feedback, Bite**. The other layers alike: the LFO among the part's knobs, the FM page
-  without it. Built already (1.4.0): the bass's LFO moves Shape (±25 around the knob's), not the Bite; the chord's
-  sweeps deeper (±2.5 octaves at 100, on a curve so the pieces' 20-30 stay as they were).
+  without it. Built already (1.4.0): the bass's LFO moves Shape (±25 around the knob's), not the Bite (then gone,
+  REPORT10: the bass has none); the chord's sweeps deeper (±2.5 octaves at 100, on a curve so the pieces' 20-30 stay as
+  they were).
 - **The LFOs, from REPORT10** (build/research/dubtechno/REPORT10-lfo.md, 86 tracks, 2026-10-24): the records move
   mostly by slow drift (60-87% of their slow movement; DUB-1 22-40%), rarely by a bar-locked LFO, never faster than
   a bar, the bass never. Proposed: a Drift mode (a smoothed random walk, 8-32 bars, ±0.3-0.5 oct) on the chord's
   filter and the noise first; a Rate (1-32 bars synced, free 4-60 s, Drift), default 4 bars; the noise slower and
   shallower; the bass's LFO off; the pings' reworked (barely heard now); per-stab scatter smaller. To decide with the
   user. Also found: the widener's 0.21 Hz Haas sweep combs the mono sum (about 5.7 dB on the hats): to check.
+  **Built** (agreed with the user; branch dub-1.4-lfo): the chord's and the noise's LFO each a Rate (1, 2, 4, 8, 16,
+  32 bars, the sine locked to the grid; or Drift: a new place within ±depth every 8-32 bars, anywhere in the bar,
+  glided to with an ease, its own seeded randomness, the chord's and the noise's apart; at 100 ±0.6 octave on the
+  chord, ±0.4 on the noise); defaults 4 bars; the noise shallower (0.27 of its tone at 100, was 0.67; a changed
+  piece's saved depth converted); the bass's and the pings' LFO gone (P_BFDEC, P_PFDEC kept, unread). Interim pages,
+  till the redesign: ENV a fourth time, Chord LFO; SAVE a third, Noise LFO (Depth, Rate; the FM pages' and Noise
+  space's fourth knob grey); their middle the LFO's path as heard, the last 16 bars; the Noise pages' wave at the
+  rate. Format 19 (P_CLRATE, P_NLRATE). The recipes: Chamber, Fog, Haze's chord on Drift (45), Fog and Haze's
+  noise; the others 2-8 bars. Found on the way: the chord's LFO and the plate's wobble shared one variable (lfo_c),
+  the LFO pulling the plate's modulation about since 1.3.0: separated (bfb8e9d). Not done: a free rate (4-60 s),
+  other shapes (triangle, ramp), the per-stab scatter (still ±0.4 octave at full Evolve).
 - **The noise's LFO seen** (the user's idea): a sine moving behind the Noise page's two rows of hits, its crest
-  where the rings are brightest.
+  where the rings are brightest. (Built, fb2fb65; 1.4.0's rates: a bar's slice of the cycle, none on Drift, whose path
+  the Noise LFO page draws.)
 
 ## Now: two lines in parallel (the user, 2026-10-23)
 
