@@ -800,6 +800,20 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   goes on to the next piece); Endless starts full, as now (a user can save a piece in a state good for a gradual
   start). The plan: build/design/SONG.md (Endless, Song, Set; Intro, Main, Outro in bars, a phrase a click; the
   outro now on HOME + PLAY; Set stops after the eighth piece; on HOME's Song page: Mode, Intro, Main, Outro).
+  - **Built** (branch dub-1.4-song, 2026-10-25): Song mode (P_SMODE, global as Tune) on GLO's second page (Setup,
+    Song mode: the least disruptive, Setup's four kept); HOME's Song page between Form and Key (Intro, Main, Outro in
+    phrases, shown as bars; Kind, Ambient or Pulse, each piece's recipe); format 26. The engine: the parts' faders
+    (EN_NPART, a gain each, ramped a block at a time, at most a whole fade in two bars: the dub mixer's next), the
+    song's places (en_song_ph, its bars), the intro (entries in the Kind's order, off the phrase lines, 2-4 bar fades;
+    the kick One, Half, Four; the hats' hits growing; the chord's filter an octave under; the echo wetter; no
+    sections), the outro (the hats out first .. the chord and the noise last, thrown into the echo), the end (PLAY
+    off); outro now (HOME + PLAY) in any mode, again back to the main (four phrases at least). Set: the next piece
+    from its intro 6 s after a song's end, through the last (Haze), then it rests (read "after the eighth" as "after
+    the last piece"). The screen: INTRO / OUTRO, the song line under the bar cells, the Song pages' picture.
+    Endless bit for bit on all eight pieces; the host CPU unchanged in Endless, lower in a song.
+    **Pending:** the "where we are" map's last piece (the song line's room and the phrase map, with the bigger
+    visualisations); the dub mixer on the same faders; a per-piece intro length (all 32 bars now); a song's own
+    variation (each run its entries drawn anew: by the seed).
 - **The header and the big ring** (the user, 2026-10-24): the header the piece's name alone (the scale gone; a
   knob's or a level's name not there any more: its ring names it); the ring's name over it, large (FONT_C), the
   value bigger in its middle, the ring a little lower (BIG_CY 64), the page's name stepping aside meanwhile.

@@ -102,13 +102,13 @@ The drawing at the top shows them all; here they are in more detail.
 | Control | What it does |
 |---|---|
 | Keys | The scale. Each key adds its note to the scale or takes it out; the keys light up for the notes in it. Every octave of a note is the same key. The root stays ("THE ROOT STAYS"), and the scale keeps at least three notes ("3 NOTES AT LEAST"). |
-| PLAY | Play / rest. DUB-1 starts playing by itself when it's switched on. At rest, the echo's feedback eases under 90% so its tails die away, the reverb rings out and the noise fades. Playing again starts from the first bar of a phrase. Lit while playing. |
+| PLAY | Play / rest. DUB-1 starts playing by itself when it's switched on. At rest, the echo's feedback eases under 90% so its tails die away, the reverb rings out and the noise fades. Playing again starts from the first bar of a phrase. Lit while playing. In Song or Set mode (GLO again: [Songs](#songs-an-intro-the-main-an-outro)) PLAY starts a song from its intro, and the song stops PLAY by itself at its end. **HOME held + PLAY:** the **outro**, from the next phrase, in any mode (Endless too: a way to land a piece by hand); again, in it or while it waits: back to the main. |
 | REC | A tap: **dub hold**: the echo stops listening and repeats what it holds, sample for sample, for ever; the reverb stops listening too and rings on; the chord doesn't move. The stabs, pings and drums go on, dry, above it. Tap again to let go. Lit while held. Held: the **effects grid** (below). |
 | EDIT | A tap: the **Chords page** (below): the eight chords coming, to see and change (again, it stays). Held (half a second): the next chord, at the start of the next bar (at once while resting; in dub hold, once you let go); a card says NEXT CHORD until the chord changes. Held on (1.5 s): **new chords**, the walk's all walked again (yours, the gaps and the one playing kept); a red card, NEW CHORDS. |
 | SEL | A tap: the **Arrangement page** (PERFORM's until 1.4.0): the screen shows each part's level on a desk's meters, the knobs are Width, Mixer (to come), Wet and Duck, and the keys stop being the scale: they mute and solo the parts (white 1–6 held: a part's channel strip), make the dub moves and throw the hats (see below). Again, it stays; a page's button or SELECT leaves it. Lit while on. **Held** (half a second), on any page: **Lock** on or off (below). |
-| HOME | The **Form** page (Dub until 1.4.0): how the piece unfolds (Energy, Evolve, Motion). Again: the Key page (tempo, root, mode, swing), and again back to Form; HOME blinks on the Key page. Held on for 1.5 s (nothing turned meanwhile): **a shake of everything**, the chord, the pings, the bass, the drums and the noise at once ("SHAKE ALL"), the page kept; again and again, to explore until something sounds right. Held with SELECT turned: the tempo. |
+| HOME | The **Form** page (Dub until 1.4.0): how the piece unfolds (Energy, Evolve, Motion). Again: the **Song** page (its intro, main and outro, 1.4.0); again: the Key page (tempo, root, mode, swing), and again back to Form; HOME blinks on the Song and Key pages. Held on for 1.5 s (nothing turned meanwhile): **a shake of everything**, the chord, the pings, the bass, the drums and the noise at once ("SHAKE ALL"), the page kept; again and again, to explore until something sounds right. Held with SELECT turned: the tempo. |
 | ENV · ARP · LFO · SEQ | The layers' pages: Chord, Pings, Bass, Drums, each its part (see [The pages](#8-the-pages)). Again: the layer's voice page (**Chord voice**, **Pings voice**, **Bass voice**; the drums' **Kick**), then its FM page or, for the drums, the **Hats** page and then the Pattern page, then back. The chord has one more: after its FM page (for every chord voice: its Colour is there), the **Chord LFO** page, then back. Held (half a second): a **nudge** to the layer's sound; held on (1.5 s): a **shake** (below). |
-| FX · GLO | The **Dub** page, the echo and the plate (Space until 1.4.0; FX again: the **Echo page**, the echo's blur and tone, the plate's size and its cloud, FX blinking; again, back); the Setup page, for what holds for every piece (GLO again, it stays). The lit button shows the page. FX held: a nudge to the space; held on: a shake (a new echo time). **GLO held** (half a second, then let go): **saves** all eight pieces (a card, SAVED); held on (1.5 s): the piece back to its recipe (a red card, RESET). |
+| FX · GLO | The **Dub** page, the echo and the plate (Space until 1.4.0; FX again: the **Echo page**, the echo's blur and tone, the plate's size and its cloud, FX blinking; again, back); the Setup page, for what holds for every piece (GLO again: **Song mode**, Endless, Song or Set; again, back). The lit button shows the page. FX held: a nudge to the space; held on: a shake (a new echo time). **GLO held** (half a second, then let go): **saves** all eight pieces (a card, SAVED); held on (1.5 s): the piece back to its recipe (a red card, RESET). |
 | SELECT | **The DJ filter**, on every page (its only place since 1.4.0's Chord pages; the Arrangement page's Open and Shut keys push on top of it): left shuts it (a low-pass, under water), right opens it (a high-pass, thin and bright), Off in the middle, where it stops on its way through (three clicks to leave it). While it turns, a big ring in the middle shows it (FILTER over it, the amount inside, Shut or Open under it); the page stays. Hold HOME and turn it for the tempo, from any page. The pages are on their buttons; the page's name, top right, says where you are. |
 | ALGORITHM | On a layer's page (Chord, Pings, Bass, Drums): that layer's **voice** (see [The voices](#the-voices)). On the Noise pages: its character. On the LFO pages: where the LFO goes, its **Destination** (the Chord LFO's: Cutoff, Reso, Colour; the Noise LFO's: Filter, Tone, Air). On the Chords page: the walk's character (Home, Wander, Free). Anywhere else: the middle of the screen, as ripples, a scope or a spectrum (see [The screen](#4-the-screen)). The mode, a piece's choice, is on the Key page (HOME again). |
 | PRESETS | The piece (see [The pieces](#7-the-pieces)). |
@@ -118,7 +118,7 @@ The drawing at the top shows them all; here they are in more detail.
 | SAVE | The **Noise page** (below: its part); again, the **Noise voice** (its Air, Tone, Decay and Width; SAVE blinks); again, **Noise LFO** (its wave and drift, on its filter, its Tone or its Air); again, back to the Noise page. (Its sends are its channel strip's, on the Arrangement page.) Held: a nudge to the noise; held on (1.5 s): a shake (another noise character). Saving is on GLO. |
 
 **One rule for the buttons:** a button with one page stays on it when you press it again (EDIT,
-SEL, GLO); a button with several steps through them (HOME: Form, Key; FX: Dub, Echo; SAVE: Noise,
+SEL); a button with several steps through them (HOME: Form, Song, Key; GLO: Setup, Song mode; FX: Dub, Echo; SAVE: Noise,
 Noise voice, Noise LFO; a layer's: its page, its voice page, its FM page; the drums': Drums, Kick, Hats,
 Pattern; the chord's, Chord, Chord voice, Chord FM and Chord LFO). To leave a page, press
 another page's button.
@@ -358,14 +358,17 @@ GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
   the audio's dropouts, beside the CPU's load); three bars (the outline red when it's nearly empty), or the bars filling
   in turn while USB powers and charges it. Messages ("ADDED F#", "NEXT CHORD ON THE BAR", "DUB HOLD ON", "KICK OFF") show here for
   a moment; a knob turning or a level changing doesn't: its big ring names it.
-- **Top left:** the section playing (FULL in grey; BREAK, GROOVE and THIN lit up) and the phrase's
+- **Top left:** the section playing (FULL in grey; BREAK, GROOVE and THIN lit up; in a song, INTRO and OUTRO) and the phrase's
   eight bars, a cell each, lit up to the bar playing, the one playing in teal. Bars 4 and 8, the B
   bars of the phrase plan (see [The arrangement](#6-the-arrangement)), have a tick over them and are
   brighter, ahead and played; under Lock all eight are alike. On the phrase's last bar, cell 8 blinks
   when the next phrase brings a change: a new plan, another kick shape or another section. Under the
   cells, a thin line fills up on the way to the next chord (none when the Chord page's Change is Hold, or in dub hold).
+  Under that, while a song plays (or an outro is coming), the **song line**: the whole song as a thin line, the intro
+  and the outro brighter at its ends, a tick where the main starts and where the outro starts, and a dot where it is.
 - **Top right:** the page's name, in teal (ARRANGEMENT on SEL's page). SOLO, in yellow, to its left
-  while a solo is on. Above it, in red: "hold" in dub hold, "lock" under Lock.
+  while a solo is on. Under it, in grey, its place among its button's pages (**2/3**: the second of three), and to
+  its left, in red: "hold" in dub hold, "lock" under Lock.
 - **The ripples:** each stab drops a ring in the middle that spreads and fades. Its outline is the
   sound itself at that moment, its wave wrapped round the circle: a soft pad a smooth ring, a
   bright stab a jagged one. The echo's repeats follow it, a ring each echo time, each as strong as
@@ -606,6 +609,50 @@ the plan is kept (a motif that comes back) or drawn again: more often as Evolve 
 about half the time; at 100, four times in five), never at Evolve 0. Lock keeps it. The screen
 marks the B bars (dots 4 and 8, brighter) and blinks dot 8 when the next phrase brings a new plan.
 
+### Songs: an intro, the main, an outro
+
+![A song's intro on the Form page: INTRO top left, and under the bar cells the song line, its dot near the start](img/screen-song-intro.png "A song's intro")
+
+DUB-1 plays for ever, starting full, as it always has: that's **Endless**, the Song mode it starts in.
+Set **Song** (GLO again, the Song mode page) and a piece becomes a song: PLAY starts its **intro**, the
+parts coming in one by one; then the **main**, the piece as Endless plays it; then the **outro**, the
+parts leaving; then silence, the last echoes ringing out, and PLAY goes off by itself. **Set** plays
+the same, then the next piece starts from its intro as the tails die (about six seconds on), an album
+from the piece you're on to the last (Haze); after it, DUB-1 rests. Song mode is the player's, as
+Tune: the same for every piece, and saved.
+
+How long each part is, and how the intro goes, is the piece's own, on the Song page (HOME again):
+the **Intro**, the **Main** and the **Outro** in bars, a phrase (8 bars) a click, and its **Kind**:
+
+- **Ambient** first (Fog, Haze, Chamber, Night Drive): the noise from the first bar, then the chord's
+  wash, then the kick, sparse, then the bass, the pings, and the hats last.
+- **Pulse** first (Steppers, Pressure, Concrete, Basic): the kick, sparse, and the bass from the
+  first bar, then the chord, the pings, the noise, and the hats last.
+
+**In the intro** each part comes in at its place in that order, spread over the intro and not on the
+phrase lines (a bar or so either way), each fading in over two to four bars. The kick plays the
+downbeat alone, then one and three, then four on the floor by the intro's end; the hats come in last
+with a few of their hits, more each bar, to the piece's own. The chord's filter starts about an
+octave darker and opens to its Cutoff, and the echo is a little wetter at first, so the wash leads.
+There are no Breaks, Grooves or Thins in the intro: the arrangement starts with the main, the kick on
+four for its first phrases as a piece's opening always is.
+
+**In the outro**, the mirror: the hats leave first, then the pings and the bass; the kick thins (one
+and three, then the downbeat alone) and stops; the chord and the noise stay longest, and for the last
+bars every stab is thrown into the echo and the noise goes into it too, fading, so the song ends on
+the echo's tails and the hiss, then silence. No sections in the outro either.
+
+**Outro now:** hold HOME and press PLAY: the outro starts from the next phrase, in any mode. In Endless
+too: a way to land any piece by hand (it plays the Song page's Outro, then rests). Again, in the outro
+or while it waits: back to the main (in a song, for four phrases at least, then the outro as planned;
+in Endless, on as ever). A card says which.
+
+The knobs work as ever during a song: what you turn is kept, and the song's moves are around it (each
+part's fader, the filter's and the echo's offsets), never on its values. Turning Main as it plays moves
+the outro (if it's already past it, to the next phrase); turning the Song mode to Endless lets the song
+go, the parts back in, playing on. A song's lengths with the defaults (32, 160 and 32 bars) make
+about 7 minutes at 122 BPM, the intro and the outro about 29% of it (the records' run from 3% to 37%).
+
 ---
 
 ## 7. The pieces
@@ -613,7 +660,7 @@ marks the B bars (dots 4 and 8, brighter) and blinks dot 8 when the next phrase 
 PRESETS chooses one of eight pieces. Each is a recipe for the whole machine: the layers, the
 sounds, tempo, key and mode, the groove, the space, how busy it is and how far it moves. Each
 remembers how you left it. Hold GLO for 1.5 s to put the piece you're on back to its recipe.
-Tune, MIDI out and Lights are the same for all.
+Tune, MIDI out, Lights and the Song mode are the same for all.
 
 | Piece | What it is |
 |---|---|
@@ -815,7 +862,7 @@ the voice and the piece. The bass's Bite and the pings' Ratio are on their FM pa
 ![The Form page: ENERGY 0, EVOLVE 55, MOTION 30 (its ring marked at 40 and 70), the fourth knob free](img/screen-main.png "The Form page")
 
 How the piece unfolds (the Dub page until 1.4.0). **ALGORITHM** (here and on any page but a layer's, the Noise page or the Chords page): the middle of the screen as ripples, scope or
-spectrum (see [The screen](#4-the-screen)). **HOME** again: the Key page (below).
+spectrum (see [The screen](#4-the-screen)). **HOME** again: the Song page (below), then the Key page.
 
 - **Energy:** busier or sparser, now: 0 in the middle, the notch there. Down, sparser and drier:
   fewer and quieter pings, fewer and quieter hats, fewer and shorter stabs, a thinner bass line, a
@@ -844,7 +891,25 @@ spectrum (see [The screen](#4-the-screen)). **HOME** again: the Key page (below)
   band-pass wander.
 - KNOB 4 is free for now: Drift, how long a chord lasts, went to the Chord page (as Change).
 
-### HOME again: Key
+### HOME again: Song
+
+![The Song page: INTRO 32 bars, MAIN 160 bars, OUTRO 32 bars, KIND Pulse; the song's shape in the middle, a row a part from where it comes in to where it leaves](img/screen-song.png "The Song page")
+
+The piece's song (1.4.0): how long its intro, its main and its outro are, and which parts come first
+(see [Songs](#songs-an-intro-the-main-an-outro)). It plays when the Song mode (GLO again) is Song or
+Set; in Endless the page shows the song it would be, dimmed. HOME blinks while you're here; HOME again
+goes to the Key page.
+
+- **Intro:** 0 to 128 bars, a phrase (8 bars) a click; None: the song starts full.
+- **Main:** 32 to 512 bars, a phrase a click: the piece as Endless plays it.
+- **Outro:** 0 to 128 bars; None: it stops at the main's end.
+- **Kind:** Ambient (the noise and the chord's wash first) or Pulse (the kick and the bass first).
+
+In the middle, the song's shape: a band over the rows, the intro and the outro in teal at its ends,
+the main between; under it a row a part (the lanes' rows, in their colours), each from where it
+comes in to where it leaves, dimmer as it fades in and out; while a song plays, a white line where it is.
+
+### HOME a third time: Key
 
 ![The Key page: TEMPO 122, ROOT F, MODE Dorian, SWING 51%](img/screen-key.png "The Key page")
 
@@ -1141,7 +1206,7 @@ space pages (SEL).
 ![The Setup page: TUNE 0, MIDI OUT On, LIGHTS On, SAVE](img/screen-setup.png "The Setup page")
 
 What holds for every piece and the whole machine (the root is the piece's: on the Key page). GLO
-again stays here.
+again: the Song mode page (below).
 
 - **Tune:** fine tuning, ±50 cents.
 - **MIDI out:** on or off.
@@ -1158,6 +1223,17 @@ least heard: the quietest tails of the stabs and the pings, the cloud's new grai
 hits and the width, eased back as the load falls, so a crowded moment doesn't break
 up. Then, next to the battery icon, a rough charge in % (**67%**), or **USB**
 when a computer powers (and charges) the FM-1.
+
+### GLO again: Song mode
+
+![The Song mode page: MODE Song; the song's shape in the middle](img/screen-song-mode.png "The Song mode page")
+
+How DUB-1 plays a piece (1.4.0; see [Songs](#songs-an-intro-the-main-an-outro)): the player's, the
+same for every piece, and saved. GLO again goes back to Setup.
+
+- **Mode:** **Endless** (as ever: it starts full and plays on), **Song** (PLAY: an intro, the main,
+  an outro, then silence, PLAY off), **Set** (the same, then the next piece from its intro, to the
+  last). A change takes effect at the next PLAY; to Endless, at once (the song let go, playing on).
 
 ---
 
@@ -1191,7 +1267,7 @@ site, and the FM-1 tells the reader where to find it.
 ## 10. Saving
 
 DUB-1 keeps all eight pieces in the FM-1's memory, each as you left it: the knobs, the scale, the
-mode, the root, the tempo and the pings' octave, plus Tune, MIDI out and Lights.
+mode, the root, the tempo and the pings' octave, each piece's song, plus Tune, MIDI out, Lights and the Song mode.
 
 - **By itself:** a few seconds after a change, but only while resting and once the stabs have
   died away. Writing to the memory interrupts the sound for a moment, so it never happens while
@@ -1225,7 +1301,9 @@ on the Noise voice and the noise's strip. From 1.4.0's channel strips (format 23
 the drums' strip is the Hats strip, its sends and Low cut kept, and the Kick strip comes in at its level
 ×1 with no sends, its Low cut the drums' (as it sounded: that one cut the kick too). From 1.4.0's six
 strips (format 24), the noise LFO's Destination comes from the recipe (Filter, as it played before);
-the Cloud and the Width are kept, on their new pages. To get a changed piece's
+the Cloud and the Width are kept, on their new pages. From 1.4.0's noise LFO Destination (format 25),
+each piece's song comes from its recipe (Intro 32, Main 160, Outro 32 bars, its Kind), and the Song mode is
+Endless, as it played before. To get a changed piece's
 whole new recipe, hold GLO for 1.5 s on it.
 Projects saved by AMB-1 aren't read by DUB-1: the first start after installing it begins with the
 eight recipes.
@@ -1291,6 +1369,10 @@ The defaults are Basic's; each piece has its own.
 | Form | Energy | −100 – 0 – +100 (for playing, not saved) | 0 |
 | Form | Evolve | 0–100 | 55 |
 | Form | Motion | 0–100 (under 40 held, 40–70 variations, 70– Breaks) | 30 |
+| Song | Intro | None, 8 – 128 bars, a phrase a click | 32 bars |
+| Song | Main | 32 – 512 bars, a phrase a click | 160 bars |
+| Song | Outro | None, 8 – 128 bars, a phrase a click | 32 bars |
+| Song | Kind | Ambient, Pulse (the piece's own) | Pulse |
 | Chord | Density | 0–100 (1 to 6 stabs a bar) | 30 |
 | Chord | Throws | 0–100 (none – about 1 stab in 8 at 50 – about 1 in 3) | 70 |
 | Chord | Change | 2, 4, 8, 16, 32, 64 bars, Hold | 64 bars |
@@ -1342,6 +1424,7 @@ The defaults are Basic's; each piece has its own.
 | Setup | Tune | −50 – +50 cents | 0 |
 | Setup | MIDI out | Off, On | On |
 | Setup | Lights | Off, On, Keys | On |
+| Song mode | Mode | Endless, Song, Set (for every piece) | Endless |
 | SELECT | Filter | −100 – 0 – +100 (Shut, Off, Open); for playing, not saved | Off |
 | Arrangement | Width | 0–100 (the whole mix: mono – wide) | 40 |
 | Arrangement | Wet | −100 – 0 – +100; for playing, not saved | 0 |

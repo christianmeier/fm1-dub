@@ -18,6 +18,9 @@ turn ALGO 1
 wait 300
 tap HOME
 wait 1500
+shot screen-song.png
+tap HOME
+wait 1500
 shot screen-key.png
 tap HOME
 wait 300
@@ -58,6 +61,13 @@ shot screen-hats.png
 tap GLO
 wait 1500
 shot screen-setup.png
+tap GLO
+wait 300
+spin K1 1
+wait 1800
+shot screen-song-mode.png
+spin K1 -1
+wait 300
 tap FX
 wait 1500
 shot screen-space.png
@@ -176,5 +186,25 @@ turn ALGO 2
 wait 300
 shot screen-noise-lfo-dest.png
 turn ALGO 1
+wait 300
+tap HOME
+# (1.4.0, the user's: song structure) a song's intro on the Form page: INTRO top left, the song line under the bar
+# cells; then Endless again
+tap GLO
+tap GLO
+wait 300
+spin K1 1
+wait 300
+tap HOME
+wait 300
+tap PLAY
+wait 600
+tap PLAY
+wait 16000
+shot screen-song-intro.png
+tap GLO
+tap GLO
+wait 300
+spin K1 -1
 wait 300
 tap HOME
