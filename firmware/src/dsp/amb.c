@@ -63,6 +63,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     {"Width", 0, 100, 50},    {"Noise decay", 0, 100, 50},
     {"Noise width", 0, 100, 50}, {"Noise plate", 0, 100, 50}, {"Noise echo", 0, 100, 50}, {"Hat len", -50, 50, 0},
     {"Noise LFO", 0, 100, 0}, {"Rumble", 0, 100, 0},
+    {"Chord rate", 0, EN_LFO_DRIFT, 2}, {"Noise rate", 0, EN_LFO_DRIFT, 2},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
 
@@ -73,7 +74,8 @@ const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PAR
  *                  then the sound pages' sixteen, all 0: the voices as they are; then the noise's five (its controls, its character);
  *                  then Throws, Ghost, Notes, Hats level (50, 50, 100, 50: the pieces as they were);
  *                  then the chord's Ghost, the kick's density, the echo's Blur, Tone and Width, the noise's Decay;
- *                  then the noise's Width, Plate and Echo, the hats' length; then the noise's LFO, the kick's rumble
+ *                  then the noise's Width, Plate and Echo, the hats' length; then the noise's LFO, the kick's rumble;
+ *                  then the chord's LFO's rate and the noise's (0..5: 1 2 4 8 16 32 bars, 6: Drift; 1.4.0)
  * (Dri: Drift, 2 4 8 16 32 64 bars or Hold; ET: Echo time, 1/8 1/8. 1/4 1/4. 1/2 1 bar; Grv: the knob's, Drone,
  *  Offbeat, Dotted, Sync, Roller (GROOVE_NAME); CV, PV, BV, Kit: the voices, EN_CV_NAME ...) */
 static const struct {
@@ -90,18 +92,20 @@ static const struct {
                     70, 70, 90, 40,
                     45, 100, 25, 50, 40, 50,
                     50, 50, 50, 0,
-                    25, 20}},
+                    25, 20,
+                    2, 2}},
     {"Chamber",    {55, 20, 62, 72, 20, 35, 6, 40, 70, 4, 45, 72, 50, 55, 30, 30, 0, 1, 128, 9, 5, 0,
                     2, 0, 0, 10, 0, 40, 5, 12, 45, 70, 45, 2, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 30, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 45, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
                     -5, 44, 78, 0, 3,
                     70, 60, 100, 55,
                     35, 75, 50, 50, 60, 50,
                     50, 50, 50, 0,
-                    30, 15}},
+                    30, 15,
+                    6, 3}},
     {"Steppers",   {52, 35, 80, 82, 35, 35, 6, 45, 50, 1, 30, 50, 55, 25, 50, 25, 0, 1, 126, 2, 1, 0,
                     0, 0, 2, 35, 45, 60, 25, 5, 60, 50, 20, 1, 1, 2,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -112,18 +116,20 @@ static const struct {
                     70, 70, 90, 60,
                     50, 100, 30, 50, 45, 50,
                     50, 50, 50, 0,
-                    30, 25}},
+                    30, 25,
+                    1, 2}},
     {"Fog",        {50, 34, 58, 62, 40, 55, 5, 42, 75, 2, 55, 72, 46, 80, 25, 72, 0, 1, 120, 7, 5, 0,
                     3, -1, 0, 15, 0, 30, 5, 30, 35, 80, 60, 0, 0, 3,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 30, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 45, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
                     -10, 44, 75, 10, 1,
                     70, 65, 100, 50,
                     55, 75, 50, 50, 85, 50,
                     85, 50, 50, 0,
-                    35, 30}},
+                    35, 30,
+                    6, 6}},
     {"Concrete",   {58, 45, 70, 85, 25, 50, 4, 55, 50, 1, 25, 62, 60, 20, 60, 35, 0, 1, 136, 0, 7, 0,
                     6, 0, 4, 30, 10, 75, 30, 5, 50, 45, 15, 2, 3, 2,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -134,7 +140,8 @@ static const struct {
                     70, 65, 85, 65,
                     50, 100, 20, 50, 55, 50,
                     50, 50, 50, 0,
-                    45, 40}},
+                    45, 40,
+                    2, 1}},
     {"Night Drive", {48, 45, 68, 78, 45, 60, 3, 35, 60, 3, 35, 65, 50, 40, 45, 45, 0, 1, 120, 10, 1, 0,
                     1, 0, 1, 25, 13, 55, 20, 15, 50, 60, 35, 4, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -145,7 +152,8 @@ static const struct {
                     80, 75, 90, 58,
                     55, 100, 50, 50, 85, 50,
                     50, 50, 50, 0,
-                    40, 25}},
+                    40, 25,
+                    3, 3}},
     {"Pressure",   {55, 20, 75, 92, 20, 45, 6, 38, 55, 1, 20, 55, 48, 30, 35, 25, 0, 1, 126, 4, 2, 0,
                     5, 0, 1, 10, 5, 65, 25, 30, 70, 40, 40, 3, 4, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -156,18 +164,20 @@ static const struct {
                     70, 70, 90, 55,
                     60, 100, 50, 50, 75, 50,
                     85, 50, 50, 0,
-                    20, 35}},
+                    20, 35,
+                    2, 2}},
     {"Haze",       {45, 42, 58, 55, 50, 60, 4, 35, 80, 3, 60, 70, 45, 80, 25, 62, 0, 1, 116, 3, 0, 1,
                     3, 0, 0, 20, 10, 35, 5, 20, 30, 85, 70, 2, 0, 4,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 30, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 45, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
                     5, 69, 72, 15, 2,
                     70, 70, 100, 50,
                     50, 50, 50, 50, 70, 50,
                     50, 50, 50, 0,
-                    30, 10}},
+                    30, 10,
+                    6, 6}},
 };
 
 const char *en_piece_name(int i) { return PIECES[(unsigned)i < EN_NPIECES ? i : 0].name; }
@@ -206,6 +216,7 @@ static const uint8_t DRIFT_BARS[7] = {2, 4, 8, 16, 32, 64, 0};
 uint32_t en_groove(int g) { return GROOVE[(unsigned)g < 5u ? g : 0]; }
 int en_groove_pat(int knob) { return GROOVE_PAT[(unsigned)knob < NGROOVE ? knob : 0]; }
 int en_drift_bars(int v) { return DRIFT_BARS[(unsigned)v < 7u ? v : 6]; }
+int en_lfo_bars(int v) { return (unsigned)v < EN_LFO_DRIFT ? 1 << v : 0; }   /* (1, 2, 4 .. 32; Drift 0) */
 
 static char *itoa_s(int v, char *b)
 {
@@ -261,6 +272,10 @@ void en_param_text(int i, int v, char *b)
         s = EN_NOTE_NAME[(unsigned)v < 12u ? v : 0];
     else if (i == P_DRIFT && !en_drift_bars(v))
         s = "Hold";
+    else if ((i == P_CLRATE || i == P_NLRATE) && !en_lfo_bars(v))
+        s = "Drift";                             /* (1.4.0: the LFOs' rates, the last a wander) */
+    else if ((i == P_CLRATE || i == P_NLRATE) && en_lfo_bars(v) == 1)
+        s = "1 bar";
     if (s) {
         int k = 0;
         while (s[k] && k < 9) {
@@ -270,8 +285,8 @@ void en_param_text(int i, int v, char *b)
         b[k] = 0;
         return;
     }
-    if (i == P_DRIFT) {
-        b = itoa_s(en_drift_bars(v), b);
+    if (i == P_DRIFT || i == P_CLRATE || i == P_NLRATE) {
+        b = itoa_s(i == P_DRIFT ? en_drift_bars(v) : en_lfo_bars(v), b);
         *b++ = ' ';
         *b++ = 'b';
         *b++ = 'a';
@@ -306,8 +321,9 @@ void en_param_text(int i, int v, char *b)
         }
         return;
     }
-    if ((i == P_TUNE || i == P_POCT || i == P_BASSOCT || (i >= P_CATT && i < P_CR0) || (i >= P_NCOL && i <= P_NDRIFT && i != P_NGRAIN && i != P_NROOM)) && v > 0)
-        *b++ = '+';
+    if ((i == P_TUNE || i == P_POCT || i == P_BASSOCT || (i >= P_CATT && i < P_CR0 && i != P_CFDEC) ||
+         (i >= P_NCOL && i <= P_NDRIFT && i != P_NGRAIN && i != P_NROOM)) && v > 0)
+        *b++ = '+';                              /* (1.4.0: the chord's LFO a depth, 0..100, as the noise's: no sign) */
     itoa_s(v, b);
 }
 
@@ -1984,6 +2000,7 @@ static int dhit(int d, int st, float *vel)
     return 1;
 }
 
+static void lfo_tick(void);
 /* the grid: one call a sixteenth (MIDI clock: 6 ticks) */
 static void tick(void)
 {
@@ -2061,6 +2078,7 @@ static void tick(void)
     }
     sixteenth++;
     en_bars = sixteenth;
+    lfo_tick();
 }
 
 /* ------------------------------------------------- reverb: Dattorro's plate --- */
@@ -2541,24 +2559,102 @@ void en_env_shape(int layer, float *lvl, float *aux, int n, float *secs)
 
 /* ------------------------------------------------------------ parameters --- */
 static int pulse;
-/* (1.3.0) the FM pages' fourth knob, an LFO synced to the bar: the chord's filter over two bars (1.4.0, the user's:
- * deeper, +-2.5 octaves at 100, on a curve so the pieces' 20-30 sweep as they did), the pings' FM brightness over
- * one, the bass's Shape over four (1.4.0, the user's: not the bite; +-25 around the knob's at 100); a sine from the
- * grid's place, eased */
-static float lfo_ch, lfo_p, lfo_b, lfo_n;    /* (lfo_n: the noise's, its rings' tone over a bar, +-1 octave at 100;
-                                                 * its crest on beat 2, the chord's on beat 3: they move apart. lfo_ch,
-                                                 * 1.4.0: was lfo_c, the plate's own name too: one variable, the chord's
-                                                 * LFO pulling the plate's wobble about) */
+/* (1.3.0) an LFO synced to the bar: the chord's filter (1.4.0, the user's: deeper, +-2.5 octaves at 100, on a curve
+ * so the pieces' 20-30 sweep as they did); a sine from the grid's place, eased.
+ * (1.4.0, REPORT10: the records move by slow drift, rarely by a bar's sine, the bass never) the chord's and the
+ * noise's only, each with its Rate: 1 to 32 bars, the sine; or Drift, a slow random wander, as a hand riding the
+ * filter: a new place within the depth every 8-32 bars (anywhere in the bar), glided to over most of the wait, eased
+ * at both ends; never the same path twice. (The pings' and the bass's gone: their knobs' places kept, unread) */
+static float lfo_ch, lfo_n;                      /* the chord's, in octaves on its cutoff (the sine 2.5 d sqrt(d) at
+                                                  * most, Drift 0.6 sqrt(d)); the noise's on its rings' tone (0.27 d
+                                                  * either way, about +-0.4 octave at 100; 1.4.0: was 0.67, shallower)
+                                                  * (the sines' crests: the noise's on beat 2, the chord's on beat 3).
+                                                  * (1.4.0: the chord's was lfo_c, the plate's own name too: one
+                                                  * variable, the chord's LFO pulling the plate's wobble about) */
+static float lfo_cr = 1.0f;                      /* (the chord's reach now, octaves at its depth: the trace's scale) */
+static struct {
+    float from, to, t, len;                      /* (where it glides from and to, -1..1 of the depth; how far on and
+                                                  * how long, in sixteenths) */
+    uint32_t left, rng;                          /* (sixteenths till the next place; its own randomness: the music's
+                                                  * choices left be) */
+} lfo_dr[2];
+volatile int8_t en_lfo_tr[2][EN_LFO_N];
+volatile uint32_t en_lfo_w, en_lfo_picks[2];
+static float dr_rand(int k)
+{
+    lfo_dr[k].rng = lfo_dr[k].rng * 1664525u + 1013904223u;
+    return (float)(lfo_dr[k].rng >> 8) * (1.0f / 16777216.0f);
+}
+static float dr_at(int k, float t)               /* the drift's place, -1..1, t sixteenths into its glide */
+{
+    const float x = fm_clampf(t / lfo_dr[k].len, 0.0f, 1.0f);
+    return lfo_dr[k].from + (lfo_dr[k].to - lfo_dr[k].from) * x * x * (3.0f - 2.0f * x);
+}
+static void lfo_reset(void)
+{
+    int k;
+    for (k = 0; k < 2; k++) {
+        lfo_dr[k].from = lfo_dr[k].to = lfo_dr[k].t = 0.0f;
+        lfo_dr[k].len = 64.0f;
+        lfo_dr[k].left = 1;                      /* (its first place on the first sixteenth) */
+        lfo_dr[k].rng = k ? 0x6C8E9CF5u : 0x3C6EF372u;
+    }
+    lfo_ch = lfo_n = 0.0f;
+}
+/* a sixteenth on (tick): the drifts a step, a new place when one's due; the trace, as heard */
+static void lfo_tick(void)
+{
+    int k;
+    for (k = 0; k < 2; k++) {
+        if (lfo_dr[k].left <= 1u) {
+            const float f = dr_at(k, lfo_dr[k].t);
+            float u = 2.0f * dr_rand(k) - 1.0f;
+            if (fm_fabsf(u - f) < 0.3f)          /* (a move worth hearing) */
+                u = f > 0.0f ? f - 0.6f : f + 0.6f;
+            lfo_dr[k].from = f;
+            lfo_dr[k].to = u;
+            lfo_dr[k].t = 0.0f;
+            lfo_dr[k].left = 128u + (uint32_t)(dr_rand(k) * 385.0f);   /* (8 to 32 bars) */
+            lfo_dr[k].len = fm_maxf((float)lfo_dr[k].left * (0.5f + 0.4f * dr_rand(k)), 64.0f);   /* (then still) */
+            en_lfo_picks[k]++;
+        } else {
+            lfo_dr[k].left--;
+            lfo_dr[k].t += 1.0f;
+        }
+    }
+    {
+        const float dc = (float)par[P_CFDEC] * 0.01f, c = dc > 0.0f ? 127.0f * dc * lfo_ch / lfo_cr : 0.0f,
+                    nn = 127.0f * lfo_n * (1.0f / 0.27f);
+        en_lfo_tr[0][en_lfo_w % EN_LFO_N] = (int8_t)fm_clampf(c + (c < 0.0f ? -0.5f : 0.5f), -127.0f, 127.0f);
+        en_lfo_tr[1][en_lfo_w % EN_LFO_N] = (int8_t)fm_clampf(nn + (nn < 0.0f ? -0.5f : 0.5f), -127.0f, 127.0f);
+        en_lfo_w++;
+    }
+}
+int en_nlfo18(int old)                           /* (format 19) a Noise LFO before 19 (0.67 of the tone at 100) as 19's */
+{
+    const int v = (int)((float)old * (0.67f / 0.27f) + 0.5f);
+    return v < 0 ? 0 : v > 100 ? 100 : v;
+}
+static float lfo_wave(int rate, float fr, int k)   /* the place now, -1..1: a sine from the grid's, or the drift's */
+{
+    if (rate >= EN_LFO_DRIFT)
+        return dr_at(k, lfo_dr[k].t + fr);
+    {
+        const uint32_t n = 16u << (rate < 0 ? 0 : rate);   /* (the cycle, in sixteenths) */
+        return fm_sinf(6.2831853f * ((float)((sixteenth - 1u) & (n - 1u)) + fr) / (float)n);
+    }
+}
 static void lfo_step(void)
 {
-    const float pos = (float)(sixteenth & 63u) + (float)pulse * (1.0f / 6.0f);   /* (four bars of sixteenths) */
-    const float tc = fm_sinf(6.2831853f * pos * (1.0f / 32.0f)), tp = fm_sinf(6.2831853f * pos * (1.0f / 16.0f)),
-                tb = fm_sinf(6.2831853f * pos * (1.0f / 64.0f));
-    const float dc = (float)par[P_CFDEC] * 0.01f;
-    lfo_ch += (2.5f * dc * fm_sqrtf(dc) * tc - lfo_ch) * 0.2f;
-    lfo_p += (0.8f * (float)par[P_PFDEC] * 0.01f * tp - lfo_p) * 0.2f;
-    lfo_b += (0.5f * (float)par[P_BFDEC] * 0.01f * tb - lfo_b) * 0.2f;
-    lfo_n += (0.67f * (float)par[P_NLFO] * 0.01f * fm_sinf(6.2831853f * pos * (1.0f / 16.0f)) - lfo_n) * 0.2f;
+    /* (where the grid is: the step playing and how far into it, smooth across the tick) */
+    const float fr = (float)(pulse ? pulse - 1 : 5) * (1.0f / 6.0f);
+    const float dc = (float)par[P_CFDEC] * 0.01f, dn = (float)par[P_NLFO] * 0.01f;
+    const int dr = par[P_CLRATE] >= EN_LFO_DRIFT;
+    lfo_cr = dr ? 0.6f * fm_sqrtf(dc) : 2.5f * dc * fm_sqrtf(dc);
+    if (lfo_cr < 1e-6f)
+        lfo_cr = 1e-6f;
+    lfo_ch += (lfo_cr * lfo_wave(par[P_CLRATE], fr, 0) - lfo_ch) * 0.2f;
+    lfo_n += (0.27f * dn * lfo_wave(par[P_NLRATE], fr, 1) - lfo_n) * 0.2f;
 }
 static uint32_t ext_age;
 
@@ -2817,6 +2913,7 @@ void en_init(void)
     bite_dec = fm_expf(-1.0f / (0.07f * EN_SR));
     gate_dec = fm_expf(-6.9f / (1.5f * EN_SR));
     arcm = arc = 0.0f;
+    lfo_reset();
     for (i = 0; i < P_NPARAMS; i++)
         apply(i, PARAMS[i].def);
     pool_set(EN_MODE_POOL[par[P_MODE]]);
@@ -2939,6 +3036,8 @@ static void drain(void)
             rng ^= (uint32_t)(b & 0xFFFF) * 2654435761u;
             if (!rng)
                 rng = 1u;
+            lfo_dr[0].rng ^= (uint32_t)(b & 0xFFFF) * 2246822519u;   /* (the drifts too: each play its own path) */
+            lfo_dr[1].rng ^= (uint32_t)(b & 0xFFFF) * 3266489917u;
             break;
         case C_CLOCK:
             en_ext = 1;
@@ -3257,7 +3356,7 @@ static void render_bass(uint32_t n)
     uint32_t j;
     const int bv = (unsigned)par[P_BVOICE] < EN_NBV ? par[P_BVOICE] : 0;
     const float g = bass_vol * 0.5f * BV_GAIN[bv] * GROOVE_LVL[gpat()],
-                xb = rel(P_BBITE), xs = fm_clampf(rel(P_BSHAPE) + lfo_b, -1.0f, 1.0f),   /* (the LFO on the Shape) */
+                xb = rel(P_BBITE), xs = rel(P_BSHAPE),   /* (1.4.0: no LFO on the bass) */
                 drv = 1.2f * fm_exp2f(1.2f * xb), bi = fm_maxf(1.0f + xb, 0.0f);   /* Bite: the drive, the FM bite */
     const int balg = BV_PATCH[bv] ? fm_alg_of(P_BALG, BV_PATCH[bv]) : 0;
     const float bfb = BV_PATCH[bv] ? fm_fb(P_BFB, BV_PATCH[bv]) : 0.0f;
@@ -3332,7 +3431,7 @@ static void render_bells(uint32_t n)
         for (; j < n; j++) {
             float x;
             if (!(j & 31u))
-                fm_ctl(&v->fm, &v->pt, alg, fm_exp2f(lfo_p));   /* (the LFO: brighter, darker) */
+                fm_ctl(&v->fm, &v->pt, alg, 1.0f);   /* (1.4.0: no LFO on the pings) */
             x = fm_sample(&v->fm, alg, fb, 1.0f + v->drop) * amp * att * g;
             mixl[j] += x * v->gl * ping_dry;   /* (Ghost: the dry against the sends, which stay; 50: -6 dB) */
             mixr[j] += x * v->gr * ping_dry;

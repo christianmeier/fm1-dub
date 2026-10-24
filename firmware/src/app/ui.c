@@ -24,37 +24,40 @@
 /* (past NPAGES, on no button of their own: V_MIX, PERFORM's knobs, the four layers' levels; the layers' sound
  * pages, the layer's button pressed again) */
 enum { V_DUB, V_CHORD, V_TEXTURE, V_BASS, V_DRUMS, V_SPACE, V_SETUP, NPAGES, V_MIX = NPAGES, V_CSND, V_PSND, V_BSND,
-       V_DSND, V_CFM, V_PFM, V_BFM, V_CHORDS, V_PAT, V_PERF, V_KEY, V_NSND, V_ESND, V_NSND2, NVIEWS };
+       V_DSND, V_CFM, V_PFM, V_BFM, V_CHORDS, V_PAT, V_PERF, V_KEY, V_NSND, V_ESND, V_NSND2, V_CLFO, V_NLFO, NVIEWS };
 /* (V_PERF: PERFORM's knobs, the master actions; V_MIX while white 6 is held. V_KEY: HOME again, the key and the
- * tempo, the Dub page's second) */
+ * tempo, the Dub page's second. V_CLFO, V_NLFO (1.4.0): the chord's LFO, ENV a fourth time (after its FM page), and
+ * the noise's, SAVE a third time; for now, till the big redesign) */
 static const char *const VIEW_NAME[NVIEWS] = {"Dub", "Chord", "Pings", "Bass", "Drums", "Space", "Setup", "Mix",
                                               "Chord sound", "Ping sound", "Bass sound", "Drum sound",
                                               "Chord FM", "Ping FM", "Bass FM", "Chords", "Pattern", "Perform", "Key", "Noise",
-                                              "Echo", "Noise space"};
+                                              "Echo", "Noise space", "Chord LFO", "Noise LFO"};
 #define B_NONE 0xFFu
 static const uint8_t VIEW_BTN[NVIEWS] = {B_HOME, B_ENV, B_ARP, B_LFO, B_SEQ, B_FX, B_GLO, B_NONE, B_NONE, B_NONE, B_NONE,
-                                         B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_SAVE, B_NONE, B_NONE};
+                                         B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_SAVE, B_NONE, B_NONE,
+                                         B_NONE, B_NONE};
 static int sound_of(int v) { return v == V_CHORD ? V_CSND : v == V_TEXTURE ? V_PSND : v == V_BASS ? V_BSND : v == V_DRUMS ? V_DSND : -1; }
 static int fm_of(int v) { return v == V_CHORD ? V_CFM : v == V_TEXTURE ? V_PFM : v == V_BASS ? V_BFM : -1; }
 static int parent_of(int v)
 {
-    return v == V_CSND || v == V_CFM ? V_CHORD : v == V_PSND || v == V_PFM ? V_TEXTURE : v == V_BSND || v == V_BFM ? V_BASS
+    return v == V_CSND || v == V_CFM || v == V_CLFO ? V_CHORD : v == V_PSND || v == V_PFM ? V_TEXTURE : v == V_BSND || v == V_BFM ? V_BASS
          : v == V_DSND || v == V_PAT ? V_DRUMS : -1;
 }
 static int layer_of(int v) { v = parent_of(v) >= 0 ? parent_of(v) : v; return v == V_CHORD ? 0 : v == V_TEXTURE ? 1 : v == V_BASS ? 2 : 3; }
 static int fm_off(int v) { return v >= V_CFM && v <= V_BFM && !en_voice_fm(v - V_CFM); }   /* an FM page, not FM */
-static int fm_knob_off(int v, int i)             /* a knob there doing nothing: the voice not FM (but the LFO), or Ratio
-                                                  * (operators 3 and 4) on a two-operator algorithm */
+static int fm_knob_off(int v, int i)             /* a knob there doing nothing: the voice not FM, or Ratio (operators 3
+                                                  * and 4) on a two-operator algorithm (1.4.0: the LFO its own page) */
 {
     if (v < V_CFM || v > V_BFM)
         return 0;
     if (!en_voice_fm(v - V_CFM))
-        return i != 3;
+        return 1;
     return i == 1 && en_fm_alg(v - V_CFM) == 8;
 }
+static int lfo_page(int v) { return v == V_CLFO || v == V_NLFO; }   /* (1.4.0) the LFO pages */
 static int page_of(int v)                        /* a sound page: its layer's; the Echo page: Space's */
 {
-    return v == V_KEY ? V_DUB : v == V_ESND ? V_SPACE : v == V_NSND2 ? V_NSND : parent_of(v) >= 0 ? parent_of(v) : v;
+    return v == V_KEY ? V_DUB : v == V_ESND ? V_SPACE : v == V_NSND2 || v == V_NLFO ? V_NSND : parent_of(v) >= 0 ? parent_of(v) : v;
 }
 /* SELECT's round and the dots, as the buttons sit on the panel: FX ENV LFO GLO, then HOME SAVE ARP SEQ */
 #define NROUND 8
@@ -73,7 +76,8 @@ static int round_pos(int v)                      /* a page's place in the round 
 static int oct_layer(int v)
 {
     v = parent_of(v) >= 0 ? parent_of(v) : v;
-    return v == V_CHORD ? 0 : v == V_TEXTURE ? 1 : v == V_BASS ? 2 : v == V_DRUMS ? 3 : v == V_NSND || v == V_NSND2 ? 4 : -1;
+    return v == V_CHORD ? 0 : v == V_TEXTURE ? 1 : v == V_BASS ? 2 : v == V_DRUMS ? 3 : v == V_NSND || v == V_NSND2 || v == V_NLFO ? 4
+         : -1;
 }
 /* the four knobs of each page: a parameter, or one of these; and what the knob is called there */
 enum { K_LEDS = 200, K_CPU, K_NONE, K_SLOT, K_CQ, K_CX,    /* (the Chords page: the slot, and its kind and type) */
@@ -99,16 +103,18 @@ static const uint16_t VIEW_KNOB[NVIEWS][4] = {
     {P_PTON, P_PRAT, P_PLEN, P_PBEND},
     {P_BBITE, P_BSHAPE, P_BLEN, P_BSLIDE},
     {P_KTUNE, P_KLEN, P_KPUNCH, P_HLEN},         /* (1.4.0: the kick's rumble here, in Hat len's place: EN_RUMBLE) */
-    {P_CALG, P_CFRAT, P_CFB, P_CFDEC},
-    {P_PALG, P_PFRAT, P_PFB, P_PFDEC},
-    {P_BALG, P_BFRAT, P_BFB, P_BFDEC},
+    {P_CALG, P_CFRAT, P_CFB, K_NONE},            /* (1.4.0: the chord's LFO its own page; the pings' and the bass's gone) */
+    {P_PALG, P_PFRAT, P_PFB, K_NONE},
+    {P_BALG, P_BFRAT, P_BFB, K_NONE},
     {K_SLOT, K_CQ, K_CX, K_PLAY},
     {K_LANE, P_DACCENT, K_LCH, P_DMODE},
     {K_FILTER, K_DUB, K_ENERGY, P_DUCK},         /* (Wet, Energy: offsets for playing; Duck the piece's own) */
     {P_TEMPO, P_ROOT, K_MODE, P_SWING},
     {P_NGRAIN, P_NROOM, P_NCOL, P_NTUNE},     /* (the level on OCT- / OCT+, as the layers'; Drift the recipes') */
     {P_EBLUR, P_ETONE, P_EWIDTH, P_SIZE},
-    {P_NWIDTH, P_NPLATE, P_NECHO, P_NLFO},       /* (the Noise page's second: SAVE again; its Change the recipes') */
+    {P_NWIDTH, P_NPLATE, P_NECHO, K_NONE},       /* (the Noise page's second: SAVE again; its Change the recipes') */
+    {P_CFDEC, P_CLRATE, K_NONE, K_NONE},         /* (1.4.0) the LFO pages: the depth, the rate */
+    {P_NLFO, P_NLRATE, K_NONE, K_NONE},
 };
 static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Filter", "Evolve", "Motion", "Drift"},
@@ -123,16 +129,18 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Tone", "Ratio", "Length", "Bend"},
     {"Bite", "Shape", "Gate", "Glide"},          /* (1.4.0, the user's: the common words) */
     {"Kick tune", "Kick len", "Punch", "Hat len"},
-    {"Algo", "Ratio", "Feedback", "LFO"},
-    {"Algo", "Ratio", "Feedback", "LFO"},
-    {"Algo", "Ratio", "Feedback", "LFO"},
+    {"Algo", "Ratio", "Feedback", ""},
+    {"Algo", "Ratio", "Feedback", ""},
+    {"Algo", "Ratio", "Feedback", ""},
     {"Slot", "Chord", "Type", "Play"},
     {"Lane", "Accent", "Chance", "Play"},
     {"Filter", "Wet", "Energy", "Duck"},
     {"Tempo", "Root", "Mode", "Swing"},
     {"Density", "Air", "Tone", "Decay"},
     {"Blur", "Tone", "Width", "Size"},
-    {"Width", "Plate", "Echo", "LFO"},
+    {"Width", "Plate", "Echo", ""},
+    {"Depth", "Rate", "", ""},
+    {"Depth", "Rate", "", ""},
 };
 /* what each knob does, a line: on the rule above the knobs while it's being turned (in capitals; each fits the
  * rule's 228 px: the host's expect helpfit) */
@@ -159,12 +167,9 @@ static const char *const KNOB_HELP[NVIEWS][4] = {
     {"Drive: clean to growling", "A pure sine, to a square", "How long each note holds (its gate)", "How long it slides to the next"},
     {"The kick's pitch, in semitones", "How long the kick booms", "The kick's click and start pitch",
      "How long the hats ring"},
-    {"Which operators modulate which", "Operators 3 and 4's pitch", "Op 4 on itself: pure to gritty",
-     "The filter swept, over two bars"},
-    {"Which operators modulate which", "Operators 3 and 4's pitch", "Op 4 on itself: pure to gritty",
-     "The brightness swept, over a bar"},
-    {"Which operators modulate which", "Operators 3 and 4's pitch", "Op 4 on itself: pure to gritty",
-     "The bite swept, over four bars"},
+    {"Which operators modulate which", "Operators 3 and 4's pitch", "Op 4 on itself: pure to gritty", ""},
+    {"Which operators modulate which", "Operators 3 and 4's pitch", "Op 4 on itself: pure to gritty", ""},
+    {"Which operators modulate which", "Operators 3 and 4's pitch", "Op 4 on itself: pure to gritty", ""},
     {"The slot you're writing", "Its kind (Empty: a gap)", "Triad, 6, 7, Maj7, 9, 11, Add9",
      "Endless, or the slots in a loop"},
     {"The lane you're writing", "How much quieter the other steps", "How likely the lane's steps play",
@@ -176,8 +181,9 @@ static const char *const KNOB_HELP[NVIEWS][4] = {
      "How long each hit rings on the chord"},
     {"Clean repeats, to a dissolving wash", "The repeats darker, or brighter", "The echo mono, to wide",
      "How long the plate rings"},
-    {"The noise mono, to wide", "How much of it rings in the plate", "How much of it goes into the echo",
-     "The rings' tone swept, over a bar"},
+    {"The noise mono, to wide", "How much of it rings in the plate", "How much of it goes into the echo", ""},
+    {"How deep the filter's sweep", "How fast: bars, or Drift's slow wander", "", ""},
+    {"How deep the rings' tone sweeps", "How fast: bars, or Drift's slow wander", "", ""},
 };
 
 /* the screen's colours: a dark room, as a dub techno sleeve (grey on black, a cold blue). The chord and
@@ -1013,6 +1019,8 @@ static void button(int b)
         int pv = parent_of(ui.view);
         if (ui.view == sound_of(pv) && fm_of(pv) >= 0)   /* (on a voice that isn't FM, the page says so) */
             set_view(fm_of(pv));
+        else if (ui.view == V_CFM)
+            set_view(V_CLFO);                    /* (1.4.0) the chord: its LFO, then back */
         else if (ui.view == sound_of(pv) && pv == V_DRUMS)
             set_view(V_PAT);                     /* the drums: their pattern */
         else
@@ -1062,8 +1070,9 @@ static void button(int b)
         break;
     case B_SAVE:                                 /* the Noise page (one page: again stays; saving: GLO held, Setup's
                                                   * KNOB 4) */
-        if (ui.view == V_NSND || ui.view == V_NSND2) {   /* (1.3.0: two pages now: SAVE again steps through) */
-            set_view(ui.view == V_NSND ? V_NSND2 : V_NSND);
+        if (ui.view == V_NSND || ui.view == V_NSND2 || ui.view == V_NLFO) {   /* (1.3.0: two pages now, 1.4.0 three:
+                                                  * SAVE again steps through) */
+            set_view(ui.view == V_NSND ? V_NSND2 : ui.view == V_NSND2 ? V_NLFO : V_NSND);
         } else {
             ui.noise_from = (uint8_t)ui.view;
             ui.noise_round = 0;
@@ -1526,7 +1535,7 @@ static void input(void)
     }
     if ((e = plat_enc(EN_ALGO)) != 0) {         /* a layer's page: its voice; the Chords page: the walk; elsewhere: the screen */
         int vp = view_voice(ui.view);
-        if (ui.view == V_NSND || ui.view == V_NSND2) {   /* the Noise pages: its character */
+        if (ui.view == V_NSND || ui.view == V_NSND2 || ui.view == V_NLFO) {   /* the Noise pages: its character */
             int c = ((proj.par[P_NCHAR] + (int)(e % EN_NNCHAR)) % EN_NNCHAR + EN_NNCHAR) % EN_NNCHAR;
             knob_set(P_NCHAR, c);
             say_name("NOISE", EN_NCHAR_NAME[c]);
@@ -1576,9 +1585,9 @@ static void input(void)
         if ((e = plat_enc(EN_K1 + (int)i)) != 0) {
             if (grid_up())
                 continue;                        /* (the grid on the screen: the knobs rest) */
-            if (fm_knob_off(ui.view, (int)i))
-                continue;                        /* (an FM page on a voice that isn't FM: the knobs rest, greyed; the
-                                                  * LFO, the fourth, works on every voice) */
+            if (fm_knob_off(ui.view, (int)i) || VIEW_KNOB[ui.view][i] == K_NONE)
+                continue;                        /* (an FM page on a voice that isn't FM: the knobs rest, greyed; a
+                                                  * knob of none, 1.4.0, rests too) */
             turn(EN_K1 + (int)i, VIEW_KNOB[ui.view][i], e);
             if (VIEW_KNOB[ui.view][i] != K_SAVE) {   /* (1.4.0, the user's) the header: the knob's name, in capitals, for
                                                        * every knob (its value the big ring's; shown, not said again) */
@@ -2666,7 +2675,11 @@ static void draw_noise_lane(void)
     const int st = en_nz_step, bar2 = st >= 16;
     const float step_s = proj.par[P_TEMPO] > 0 ? 15.0f / (float)proj.par[P_TEMPO] : 0.12f;
     const int tail = (int)(en_nz_t60 * 0.5f / step_s + 0.5f);   /* (to about -30 dB, in sixteenths) */
-    const int amp = proj.par[P_NLFO] * 16 / 100;  /* (the LFO's wave: 16 px either way at 100, the two rows' height) */
+    const int nb = en_lfo_bars(proj.par[P_NLRATE]);   /* (1.4.0: its rate; Drift none here, the LFO page shows it) */
+    const int amp = nb ? proj.par[P_NLFO] * 16 / 100 : 0;   /* (the LFO's wave: 16 px either way at 100, the two rows'
+                                                  * height) */
+    const float cb = nb > 1 ? (float)(((en_bars ? en_bars - 1u : 0u) >> 4) % (uint32_t)nb) : 0.0f;   /* (the bar playing,
+                                                  * in the cycle: a rate over bars, its slice) */
     const uint16_t wave = mix(K_BG, K_NOISE, 6);
     int r, i, k;
     text_c(17, 99, &FONT_C, "1", bar2 ? K_LINE : K_NOISE);
@@ -2675,10 +2688,12 @@ static void draw_noise_lane(void)
         cv_round(38 + (st & 15) * 11, (bar2 ? 126 : 106) - 5, 10, 20, 2, K_PANEL);
     if (amp > 0) {                               /* (1.4.0, the user's) behind the hits, the LFO: one wave, the rings'
                                                   * tone over a bar (a row's width), brightest (up) on beat 2; as tall
-                                                  * as deep, across both rows */
+                                                  * as deep, across both rows (1.4.0: a cycle a row at 1 bar; slower,
+                                                  * the bar's slice of it) */
         int32_t x, y0 = 0;
         for (x = 36; x <= 214; x++) {
-            const int32_t yy = 121 - (int32_t)((float)amp * fm_sinf(6.2831853f * (float)(x - 43) * (1.0f / 176.0f)) + 0.5f);
+            const int32_t yy = 121 - (int32_t)((float)amp * fm_sinf(6.2831853f * (cb + (float)(x - 43) * (1.0f / 176.0f)) /
+                                                                    (float)nb) + 0.5f);
             const int32_t a0 = x == 36 ? yy : y0 < yy ? y0 : yy, a1 = x == 36 ? yy : y0 > yy ? y0 : yy;
             cv_rect(x, a0, 1, a1 - a0 + 1, wave);
             y0 = yy;
@@ -2701,13 +2716,56 @@ static void draw_noise_lane(void)
     }
     if (amp > 0 && en_playing)                   /* (on the wave, over the hits: where the sound is now) */
         cv_round(43 + (st & 15) * 11 - 2,
-                 121 - (int32_t)((float)amp * fm_sinf(6.2831853f * (float)(st & 15) * (1.0f / 16.0f)) + 0.5f) - 2, 5, 5, 2,
+                 121 - (int32_t)((float)amp * fm_sinf(6.2831853f * (cb + (float)(st & 15) * (1.0f / 16.0f)) / (float)nb) +
+                                 0.5f) - 2, 5, 5, 2,
                  K_TEXT);                        /* (white: seen on a hit too) */
+}
+
+/* (1.4.0) an LFO page: the modulation's path, as heard, the last 16 bars (en_lfo_tr), in the layer's colour, older
+ * fainter, the present at the right with a dot; a faint line at the middle (the knob's own value), its reach at the
+ * depth dotted above and below; the bars ticked on the middle line; the rate over it */
+static void draw_lfo(int k)
+{
+    const int32_t x0 = 60, w = 124, yc = 60, rr = 28;   /* (between the meters and the duck, under the page's name,
+                                                  * over the lane; 127: rr pixels) */
+    const uint16_t col = k ? K_NOISE : K_PAD;
+    const uint32_t wn = en_lfo_w, n = wn < EN_LFO_N ? wn : EN_LFO_N, b16 = en_bars ? en_bars - 1u : 0u;
+    const int d = proj.par[k ? P_NLFO : P_CFDEC], reach = d * rr / 100;
+    int32_t x, y0 = yc, yy;
+    char t[12], tt[12];
+    en_param_text(k ? P_NLRATE : P_CLRATE, proj.par[k ? P_NLRATE : P_CLRATE], t);
+    caps(tt, t, sizeof tt);
+    text_c(120, -1, &FONT_XS, tt, K_DIM);
+    cv_rect(x0, yc, w, 1, mix(K_BG, K_LINE, 10));
+    for (x = 0; x < w; x += 4)                   /* (its reach, at the depth) */
+        if (reach > 0) {
+            cv_rect(x0 + x, yc - reach, 1, 1, K_LINE);
+            cv_rect(x0 + x, yc + reach, 1, 1, K_LINE);
+        }
+    for (x = 0; x < w; x++) {                    /* (the bars, on the middle line: the oldest at the left) */
+        const uint32_t age = (uint32_t)(w - 1 - x) * EN_LFO_N / (uint32_t)w, age2 = (uint32_t)(w - x) * EN_LFO_N / (uint32_t)w;
+        if (age2 <= b16 && ((b16 - age) >> 4) != ((b16 - age2) >> 4))
+            cv_rect(x0 + x, yc - 1, 1, 3, K_LINE);
+    }
+    for (x = 0; x < w; x++) {
+        const uint32_t age = (uint32_t)(w - 1 - x) * EN_LFO_N / (uint32_t)w;
+        int32_t a0, a1;
+        if (age >= n)                            /* (not played yet so far back) */
+            continue;
+        yy = yc - (int32_t)en_lfo_tr[k][(wn - 1u - age) % EN_LFO_N] * rr / 127;
+        if (x == 0 || age + 1u >= n)
+            y0 = yy;
+        a0 = y0 < yy ? y0 : yy, a1 = y0 > yy ? y0 : yy;
+        cv_rect(x0 + x, a0, 1, a1 - a0 + 1, mix(K_BG, col, 5 + (int)(11u - age * 11u / EN_LFO_N)));
+        y0 = yy;
+    }
+    if (n)                                       /* (now: a dot at the right) */
+        cv_disc(x0 + w - 1, yc - (int32_t)en_lfo_tr[k][(wn - 1u) % EN_LFO_N] * rr / 127, 3, en_playing ? K_TEXT : col);
 }
 
 static void draw_lanes(void)
 {
-    if (ui.view == V_NSND || ui.view == V_NSND2) {   /* (1.4.0) the Noise pages: its groove alone */
+    if (ui.view == V_NSND || ui.view == V_NSND2 || ui.view == V_NLFO) {   /* (1.4.0) the Noise pages: its groove alone */
         draw_noise_lane();
         return;
     }
@@ -3144,10 +3202,15 @@ static void draw_main(void)
     for (i = 0; i < EN_NDRUM; i++)
         h = hash(h, (uint32_t)q16(en_drum_glow[i]));
     h = hash(h, ui.view | (uint32_t)oct_ring_on(now) << 8);
-    h = hash(h, (uint32_t)proj.par[P_NLFO]);     /* (the Noise pages' wave: as deep as the LFO) */
+    h = hash(h, (uint32_t)proj.par[P_NLFO] | (uint32_t)proj.par[P_NLRATE] << 8);   /* (the Noise pages' wave: as deep
+                                                  * as the LFO, at its rate) */
+    if (ui.view == V_NSND || ui.view == V_NSND2 || ui.view == V_NLFO)
+        h = hash(h, en_bars >> 4);                /* (a rate over bars: each bar its slice) */
+    if (lfo_page(ui.view))                       /* (the LFO pages: the trace, a sixteenth at a time) */
+        h = hash(h, en_lfo_w | (uint32_t)proj.par[P_CFDEC] << 16 | (uint32_t)proj.par[P_CLRATE] << 24);
     if (parent_of(ui.view) >= 0) {               /* a sound or FM page: redrawn as its values move */
         for (i = 0; i < 4; i++)
-            h = hash(h, (uint32_t)(proj.par[VIEW_KNOB[ui.view][i]] + 64));
+            h = hash(h, (uint32_t)(knob_get(VIEW_KNOB[ui.view][i]) + 64));   /* (1.4.0: K_NONE's too, no parameter) */
         h = hash(h, (uint32_t)proj.par[view_voice(ui.view)] | (uint32_t)proj.par[P_DECAY] << 8 | (uint32_t)proj.par[P_GROOVE] << 16);
     }
     h = hash(h, (uint32_t)card_on(now) | (en_phrase_bar == 7 && en_change_next ? (now / 200u & 1u) << 1 : 0u));
@@ -3157,6 +3220,9 @@ static void draw_main(void)
     cv_begin(240, MAIN_H, K_BG);
     if (ui.view >= V_CFM && ui.view <= V_BFM) {  /* an FM page: the algorithm */
         draw_alg(layer_of(ui.view));
+        moving = 0;
+    } else if (lfo_page(ui.view)) {              /* (1.4.0) an LFO page: its path */
+        draw_lfo(ui.view == V_NLFO);
         moving = 0;
     } else if (proj.screen % 3u == 1u) {         /* (HOME again: a scope, a spectrum, or the ripples) */
         draw_scope();
@@ -3173,7 +3239,8 @@ static void draw_main(void)
         if (rip_src < 0 || rip_src == 1)         /* (the ping loops: on the whole, and the Pings page) */
             draw_orbits();
     }
-    const int named = parent_of(ui.view) < 0 || scr_layer(ui.view) >= 0;   /* (a sound page: as its layer's) */
+    const int named = (parent_of(ui.view) < 0 || scr_layer(ui.view) >= 0) && !lfo_page(ui.view);   /* (a sound page:
+                                                  * as its layer's; the LFO pages: the trace there) */
     static char ch_last[16];
     static uint32_t ch_t;
     char nm[16];
@@ -3285,7 +3352,7 @@ static void draw_knobs(void)
         h = hash(h, (uint32_t)proj.par[view_voice(ui.view)]);
     if (ui.view == V_CHORDS)
         h = hash(h, (uint32_t)proj.par[P_PMODE]);
-    if (ui.view == V_NSND || ui.view == V_NSND2)
+    if (ui.view == V_NSND || ui.view == V_NSND2 || ui.view == V_NLFO)
         h = hash(h, (uint32_t)proj.par[P_NCHAR]);
     if (ui.view == V_MIX)
         h = hash(h, ui.mutes);
@@ -3302,10 +3369,10 @@ static void draw_knobs(void)
         int k;
         int32_t xd = 237 - NROUND * 6, xt;
         int32_t x0 = 4;
-        if (view_voice(ui.view) >= 0 || ui.view == V_CHORDS || ui.view == V_NSND || ui.view == V_NSND2) {   /* a layer's page: its voice, at the rule's start;
+        if (view_voice(ui.view) >= 0 || ui.view == V_CHORDS || ui.view == V_NSND || ui.view == V_NSND2 || ui.view == V_NLFO) {   /* a layer's page: its voice, at the rule's start;
                                                                    * the Chords page: the walk's; Noise: its character */
             char vn[12];
-            if (ui.view == V_CHORDS || ui.view == V_NSND || ui.view == V_NSND2) {
+            if (ui.view == V_CHORDS || ui.view == V_NSND || ui.view == V_NSND2 || ui.view == V_NLFO) {
                 const char *w = ui.view != V_CHORDS ? EN_NCHAR_NAME[proj.par[P_NCHAR] % EN_NNCHAR]
                                                   : EN_WALK_NAME[(proj.par[P_PMODE] & 3) % EN_NWALK];
                 int j;
@@ -3334,7 +3401,7 @@ static void draw_knobs(void)
         }
     }
     for (i = 0; i < 4; i++) {
-        const int off = fm_knob_off(ui.view, (int)i);   /* (the LFO, the fourth, on every voice; Ratio on two ops) */
+        const int off = fm_knob_off(ui.view, (int)i);   /* (a voice not FM: all grey; Ratio on two ops) */
         const int moff = ui.view == V_MIX && (ui.mutes & LAYER_MUTE[i]) == LAYER_MUTE[i];   /* (the mix: a muted
                                                                                        * layer grey, its level kept) */
         int k = VIEW_KNOB[ui.view][i], lo, hi, v, hot = now_touch && ui.touched == (int)i && !off;
@@ -3377,7 +3444,7 @@ static void draw_knobs(void)
 static void leds(void)
 {
     uint32_t b = 0, k = 0, i, ap = pool_abs();
-    if (VIEW_BTN[page_of(ui.view)] != B_NONE && ((parent_of(ui.view) < 0 && ui.view != V_KEY && ui.view != V_ESND && ui.view != V_NSND2) || (plat_ms() / 300u) & 1u))
+    if (VIEW_BTN[page_of(ui.view)] != B_NONE && ((parent_of(ui.view) < 0 && ui.view != V_KEY && ui.view != V_ESND && ui.view != V_NSND2 && ui.view != V_NLFO) || (plat_ms() / 300u) & 1u))
         b |= 1u << VIEW_BTN[page_of(ui.view)];   /* (a sound page, or Key: its button blinks) */
     if (en_playing)
         b |= 1u << B_PLAY;
@@ -3525,7 +3592,7 @@ static void sp_page(int all)
     sp_buf[0] = 0;
     sp_cat(VIEW_NAME[ui.view]);
     sp_cat(" page");
-    if (ui.view == V_NSND || ui.view == V_NSND2) {
+    if (ui.view == V_NSND || ui.view == V_NSND2 || ui.view == V_NLFO) {
         sp_cat(", character ");
         sp_cat(EN_NCHAR_NAME[proj.par[P_NCHAR] % EN_NNCHAR]);
     } else if (view_voice(ui.view) >= 0) {
@@ -3750,6 +3817,8 @@ static void speak_dump(void)
         sp_print("SCREEN", sp_buf);
         for (i = 0; i < 4; i++) {
             int k = VIEW_KNOB[v][i];
+            if (k == K_NONE)
+                continue;
             knob_range(k, &lo, &hi);
             for (x = lo; x <= hi; x++) {
                 if (k < P_NPARAMS)

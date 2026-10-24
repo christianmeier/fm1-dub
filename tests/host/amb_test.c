@@ -2,8 +2,12 @@
 /* The instrument on the host: the pure parts (Euclid, scales, chords, voicings, grooves, names, texts) and
  * the render (sound, no NaN, bounded; the kick on the floor, the chord drifts and holds, never on a
  * diminished fifth, freeze holds, the arrangement moves with Motion, throws, the loops evolve). */
+#define _POSIX_C_SOURCE 200809L                /* (fork, pipe: the LFOs' test, one engine run two ways) */
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <stdlib.h>
 #include <math.h>
 #include "amb.h"
@@ -85,6 +89,67 @@ static void run(float secs)
             sum2 += x * x;
         }
     }
+}
+
+/* (1.4.0) the LFOs: a sixteenth at a time, as the LFO pages' trace has it (en_lfo_tr), n of them from now: the
+ * chord's (k 0) and the noise's (1); and when the chord's drift took a new place (picks, the sixteenth's index) */
+#define LFO_REC 4800
+static int8_t lfo_v[2][LFO_REC];
+static int lfo_pick[64], lfo_npick;
+static void lfo_rec(int n)
+{
+    uint32_t w = en_lfo_w, p = en_lfo_picks[0];
+    int i = 0;
+    lfo_npick = 0;
+    while (i < n) {
+        en_render(buf, 256, 2048);
+        if (en_lfo_w != w) {
+            w = en_lfo_w;
+            lfo_v[0][i] = en_lfo_tr[0][(w - 1u) % EN_LFO_N];
+            lfo_v[1][i] = en_lfo_tr[1][(w - 1u) % EN_LFO_N];
+            if (en_lfo_picks[0] != p && lfo_npick < 64)
+                lfo_pick[lfo_npick++] = i;
+            p = en_lfo_picks[0];
+            i++;
+        }
+    }
+}
+/* one engine, from here two ways (a fork): as it is, and with parameter p set to v; the same sound either way */
+static uint32_t out_hash(float secs)
+{
+    int blocks = (int)(secs * 44100.0f / 256.0f), b, j;
+    uint32_t h = 2166136261u;
+    for (b = 0; b < blocks; b++) {
+        en_render(buf, 256, 2048);
+        for (j = 0; j < 512; j++)
+            h = (h ^ (uint32_t)buf[j]) * 16777619u;
+    }
+    return h;
+}
+static int same_with(int p, int v)
+{
+    int fd[2];
+    pid_t pid;
+    uint32_t h0, h1 = 0;
+    fflush(stdout);
+    if (pipe(fd))
+        return -1;
+    pid = fork();
+    if (pid == 0) {
+        en_set(p, v);
+        h1 = out_hash(12.0f);
+        if (write(fd[1], &h1, sizeof h1) != (ssize_t)sizeof h1)
+            _exit(1);
+        _exit(0);
+    }
+    en_set(p, en_param_info(p)->lo);             /* (a command here too: the same drain) */
+    h0 = out_hash(12.0f);
+    if (read(fd[0], &h1, sizeof h1) != (ssize_t)sizeof h1)
+        h1 = ~h0;
+    waitpid(pid, 0, 0);
+    close(fd[0]);
+    close(fd[1]);
+    return h0 == h1;
 }
 
 /* a new engine, stopped, the count from the top (en_init leaves the transport, en_bars, as they were) */
@@ -894,6 +959,131 @@ int main(void)
         printf("  3 min at Feedback 100: peak %.3f, rms %.4f; a minute after stop: %.4f\n", (double)p1,
                (double)rms, (double)peak);
         CHECK(peak < 0.3f, "Feedback 100: still %f a minute after stopping", (double)peak);
+    }
+
+    /* (1.4.0, REPORT10) the LFOs' rates: each sine's cycle as long as its rate (1 to 32 bars), on the trace; full
+     * depth there at 100 */
+    {
+        int r, k;
+        en_set(P_TEMPO, 140);
+        for (r = 0; r < EN_LFO_DRIFT; r++) {
+            const int per = 16 << r, n = 2 * per + 40;
+            for (k = 0; k < 2; k++) {
+                int i, ups = 0, first = -1, last = -1, ok = 1, hi = 0;
+                fresh();
+                en_set(P_TEMPO, 140);
+                en_set(P_CFDEC, 100);
+                en_set(P_NLFO, 100);
+                en_set(P_CLRATE, r);
+                en_set(P_NLRATE, r);
+                en_play(1);
+                lfo_rec(n);
+                for (i = 8; i < n; i++) {        /* (upward through the middle: a cycle apart) */
+                    if (lfo_v[k][i - 1] < 0 && lfo_v[k][i] >= 0) {
+                        if (last >= 0 && (i - last < per - 1 || i - last > per + 1))
+                            ok = 0;
+                        if (first < 0)
+                            first = i;
+                        last = i;
+                        ups++;
+                    }
+                    hi = lfo_v[k][i] > hi ? lfo_v[k][i] : hi;
+                }
+                CHECK(ok && ups >= 2 && hi > 110, "%s LFO at %d bars: %d crossings %d..%d, its top %d",
+                      k ? "noise" : "chord", 1 << r, ups, first, last, hi);
+            }
+        }
+        printf("  the LFOs' rates: 1 to 32 bars, each a cycle as long\n");
+    }
+
+    /* Drift: within the depth, gliding (no step over a small bound a sixteenth), a new place every 8 to 32 bars, never
+     * a cycle; the same with the same seed, another with another; the noise's its own */
+    {
+        static int8_t a[600], c[600];
+        int i, lo = 127, hi = -127, step = 0, iv_ok = 1, iv_n = 0, iv_min = 1 << 30, iv_max = 0, per = 0, L, same, other;
+        fresh();
+        en_seed(11);
+        en_set(P_TEMPO, 140);
+        en_set(P_CFDEC, 50);
+        en_set(P_NLFO, 50);
+        en_set(P_CLRATE, EN_LFO_DRIFT);
+        en_set(P_NLRATE, EN_LFO_DRIFT);
+        en_play(1);
+        lfo_rec(LFO_REC);
+        for (i = 0; i < LFO_REC; i++) {
+            const int d = i ? lfo_v[0][i] - lfo_v[0][i - 1] : 0;
+            lo = lfo_v[0][i] < lo ? lfo_v[0][i] : lo;
+            hi = lfo_v[0][i] > hi ? lfo_v[0][i] : hi;
+            step = (d < 0 ? -d : d) > step ? (d < 0 ? -d : d) : step;
+        }
+        for (i = 2; i < lfo_npick; i++) {        /* (the first, at the start, left out) */
+            const int g = lfo_pick[i] - lfo_pick[i - 1];
+            iv_ok &= g >= 128 && g <= 513;
+            iv_min = g < iv_min ? g : iv_min;
+            iv_max = g > iv_max ? g : iv_max;
+            iv_n++;
+        }
+        for (L = 128; L <= 2400; L += 4) {       /* (no lag at which it comes back as it was) */
+            int sum = 0;
+            for (i = 0; i < 2400; i++)
+                sum += abs(lfo_v[0][i] - lfo_v[0][i + L]);
+            if (sum < 2400 * 4)
+                per++;
+        }
+        for (same = 0, i = 0; i < LFO_REC; i++)
+            same += lfo_v[0][i] == lfo_v[1][i];
+        printf("  Drift at 50: %d..%d (of +-64), its biggest step a sixteenth %d, %d new places %d..%d sixteenths apart\n",
+               lo, hi, step, iv_n + 1, iv_min, iv_max);
+        CHECK(lo >= -64 && hi <= 64 && hi - lo > 50, "Drift: %d..%d at depth 50", lo, hi);
+        CHECK(step <= 4, "Drift: a step of %d in a sixteenth", step);
+        CHECK(iv_ok && iv_n >= 8 && iv_max > iv_min, "Drift: places %d..%d sixteenths apart (%d)", iv_min, iv_max, iv_n);
+        CHECK(per == 0, "Drift: like itself at %d lags", per);
+        CHECK(same < LFO_REC / 3, "Drift: the noise's the chord's (%d of %d alike)", same, LFO_REC);
+        fresh();
+        en_seed(11);
+        en_set(P_TEMPO, 140);
+        en_set(P_CFDEC, 50);
+        en_set(P_CLRATE, EN_LFO_DRIFT);
+        en_play(1);
+        lfo_rec(600);
+        memcpy(a, lfo_v[0], sizeof a);
+        fresh();
+        en_seed(11);
+        en_set(P_TEMPO, 140);
+        en_set(P_CFDEC, 50);
+        en_set(P_CLRATE, EN_LFO_DRIFT);
+        en_play(1);
+        lfo_rec(600);
+        memcpy(c, lfo_v[0], sizeof c);
+        same = !memcmp(a, c, sizeof a);
+        fresh();
+        en_seed(12);
+        en_set(P_TEMPO, 140);
+        en_set(P_CFDEC, 50);
+        en_set(P_CLRATE, EN_LFO_DRIFT);
+        en_play(1);
+        lfo_rec(600);
+        other = memcmp(a, lfo_v[0], sizeof a) != 0;
+        CHECK(same && other, "Drift: the same seed the same path (%d), another seed another (%d)", same, other);
+    }
+
+    /* the bass's and the pings' LFO gone: their old knobs (P_BFDEC, P_PFDEC) change nothing; the chord's does (the test
+     * hears a change) */
+    {
+        int b, pg, ch;
+        fresh();
+        en_seed(3);
+        en_set(P_BASS, 100);
+        en_set(P_PINGS, 100);
+        en_play(1);
+        run(2.0f);
+        b = same_with(P_BFDEC, 100);
+        pg = same_with(P_PFDEC, 100);
+        ch = same_with(P_CFDEC, 100);
+        printf("  the old LFO knobs: the bass's %s, the pings' %s; the chord's %s\n", b ? "nothing" : "heard",
+               pg ? "nothing" : "heard", ch ? "nothing" : "heard");
+        CHECK(b == 1 && pg == 1 && ch == 0, "LFOs: the bass's %d, the pings' %d, the chord's %d (1: unheard)", b, pg, ch);
+        en_set(P_TEMPO, 122);
     }
 
     /* every setting at its extremes: still bounded */

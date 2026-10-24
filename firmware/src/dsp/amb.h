@@ -100,6 +100,10 @@ enum {
     P_NWIDTH, P_NPLATE, P_NECHO, P_HLEN,
     P_NLFO,                                           /* (1.3.0, format 16) the noise's LFO: its rings' tone, over a bar */
     P_RUMBLE,                                         /* (1.3.0, format 17) the kick's rumble */
+    /* (1.4.0, format 19, REPORT10) the chord's LFO and the noise's: their rate (1, 2, 4, 8, 16, 32 bars, or Drift: a
+     * slow random wander, a new place every 8-32 bars, glided to); their depth the Chord LFO and Noise LFO knobs.
+     * (The pings' and the bass's LFO gone: P_PFDEC and P_BFDEC kept in the format, the engine leaves them be) */
+    P_CLRATE, P_NLRATE,
     P_NPARAMS
 };
 typedef struct {
@@ -225,6 +229,16 @@ extern volatile uint32_t en_nz_pat;             /* (1.4.0, the Noise page) its g
 extern volatile uint8_t en_nz_vel[32], en_nz_step;   /* each hit's strength (a ghost low); the step playing (0..31) */
 int en_nz_air18(int old, int character);          /* (format 18) the noise's Air before 18 (-50..50) as 0..100 */
 int en_nz_dens18(int old, int character);         /* (format 18) the noise's Density before 18 (-50..50) as 0..100 */
+/* (1.4.0) the LFO pages: the chord's (0) and the noise's (1) LFO as heard, a sixteenth at a time, the last 16 bars;
+ * each -127..127 of its depth's reach (its knob: 127 at 100, a sine or a drift alike); en_lfo_w the sixteenths
+ * written so far (the next goes at en_lfo_w % EN_LFO_N) */
+#define EN_LFO_N 256
+#define EN_LFO_DRIFT 6                           /* (the rate's last: Drift) */
+extern volatile int8_t en_lfo_tr[2][EN_LFO_N];
+extern volatile uint32_t en_lfo_w;
+extern volatile uint32_t en_lfo_picks[2];        /* the drifts' new places so far (for tests) */
+int en_lfo_bars(int v);                          /* a rate's bars (0: Drift) */
+int en_nlfo18(int old);                          /* (format 19) a Noise LFO before 19 as 19's (its depth kept) */
 extern volatile float en_nz_t60;                 /* how long a hit rings, to -60 dB, seconds */
 extern volatile float en_stab_t60;              /* (1.4.0, the chord's page) a stab's length to -60 dB, seconds */
 extern volatile uint16_t en_stab_thr;            /* this bar's stabs thrown so far (bit a step) */

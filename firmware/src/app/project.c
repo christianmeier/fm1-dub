@@ -181,6 +181,23 @@ typedef struct {
     slot16_t slot[NPIECES];
     uint8_t rsv[16];
 } project16_t;
+/* DUB-1 1.4.0's test builds (formats 17 and 18): today's, without the LFOs' rates */
+#define NPAR18 P_CLRATE
+_Static_assert(NPAR18 == 127, "formats 17-18 had 127 parameters");
+typedef struct {
+    int16_t par[NPAR18];
+    uint16_t pool;
+    uint8_t pings[EN_PINGS_N];
+    uint8_t pings_ok, screen;
+} slot18_t;
+typedef struct {
+    uint32_t magic, format;
+    int16_t par[NPAR18];
+    uint16_t pool;
+    uint8_t leds, piece, screen, rsv0;
+    slot18_t slot[NPIECES];
+    uint8_t rsv[16];
+} project18_t;
 _Static_assert(sizeof(project_t) <= 3840u, "the project must fit one storage sector's payload");
 
 static void take(const slot_t *s)                /* a piece's settings into play, the globals kept */
@@ -378,6 +395,23 @@ static void from16(const project16_t *o)        /* 1.3.0's noise LFO (16): every
         proj.slot[i].screen = o->slot[i].screen;
     }
 }
+static void from18(const project18_t *o)        /* 1.4.0's test builds (17, 18): everything kept */
+{
+    int i;
+    memset(&proj, 0, sizeof proj);
+    proj.magic = o->magic;
+    proj.format = PROJ_FORMAT;
+    memcpy(proj.par, o->par, sizeof o->par);
+    proj.pool = o->pool;
+    proj.leds = o->leds, proj.piece = o->piece, proj.screen = o->screen;
+    for (i = 0; i < NPIECES; i++) {
+        memcpy(proj.slot[i].par, o->slot[i].par, sizeof o->slot[i].par);
+        proj.slot[i].pool = o->slot[i].pool;
+        memcpy(proj.slot[i].pings, o->slot[i].pings, sizeof proj.slot[i].pings);
+        proj.slot[i].pings_ok = o->slot[i].pings_ok;
+        proj.slot[i].screen = o->slot[i].screen;
+    }
+}
 static void groove11(int16_t *par)              /* before 12: the groove a pattern (0..4: Drone, Offbeat, Dotted,
                                                  * Roller, Sync), now the knob's (Drone, Offbeat, Dotted, Sync, Roller) */
 {
@@ -432,6 +466,15 @@ static void nz17(void)                          /* before 18: the noise's Densit
         proj.slot[i].par[P_NGRAIN] = (int16_t)en_nz_dens18(proj.slot[i].par[P_NGRAIN], proj.slot[i].par[P_NCHAR]);
         proj.slot[i].par[P_NROOM] = (int16_t)en_nz_air18(proj.slot[i].par[P_NROOM], proj.slot[i].par[P_NCHAR]);
     }
+}
+
+static void nlfo18(void)                        /* before 19: the noise's LFO deeper a step (0.67 of the tone at 100,
+                                                 * now 0.27): as deep as it was */
+{
+    int i;
+    proj.par[P_NLFO] = (int16_t)en_nlfo18(proj.par[P_NLFO]);
+    for (i = 0; i < NPIECES; i++)
+        proj.slot[i].par[P_NLFO] = (int16_t)en_nlfo18(proj.slot[i].par[P_NLFO]);
 }
 
 static void gaps9(int16_t *par)                  /* before 10: an empty slot is a gap (its root, left as it was, is not
@@ -503,15 +546,20 @@ int project_load(void)
             fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR13, o->slot[i].pool, i);
         }
         from13((const project13_t *)(const void *)&buf);
-    } else if (n >= 8 && buf.magic == PROJ_MAGIC && buf.format == 17u && n >= (int)sizeof(project_t)) {
-        proj = buf;                              /* (17: as 18 laid out; the noise's Density and Air converted below) */
-        proj.format = PROJ_FORMAT;
-        old = 17;
+    } else if (n >= 8 && buf.magic == PROJ_MAGIC && (buf.format == 17u || buf.format == 18u) &&
+               n >= (int)sizeof(project18_t)) {
+        old = (int)buf.format;                   /* (17: as 18 laid out; the noise's Density and Air converted below) */
+        for (i = 0; i < NPIECES; i++) {
+            const project18_t *o = (const project18_t *)(const void *)&buf;
+            fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR18, o->slot[i].pool, i);
+        }
+        from18((const project18_t *)(const void *)&buf);
     } else {
         proj = buf;
     }
-    if (old && old < 17)                                     /* (the new ones, from the recipes) */
-        newpar(old == 16 ? NPAR16 : old == 15 ? NPAR15 : old == 14 ? NPAR14 : old == 13 ? NPAR13 : NPAR12);
+    if (old && old < 19)                                     /* (the new ones, from the recipes) */
+        newpar(old >= 17 ? NPAR18 : old == 16 ? NPAR16 : old == 15 ? NPAR15 : old == 14 ? NPAR14 : old == 13 ? NPAR13
+                                                                                                            : NPAR12);
     if (old == 9) {                              /* (8 and 9: the chords' slots as 10 has them) */
         gaps9(proj.par);
         for (i = 0; i < NPIECES; i++)
@@ -532,8 +580,12 @@ int project_load(void)
                                                   * then; then the noise's Density and Air converted) */
         for (i = 0; i < NPIECES; i++)
             fresh[i] = (uint8_t)(fresh[i] || untouched_now(&proj.slot[i], i));
-        nz17();
+        if (old < 18)
+            nz17();
     }
+    if (old >= 16)                               /* (before 19, the noise's LFO saved: as deep as it was; the pieces
+                                                  * never changed take today's recipe below) */
+        nlfo18();
     if (n >= 8 && proj.magic == PROJ_MAGIC && proj.format == PROJ_FORMAT) {   /* (the ranges as they are now) */
         pars_clamp(proj.par);
         for (i = 0; i < NPIECES; i++)

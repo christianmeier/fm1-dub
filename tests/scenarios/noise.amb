@@ -38,7 +38,27 @@ expect peak_db_max -0.5
 tap SAVE
 wait 200
 expect view 21
-said Noise space page, character Tape: Width 50, Plate 50, Echo 50, LFO 25
+said Noise space page, character Tape: Width 50, Plate 50, Echo 50
+tap SAVE
+wait 400
+expect view 23
+said Noise LFO page, character Tape: Depth 25, Rate 4 bars
+spin K2 9
+wait 300
+expect par128 6
+said Rate Drift
+spin K2 -4
+wait 300
+expect par128 2
+turn ALGO 1
+wait 300
+said NOISE Dust
+turn ALGO -1
+wait 300
+expect par110 1
+tap SAVE
+wait 300
+expect view 19
 tap HOME
 wait 300
 expect view 0
@@ -79,7 +99,7 @@ wait 600
 release GLO
 reboot
 wait 1000
-expect format 18
+expect format 19
 expect par110 1
 expect par106 20
 # a 1.2.0 project (format 10): read, everything kept (Basic's chord level, set to 50 here), the noise from the
@@ -94,7 +114,7 @@ expect par0 50
 store10
 reboot
 wait 1000
-expect format 18
+expect format 19
 expect par111 70
 expect par113 100
 expect par0 50
@@ -125,7 +145,7 @@ expect par121 95
 store14
 reboot
 wait 1000
-expect format 18
+expect format 19
 expect par121 85
 expect par124 0
 # a 1.3.0 Noise space project (format 15): kept, the noise's LFO from the recipe (Fog's 35)
@@ -139,13 +159,35 @@ expect par121 95
 store15
 reboot
 wait 1000
-expect format 18
+expect format 19
 expect par121 95
 expect par125 35
 # a 1.3.0 noise-LFO project (format 16): kept, the kick's rumble from the recipe (Fog's 30)
 store16
 reboot
 wait 1000
-expect format 18
+expect format 19
 expect par121 95
 expect par126 30
+# (converted from 16: the noise's LFO as deep as it was, on 1.4.0's shallower scale: 35 x 0.67 / 0.27, 87)
+expect par125 87
+# a 1.4.0 test build's project (format 18): kept, the LFOs' rates from the recipe (Fog's: Drift and Drift), the noise's
+# LFO converted (20 as 50)
+tap SAVE
+tap SAVE
+tap SAVE
+wait 300
+expect view 23
+spin K1 -67
+spin K2 -3
+wait 300
+expect par125 20
+expect par128 3
+store18
+reboot
+wait 1000
+expect format 19
+expect par121 95
+expect par125 50
+expect par127 6
+expect par128 6
