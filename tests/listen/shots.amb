@@ -167,3 +167,14 @@ turn ALGO 2
 wait 300
 spin K1 -35
 tap HOME
+# (1.4.0, the user's) the Noise LFO page (SAVE a third time): ALGORITHM there its Destination, Air, its big ring
+tap SAVE
+tap SAVE
+tap SAVE
+wait 300
+turn ALGO 2
+wait 300
+shot screen-noise-lfo-dest.png
+turn ALGO 1
+wait 300
+tap HOME
