@@ -1609,9 +1609,10 @@ static void input(void)
                 static const uint16_t LC[NLAYER] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE};
                 static const uint16_t MC[4] = {K_PAD, K_BELL, K_BASS, K_PULSE};
                 const int k = VIEW_KNOB[ui.view][i], l = oct_layer(ui.view);
-                if (ui.view != V_CHORDS && ui.view != V_PAT && ui.view != V_PERF && ui.view != V_MIX && k != K_SAVE &&
-                    k != K_CPU && k != K_NONE)   /* (1.4.0, the user's: nor the Arrangement page, the meters its
-                                                  * picture: the notches show the change) */
+                if (ui.view != V_CHORDS && ui.view != V_PAT && ui.view != V_MIX && k != K_SAVE && k != K_CPU &&
+                    k != K_NONE)                 /* (1.4.0, the user's: nor the Mix, white 6 held, the meters its
+                                                  * picture: the notches show the change; Arrangement's own knobs keep
+                                                  * the ring) */
                     big_show_help(k, KNOB_LABEL[ui.view][i], ui.view == V_MIX ? MC[i] : l >= 0 ? LC[l] : K_ACC,
                                   KNOB_HELP[ui.view][i]);
             }

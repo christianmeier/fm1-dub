@@ -729,7 +729,7 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   - Not now: a three-band EQ (the voice pages have the tone), a bus compressor (the CPU).
   - **After step 1** (the user, 2026-10-24): the classic green / yellow / red meters chosen; the duck's row named
     DUCK and as tall as the others; the cards under a second everywhere (they distract; they go with the aids' off
-    switch later); no big ring on the Arrangement page (the notches show the change). The strips' freed room (the
+    switch later); no big ring on the Mix (white 6 held: the notches show the change; Arrangement's own knobs keep it). The strips' freed room (the
     user: "both, let's see how it works in place"): five thin strips at the left (the meters', the noise too), and
     the phrase's bars as cells under the section (the one playing teal, the B bars ticked). Built; the song line to
     come with song structure.
