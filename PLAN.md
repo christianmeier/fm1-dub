@@ -845,7 +845,7 @@ loop held, the kick never leaving, an echo you hear, movement by hand rather tha
 - **Smaller engine features:** hats on the four "ands" (an auto pattern); named bass figures (BCD's x.....x.x.....x.)
   as grooves; kick shapes 3+3+2 and a four leaning on 1 and 3; a dotted-half echo time; a lower chord voicing; a
   reggae offbeat chop (a stab pattern); intro and outro (for a set or a recording).
-- [ ] **A CPU audit** (the user, 2026-10-24: "at some point"): how the load splits across DUB-1's sub-systems (the
+- [ ] **A CPU audit** (the user, 2026-10-24: after the next features): how the load splits across DUB-1's sub-systems (the
   chord's voices, the pings, the bass, the drums, the noise, the echo, the plate and cloud, the master, the meters,
   the effects grid), per piece, average and peak. On the host: each render stage timed per block (a profiling build,
   en_render's blocks); on the FM-1: the same stages timed with fm1_ticks in a test build, shown on the Setup page, so
