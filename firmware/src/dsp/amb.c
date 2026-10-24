@@ -545,7 +545,7 @@ volatile float en_stab_t60 = 0.3f;
 volatile uint32_t en_nz_pat;
 volatile uint8_t en_nz_vel[32], en_nz_step;
 volatile float en_nz_t60 = 0.3f;
-volatile uint16_t en_lane_sh, en_lane_op;
+volatile uint16_t en_lane_sh, en_lane_op, en_lane_png;
 volatile uint8_t en_kick_v[16], en_hat_v[16];
 volatile uint16_t en_stab_thr;
 volatile uint8_t en_stab_v[16];
@@ -2088,6 +2088,27 @@ static void tick(void)
     noise_step((int)(sixteenth & 31u));         /* (the noise's groove: two bars) */
     for (d = 0; d < EN_NDRUM; d++)
         en_drum_pos[d] = (uint8_t)st;
+    {   /* (1.4.0, the overview's pings row) this bar's sixteenths a ping falls on: those that rang so far, kept; then
+         * the loops' notes ahead, where each loop will be (a pass's end may still change them) */
+        uint32_t m = en_lane_png & ((st & 1 ? 2u : 1u) << st) - 1u;
+        int q;
+        if (!st)
+            m = 0u;
+        if ((sixteenth & 1u) == 0u) {           /* (this step's: what rings, below) */
+            for (l = 0; l < EN_NLOOP; l++)
+                if (loop_note[l][loop_pos[l]] >= 0 && !loop_rest[l] && !(mutes & EN_M_PINGS) && par[P_PINGS] > 0)
+                    m |= 1u << st;
+        }
+        if (!(mutes & EN_M_PINGS) && par[P_PINGS] > 0)
+            for (q = (st + 2) & ~1; q < 16; q += 2)
+                for (l = 0; l < EN_NLOOP; l++) {
+                    const int k = loop_pos[l] + (q - ((st + 2) & ~1)) / 2 + ((sixteenth & 1u) == 0u ? 1 : 0),
+                              len = EN_LOOP_LEN[l];
+                    if (loop_note[l][k % len] >= 0 && (k >= len || !loop_rest[l]))
+                        m |= 1u << q;
+                }
+        en_lane_png = (uint16_t)m;
+    }
     if ((sixteenth & 1u) == 0u) {               /* the loops step in eighths */
         for (l = 0; l < EN_NLOOP; l++) {
             int s = loop_pos[l];

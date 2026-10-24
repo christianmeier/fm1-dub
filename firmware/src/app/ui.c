@@ -2536,6 +2536,9 @@ static struct {
     float db[EN_NMETER], hold[EN_NMETER];        /* each meter as shown (dB), its peak held */
     uint32_t hold_t[EN_NMETER];
     float gr;                                    /* the duck's gain reduction as shown, dB */
+    float dr[3];                                 /* (1.4.0) the lanes' drum rows (the kick, the hats, the rim and clap),
+                                                  * from their hits, dB */
+    uint8_t clap;                                /* (the R/C row: the clap the last to hit) */
     uint32_t t, clip_t;                          /* the last frame; the master's last clip (0: none yet) */
 } mt;
 static float mt_db(float pk) { return pk > 1e-6f ? 6.0206f * fm_log2f(pk) : -120.0f; }
@@ -2547,7 +2550,7 @@ static void meter_take(uint32_t now)             /* every frame: the engine's pe
     const float dt = mt.t ? (float)(now - mt.t) * 0.001f : 0.0f;
     int i;
     mt.t = now;
-    en_meter_on = 1;                             /* (1.4.0, the user's: the parts measured on every page now, the strips at
+    en_meter_on = 1;                             /* (1.4.0, the user's: the parts measured on every page now, the lanes' meters at
                                                   * the left theirs) */
     for (i = 0; i < EN_NMETER; i++) {
         const float pk = en_meter[i], d = mt_db(pk);
@@ -2561,6 +2564,18 @@ static void meter_take(uint32_t now)             /* every frame: the engine's pe
         } else if (now - mt.hold_t[i] > 1000u) {
             mt.hold[i] = fm_maxf(mt.hold[i] - 30.0f * dt, mt.db[i]);
         }
+    }
+    {   /* (1.4.0, the user's) the lanes' drum rows, each from its own hits (the kick; the shaker and the open hat; the
+         * rim and the clap): at once up, 48 dB a second down (a hit seen, then gone) */
+        const float lv = (float)proj.par[P_DRUMS] * 0.01f,
+                    pk[3] = {en_drum_glow[0] * lv, fm_maxf(en_drum_glow[1], en_drum_glow[2]) * lv * 0.5f,
+                             fm_maxf(en_drum_glow[3], en_drum_glow[4]) * lv * 0.6f};
+        for (i = 0; i < 3; i++) {
+            const float d = mt_db(pk[i]);
+            mt.dr[i] = d > mt.dr[i] ? d : fm_maxf(mt.dr[i] - 48.0f * dt, -120.0f);
+        }
+        if (en_drum_glow[3] > 0.9f || en_drum_glow[4] > 0.9f)
+            mt.clap = en_drum_glow[4] > en_drum_glow[3];
     }
     {   /* the duck: on the bass while it plays (the deepest, the pump), else on the rest of the music (a few dB) */
         const float g = en_duck_lo[mt.db[EN_MT_BASS] > -60.0f ? 1 : 0], d = -mt_db(fm_maxf(g, 0.01f));
@@ -2585,11 +2600,12 @@ static uint16_t mt_col(int row, int i)           /* a segment's colour, lit */
 }
 static const char *const MT_TAG[EN_NMETER] = {"CHD", "PNG", "BAS", "DRM", "NOI", "MST"};
 static const uint16_t MT_TAGC[EN_NMETER] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE, K_TEXT};
-static int mt_state(int row)                     /* 0 heard, 1 soloed out (dimmed), 2 muted (dark) */
+static int mute_state(uint32_t m)                /* 0 heard, 1 soloed out (dimmed), 2 muted (dark): the parts m */
 {
-    const uint32_t m = row < NLAYER ? LAYER_MUTE[row] : 0u, eng = ui.mutes | (ui.solo ? 0x1Fu & ~ui.solo : 0u);
+    const uint32_t eng = ui.mutes | (ui.solo ? 0x1Fu & ~ui.solo : 0u);
     return !m ? 0 : (ui.mutes & m) == m ? 2 : (eng & m) == m ? 1 : 0;
 }
+static int mt_state(int row) { return mute_state(row < NLAYER ? LAYER_MUTE[row] : 0u); }
 static int32_t mt_y(int row) { return MT_Y0 + row * MT_ROW + (row == EN_MT_MASTER ? 4 : 0); }
 static int32_t mt_mark(int row)                  /* the level's marker: its x (-1: none, the master's on its pot) */
 {
@@ -2638,6 +2654,61 @@ static void draw_desk(void)
     }
 }
 
+/* (1.4.0, the user's) the lanes' seven rows, top to bottom: CHD the stabs, PNG the pings, BAS the bass, KCK the kick,
+ * HAT the hats, R/C the rim and the clap, NOI the noise; at each row's left a short level meter, in its colour, its
+ * track dim (the chord, the pings, the bass and the noise their meters', -48..0 dB; the kick, the hats, the rim and
+ * clap from their own hits); a part muted dark, soloed out dimmed. On the overview with the bar's notes; on a voice
+ * page the meters alone, its own row(s) bright, the others dimmed, its lane to the right */
+#define LN_ROWS 7
+#define LN_Y0 94                                 /* the first row's top; LN_ROW apart, the notes LN_H high */
+#define LN_ROW 7
+#define LN_H 5
+#define LN_X0 40                                 /* the overview's grid: a step LN_P apart */
+#define LN_P 11
+#define LM_X 8                                   /* the meters: LM_W wide, LM_H high, in the row's middle */
+#define LM_W 22
+#define LM_H 3
+#define VX 50                                    /* a voice page's lane: its grid, right of the meters */
+static const uint32_t LN_MUTE[LN_ROWS] = {EN_M_CHORD, EN_M_PINGS, EN_M_BASS, EN_M_KICK, EN_M_HATS, EN_M_HATS, EN_M_NOISE};
+static uint16_t ln_col(int r) { static const uint16_t C[LN_ROWS] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_TEXT, K_RIM, K_NOISE};
+                                return r == 5 && mt.clap ? K_CLAP : C[r]; }
+static int ln_own(int r)                         /* a voice page's row(s): lit (the overview: all) */
+{
+    static const int8_t LAY[LN_ROWS] = {0, 1, 2, 3, 3, 3, 4};
+    const int l = oct_layer(ui.view);
+    return l < 0 || LAY[r] == l;
+}
+static int lm_lit(int r)                         /* a row's meter: its pixels lit */
+{
+    static const int8_t MT[LN_ROWS] = {EN_MT_CHORD, EN_MT_PINGS, EN_MT_BASS, -1, -1, -1, EN_MT_NOISE};
+    const float db = MT[r] >= 0 ? mt.db[MT[r]] : mt.dr[r - 3];
+    return mute_state(LN_MUTE[r]) == 2 ? 0 : (int)(fm_clampf((db + 48.0f) * (1.0f / 48.0f), 0.0f, 1.0f) * LM_W + 0.5f);
+}
+static uint32_t lm_sig(void)                     /* what the meters show, for the redraw */
+{
+    uint32_t h = 2166136261u;
+    int r;
+    for (r = 0; r < LN_ROWS; r++)
+        h = hash(h, (uint32_t)lm_lit(r) | (uint32_t)mute_state(LN_MUTE[r]) << 8);
+    return hash(h, mt.clap);
+}
+static void draw_lmeters(void)
+{
+    int r;
+    for (r = 0; r < LN_ROWS; r++) {
+        const int32_t y = LN_Y0 + r * LN_ROW + (LN_H - LM_H) / 2, n = lm_lit(r);
+        const int st = mute_state(LN_MUTE[r]), own = ln_own(r);
+        const uint16_t c = ln_col(r);
+        if (st == 2) {                           /* (muted: dark) */
+            cv_rect(LM_X, y, LM_W, LM_H, mix(K_BG, K_LINE, 5));
+            continue;
+        }
+        cv_rect(LM_X, y, LM_W, LM_H, mix(K_BG, c, own && st == 0 ? 4 : 2));
+        if (n > 0)
+            cv_rect(LM_X, y, n, LM_H, st == 1 || !own ? mix(K_BG, c, own ? 8 : 7) : c);
+    }
+}
+
 /* below: the bar, a lane a layer. On a layer's page (and its sound pages) its lanes as ever, the others in grey (the
  * pings and the noise have none: all grey) */
 /* (1.4.0, the user asked: "show only the line that matters, the current voice, even make it bigger") the bass's page:
@@ -2650,8 +2721,8 @@ static void draw_desk(void)
  * layer's colour, the other grey */
 static void phrase_ab(int b, uint16_t col)
 {
-    text_c(17, 99, &FONT_C, "A", b ? K_LINE : col);
-    text_c(17, 119, &FONT_C, "B", b ? col : K_LINE);
+    text_c(VX - 11, 99, &FONT_C, "A", b ? K_LINE : col);
+    text_c(VX - 11, 119, &FONT_C, "B", b ? col : K_LINE);
 }
 static int bass_len(uint32_t notes, int i, float gate)   /* a note's length in steps: its gate, to the next note */
 {
@@ -2669,15 +2740,15 @@ static void draw_bass_lane(void)
     const float gate = en_bass_gate;
     int i, playing = -1;
     if (en_playing)
-        cv_round(38 + pos * 11, 98, 10, 46, 2, K_PANEL);
+        cv_round(VX - 2 + pos * 11, 98, 10, 46, 2, K_PANEL);
     phrase_ab(b, K_BASS);
     for (i = 0; i < 16; i++)                     /* the beats: the grid under it */
-        cv_rect(40 + i * 11 + 2, 140, 2, (i & 3) ? 2 : 4, (i & 3) ? K_LINE : K_DIM);
+        cv_rect(VX + i * 11 + 2, 140, 2, (i & 3) ? 2 : 4, (i & 3) ? K_LINE : K_DIM);
     for (i = 0; i < 16; i++)                     /* the note playing: the one whose length covers the playhead */
         if (bar >> i & 1u && en_playing && pos >= i && pos < i + bass_len(bar, i, gate))
             playing = i;
     for (i = 0; i < 16; i++) {
-        const int32_t x = 40 + i * 11, y = BASS_ROOT_Y - (int32_t)((float)en_bass_off[i] * 1.3f) - 5;
+        const int32_t x = VX + i * 11, y = BASS_ROOT_Y - (int32_t)((float)en_bass_off[i] * 1.3f) - 5;
         if (bar >> i & 1u) {                     /* a note this bar plays */
             cv_round(x, y, bass_len(bar, i, gate) * 11 - 3, 10, 4, i == playing ? K_BASS : mix(K_BASS_T, K_BASS, 9));
         } else if (groove >> i & 1u) {           /* the groove's, not played this bar: an outline, as long as it'd be */
@@ -2704,9 +2775,9 @@ static void draw_chord_lane(void)
     uint8_t gthr[16];
     int i, k;
     if (en_playing)
-        cv_round(38 + pos * 11, 98, 10, 46, 2, K_PANEL);
+        cv_round(VX - 2 + pos * 11, 98, 10, 46, 2, K_PANEL);
     for (i = 0; i < 16; i++)                     /* the beats */
-        cv_rect(40 + i * 11 + 2, 140, 2, (i & 3) ? 2 : 4, (i & 3) ? K_LINE : K_DIM);
+        cv_rect(VX + i * 11 + 2, 140, 2, (i & 3) ? 2 : 4, (i & 3) ? K_LINE : K_DIM);
     for (i = 0; i < 16; i++)
         ghost[i] = 0.0f, gthr[i] = 0;
     if (!en_ext && proj.par[P_TEMPO] > 0) {      /* the echo's repeats: where each lands, as faint as it is */
@@ -2726,7 +2797,7 @@ static void draw_chord_lane(void)
             }
     }
     for (i = 0; i < 16; i++) {                   /* the repeats first, under the stabs */
-        const int32_t x = 40 + i * 11;
+        const int32_t x = VX + i * 11;
         if (ghost[i] > 0.0f && !(bar >> i & 1u)) {
             const uint16_t c = mix(K_BG, gthr[i] ? K_TEXT : K_PAD, 6 + q16(ghost[i]) * 9 / 16);
             cv_rect(x + 1, 116, 5, 1, c), cv_rect(x + 1, 122, 5, 1, c);
@@ -2734,7 +2805,7 @@ static void draw_chord_lane(void)
         }
     }
     for (i = 0; i < 16; i++) {
-        const int32_t x = 40 + i * 11;
+        const int32_t x = VX + i * 11;
         int j, len, h;
         float v;
         if (!(bar >> i & 1u))
@@ -2769,9 +2840,9 @@ static void draw_pings_lane(void)
         const int len = EN_LOOP_LEN[l], at = en_loop_pos[l];
         const int32_t y = 100 + l * 11;
         const float g = en_playing ? en_loop_glow[l] : 0.0f;
-        cv_round(29, y + 3, 5, 4, 1, mix(K_BELL_T, K_BELL, 6 + 2 * l));
+        cv_round(VX - 13, y + 3, 5, 4, 1, mix(K_BELL_T, K_BELL, 6 + 2 * l));
         for (j = 0; j < len; j++) {
-            const int32_t x0 = 40 + j * 176 / len, x1 = 40 + (j + 1) * 176 / len - 2;
+            const int32_t x0 = VX + j * 176 / len, x1 = VX + (j + 1) * 176 / len - 2;
             const int n = en_loop_note[l][j];
             const int32_t xc = (x0 + x1) / 2;     /* (each step's middle: the same marks on every row, not stretched) */
             if (en_playing && j == at)           /* the step it's on: the same width on every row */
@@ -2796,10 +2867,10 @@ static void draw_drums_lane(void)
     const int pos = en_drum_pos[0], b = en_phrase_bar == 3 || en_phrase_bar == 7;
     int i;
     if (en_playing)
-        cv_round(38 + pos * 11, 101, 10, 40, 2, K_PANEL);
+        cv_round(VX - 2 + pos * 11, 101, 10, 40, 2, K_PANEL);
     phrase_ab(b, K_PULSE);
     for (i = 0; i < 16; i++) {
-        const int32_t x = 40 + i * 11;
+        const int32_t x = VX + i * 11;
         const int now = en_playing && i == pos;
         if (k >> i & 1u)                         /* the kick */
             cv_round(x, 106, 8, 12, 2, now ? K_TEXT : en_kick_v[i] < 160 ? mix(K_PULSE_T, K_PULSE, 7) : K_PULSE);
@@ -2827,15 +2898,15 @@ static void draw_noise_lane(void)
     const float step_s = proj.par[P_TEMPO] > 0 ? 15.0f / (float)proj.par[P_TEMPO] : 0.12f;
     const int tail = (int)(en_nz_t60 * 0.5f / step_s + 0.5f);   /* (to about -30 dB, in sixteenths) */
     int r, i, k;
-    text_c(17, 99, &FONT_C, "1", bar2 ? K_LINE : K_NOISE);
-    text_c(17, 119, &FONT_C, "2", bar2 ? K_NOISE : K_LINE);
+    text_c(VX - 11, 99, &FONT_C, "1", bar2 ? K_LINE : K_NOISE);
+    text_c(VX - 11, 119, &FONT_C, "2", bar2 ? K_NOISE : K_LINE);
     if (en_playing)                              /* (the step playing, in its bar's row) */
-        cv_round(38 + (st & 15) * 11, (bar2 ? 126 : 106) - 5, 10, 20, 2, K_PANEL);
+        cv_round(VX - 2 + (st & 15) * 11, (bar2 ? 126 : 106) - 5, 10, 20, 2, K_PANEL);
     for (r = 0; r < 2; r++) {
         const int32_t y = r ? 126 : 106;
         for (i = 0; i < 16; i++) {
             const int s = r * 16 + i;
-            const int32_t x = 40 + i * 11;
+            const int32_t x = VX + i * 11;
             if (p >> s & 1u) {
                 const int h = 4 + en_nz_vel[s] * 10 / 255, now = en_playing && s == st;
                 for (k = 1; k <= tail && i + k < 16 && !(p >> (s + k) & 1u); k++)   /* its ring, fading */
@@ -2906,6 +2977,7 @@ static void draw_lfo(int k)
 
 static void draw_lanes(void)
 {
+    draw_lmeters();                              /* (1.4.0, the user's: the meters at the left, on every page with lanes) */
     if (ui.view == V_NSND || ui.view == V_NSND2 || ui.view == V_NLFO) {   /* (1.4.0) the Noise pages: its groove alone */
         draw_noise_lane();
         return;
@@ -2926,70 +2998,75 @@ static void draw_lanes(void)
         draw_bass_lane();
         return;
     }
-    static const uint16_t C0[6] = {K_PAD, K_PULSE, K_TEXT, K_RIM, K_CLAP, K_BASS},
-                          T0[6] = {K_PAD_T, K_PULSE_T, K_LINE, K_RIM_T, K_CLAP_T, K_BASS_T};
-    static const int8_t DR[6] = {-1, 0, 1, 3, 4, -1};   /* each lane's drum (its chance) */
-    static const int8_t LL[6] = {0, 3, 3, 3, 3, 2};     /* each lane's layer (oct_layer's) */
-    const int lay = oct_layer(ui.view);
-    uint16_t C[6], T[6], dot[6], dot4[6];
-    int l, i, k, pos = en_drum_pos[0];
-    for (l = 0; l < 6; l++) {
-        int lit = lay < 0 || LL[l] == lay;
-        C[l] = lit ? C0[l] : K_LINE;
-        T[l] = lit ? T0[l] : mix(K_BG, K_LINE, 8);
-        dot[l] = lit ? K_LINE : mix(K_BG, K_LINE, 9);
-        dot4[l] = lit ? K_DIM : K_LINE;
-    }
-    float ghost[16];
-    if (en_playing)                              /* the step playing: a column */
-        cv_round(38 + pos * 11, 94, 10, 50, 2, K_PANEL);
-    for (i = 0; i < 16; i++)
-        ghost[i] = 0.0f;
-    if (!en_ext && proj.par[P_TEMPO] > 0) {      /* the stabs' echoes: where each repeat lands, as faint as it is */
-        float e = en_echo_ms * (float)proj.par[P_TEMPO] * (1.0f / 15000.0f), g = en_echo_in;   /* (in sixteenths) */
+    {
+        static const uint16_t C[8] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_TEXT, K_RIM, K_NOISE, K_CLAP},
+                              T[8] = {K_PAD_T, K_BELL_T, K_BASS_T, K_PULSE_T, K_LINE, K_RIM_T, RGB(86, 82, 76), K_CLAP_T};
+        static const int8_t DR[8] = {-1, -1, -1, 0, 1, 3, -1, 4};   /* each row's drum (its chance); the clap the 8th */
+        const int pos = en_drum_pos[0], nz2 = en_nz_step >= 16;
+        const uint32_t nz = (ui.mutes & EN_M_NOISE) || !proj.par[P_CRACKLE] ? 0u : (en_nz_pat >> (nz2 ? 16 : 0)) & 0xFFFFu;
+        float ghost[16];
+        int l, i, k;
+        if (en_playing)                          /* the step playing: a column */
+            cv_round(LN_X0 - 2 + pos * LN_P, LN_Y0 - 2, 10, LN_ROWS * LN_ROW + 2, 2, K_PANEL);
         for (i = 0; i < 16; i++)
-            if (en_lane[0] >> i & 1u) {
-                float a = g;
-                for (k = 1; k <= 6; k++) {
-                    int q = (int)((float)i + (float)k * e + 0.5f) % 16;
-                    a *= en_echo_g;
-                    if (a < 0.06f)
-                        break;
-                    if (a > ghost[q])
-                        ghost[q] = a;
+            ghost[i] = 0.0f;
+        if (!en_ext && proj.par[P_TEMPO] > 0) {  /* the stabs' echoes: where each repeat lands, as faint as it is */
+            float e = en_echo_ms * (float)proj.par[P_TEMPO] * (1.0f / 15000.0f), g = en_echo_in;   /* (in sixteenths) */
+            for (i = 0; i < 16; i++)
+                if (en_lane[0] >> i & 1u) {
+                    float a = g;
+                    for (k = 1; k <= 6; k++) {
+                        int q = (int)((float)i + (float)k * e + 0.5f) % 16;
+                        a *= en_echo_g;
+                        if (a < 0.06f)
+                            break;
+                        if (a > ghost[q])
+                            ghost[q] = a;
+                    }
                 }
-            }
-    }
-    for (l = 0; l < 6; l++) {                    /* (in the layers' colours: stabs, kick, hats, rim, clap, bass) */
-        uint32_t p = en_lane[l];
-        int32_t y = 96 + l * 8;
-        int maybe = DR[l] >= 0 && (proj.par[P_DMODE] ? proj.par[P_DCH0 + DR[l]] < 50 : DR[l] == 4);
-        cv_round(29, y + 1, 5, 4, 1, C[l]);
-        for (i = 0; i < 16; i++) {
-            int32_t x = 40 + i * 11;
-            if (p >> i & 1u && maybe) {          /* a hit that only sometimes comes: a ring; filled when it does */
-                uint16_t c = en_playing && i == pos && en_drum_glow[DR[l]] > 0.5f ? (C[l] == K_LINE ? K_DIM : K_TEXT) : mix(T[l], C[l], 10);
-                if (en_playing && i == pos && en_drum_glow[DR[l]] > 0.5f) {
-                    cv_round(x - 1, y - 1, 8, 8, 3, c);
-                } else {
-                    cv_rect(x + 1, y, 4, 1, c), cv_rect(x + 1, y + 5, 4, 1, c);
-                    cv_rect(x, y + 1, 1, 4, c), cv_rect(x + 5, y + 1, 1, 4, c);
+        }
+        for (l = 0; l < LN_ROWS; l++) {
+            const int32_t y = LN_Y0 + l * LN_ROW;
+            const uint32_t p = l == 0 ? en_lane[0] : l == 1 ? en_lane_png : l == 2 ? en_lane[5] : l == 3 ? en_lane[1]
+                             : l == 4 ? en_lane[2] : l == 5 ? en_lane[3] : nz, p2 = l == 5 ? en_lane[4] : 0u;
+            for (i = 0; i < 16; i++) {
+                const int32_t x = LN_X0 + i * LN_P;
+                const int now = en_playing && i == pos, two = (p >> i & 1u) && (p2 >> i & 1u);
+                int h;
+                if (!((p | p2) >> i & 1u)) {
+                    if (l == 0 && ghost[i] > 0.0f) {   /* an echo's repeat: a ring; as the playhead hits it, a flash */
+                        if (now) {
+                            cv_round(x - 1, y - 1, 8, LN_H + 2, 2, K_TEXT);
+                        } else {
+                            const uint16_t c = mix(K_BG, K_PAD, 9 + q16(ghost[i]) * 7 / 16);
+                            cv_rect(x + 1, y, 4, 1, c), cv_rect(x + 1, y + LN_H - 1, 4, 1, c);
+                            cv_rect(x, y + 1, 1, LN_H - 2, c), cv_rect(x + 5, y + 1, 1, LN_H - 2, c);
+                        }
+                    } else {
+                        cv_rect(x + 2, y + 2, 2, 1, (i & 3) ? mix(K_BG, K_LINE, 12) : K_DIM);
+                    }
+                    continue;
                 }
-            } else if (p >> i & 1u) {
-                cv_round(x, y, 6, 6, 2, en_playing && i == pos ? C[l] : mix(T[l], C[l], 10));
-            } else if (l == 0 && ghost[i] > 0.0f && (lay < 0 || lay == 0)) {   /* an echo's repeat: a ring; as the
-                                                                                  * playhead hits it, a flash */
-                if (en_playing && i == pos) {
-                    cv_round(x - 1, y - 1, 8, 8, 3, K_TEXT);
-                } else {
-                    uint16_t c = mix(K_BG, K_PAD, 9 + q16(ghost[i]) * 7 / 16);
-                    cv_rect(x + 1, y, 4, 1, c), cv_rect(x + 1, y + 5, 4, 1, c);
-                    cv_rect(x, y + 1, 1, 4, c), cv_rect(x + 5, y + 1, 1, 4, c);
+                for (h = 0; h < 2; h++) {        /* (the R/C row: the rim, then the clap; both on a step, side by side) */
+                    const int c8 = h ? 7 : l, d = DR[c8];
+                    const int32_t xx = two && h ? x + 3 : x, w = two ? 3 : 6;
+                    const int maybe = d >= 0 && (proj.par[P_DMODE] ? proj.par[P_DCH0 + d] < 50 : d == 4);
+                    if (!((h ? p2 : p) >> i & 1u))
+                        continue;
+                    if (maybe && !(now && en_drum_glow[d] > 0.5f)) {   /* a hit that only sometimes comes: a ring;
+                                                  * filled when it does */
+                        const uint16_t c = mix(T[c8], C[c8], 11);
+                        cv_rect(xx + 1, y, w - 2, 1, c), cv_rect(xx + 1, y + LN_H - 1, w - 2, 1, c);
+                        cv_rect(xx, y + 1, 1, LN_H - 2, c), cv_rect(xx + w - 1, y + 1, 1, LN_H - 2, c);
+                    } else if (maybe) {
+                        cv_round(xx - (two ? 0 : 1), y - 1, w + (two ? 0 : 2), LN_H + 2, 2, K_TEXT);
+                    } else {
+                        const uint16_t c = now ? (l == 4 ? K_TEXT : mix(C[c8], K_TEXT, 6))
+                                         : l == 6 && en_nz_vel[(nz2 ? 16 : 0) + i] < 100 ? mix(T[c8], C[c8], 6)
+                                         : mix(T[c8], C[c8], 11);
+                        cv_round(xx, y, w, LN_H, two ? 1 : 2, c);
+                    }
                 }
-            } else if (i & 3) {
-                cv_rect(x + 2, y + 2, 2, 2, dot[l]);
-            } else {
-                cv_rect(x + 2, y + 2, 2, 2, dot4[l]);
             }
         }
     }
@@ -3276,32 +3353,6 @@ static void draw_card(uint32_t now)
     text_c(CX, y + 28, &FONT_XS, ui.card_text, tc);
 }
 
-/* (1.4.0, the user's) at the left, under the phrase: the parts' levels, five thin strips (the chord, the pings, the
- * bass, the drums, the noise), their meters' (the Arrangement page's), -48..0 dB; a muted part's dark */
-#define ST_Y 36
-#define ST_H 48
-static int strip_h(int r) { return mt_state(r) == 2 ? 0 : (int)(fm_clampf((mt.db[r] + 48.0f) * (1.0f / 48.0f), 0.0f, 1.0f) * ST_H + 0.5f); }
-static void draw_strips(void)
-{
-    static const uint16_t C[NLAYER] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE};
-    int r;
-    for (r = 0; r < NLAYER; r++) {
-        const int32_t x = 9 + r * 8, h = strip_h(r);
-        const uint16_t c = mt_state(r) == 1 ? mix(K_BG, C[r], 8) : C[r];
-        cv_round(x, ST_Y, 3, ST_H, 1, mix(K_BG, C[r], 3));
-        if (h > 0)
-            cv_round(x, ST_Y + ST_H - h, 3, h, 1, c);
-    }
-}
-static uint32_t strips_sig(void)
-{
-    uint32_t h = 2166136261u;
-    int r;
-    for (r = 0; r < NLAYER; r++)
-        h = hash(h, (uint32_t)strip_h(r) | (uint32_t)mt_state(r) << 8);
-    return h;
-}
-
 /* the corners of the main screen: the phrase's section and its eight bars, the way to the next chord (top left); the
  * page's name, SOLO, hold and lock (top right) */
 static void draw_where(uint32_t now)
@@ -3433,8 +3484,10 @@ static void draw_main(void)
         h = hash(h, en_chord[i]);
     for (i = 0; i < 6; i++)
         h = hash(h, en_lane[i] | (uint32_t)proj.par[i < 4 ? i : 0] << 16);
-    h = hash(h, en_drum_pos[0]);                 /* (1.4.0: the duck meter gone; the strips thin, at the left) */
-    h = hash(h, strips_sig());
+    h = hash(h, en_drum_pos[0]);                 /* (1.4.0: the duck meter gone; the lanes' meters at the left, their lit
+                                                  * lengths; the pings' and the noise's rows) */
+    h = hash(h, lm_sig());
+    h = hash(hash(h, en_lane_png), en_nz_pat ^ (uint32_t)(en_nz_step >> 4) << 31 ^ (uint32_t)proj.par[P_CRACKLE] << 24);
     h = hash(h, (uint32_t)(en_prog_pos + 1) << 12);
     h = hash(h, (uint32_t)(en_drift * 40.0f) | en_section << 8 | (uint32_t)en_phrase_bar << 12 | (uint32_t)ui.perf << 16 | ui.solo << 20 |
                 (uint32_t)ui.lock << 28);
@@ -3527,7 +3580,6 @@ static void draw_main(void)
             text_c(CX, CY + 11, &FONT_XS, t, K_DIM);
         }
     }
-    draw_strips();
     draw_where(now);
     draw_lanes();
     draw_oct(now);

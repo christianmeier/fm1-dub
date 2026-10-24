@@ -238,6 +238,7 @@ extern volatile uint16_t en_lane[6];
 extern volatile float en_bass_gate;              /* (1.4.0, the bass's page) how long its notes hold, in sixteenths */
 extern volatile int8_t en_bass_octn;             /* which of this bar's bass notes is an octave up (0..; -1: none) */
 extern volatile uint16_t en_lane_sh, en_lane_op;   /* (1.4.0, the Drums page) the shaker's and the open hat's apart */
+extern volatile uint16_t en_lane_png;            /* (1.4.0, the overview) the pings this bar: the sixteenths one falls on */
 extern volatile uint8_t en_kick_v[16], en_hat_v[16];   /* each step's strength as it will play (0..255): the ghosts low */
 extern volatile uint32_t en_nz_pat;             /* (1.4.0, the Noise page) its groove: two bars of sixteenths */
 extern volatile uint8_t en_nz_vel[32], en_nz_step;   /* each hit's strength (a ghost low); the step playing (0..31) */
