@@ -760,7 +760,8 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   layers coming in over a steady pulse, atmosphere first or pulse first, the hats last, outros the mirror):
   each piece chooses its own intro (atmosphere first or pulse first); a song ends in silence (or, as an option,
   goes on to the next piece); Endless starts full, as now (a user can save a piece in a state good for a gradual
-  start). The plan to write next: build/design/SONG.md.
+  start). The plan: build/design/SONG.md (Endless, Song, Set; Intro, Main, Outro in bars, a phrase a click; the
+  outro now on HOME + PLAY; Set stops after the eighth piece; on HOME's Song page: Mode, Intro, Main, Outro).
 - **Still missing (the user, 2026-10-24: "don't forget"):**
   - **The virtual dub mixer** (the Arrangement page's Mixer knob, grey now): how much it rides the faders and the
     sends by itself.
