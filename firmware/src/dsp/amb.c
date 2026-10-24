@@ -2545,15 +2545,17 @@ static int pulse;
  * deeper, +-2.5 octaves at 100, on a curve so the pieces' 20-30 sweep as they did), the pings' FM brightness over
  * one, the bass's Shape over four (1.4.0, the user's: not the bite; +-25 around the knob's at 100); a sine from the
  * grid's place, eased */
-static float lfo_c, lfo_p, lfo_b, lfo_n;      /* (lfo_n: the noise's, its rings' tone over a bar, +-1 octave at 100;
-                                                 * its crest on beat 2, the chord's on beat 3: they move apart) */
+static float lfo_ch, lfo_p, lfo_b, lfo_n;    /* (lfo_n: the noise's, its rings' tone over a bar, +-1 octave at 100;
+                                                 * its crest on beat 2, the chord's on beat 3: they move apart. lfo_ch,
+                                                 * 1.4.0: was lfo_c, the plate's own name too: one variable, the chord's
+                                                 * LFO pulling the plate's wobble about) */
 static void lfo_step(void)
 {
     const float pos = (float)(sixteenth & 63u) + (float)pulse * (1.0f / 6.0f);   /* (four bars of sixteenths) */
     const float tc = fm_sinf(6.2831853f * pos * (1.0f / 32.0f)), tp = fm_sinf(6.2831853f * pos * (1.0f / 16.0f)),
                 tb = fm_sinf(6.2831853f * pos * (1.0f / 64.0f));
     const float dc = (float)par[P_CFDEC] * 0.01f;
-    lfo_c += (2.5f * dc * fm_sqrtf(dc) * tc - lfo_c) * 0.2f;
+    lfo_ch += (2.5f * dc * fm_sqrtf(dc) * tc - lfo_ch) * 0.2f;
     lfo_p += (0.8f * (float)par[P_PFDEC] * 0.01f * tp - lfo_p) * 0.2f;
     lfo_b += (0.5f * (float)par[P_BFDEC] * 0.01f * tb - lfo_b) * 0.2f;
     lfo_n += (0.67f * (float)par[P_NLFO] * 0.01f * fm_sinf(6.2831853f * pos * (1.0f / 16.0f)) - lfo_n) * 0.2f;
@@ -3140,7 +3142,7 @@ static void render_stabs(uint32_t n)
     for (j = 0; j < n; j++) {
         float l = 0.0f, r = 0.0f, v1, v2, v3, yl, yr, e;
         if (!(j & 31u)) {                        /* the filter: its base, its envelope, the sweep */
-            float fc = cut_base * fm_exp2f(fe * st_fenv + 1.6f * arcm + st_cofs + lfo_c + perf_sw + 0.3f * motion * mod[0].v);
+            float fc = cut_base * fm_exp2f(fe * st_fenv + 1.6f * arcm + st_cofs + lfo_ch + perf_sw + 0.3f * motion * mod[0].v);
             svf_coefs(st_c, fm_clampf(fc, 90.0f, 12000.0f), k);
             st_fenv *= st_fdec;
             pc = st_fenv * st_fenv;              /* (Tonewheel: the percussion, quicker still) */
