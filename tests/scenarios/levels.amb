@@ -146,7 +146,7 @@ spin K3 10
 # (1.4.0) the hats' own page: SEQ a third time (the Kick page the second)
 tap SEQ
 wait 300
-said Kick page, kit Tight: Tune 0, Length 0, Punch 0, Rumble 20
+said Kick page, kit Tight: Tune 0, Length 0, Punch 0, Rumble 21
 tap SEQ
 wait 300
 said Hats page, kit Tight: Level 40, Tone 0, Length 0

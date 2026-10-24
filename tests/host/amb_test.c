@@ -153,6 +153,58 @@ static int same_with(int p, int v)
 }
 
 /* a new engine, stopped, the count from the top (en_init leaves the transport, en_bars, as they were) */
+/* (1.4.0) the kick's rumble alone: one engine, from here two ways (a fork), the rumble at 0 and at v, the same
+ * otherwise; the difference's mid (m), its side's energy, and each sample's sixteenth within its beat (q: 0 on the
+ * beat, where the kick lands) */
+#define RB_TN (6 * 44100)
+static float rb_m[RB_TN];
+static uint8_t rb_q[RB_TN];
+static double rb_side;
+static void rumble_ab(int v)
+{
+    static float alt[2 * RB_TN];
+    int fd[2], b, j, i = 0;
+    pid_t pid;
+    fflush(stdout);
+    if (pipe(fd))
+        return;
+    pid = fork();
+    if (pid == 0) {                              /* (the rumble at v: its output, through the pipe) */
+        en_set(P_RUMBLE, v);
+        for (b = 0; b < RB_TN / 256; b++) {
+            en_render(buf, 256, 2048);
+            for (j = 0; j < 256; j++, i++)
+                alt[2 * i] = (float)buf[2 * j] / 8388608.0f, alt[2 * i + 1] = (float)buf[2 * j + 1] / 8388608.0f;
+        }
+        for (j = 0; j < (int)sizeof alt; j += (int)write(fd[1], (char *)alt + j, sizeof alt - (size_t)j))
+            ;
+        _exit(0);
+    }
+    en_set(P_RUMBLE, 0);
+    rb_side = 0.0;
+    for (b = 0; b < RB_TN / 256; b++) {
+        en_render(buf, 256, 2048);
+        for (j = 0; j < 256; j++, i++) {
+            alt[2 * i] = (float)buf[2 * j] / 8388608.0f, alt[2 * i + 1] = (float)buf[2 * j + 1] / 8388608.0f;
+            rb_q[i] = (uint8_t)((en_bars + 3u) % 4u);   /* (en_bars: the step coming, one past the playing one) */
+        }
+    }
+    {
+        static float other[2 * RB_TN];
+        size_t got = 0;
+        ssize_t r;
+        while (got < sizeof other && (r = read(fd[0], (char *)other + got, sizeof other - got)) > 0)
+            got += (size_t)r;
+        for (i = 0; i < RB_TN; i++) {
+            const float dl = other[2 * i] - alt[2 * i], dr = other[2 * i + 1] - alt[2 * i + 1];
+            rb_m[i] = 0.5f * (dl + dr);
+            rb_side += (double)(0.5f * (dl - dr)) * (double)(0.5f * (dl - dr));
+        }
+    }
+    waitpid(pid, 0, 0);
+    close(fd[0]);
+    close(fd[1]);
+}
 static int chord_root_pc(void) { return en_chord_root % 12; }
 
 static void fresh(void)
@@ -1362,6 +1414,91 @@ int main(void)
         run(1.0f);
         for (i = 0; i < EN_MT_MASTER; i++)
             CHECK(en_meter[i] == 0.0f, "meter %d measured while off", i);
+    }
+
+    /* (1.4.0, the user's: the second try) the kick's rumble: none at 0; at its knob a low bed (under ~150 Hz, nearly
+     * nothing over 200), mono, ducked on the kick (the beat's first sixteenth well under its last); the master never
+     * over full scale at 100 (Pressure, the loudest kick, and Concrete) */
+    {
+        int16_t pp[P_NPARAMS];
+        uint16_t pl;
+        int k, i, pc;
+        for (pc = 0; pc < 2; pc++) {
+            const int piece = pc ? 4 : 6;
+            double e = 0.0, eh = 0.0, eq[4] = {0, 0, 0, 0};
+            int nq[4] = {0, 0, 0, 0};
+            float lo1 = 0.0f, lo2 = 0.0f, mx = 0.0f, m0 = 0.0f;
+            fresh();
+            en_piece(piece, pp, &pl);
+            for (k = 0; k < P_NPARAMS; k++)
+                if (k != P_TUNE && k != P_MIDI)
+                    en_set(k, pp[k]);
+            en_pool(pl);
+            en_set(P_RUMBLE, 0);
+            en_regrow();
+            en_play(1);
+            run(8.0f);
+            CHECK(same_with(P_RUMBLE, 0) == 1 && same_with(P_RUMBLE, 35) == 0, "the rumble: none at 0, heard at 35");
+            rumble_ab(35);
+            for (i = 44100; i < RB_TN; i++) {    /* (the first second left out: the tail building) */
+                const float x = rb_m[i];
+                float y;
+                lo1 += 0.0350f * (x - lo1);      /* (two one-poles at ~250 Hz: what's over them, x - their low) */
+                y = x - lo1;
+                lo2 += 0.0350f * (y - lo2);
+                y -= lo2;
+                e += (double)(x * x);
+                eh += (double)(y * y);
+                eq[rb_q[i]] += (double)(x * x), nq[rb_q[i]]++;
+            }
+            for (k = 0; k < 4; k++)
+                eq[k] /= nq[k] ? nq[k] : 1;
+            printf("  the rumble (%s, 35): %.1f dB, %.1f%% of it over ~250 Hz, its side %.1f dB under it; "
+                   "the beat's sixteenths %.1f %.1f %.1f %.1f dB\n", en_piece_name(piece),
+                   10.0 * log10(e / (RB_TN - 44100) + 1e-20), 100.0 * eh / (e + 1e-20),
+                   10.0 * log10(e / (rb_side + 1e-30)), 10.0 * log10(eq[0] + 1e-20), 10.0 * log10(eq[1] + 1e-20),
+                   10.0 * log10(eq[2] + 1e-20), 10.0 * log10(eq[3] + 1e-20));
+            CHECK(e / (RB_TN - 44100) > 1e-6, "the rumble at 35 heard (%g)", e / (RB_TN - 44100));
+            CHECK(eh < 0.05 * e, "the rumble low: %.1f%% over ~250 Hz", 100.0 * eh / (e + 1e-20));
+            CHECK(rb_side < 1e-3 * e, "the rumble mono (its side %.1f dB under it)", 10.0 * log10(e / (rb_side + 1e-30)));
+            CHECK(eq[0] * 2.0 < eq[3], "the rumble ducked on the kick: the beat's first sixteenth %.1f dB, its last %.1f",
+                  10.0 * log10(eq[0] + 1e-20), 10.0 * log10(eq[3] + 1e-20));
+            {   /* (a minute, the master's peak each block: at 100 (a fork) and at 0, the same minute) */
+                int fd[2], w;
+                pid_t pid;
+                float *pk;
+                fflush(stdout);
+                if (pipe(fd))
+                    fd[0] = fd[1] = -1;
+                pid = fork();
+                for (w = 0; w < 2; w++) {
+                    if ((pid == 0) != (w == 0))
+                        continue;
+                    pk = w == 0 ? &mx : &m0;
+                    en_set(P_RUMBLE, w == 0 ? 100 : 0);
+                    en_meter[EN_MT_MASTER] = 0.0f;
+                    for (k = 0; k < 60 * 172; k++) {
+                        en_render(buf, 256, 2048);
+                        *pk = en_meter[EN_MT_MASTER] > *pk ? en_meter[EN_MT_MASTER] : *pk;
+                        en_meter[EN_MT_MASTER] = 0.0f;
+                    }
+                }
+                if (pid == 0) {
+                    if (write(fd[1], &mx, sizeof mx) != (ssize_t)sizeof mx)
+                        _exit(1);
+                    _exit(0);
+                }
+                if (read(fd[0], &mx, sizeof mx) != (ssize_t)sizeof mx)
+                    mx = 9.0f;
+                waitpid(pid, 0, 0);
+                close(fd[0]);
+                close(fd[1]);
+            }
+            printf("  the rumble (%s, 100): the master's peak %.2f (%.2f without it)\n", en_piece_name(piece), (double)mx,
+                   (double)m0);
+            CHECK(mx < 1.0f && mx < m0 * 1.25f, "the rumble at 100: the master's peak %.2f (%.2f without it)", (double)mx,
+                  (double)m0);
+        }
     }
 
     /* stop: the tails die away (but the vinyl turns on) */

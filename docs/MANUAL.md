@@ -1018,14 +1018,15 @@ Swing is on the Key page (HOME, then HOME again).
 
 **SEQ again: Kick**
 
-![The Kick page: TIGHT, TUNE 0, LENGTH −4, PUNCH −5, RUMBLE 20](img/screen-kick.png "The Kick page")
+![The Kick page: TIGHT, TUNE 0, LENGTH −4, PUNCH −5, RUMBLE 21](img/screen-kick.png "The Kick page")
 
 - **Tune:** semitones from the key's note, −12 to +12.
 - **Length:** how long the kick booms, −50 to +50 around the kit's.
 - **Punch:** the kick's start pitch and its click, −50 to +50.
-- **Rumble:** a dark roar under the kick (the kick into a dark reverb, low, ducked by the next kick),
-  none at 0, deeper and longer as it rises (Basic's 20, Pressure's 35). Back in 1.4.0 for a second
-  try: its sound is still being worked on.
+- **Rumble:** dub techno's rumble: a dark, unpitched bed under the kick (around 30–80 Hz, mono), the
+  kick's tail held over the beat, ducked by each kick and swelling before the next; none at 0, deeper
+  and longer as it rises (Steppers' 14, Basic's 21, Fog's 62). Most pieces sit between 15 and 60; 100
+  is heavy, for when you want it.
 
 **SEQ a third time: Hats**
 
@@ -1273,7 +1274,7 @@ The defaults are Basic's; each piece has its own.
 | Drums | Vary | 0–100 (0 the kick settled, the shaker kept – 50 as Evolve – 100 three times as often) | 50 |
 | Kick | Tune | −12 – +12 semitones | 0 |
 | Kick | Length, Punch | −50 – +50 | 0 |
-| Kick | Rumble | 0–100 (none – a deep roar) | 20 |
+| Kick | Rumble | 0–100 (none – a deep roar) | 21 |
 | Hats | Level | 0–100 (−12 dB – ×1 at 50 – +12 dB) | 40 |
 | Hats | Tone, Length | −50 – +50 | 0 |
 | Dub | Echo | 0–100 | 55 |
