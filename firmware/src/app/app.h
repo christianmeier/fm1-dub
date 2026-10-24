@@ -10,7 +10,9 @@
 #define EN_VERSION "DEV"
 #endif
 #define PROJ_MAGIC 0x31425544u           /* "DUB1": AMB-1's projects ("ENO1") give the recipes */
-#define PROJ_FORMAT 18u                  /* 18: the noise's Density and Air 0..100, 0 none (8-17 read, converted);
+#define PROJ_FORMAT 19u                  /* 19: the chord's and the noise's LFO rates (P_CLRATE, P_NLRATE; 8-18 read,
+                                         * they from the recipes, the noise's LFO depth converted: its scale shallower);
+                                         * 18: the noise's Density and Air 0..100, 0 none (8-17 read, converted);
                                          * 17: the kick's rumble (P_RUMBLE; 8-16 read, it from the recipes);
                                          * 16: the noise's LFO (P_NLFO; 8-15 read, it from the recipes);
                                          * 15: the Noise page's second (Width, Plate, Echo) and the hats' length

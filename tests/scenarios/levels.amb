@@ -345,7 +345,7 @@ wait 300
 store12 5
 reboot
 wait 1000
-expect format 18
+expect format 19
 expect piece 0
 expect par24 3
 expect par113 65
@@ -371,7 +371,7 @@ expect par112 80
 store13
 reboot
 wait 1000
-expect format 18
+expect format 19
 expect par112 80
 expect par115 45
 expect par116 100

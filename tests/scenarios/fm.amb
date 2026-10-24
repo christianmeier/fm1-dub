@@ -1,4 +1,6 @@
-# the FM pages: a third press on an FM voice; the algorithm overridden, kept by the piece; a non-FM voice: back
+# the FM pages: a third press on an FM voice; the algorithm overridden, kept by the piece; a non-FM voice: greyed.
+# (1.4.0) The chord's fourth press: its LFO page (Depth, Rate: 1 to 32 bars, or Drift); then back. The pings' and the
+# bass's FM pages: their fourth knob none now (their LFO gone)
 listen
 wait 3000
 tap ENV
@@ -9,7 +11,7 @@ said VOICE Keys
 tap ENV
 tap ENV
 wait 400
-said Chord FM page, voice Keys: Algo Voice, Ratio 0, Feedback 0, LFO +25
+said Chord FM page, voice Keys: Algo Voice, Ratio 0, Feedback 0
 expect view 12
 spin K1 1
 wait 300
@@ -20,6 +22,30 @@ wait 300
 expect par54 40
 wait 4000
 expect peak_db_max -0.5
+tap ENV
+wait 400
+expect view 22
+said Chord LFO page, voice Keys: Depth 25, Rate 4 bars
+spin K2 1
+wait 300
+expect par127 3
+said Rate 8 bars
+spin K2 9
+wait 300
+expect par127 6
+said Rate Drift
+spin K2 -4
+wait 300
+expect par127 2
+spin K1 10
+wait 300
+expect par55 35
+said Depth 35
+spin K3 5
+spin K4 5
+wait 300
+expect par55 35
+expect par127 2
 tap ENV
 wait 300
 expect view 1
@@ -38,6 +64,7 @@ expect par54 40
 expect par52 1
 shot fm_off.png
 tap ENV
+tap ENV
 wait 300
 expect view 1
 tap ARP
@@ -49,18 +76,33 @@ spin K1 9
 wait 3000
 expect par56 9
 expect peak_db_max -0.5
-# the fourth knob, the LFO, works on every voice: on Saws (not FM) the FM page greys the rest but not it
+# (the pings' fourth knob none now: turned, nothing; ARP again: back to Pings)
+spin K4 20
+wait 300
+expect par59 0
+tap ARP
+wait 300
+expect view 2
+# the chord's LFO works on every voice: on Saws (not FM) its page as on Keys
 tap HOME
 tap ENV
 wait 300
 expect par22 0
 tap ENV
 tap ENV
+tap ENV
+wait 300
+expect view 22
+spin K1 30
+wait 300
+expect par55 65
+tap ENV
+wait 300
+expect view 1
+tap ENV
+tap ENV
 wait 300
 expect view 12
-spin K4 30
-wait 300
-expect par55 55
 spin K1 3
 wait 300
 expect par52 1
