@@ -2578,7 +2578,7 @@ static struct {
     uint32_t left, rng;                          /* (sixteenths till the next place; its own randomness: the music's
                                                   * choices left be) */
 } lfo_dr[2];
-volatile int8_t en_lfo_tr[2][EN_LFO_N];
+volatile int8_t en_lfo_tr[2][EN_LFO_N] EN_POOL;   /* (in the pool: read only as far as written) */
 volatile uint32_t en_lfo_w, en_lfo_picks[2];
 static float dr_rand(int k)
 {
