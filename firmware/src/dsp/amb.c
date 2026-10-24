@@ -3882,13 +3882,13 @@ static void noise_step(int s)
     nz_wait = (int32_t)fm_maxf(gap - lead, 0.0f);
     nz_due = 1;
 }
-static float nzf_s[4];                           /* (the noise's LFO filter's state, l and r) */
+static float nzf_s[2];                           /* (the noise's LFO filter's state: the rings', l and r) */
 static inline float svf_lp(const float *c, float *s, float x, float *bp);
 static void render_crackle(uint32_t n)
 {
     uint32_t j, thr;
     int i;
-    float g, k, sg, nc, ng, nd, gh, lpc, vg, gres, cg, lpk, bf, cont, dry;
+    float g, k, sg, nc, ng, nd, gh, lpc, vg, gres, cg, lpk, bf, cont, dry, nzla = 1.0f, nzl4 = 1.0f;
     const unsigned c = nz_char();
     cr_gate += ((en_playing ? 1.0f : 0.0f) - cr_gate) * fm_minf((float)n / (0.5f * EN_SR), 1.0f);
     if (cr_gate < 1e-4f)
@@ -3930,6 +3930,18 @@ static void render_crackle(uint32_t n)
     cont = NCHAR[c].cont;
     gh = 0.03f * g * cr_dv[0] * nctl.room;      /* the Air: quiet (it breathes with the duck: render_chunk) */
     lpc = fm_clampf(0.4f * fm_exp2f(0.5f * nc), 0.15f, 0.8f);   /* (its band: ~2-4 kHz at the top) */
+    if (par[P_NLFO] > 0 || par[P_NLWALK] > 0) {  /* (1.4.0, the user's) the LFO and the drift: a low-pass on the
+                                                  * whole noise, its hits and its hiss; open at the top of their
+                                                  * reach, closing towards the bottom, 3.5 octaves at 100 (~20 kHz ..
+                                                  * ~1.4 kHz). In the noise's own filters, not one of its own after
+                                                  * them (the FM-1's CPU: on in every piece, the drift's): the hiss's
+                                                  * and the clicks' low-passes no higher than it, the rings' through a
+                                                  * one-pole at their quarter rate */
+        const float fc = 20000.0f * fm_exp2f(-1.9f * fm_minf((float)(par[P_NLFO] + par[P_NLWALK]) * 0.01f - lfo_n, 2.0f));
+        nzla = 1.0f - fm_expf(-2.0f * FM_PI * (1.0f / EN_SR) * fc);
+        nzl4 = 1.0f - fm_expf(-2.0f * FM_PI * (1.0f / TAPE_SR) * fc);
+        lpc = fm_minf(lpc, nzla);
+    }
     vg = 0.5f * g * NCHAR[c].clicks * fm_exp2f(0.7f * ng);   /* (the dry clicks, quiet) */
     thr = !nctl.hits ? 0u : (uint32_t)((3.0f + 12.0f * g) * cr_dv[2] * fm_exp2f(ng) * NCHAR[c].loose * (4294967296.0f / EN_SR));   /* dry
                                                   * clicks a second, the loose ones (the rest on the grid: noise_step) */
@@ -3938,7 +3950,7 @@ static void render_crackle(uint32_t n)
         float lp1 = cr_lp, lp2 = cr_lp2, hp1 = cr_hp, cl = cr_cl, cr = cr_cr, fl = cr_fl, fr = cr_fr, cc = cr_cc;
         float ex = nz_ex, ck = nz_click, acc = nz_acc, b0 = nz_b[0], b1 = nz_b[1], b2 = nz_b[2], b3 = nz_b[3];
         float pl = nz_p[0], pr = nz_p[1], ql = nz_c[0], qr = nz_c[1];
-        float exd = nz_exd;
+        float exd = nz_exd, rl = nzf_s[0], rr = nzf_s[1];
         const float sw = 0.05f * cont * (1.0f - 0.8f * duck_d);   /* (Tape: the hiss in, between beats) */
         const int32_t sj = nz_wait >= 0 && nz_wait < (int32_t)n ? nz_wait : -1;   /* (a hit strikes in this chunk) */
         const int rest = SHED && ex < 1e-4f && cont <= 0.0f &&
@@ -3983,8 +3995,11 @@ static void render_crackle(uint32_t n)
                 cr += a * s1 * pn;
                 nev(0, a * vg * 3.0f, pn);
             }
-            fl += cc * (cl - fl);
-            fr += cc * (cr - fr);
+            {
+                const float cq = fm_minf(cc, nzla);   /* (the LFO's low-pass: above) */
+                fl += cq * (cl - fl);
+                fr += cq * (cr - fr);
+            }
             cl *= 0.55f;
             cr *= 0.55f;
             x = wn * ex + h * sw + 0.3f * (fl + fr);   /* what rings the combs: the hit's burst (no crack), the hiss
@@ -4025,7 +4040,9 @@ static void render_crackle(uint32_t n)
                 b3 += bf * (sr2 - b2 - 0.9f * b3);
                 b2 += bf * b3;
                 pl = ql, pr = qr;
-                ql = b1 * gres, qr = b3 * gres;
+                rl += nzl4 * (b1 * gres - rl);   /* (the LFO's low-pass: above; off, 1: as they were) */
+                rr += nzl4 * (b3 * gres - rr);
+                ql = rl, qr = rr;
             }
             f = (float)ph * 0.25f;               /* (back to the full rate: a line from the last to the next) */
             l = (pl + (ql - pl) * f) * dnr;
@@ -4042,23 +4059,7 @@ static void render_crackle(uint32_t n)
             crr[j] = r;
         }
 #undef CRU
-        if (par[P_NLFO] > 0 || par[P_NLWALK] > 0 || nzf_s[0] != 0.0f || nzf_s[1] != 0.0f) {   /* (1.4.0, the
-                                                  * user's) the LFO and the drift: a low-pass on the whole noise, its
-                                                  * hits and its hiss; open at the top of their reach, closing towards
-                                                  * the bottom, 3.5 octaves at 100 (15 kHz .. ~1.3 kHz) */
-            const float dn0 = (float)(par[P_NLFO] + par[P_NLWALK]) * 0.01f;
-            float cf[4], bp;
-            svf_coefs(cf, 15000.0f * fm_exp2f(-1.75f * fm_minf(dn0 - lfo_n, 2.0f)), 1.2f);
-            for (j = 0; j < n; j++) {
-                crl[j] = svf_lp(cf, nzf_s, crl[j], &bp);
-                crr[j] = svf_lp(cf, nzf_s + 2, crr[j], &bp);
-            }
-            for (i = 0; i < 4; i++)
-                nzf_s[i] = fm_flush(nzf_s[i]);
-            if (dn0 <= 0.0f)
-                for (i = 0; i < 4; i++)
-                    nzf_s[i] = 0.0f;             /* (off: out of the way, at once) */
-        }
+        nzf_s[0] = fm_flush(rl), nzf_s[1] = fm_flush(rr);
         cnoise = cn;
         cr_lp = fm_flush(lp1), cr_lp2 = fm_flush(lp2), cr_hp = fm_flush(hp1);
         cr_cl = fm_flush(cl), cr_cr = fm_flush(cr), cr_fl = fm_flush(fl), cr_fr = fm_flush(fr), cr_cc = cc;

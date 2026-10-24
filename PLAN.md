@@ -845,6 +845,12 @@ loop held, the kick never leaving, an echo you hear, movement by hand rather tha
 - **Smaller engine features:** hats on the four "ands" (an auto pattern); named bass figures (BCD's x.....x.x.....x.)
   as grooves; kick shapes 3+3+2 and a four leaning on 1 and 3; a dotted-half echo time; a lower chord voicing; a
   reggae offbeat chop (a stab pattern); intro and outro (for a set or a recording).
+- **CPU: 1.4.0's LFO rework** (2026-10-24, the user: dropouts and clicks on Chamber and Concrete, "the CPU higher in
+  general"): on the host the engine had grown 5-8% over 1.3.0's, nearly all of it the noise LFO's low-pass (two SVFs a
+  sample, on in every piece since each drifts its noise), enough to take 1.3.0's peaks (80-82 on the FM-1) over.
+  Folded into the noise's own filters (the hiss's and the clicks' low-passes no higher than the LFO's, the rings a
+  one-pole at their quarter rate): within ~2% of 1.3.0, the sweep as deep (build dub-1.4.0zh). To read on the FM-1:
+  Setup's CPU now/peak and any !n on Chamber, Concrete, Haze.
 - **CPU: the hot DSP code from RAM: tried, not kept** (2026-10-23). The core's stall counters don't run on this chip
   (F--, both orders); the engine in RAM (b757564: 62 KB in a FAST region) gave the same averages (Fog 30s, Haze
   50s-60s; flash a tad lower) and evened the peaks to 80-82 (Haze, Chamber down a little, Fog up from 63-70): the
