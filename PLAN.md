@@ -677,6 +677,27 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
 - **The noise's LFO seen** (the user's idea): a sine moving behind the Noise page's two rows of hits, its crest
   where the rings are brightest.
 
+- **The pages' names** (the user, 2026-10-24): HOME's first page **Form** (Evolve, Motion, Drift: how the piece
+  unfolds), PERFORM becomes **Arrangement**, the Space page **Dub** (the echo and the plate: dub's instrument). "Dub
+  hold" keeps its name.
+- **The Arrangement page** (the user, 2026-10-24: "the levels are of course the most important part"; the layout
+  agreed):
+  - The screen: horizontal LED meters, one row a part (Chord, Pings, Bass, Drums, Noise) and the master: the live
+    signal left to right, a peak-hold segment, the level setting as a fader marker on the row, a muted row dark, a
+    solo dimming the others; the duck as gain reduction eating segments from the right on each kick. Each row named
+    (CHD, PNG, BAS, DRM, NOI, MST). Two builds to test on the FM-1, only the colours apart: classic green / yellow /
+    red, and each row in its layer's colour with the top two segments amber and red.
+  - The vertical strips and the duck meter gone from every other page (the ripples, scope and spectrum keep the
+    colour and motion; the OCT ring shows a level as it changes); a small red dot at the top if the output clips.
+  - KNOB 1 **Energy**, KNOB 2 **Mixer** (the virtual dub mixer: how much it rides the faders and the sends by
+    itself; its moves seen on the meters' markers), KNOB 3 **Wet** (the master send), KNOB 4 **Duck** (the sidechain:
+    the desk's compressor). The Filter on SELECT only.
+  - A part's white key (1-5) held: the knobs that channel's strip, **Level, Echo send, Plate send**, and a fourth
+    (pan or a low cut; to decide). The Chord and Pings pages' Wet move here (per-channel sends for every part). A
+    tap still mutes, the black keys still throw and drop.
+  - Not now: a three-band EQ (the voice pages have the tone), a bus compressor (the CPU).
+  - After the LFO work is merged (both touch ui.c).
+
 ## Now: two lines in parallel (the user, 2026-10-23)
 
 After 1.3.0's release (the docs done, e20d31b..e10ddf4; a release video being made in build/film/release-1.3.0/):
