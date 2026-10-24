@@ -774,6 +774,11 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   Form: Energy (KNOB 1, the Filter on SELECT only), Evolve, Motion, and a free fourth. Wet to the channel strip.
   "Vary" the word for each layer's how-often-it-changes knob. Song Mode (Endless, Song, Set) on GLO; the Song page
   on HOME: Intro, Main, Outro, the intro's kind.
+- **Bigger visualisations** (the user, 2026-10-24; a plan, after the song structure's own display is decided): with
+  the strips gone and the header freed, the middle's pictures can grow. The ripples further up and to the sides,
+  the deepest layer (whatever is on top covers them: the section and bar cells, the page's name, the big ring, the
+  lanes); the scope and the spectrum wider (the screen's width, or nearly). To fit with the song line and the
+  "where we are" map, so the room is shared out once.
 - **Still missing (the user, 2026-10-24: "don't forget"):**
   - **The virtual dub mixer** (the Arrangement page's Mixer knob, grey now): how much it rides the faders and the
     sends by itself.
