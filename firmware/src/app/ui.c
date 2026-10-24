@@ -165,6 +165,21 @@ static int vknob(int v, int i)                   /* a page's knob i: VIEW_KNOB's
 {
     return v == V_STRIP ? STRIP_PAR[strip_part][i] : VIEW_KNOB[v][i];
 }
+static void page_pos(int v, int *n, int *m)     /* (1.4.0, the user's) a page's place among its button's: n of m (m 1: alone) */
+{
+    static const uint8_t SEQ[7][4] = {{V_DUB, V_KEY}, {V_CHORD, V_CSND, V_CFM, V_CLFO}, {V_TEXTURE, V_PSND, V_PFM},
+                                      {V_BASS, V_BSND, V_BFM}, {V_DRUMS, V_DSND, V_HATS, V_PAT}, {V_SPACE, V_ESND},
+                                      {V_NSND, V_NVOX, V_NLFO}};
+    static const uint8_t LEN[7] = {2, 4, 3, 3, 4, 2, 3};
+    int s, i;
+    for (s = 0; s < 7; s++)
+        for (i = 0; i < LEN[s]; i++)
+            if (SEQ[s][i] == v) {
+                *n = i + 1, *m = LEN[s];
+                return;
+            }
+    *n = *m = 1;
+}
 static const char *view_name(int v)              /* a page's name (a strip's: its part's, "Chord strip") */
 {
     static const char *const SN[NSTRIP] = {"Chord strip", "Pings strip", "Bass strip", "Kick strip", "Hats strip",
@@ -3500,6 +3515,16 @@ static void draw_card(uint32_t now)
 
 /* the corners of the main screen: the phrase's section and its eight bars, the way to the next chord (top left); the
  * page's name, SOLO, hold and lock (top right) */
+static void draw_page_pos(void)                  /* under the page's name, in grey: "2/3" (none on a page alone) */
+{
+    int n, m;
+    char t[6];
+    page_pos(ui.view, &n, &m);
+    if (m < 2)
+        return;
+    t[0] = (char)('0' + n), t[1] = '/', t[2] = (char)('0' + m), t[3] = 0;
+    cv_text(232 - text_w(&FONT_XS, t), 32, &FONT_XS, t, K_DIM);
+}
 static void draw_where(uint32_t now)
 {
     {   /* top left: the phrase's section and its eight bars; under it, the mode the keys are in */
@@ -3533,6 +3558,7 @@ static void draw_where(uint32_t now)
         caps(pn, view_name(ui.view), sizeof pn);
         x = 232 - text_w(&FONT_B, pn);
         cv_text(x, 12, &FONT_B, pn, K_ACC);
+        draw_page_pos();
         /* (1.4.0, the user's: the round's dots under it gone; SELECT doesn't circle the pages any more) */
         if (ui.solo) {                           /* (a solo on, in PERFORM or kept after it) */
             x -= 6 + text_w(&FONT_XS, "SOLO");
@@ -3611,6 +3637,7 @@ static void draw_main(void)
                 caps(pn, view_name(ui.view), sizeof pn);
                 cv_text(232 - text_w(&FONT_B, pn), 12, &FONT_B, pn, K_ACC);
             }
+            draw_page_pos();
             draw_big(now);
             cv_blit(0, MAIN_Y);
         }
