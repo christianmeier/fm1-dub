@@ -847,10 +847,12 @@ static stab_t stab[EN_NPAD];
 static float chord_vol, cut_base = 800.0f, st_dec = 0.9995f, st_fdec = 0.99f, st_t60 = 0.3f;
 static float st_env, st_amp, st_fenv, st_throw, throw_dec, st_cofs;
 #ifndef EN_RUMBLE
-#define EN_RUMBLE 0                              /* (the kick's rumble: off in 1.3.0, its work for 1.4.0) */
+#define EN_RUMBLE 1                              /* (the kick's rumble: off in 1.3.0; 1.4.0, the second try: on) */
 #endif
 #define RB_SR (EN_SR / 16.0f)                    /* (the rumble's rate) */
-static float rb_amt, rb_g = 0.9f, rb_on = 1.0f;   /* (rb_on: eased off while shedding) */                /* (the kick's rumble: its level, its loop's gain) */
+static float rb_amt, rb_g = 0.999f, rb_on = 1.0f;   /* (the kick's rumble: its level, its tail's decay a sample
+                                                  * of its rate; rb_on: eased off while shedding) */
+static void rumble_init(void);
 static float ec_dk, ec_dd;                      /* (the classics pass) a strike ducks the echo's returns: its level,
                                                  * eased; the repeats heard in the gaps, not over the stab */
 static float st_s[4], st_c[4], st_h[2];
@@ -2832,11 +2834,11 @@ static void apply(int p, int v)
     case P_HATSLVL: hats_lvl = fm_exp2f((float)(v - 50) * 0.04f); break;   /* x1 at 50, -12 .. +12 dB */
     case P_KDENS: kick_now = 1; break;           /* (1.4.0, the user's) the kick's shape turned: from the next bar, not
                                                   * the next phrase (and its hold begun again) */
-    case P_RUMBLE:                               /* the kick's rumble: none (0) .. a deep roar (100), longer as it rises:
-                                                  * its tail 0.8 s .. 2.5 s (rumble); (1.3.0: off, not yet to standard,
-                                                  * the user: EN_RUMBLE 1 for 1.4.0's work; the value kept, saved) */
-        rb_amt = EN_RUMBLE ? (float)v * (float)v * 0.0001f : 0.0f;
-        rb_g = fm_exp2f(-9.966f * (180.0f / RB_SR) / (0.8f + 1.7f * (float)v * 0.01f));
+    case P_RUMBLE:                               /* the kick's rumble: none (0) .. heavy (100), longer as it rises: its
+                                                  * tail 2.5 .. 6 s, held across a beat, the sidechain shaping it
+                                                  * (1.3.0: off, not yet to standard; 1.4.0, the second try: rumble) */
+        rb_amt = EN_RUMBLE ? (float)v * 0.01f * (0.35f + 0.0065f * (float)v) : 0.0f;   /* (-14 dB at 35, -5 at 70) */
+        rb_g = fm_expf(-6.9f / ((2.5f + 3.5f * (float)v * 0.01f) * RB_SR));   /* (the tail's -60 dB) */
         break;
     case P_CGHOST:                               /* the chord's dry: 0 dB (0), -6 dB (50), -20 dB (100); its sends x1 .. x1.7 */
         chord_dry = 0.5f * fm_exp2f((v <= 50 ? 6.0f * (float)(50 - v) : -14.0f * (float)(v - 50)) * 0.02f * 0.16609640f);
@@ -2974,6 +2976,7 @@ void en_init(void)
     for (i = 0; i <= SN; i++)
         sint[i] = fm_sinf((float)i * (FM_TWO_PI / (float)SN));
     plate_init();
+    rumble_init();
     for (i = 0; i < TAPE_N; i++)
         tape[i] = 0;
     for (i = 0; i < PLEX_N; i++)
@@ -3210,45 +3213,83 @@ static void drain(void)
 #define BLK 256
 static float mixl[BLK], mixr[BLK], rsend[BLK], esend[BLK], kickb[BLK], bassb[BLK], crl[BLK], crr[BLK];
 
-/* (the classics pass) the kick's rumble: the kick alone into a small dark reverb under ~150 Hz, ducked by each beat,
- * so it roars between them (Porter Ricks, Monolake's Cyan). Four lines mixed (a Householder matrix) at a sixteenth of
- * the rate (all of it under 150 Hz), its two sides apart over 80 Hz: some width in the lows. Rumble: its level and
- * its length */
-#define RB_N 692                                /* (157 + 173 + 179 + 183: the lines, ~57-66 ms) */
-static int16_t rb_buf[RB_N];
-static const int16_t RB_LEN[4] = {157, 173, 179, 183}, RB_OFF[4] = {0, 157, 330, 509};
-static int rb_i[4], rb_ph;
-static float rb_acc, rb_d[4], rb_pl, rb_pr, rb_cl, rb_cr, rb_ol, rb_or;
-static inline void rumble(float kick, float duck, float *l, float *r)
+/* (1.4.0, the user's: the second try) the kick's rumble: dub techno's "rumble kick", the kick into a long dark
+ * reverb, its return low-passed and high-passed, ducked by the next kick, so a low bed breathes between the beats
+ * (Echospace, Monolake's Cyan and Index, Intrusion). Not the kick itself ringing: 1.3.0's four short lines rang at the
+ * kick's pitch (a boom against the bass's notes; its sides apart). Here the tail is the kick's level, decaying as a
+ * reverb's (Rumble: 2.5 .. 6 s), carried by a band of noise ~32-80 Hz: unpitched, as the records' are (their low
+ * end between the kicks noise-like, mostly 25-60 Hz), so it never fights the bass's notes; mono; not saturated (at
+ * its levels a saturation did nothing; driven, it put harmonics into 150-400 Hz). All of it at a sixteenth of the
+ * rate, out a line between. */
+#ifndef RB_LP
+#define RB_LP 80.0f                              /* (the band's top, three poles; its bottom two) */
+#endif
+#ifndef RB_HP
+#define RB_HP 32.0f
+#endif
+#ifndef RB_SCD
+#define RB_SCD 0.9f                              /* (the sidechain: how far down on a kick) */
+#endif
+#ifndef RB_SCR
+#define RB_SCR 0.25f                             /* (its release, s: a swell over the beat, its top before the next) */
+#endif
+#ifndef RB_K
+#define RB_K 50.0f                               /* (the level) */
+#endif
+static int rb_ph;
+static uint32_t rb_rng = 0x2545F491u;
+static float rb_acc, rb_e, rb_eb, rb_n1, rb_n2, rb_n3, rb_h, rb_h2, rb_pk, rb_sc, rb_p, rb_c;
+static float rb_lpa, rb_hpa, rb_scr, rb_pkr;     /* (the band's, the sidechain's, the kick's peak's: rumble_init) */
+static void rumble_init(void)
 {
-    float f;
-    rb_acc += kick;                               /* (the sixteen's mean: its own low-pass) */
-    if (++rb_ph >= 16) {                          /* the reverb, a sixteenth of the time */
-        float y[4], m = 0.0f, x = rb_acc * (1.0f / 16.0f);
-        int k;
-        rb_ph = 0;
-        rb_acc = 0.0f;
-        for (k = 0; k < 4; k++) {
-            y[k] = (float)rb_buf[RB_OFF[k] + rb_i[k]] * (1.0f / 12000.0f);
-            m += y[k];
+    rb_lpa = 1.0f - fm_expf(-2.0f * FM_PI * RB_LP / RB_SR);
+    rb_hpa = 1.0f - fm_expf(-2.0f * FM_PI * RB_HP / RB_SR);
+    rb_scr = fm_expf(-1.0f / (RB_SCR * RB_SR));
+    rb_pkr = fm_expf(-1.0f / (2.0f * RB_SR));
+    rb_acc = rb_e = rb_eb = rb_n1 = rb_n2 = rb_n3 = rb_h = rb_h2 = rb_pk = rb_sc = rb_p = rb_c = 0.0f;   /* (off: from
+                                                  * silence when it comes back, not an old piece's tail) */
+    rb_ph = 0;
+}
+/* a block's rumble, into the kick's bus (so it goes where the kick goes, after the music's duck and its mono lows);
+ * its sidechain the kick itself, against its own recent peak (the Drums level not changing how deep it ducks) */
+static void rumble_block(uint32_t n)
+{
+    const float g = rb_amt * rb_on;
+    float p = rb_p, d = rb_c - rb_p, acc = rb_acc;
+    int ph = rb_ph;
+    uint32_t j;
+    for (j = 0; j < n; j++) {
+        const float k = kickb[j];
+        acc += fm_fabsf(k);
+        kickb[j] = k + (p + d * (float)ph * (1.0f / 16.0f)) * g;   /* (a line between) */
+        if (++ph >= 16) {                        /* a sixteenth of the time */
+            const float x = acc * (1.0f / 16.0f);
+            float w, y;
+            ph = 0;
+            acc = 0.0f;
+            rb_e = rb_e * rb_g + x * (1.0f - rb_g);   /* the tail: the kick's level, as a reverb's */
+            rb_eb += (rb_e - rb_eb) * 0.01f;     /* (its build, ~35 ms: a reverb's, not the kick's attack) */
+            rb_rng = rb_rng * 1664525u + 1013904223u;
+            w = (float)(int32_t)rb_rng * (1.0f / 2147483648.0f);
+            rb_n1 += rb_lpa * (w - rb_n1);       /* the band: three one-poles down (no mud over ~150 Hz), two up */
+            rb_n2 += rb_lpa * (rb_n1 - rb_n2);
+            rb_n3 += rb_lpa * (rb_n2 - rb_n3);
+            rb_h += rb_hpa * (rb_n3 - rb_h);
+            rb_h2 += rb_hpa * (rb_n3 - rb_h - rb_h2);
+            y = (rb_n3 - rb_h - rb_h2) * rb_eb * RB_K;
+            rb_pk = fm_maxf(x, rb_pk * rb_pkr);
+            rb_sc = fm_maxf(rb_pk > 1e-6f ? x / rb_pk : 0.0f, rb_sc * rb_scr);   /* the sidechain: down on each kick,
+                                                  * back up before the next */
+            y *= 1.0f - RB_SCD * rb_sc;
+            p = rb_c;
+            rb_c = y;
+            d = rb_c - p;
         }
-        m *= 0.5f;                                /* (Householder: y - 2/N sum) */
-        for (k = 0; k < 4; k++) {
-            float w = rb_g * (y[k] - m);
-            rb_d[k] += 0.35f * (w - rb_d[k]);     /* (each round darker) */
-            rb_buf[RB_OFF[k] + rb_i[k]] = s16(rb_d[k] + x);
-            if (++rb_i[k] >= RB_LEN[k])
-                rb_i[k] = 0;
-        }
-        rb_pl = rb_cl, rb_pr = rb_cr;
-        rb_cl = y[0] + y[2], rb_cr = y[1] + y[3];
     }
-    f = (float)rb_ph * (1.0f / 16.0f);
-    rb_ol = rb_pl + (rb_cl - rb_pl) * f;         /* (back to the full rate: a line between) */
-    rb_or = rb_pr + (rb_cr - rb_pr) * f;
-    f = rb_amt * rb_on * 2.2f * (1.0f - 0.9f * duck);
-    *l += rb_ol * f;
-    *r += rb_or * f;
+    rb_p = p, rb_acc = acc, rb_ph = ph;
+    rb_e = fm_flush(rb_e), rb_eb = fm_flush(rb_eb), rb_n1 = fm_flush(rb_n1), rb_n2 = fm_flush(rb_n2);
+    rb_n3 = fm_flush(rb_n3), rb_h = fm_flush(rb_h), rb_h2 = fm_flush(rb_h2), rb_pk = fm_flush(rb_pk);
+    rb_sc = fm_flush(rb_sc), rb_c = fm_flush(rb_c), rb_p = fm_flush(rb_p);
 }
 
 /* (the classics pass) the chord's and the pings' dry, wider: each side a little of the other's, 5 and 8 ms later and
@@ -4269,6 +4310,10 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     eg += (1.0f - eg) * fx_wash;                 /* Wash: everything into the echo */
     epk = en_echo_pk;
     rb_on += ((SHED ? 0.0f : 1.0f) - rb_on) * 0.25f;
+    if (rb_amt > 0.0f && rb_on > 0.004f)       /* (the kick's rumble, mono, ducked by the kick) */
+        rumble_block(n);
+    else if (rb_c != 0.0f || rb_e != 0.0f)
+        rumble_init();
     for (j = 0; j < n; j++) {
         float wl, wr, l, r, el, er, xl, xr, dg, dgb, rin, cl, cr, sd, dry = 1.0f - 0.75f * fx_wash;
         duck_d += (duck_x - duck_d) * 0.08f;
@@ -4321,8 +4366,6 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         cr *= 1.0f + 9.0f * fx_cf;
         l = mixl[j] * dry + 1.2f * el + 1.1f * wl + 1.4f * cl;   /* (1.3.0: the Echoplex's taps out) */
         r = mixr[j] * dry + 1.2f * er + 1.1f * wr + 1.4f * cr;
-        if (rb_amt > 0.0f && rb_on > 0.004f)     /* (the kick's rumble, ducked as the kick lands) */
-            rumble(kickb[j], duck_d, &l, &r);
         sd = 0.5f * (l - r);                     /* mono below ~80 Hz (the classics pass; was ~150): the side's lows
                                                   * taken out (two poles), so the
                                                   * stabs' and pings' low partials, the echo's and the plate's, sit in
