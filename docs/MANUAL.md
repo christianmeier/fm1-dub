@@ -105,15 +105,15 @@ The drawing at the top shows them all; here they are in more detail.
 | PLAY | Play / rest. DUB-1 starts playing by itself when it's switched on. At rest, the echo's feedback eases under 90% so its tails die away, the reverb rings out and the noise fades. Playing again starts from the first bar of a phrase. Lit while playing. |
 | REC | A tap: **dub hold**: the echo stops listening and repeats what it holds, sample for sample, for ever; the reverb stops listening too and rings on; the chord doesn't move. The stabs, pings and drums go on, dry, above it. Tap again to let go. Lit while held. Held: the **effects grid** (below). |
 | EDIT | A tap: the **Chords page** (below): the eight chords coming, to see and change (again, it stays). Held (half a second): the next chord, at the start of the next bar (at once while resting; in dub hold, once you let go); a card says NEXT CHORD until the chord changes. Held on (1.5 s): **new chords**, the walk's all walked again (yours, the gaps and the one playing kept); a red card, NEW CHORDS. |
-| SEL | A tap: the **Arrangement page** (PERFORM's until 1.4.0): the screen shows each part's level on a desk's meters, the knobs are Energy, Mixer (to come), Wet and Duck, and the keys stop being the scale: they mute and solo the layers, make the dub moves, and white 6 held puts the mix on the knobs (see below). Again, it stays; a page's button or SELECT leaves it. Lit while on. **Held** (half a second), on any page: **Lock** on or off (below). |
+| SEL | A tap: the **Arrangement page** (PERFORM's until 1.4.0): the screen shows each part's level on a desk's meters, the knobs are Energy, Mixer (to come), Wet and Duck, and the keys stop being the scale: they mute and solo the parts (white 1–6 held: a part's channel strip), make the dub moves and throw the hats (see below). Again, it stays; a page's button or SELECT leaves it. Lit while on. **Held** (half a second), on any page: **Lock** on or off (below). |
 | HOME | The **Form** page (Dub until 1.4.0): how the piece unfolds (Energy, Evolve, Motion). Again: the Key page (tempo, root, mode, swing), and again back to Form; HOME blinks on the Key page. Held on for 1.5 s (nothing turned meanwhile): **a shake of everything**, the chord, the pings, the bass, the drums and the noise at once ("SHAKE ALL"), the page kept; again and again, to explore until something sounds right. Held with SELECT turned: the tempo. |
 | ENV · ARP · LFO · SEQ | The layers' pages: Chord, Pings, Bass, Drums, each its part (see [The pages](#8-the-pages)). Again: the layer's voice page (**Chord voice**, **Pings voice**, **Bass voice**; the drums' **Kick**), then its FM page or, for the drums, the **Hats** page and then the Pattern page, then back. The chord has one more: after its FM page (for every chord voice: its Colour is there), the **Chord LFO** page, then back. Held (half a second): a **nudge** to the layer's sound; held on (1.5 s): a **shake** (below). |
 | FX · GLO | The **Dub** page, the echo and the plate (Space until 1.4.0; FX again: the **Echo page**, FX blinking; again, back); the Setup page, for what holds for every piece (GLO again, it stays). The lit button shows the page. FX held: a nudge to the space; held on: a shake (a new echo time). **GLO held** (half a second, then let go): **saves** all eight pieces (a card, SAVED); held on (1.5 s): the piece back to its recipe (a red card, RESET). |
 | SELECT | **The DJ filter**, on every page (its only place since 1.4.0's Chord pages; the Arrangement page's Open and Shut keys push on top of it): left shuts it (a low-pass, under water), right opens it (a high-pass, thin and bright), Off in the middle, where it stops on its way through (three clicks to leave it). While it turns, a big ring in the middle shows it (FILTER over it, the amount inside, Shut or Open under it); the page stays. Hold HOME and turn it for the tempo, from any page. The pages are on their buttons; the page's name, top right, says where you are. |
 | ALGORITHM | On a layer's page (Chord, Pings, Bass, Drums): that layer's **voice** (see [The voices](#the-voices)). On the Noise pages: its character. On the Chord LFO page: where the chord's LFO goes, its **Destination** (Cutoff, Reso, Colour). On the Chords page: the walk's character (Home, Wander, Free). Anywhere else: the middle of the screen, as ripples, a scope or a spectrum (see [The screen](#4-the-screen)). The mode, a piece's choice, is on the Key page (HOME again). |
 | PRESETS | The piece (see [The pieces](#7-the-pieces)). |
-| KNOB 1–4 | The four values on the screen. A few clicks are always single steps; a quick turn speeds up, so half a turn sweeps the range. While a knob turns, its value shows large in the middle of the screen, in a big ring with its name and what it does under it (on the Chords and Pattern pages, and the Mix (white 6 held on the Arrangement page), which show the change themselves, the line above the knobs says what it does). A **centred** knob (0 in the middle: the voice pages' −50…+50 ones, the chord's Cutoff, the Noise voice's Tone, the Filter, Energy (the Form and the Arrangement pages') and the Arrangement page's Wet) has a **notch** at 0: turning through, it stops there, and to leave it takes three clicks the same way (the first two are held back). A switch shows its positions as dots, up to ten (Change, Mode, Algo). A grey knob does nothing there. |
-| OCT− / OCT+ | On a layer's page (Chord, Pings, Bass, Drums or Noise, and their voice, FM, Hats and Pattern pages, and the Noise pages): that layer's **level**, 5 down or up a press (a big ring in the middle, in the layer's colour, BASS over it, the level inside, until a second after the last press); held, it keeps going. **Both together**, let go within a second: the layer **muted** ("BASS MUTED"), its level kept; again, back ("BASS ON"). The drums mute the kick and the hats together. These are the Arrangement page's mutes (white 1–5): a mute made here shows there, and the other way round. Held together for five seconds: the update mode (see [Troubleshooting](#11-troubleshooting)); a long press never mutes. On the other pages they do nothing. (The pings' octave is on the Pings voice page, KNOB 1.) |
+| KNOB 1–4 | The four values on the screen. A few clicks are always single steps; a quick turn speeds up, so half a turn sweeps the range. While a knob turns, its value shows large in the middle of the screen, in a big ring with its name and what it does under it (on the Chords and Pattern pages, which show the change themselves, the line above the knobs says what it does). A **centred** knob (0 in the middle: the voice pages' −50…+50 ones, the chord's Cutoff, the Noise voice's Tone, the Filter, Energy (the Form and the Arrangement pages') and the Arrangement page's Wet) has a **notch** at 0: turning through, it stops there, and to leave it takes three clicks the same way (the first two are held back). A switch shows its positions as dots, up to ten (Change, Mode, Algo). A grey knob does nothing there. |
+| OCT− / OCT+ | On a layer's page (Chord, Pings, Bass, Drums or Noise, and their voice, FM, Hats and Pattern pages, and the Noise pages): that layer's **level**, 5 down or up a press (a big ring in the middle, in the layer's colour, BASS over it, the level inside, until a second after the last press); held, it keeps going. **Both together**, let go within a second: the layer **muted** ("BASS MUTED"), its level kept; again, back ("BASS ON"). The drums mute the kick and the hats together. These are the Arrangement page's mutes (white 1–6): a mute made here shows there, and the other way round. Held together for five seconds: the update mode (see [Troubleshooting](#11-troubleshooting)); a long press never mutes. On the other pages they do nothing. (The pings' octave is on the Pings voice page, KNOB 1.) |
 | MASTER | Volume. |
 | SAVE | The **Noise page** (below: its part); again, the **Noise voice** (its Air, Tone, Decay and Width; SAVE blinks); again, **Noise LFO** (its filter's wave and drift); again, back to the Noise page. (Its sends are its channel strip's, on the Arrangement page.) Held: a nudge to the noise; held on (1.5 s): a shake (another noise character). Saving is on GLO. |
 
@@ -148,23 +148,25 @@ kick ducks it fully; a beat without one a little less, and less again while the 
 kick out (a Break), so the music keeps breathing (the ghost duck). The noise is ducked deeper than
 the music.
 
-![The Arrangement page: six rows of green LED segments, CHD, PNG, BAS, DRM, NOI and MST, each with a white fader marker, the drums' and the master's reaching yellow; under the master, DUCK, its orange segments from the right; ENERGY 0, MIXER grey, WET 0, DUCK 80](img/screen-perform.png "The Arrangement page")
+![The Arrangement page: seven rows of green LED segments, CHD, PNG, BAS, KCK, HAT, NOI and MST, each with a white fader marker, the kick's and the master's reaching yellow; under the master, DUCK, its orange segments from the right; ENERGY 0, MIXER grey, WET 0, DUCK 80](img/screen-perform.png "The Arrangement page")
 
-**The meters.** A row a part, top to bottom: the chord (CHD), the pings (PNG), the bass (BAS), the
-drums (DRM: the kick and the hats, the rim and the clap), the noise (NOI), and under them the master
-(MST). Each row is a meter of LED segments, left to right, from −48 dB to 0 dB, 2 dB a segment:
+**The meters.** A row a part, top to bottom, as the white keys 1–6: the chord (CHD), the pings (PNG),
+the bass (BAS), the kick (KCK), the hats (HAT: the shaker and the open hat, with the rim and the clap),
+the noise (NOI), and under them the master (MST). Each row is a meter of LED segments, left to right, from −48 dB to 0 dB, 2 dB a segment:
 
 - **The lit segments:** the part's level as it plays, its peaks: up at once, falling back at about
   20 dB a second. The parts are measured dry, as each goes into the mix (their echo and plate are
   in the master, not in their rows), before the duck; the master as it goes out, after MASTER.
 - **A lone segment above them:** the peak held, for a second; then it falls back.
-- **The white notch** through a row: the part's level setting (its knob: OCT− / OCT+ on its page, or
-  the Mix page's), as a fader's position, 0 at the left, 100 at the right. Turn a level and it moves.
+- **The white notch** through a row: the part's level setting (its strip's Level, below; OCT− / OCT+ on
+  its page), as a fader's position, 0 at the left, 100 at the right. Turn a level and it moves. The
+  kick's and the hats' are their own faders, 50 in the middle as the piece has them; the drums' level
+  (OCT− / OCT+ on the Drums pages) moves both.
 - **Colours** (two builds to try): *classic*, green, yellow from −12 dB, red in the top 4 dB, on
   every row; or *the layers'*, each row in its layer's colour (the master white), its top two
   segments amber and red.
 - **A muted part's row is dark** (its notch kept, grey); with a **solo** on, the rows soloed out are
-  dimmed, the one you hear bright. (The noise has no solo key: it plays on under a solo.)
+  dimmed, the one you hear bright. (The noise has no solo key: a solo quiets it with the rest.)
 - **DUCK**, under the master, a row as the others: the duck, as a compressor's gain reduction, eating segments from the
   right with each kick (2 dB a segment): on the bass while it plays (the deepest, the pump you
   hear), else on the rest of the music. Duck at 0, it stays dark.
@@ -172,56 +174,63 @@ drums (DRM: the kick and the hats, the rim and the clap), the noise (NOI), and u
   a red **!** lights in the header, on every page, for a second (turn MASTER or a level down).
 
 On the Arrangement page, each key says what it did on a card in the middle for a moment (under a second, so the
-meters under it show the effect): a mute ("PINGS muted",
-in the layer's colour), a solo, a move as you press it ("THROW: every stab into the echo"), the mix.
+meters under it show the effect): a mute ("PINGS muted", in the part's colour), a solo, a move as you press it
+("THROW: every stab into the echo"). A page's button **leaves the Arrangement page**: the keys are the scale again
+(the mutes and solos stay), and SEL brings it back.
 
-**Hold white 6** for the **Mix** page: KNOB 1–4 the levels of the chord, the pings, the bass and the
-drums (the same levels OCT− / OCT+ set on each layer's page), until you let go. A muted layer's knob
-is grey, its level kept; the meters' notches move as you turn. A page's button **leaves the
-Arrangement page**: the keys are the scale again (the mutes and solos stay), and SEL brings it back.
-
-**Hold white 1–5** for a part's **channel strip**, as on a mixing desk: KNOB 1–4 that part's
+**Hold white 1–6** for a part's **channel strip**, as on a mixing desk: KNOB 1–4 that part's
 **Level**, **Echo** send, **Plate** send and **Low cut**, until you let go. White 1 the chord, 2 the
-pings, 3 the bass, 4 the drums (the kick's key), 5 the noise (the hats' key): the meters' rows, top
-to bottom. The strip comes up after a third of a second held, or at once if you turn a knob; its
-name shows at the top right ("CHORD STRIP"), its row on the meters is lit behind, its knobs are in
-its colour, and the big ring names what you turn ("CHORD ECHO"). Let go and you're back on the
-Arrangement page. A **tap** still mutes the layer, as before: the mute comes as you let go (a hold
-mutes nothing).
+pings, 3 the bass, 4 the kick, 5 the hats (with the rim and the clap), 6 the noise: the meters' rows,
+top to bottom. The strip comes up after a third of a second held, or at once if you turn a knob; its
+name shows at the top right ("KICK STRIP"), its row on the meters is lit behind, its knobs are in
+its colour, and the big ring names what you turn ("HATS ECHO"). Let go and you're back on the
+Arrangement page. A **tap** still mutes the part: the mute comes as you let go (a hold mutes nothing).
+(Until 1.4.0's last builds, white 6 held was the Mix page, the four levels on the knobs: each part's
+Level is its strip's now, the noise's too.)
 
 ![A channel strip: white 1 held, the chord's: its meter row lit, CHORD ECHO 60 in the big ring, LEVEL 52, ECHO 60, PLATE 50, LOW CUT 0](img/screen-strip.png "A channel strip")
 
 | Knob | What it does |
 |---|---|
-| KNOB 1 · **Level** | the part's level: the same as OCT− / OCT+ on its page, and the Mix's (the noise's too) |
-| KNOB 2 · **Echo** | how much it sends into the echo: 50 as the piece sends it, 0 none, 100 twice as much (+6 dB). The bass sends none in every piece (0): turn it up for a dub bass throw. The drums' is the hats', the rim's and the clap's (the kick never goes into the echo) |
-| KNOB 3 · **Plate** | how much it sends into the plate, the same way: 50 the piece's, 0 none, 100 twice |
-| KNOB 4 · **Low cut** | a gentle high-pass (6 dB an octave) on the part, before its sends: 0 off, then from about 20 Hz up to about 600 Hz at 100, an octave every 20 or so. The chord keeps its own gentle cut at about 160 Hz under it; the drums' takes the kick's lows too, but not the rumble (its own knob, on the Kick page) |
+| KNOB 1 · **Level** | the part's level: the same as OCT− / OCT+ on its page (the noise's too). The kick's and the hats' are their own: 50 as the piece has them (×1), about 12 dB down at 0 and 12 dB up at 100; the hats' is the Hats page's Level (the shaker and the open hat; the rim and the clap go with the drums' level, OCT− / OCT+ on the Drums pages, which moves the kick and the hats too) |
+| KNOB 2 · **Echo** | how much it sends into the echo: 50 as the piece sends it, 0 none, 100 twice as much (+6 dB). The bass sends none in every piece (0): turn it up for a dub bass throw. The hats' is the hats', the rim's and the clap's. The kick sends none in every piece (0): turn it up and it goes into the echo too (100 a full send) |
+| KNOB 3 · **Plate** | how much it sends into the plate, the same way: 50 the piece's, 0 none, 100 twice (the kick's from 0, as its Echo) |
+| KNOB 4 · **Low cut** | a gentle high-pass (6 dB an octave) on the part, before its sends: 0 off, then from about 20 Hz up to about 600 Hz at 100, an octave every 20 or so. The chord keeps its own gentle cut at about 160 Hz under it; the kick's leaves the rumble be (its own knob, on the Kick page) |
+
+![The Kick strip: white 4 held, its meter row lit, KICK LOW CUT 20 in the big ring, LEVEL 50, ECHO 0, PLATE 0, LOW CUT 20](img/screen-strip-kick.png "The Kick strip")
+
+![The Hats strip: white 5 held, HATS ECHO 60 in the big ring, LEVEL 40, ECHO 60, PLATE 50, LOW CUT 0](img/screen-strip-hats.png "The Hats strip")
+
+![The Noise strip: white 6 held, NOISE PLATE 60 in the big ring, LEVEL 8, ECHO 50, PLATE 60, LOW CUT 0](img/screen-strip-noise.png "The Noise strip")
 
 A thrown stab still goes into the echo whatever the chord's Echo, and the Arrangement page's Wet
 moves everything on top. The strips are the piece's, saved with it.
 A page's button goes to its page (HOME: the Form page). The keys, from the lowest up,
-are three sets, with white 6 between them. Each key that does something is lit:
+are the parts, an empty white key, then the moves. Each key that does something is lit:
 
-| | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| **Black keys:** solo | Chord | Pings | Bass | Kick | Hats | | | | | | |
-| **White keys:** mute, mix, moves | Chord | Pings | Bass | Kick | Hats | Mix (held) | Throw | Open | Shut | Drop | Echo |
+| | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| **Black keys:** solo, the hats' throw | Chord | Pings | Bass | Kick | Hats | Hats throw (held) | | | | | | |
+| **White keys:** parts, moves | Chord | Pings | Bass | Kick | Hats | Noise | — | Throw | Open | Shut | Drop | Echo |
 
-The first five black keys (F♯ G♯ A♯, C♯ D♯) sit above the five mutes, like a mixer's channel strip.
+The first five black keys (F♯ G♯ A♯, C♯ D♯) are the solos; the sixth (F♯, the next octave's) sits
+just above Throw, the hats' throw beside the stabs'. White 7 (E) is dark and does nothing: the gap
+between the parts and the moves, so you can find them without looking.
 
-- **White 6, held:** the Mix page on the knobs. It blinks slowly on the Arrangement page, so it's easy to find, and goes dark while held. The mutes still act
-  while you hold it.
-- **White 1–5, the chord, pings, bass, kick and hats:** a tap mutes the layer, another brings it
-  back (the mute as you let go: held, the key is the part's channel strip, above); lit while it plays. The levels stay as they are (a true mute: the Mix knobs don't move). They
+- **White 1–6, the chord, pings, bass, kick, hats and noise:** a tap mutes the part, another brings it
+  back (the mute as you let go: held, the key is the part's channel strip, above); lit while it plays.
+  The levels stay as they are (a true mute: the strips' Levels don't move). They
   are the same mutes as OCT− + OCT+ on a layer's page (there, the drums' mute is the kick's and the
   hats' together): a mute made either way shows on the other. The mutes stay when you leave the Arrangement page.
-  The music goes on underneath: a muted layer comes back where it would have been.
-- **Black 1–5, solos:** a press solos the layer: the others go quiet (their echoes and reverb ring
-  out). Solo more than one and they play together; press
+  The music goes on underneath: a muted part comes back where it would have been.
+- **Black 1–5, solos:** a press solos the layer: the others go quiet, the noise too (their echoes and
+  reverb ring out). Solo more than one and they play together; press
   again to let one go. A soloed key blinks; the white keys show what you hear. SOLO shows top right,
   beside the page's name. Solos stay when you leave the Arrangement page, as the mutes do.
-- **White 7–11, moves, held** (lit; dark while held):
+- **Black 6, the hats thrown, held** (lit; dark while held): the hats, the rim and the clap go into the
+  echo, whatever their strip's Echo, and the echo feeds back a little more; let go and their repeats
+  ring on. The kick is never thrown with them.
+- **White 8–12, moves, held** (lit; dark while held):
   - **Throw:** every stab is thrown into the echo.
   - **Open:** the music thins and brightens over the kick: a resonant high-pass on everything but
     the kick sweeps up to about 400 Hz, and the chords' filter opens three octaves and sings, the
@@ -413,7 +422,7 @@ GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
   switch, its positions as dots) and the value. The one you're turning lights up, and while it
   turns, the rule says what it does ("HOW LONG THE REPEATS GO ON"); a moment after, the rule is
   back. A grey knob does nothing here (on an FM page, the voice not FM, the Chord FM page's Colour
-  still turning; or Ratio on a two-operator algorithm; on the Mix page, a muted layer's).
+  still turning; or Ratio on a two-operator algorithm).
 - **The cards:** a long press's card, in the middle (see [The cards](#3-controls)).
 - **The big ring:** a knob turning, in the middle: its value large inside, its name over it in large
   capitals, in its layer's colour (teal elsewhere; the page's name steps aside for it), and under the
@@ -649,8 +658,8 @@ noise's groove (drawn anew, or kept).
 
 The layers' **levels** aren't on their pages: OCT− / OCT+ set them on each layer's pages (the
 noise's on the Noise pages), 5 a press, and both together mute it (see
-[Controls](#3-controls)); the Arrangement page's Mix (white 6 held) has the four together, and its meters show them all.
-Each part's level, its sends and its Low cut are also its **channel strip** there (white 1–5 held).
+[Controls](#3-controls)); the Arrangement page's meters show them all, and each part's level, its sends and its
+Low cut are its **channel strip** there (white 1–6 held: the kick and the hats each their own).
 
 ### The voices
 
@@ -1050,8 +1059,9 @@ Swing is on the Key page (HOME, then HOME again).
 ![The Hats page: TIGHT, LEVEL 40, TONE 0, LENGTH 0, the fourth knob empty](img/screen-hats.png "The Hats page")
 
 - **Level:** the shaker and the open hat against the kick: at 50, as the pieces have them; about
-  12 dB down at 0 and 12 dB up at 100. The drums' level (OCT− / OCT+, the Mix page) moves the kick,
-  the hats and the rim together.
+  12 dB down at 0 and 12 dB up at 100. The same as the Hats strip's Level (white 5 held on the
+  Arrangement page); the kick's is the Kick strip's (white 4). The drums' level (OCT− / OCT+ on the
+  Drums pages) moves the kick, the hats, the rim and the clap together.
 - **Tone:** how dark or bright the hats are, around the piece's own colour (−50 to +50).
 - **Length:** how long the shaker and the open hat ring, from about half the kit's to twice.
 
@@ -1190,7 +1200,9 @@ played before), and a chord Cutoff you had set (then a 0–100 knob) is kept as 
 the piece's own (as far as the knob goes, ±50). From 1.4.0's layers' pages (format 22), the channel
 strips' sends and Low cuts come from the recipe (the sends 50, as they sent before; the bass's Echo
 0; the Low cuts off), and the noise's Width, Plate and Echo (the Noise space page's) are kept, now
-on the Noise voice and the noise's strip. To get a changed piece's
+on the Noise voice and the noise's strip. From 1.4.0's channel strips (format 23, the drums one strip),
+the drums' strip is the Hats strip, its sends and Low cut kept, and the Kick strip comes in at its level
+×1 with no sends, its Low cut the drums' (as it sounded: that one cut the kick too). To get a changed piece's
 whole new recipe, hold GLO for 1.5 s on it.
 Projects saved by AMB-1 aren't read by DUB-1: the first start after installing it begins with the
 eight recipes.
@@ -1312,8 +1324,8 @@ The defaults are Basic's; each piece has its own.
 | Arrangement | Energy, Wet | −100 – 0 – +100; for playing, not saved | 0 |
 | Arrangement | Mixer | (to come) | |
 | Arrangement | Duck | 0–100 (to −12 dB); the piece's, saved | 50 |
-| Strip (white 1–5 held) | Level | the layer's level (as OCT− / OCT+) | 52, 30, 68, 80, 8 |
-| Strip | Echo, Plate | 0–100 (0 none – 50 as the piece sends – 100 twice) | 50 (the bass's Echo 0) |
+| Strip (white 1–6 held) | Level | the part's level (as OCT− / OCT+; the kick's and the hats' their own, ×1 at 50) | 52, 30, 68, 50, 40, 8 |
+| Strip | Echo, Plate | 0–100 (0 none – 50 as the piece sends – 100 twice; the kick's 0 none – 100 a full send) | 50 (the bass's Echo 0, the kick's 0) |
 | Strip | Low cut | 0–100 (off – about 20 Hz at 1 – about 600 Hz) | 0 |
 | SEL held | Lock | Off, On; not saved | Off |
 | ALGORITHM | Screen (all pages but a layer's, the Noise pages and the Chords page) | Ripples, Scope, Spectrum | Ripples |
@@ -1337,7 +1349,7 @@ The defaults are Basic's; each piece has its own.
 | Chord LFO | Rate | 1, 2, 4, 8, 16, 32 bars | 4 bars |
 | Chord LFO | Shape | Sine, Triangle, Ramp up, Ramp down | Sine |
 | Chord LFO | Drift | 0–100 (the slow random wander: to ±0.6 octave) | 30 |
-| OCT− / OCT+ (a layer's page), Mix (Arrangement, white 6) | Levels: chord, pings, bass, drums (and the noise: OCT on its page) | 0–100, 5 a press | 52, 30, 68, 80 (noise 8) |
+| OCT− / OCT+ (a layer's page), a strip's Level (Arrangement, white 1–6 held) | Levels: chord, pings, bass, drums, noise (a strip: its part's) | 0–100, 5 a press | 52, 30, 68, 80 (noise 8) |
 
 Set by the piece (no knob of its own): the pings' tone (from a round blip to a metallic clank;
 the Pings voice page's Tone moves it), the hats' colour (the Hats page's Tone moves it) and how far

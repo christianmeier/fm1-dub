@@ -769,6 +769,29 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
     at the defaults ~+1% (the Low cuts' branches, spread over the parts; within the timings' noise), all at 50
     ~+1.5%. RAM 93,052 of 98,304. Open: white 5 taps the hats' mute but holds the noise's strip (the meters' rows;
     the noise has no mute key here): to see on the FM-1.
+  - **Six parts on white 1-6** (the user, 2026-10-25, after dub-1.4.0zj: "there's no way to work on the hats ... we
+    might need now to include the noise as a white key ... get rid of the sixth white key as a way to access the
+    parts volume"; "I'd like to act separately on the kick and the hats, so for instance I can throw the hats to the
+    echo"; "we now need an empty white key to distinguish the macros from the voices"). Built (branch dub-1.4-strips6):
+    white 1-6 the chord, pings, bass, kick, hats (with the rim and the clap), noise: a tap a mute (the noise's
+    EN_M_NOISE its own now), held its strip; the Mix (white 6 held, V_MIX) gone, its view number kept unused; white 7
+    (E4) dark, the gap; the moves on white 8-12 (F4 G4 A4 B4 C5), as they were otherwise (the user: the macros to be
+    rethought later); black 1-5 the solos as before (a solo quiets the noise too now: 0x3F); **black 6 (F#4, just
+    above Throw): the hats thrown** (EN_PF_HATTHROW: the shaker's, the open hat's, the rim's and the clap's echo sends
+    pushed while held, whatever their strip's Echo, the echo's feedback +0.08, in over ~15 ms, out over ~60 ms, the
+    tails left to ring; the kick never: +7 dB of tail on the hats alone, 0.1 dB on the kick alone). The Drums strip
+    split: the **Kick strip** (P_KLVL, its own fader x1 at 50, +-12 dB as Hats level; P_KECHO, P_KPLATE, its sends,
+    0 none as before, 100 a full send; P_KLOW its Low cut, the rumble hearing the kick before it, so never cut) and the
+    **Hats strip** (P_HATSLVL, the Hats page's Level, the shaker and the open hat; P_DECHO, P_DPLATE, P_DLOW, the
+    drums' that were: the hats', the rim's, the clap's). P_DRUMS stays the Drums pages' OCT level over both (the two
+    faders apart from each other); the rim and the clap in the Hats strip's sends and Low cut but not its Level (most
+    recipes' Hats level isn't 50: scaling them would have changed every piece). The meters six rows and the master and
+    the duck (CHD PNG BAS KCK HAT NOI MST DUCK, 14 px apart now), the engine's drums meter split (the kick its bus, the
+    rest the mix's diff). Format 24 (8-23 read; a 23's drums Low cut the kick's too, as it sounded). Bit for bit on all
+    eight pieces against dcf886e; host CPU ~0% (-0.3%, the timings' noise); RAM 94,248 of 98,304 (+1.2 KB: the kick
+    before its cut, for the rumble's ear). Open: a noise solo (no free black key over white 6: C#4 and D#4 are the
+    kick's and the hats' solos); the lanes' KCK and HAT meters still from the hits (the Arrangement page's from the
+    sound).
   - After the LFO work is merged (both touch ui.c).
 
 - **Song structure, the user's answers** (2026-10-24; the records' intros and outros in REPORT9: 3-37% of the bars,
