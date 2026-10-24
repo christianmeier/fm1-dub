@@ -150,7 +150,7 @@ kick ducks it fully; a beat without one a little less, and less again while the 
 kick out (a Break), so the music keeps breathing (the ghost duck). The noise is ducked deeper than
 the music.
 
-![The Arrangement page: seven rows of green LED segments, CHD, PNG, BAS, KCK, HAT, NOI and MST, each with a white fader marker, the kick's and the master's reaching yellow; under the master, DUCK, its orange segments from the right; ENERGY 0, MIXER grey, WET 0, DUCK 80](img/screen-perform.png "The Arrangement page")
+![The Arrangement page: seven rows of green LED segments, CHD, PNG, BAS, KCK, HAT, NOI and MST, each with a white fader marker, the kick's and the master's reaching yellow; under the master, DUCK, its orange segments from the right; WIDTH 40, MIXER grey, WET 0, DUCK 80](img/screen-perform.png "The Arrangement page")
 
 **The meters.** A row a part, top to bottom, as the white keys 1–6: the chord (CHD), the pings (PNG),
 the bass (BAS), the kick (KCK), the hats (HAT: the shaker and the open hat, with the rim and the clap),
@@ -1119,7 +1119,7 @@ The echo and the plate, dub's own instrument (the Space page until 1.4.0).
 
 ### FX again: Echo
 
-![The Echo page: BLUR 25, TONE 50, SIZE 55, CLOUD 30](img/screen-echo.png "The Echo page")
+![The Echo page: BLUR 25, TONE 50, SIZE 55, CLOUD 25](img/screen-echo.png "The Echo page")
 
 FX on the Dub page opens the Echo page (FX blinks while you're here); FX again goes back. The
 space's colour, the echo's and the plate's, together. The four are 0 to 100; 50 is the echo as the
