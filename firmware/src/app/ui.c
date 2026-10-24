@@ -1598,12 +1598,8 @@ static void input(void)
                 continue;                        /* (an FM page on a voice that isn't FM: the knobs rest, greyed; a
                                                   * knob of none, 1.4.0, rests too) */
             turn(EN_K1 + (int)i, VIEW_KNOB[ui.view][i], e);
-            if (VIEW_KNOB[ui.view][i] != K_SAVE) {   /* (1.4.0, the user's) the header: the knob's name, in capitals, for
-                                                       * every knob (its value the big ring's; shown, not said again) */
-                char nm[16];
-                caps(nm, KNOB_LABEL[ui.view][i], sizeof nm);
-                say_as(nm, 0, 0);
-            }
+            /* (1.4.0, the user's: no more the knob's name in the header: the big ring names it, over it; the header
+             * the piece's) */
             {   /* (1.4.0) the big ring: the knob's value large over the middle (not where the page itself is the
                  * picture: the Chords and the Pattern pages; nor Save and the CPU) */
                 static const uint16_t LC[NLAYER] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE};
@@ -1869,7 +1865,9 @@ static int clip_on(uint32_t now);
 static void draw_header(void)
 {
     char t[24];
-    int msg = plat_ms() < ui.msg_until, clip = clip_on(plat_ms());
+    int msg = plat_ms() < ui.msg_until && !big_on(plat_ms()) && !oct_ring_on(plat_ms()), clip = clip_on(plat_ms());
+                                                 /* (1.4.0, the user's: a ring names itself; the header keeps the
+                                                  * piece) */
     uint32_t h = hash(hash(hash(2166136261u, proj.piece | (uint32_t)proj.par[P_ROOT] << 8 | (uint32_t)proj.pool << 12),
                            en_playing | ui.dirty << 4 | (uint32_t)msg << 5 | (uint32_t)en_ext << 6 | (uint32_t)proj.par[P_MODE] << 8),
                       (uint32_t)proj.par[P_TEMPO] | (uint32_t)(ui.view == V_SETUP ? batt_pct() : 0) << 22 | (uint32_t)batt_bars() << 29 | (uint32_t)plat_usb_power() << 31 |
@@ -1959,10 +1957,7 @@ static void draw_header(void)
         w = text_w(&FONT_B, piece_name(proj.piece)) + 12;   /* the piece, in a coral tag */
         cv_round(4, 4, w, 20, 6, K_TEXT);
         cv_text(10, 6, &FONT_B, piece_name(proj.piece), K_BG);
-        if (ui.view != V_SETUP) {                /* (Setup: the room is the CPU's; the root is its first knob) */
-            w = cv_text(w + 10, 8, &FONT_XS, EN_NOTE_NAME[proj.par[P_ROOT]], K_TEXT);
-            cv_text(w + 3, 8, &FONT_XS, mode_name(), K_DIM);
-        }
+        /* (1.4.0, the user's: the piece's name alone; its key on the Key page) */
     }
     cv_blit(0, 0);
 }
@@ -3184,6 +3179,17 @@ static void draw_slots(void)
  * number inside, its name under; the arc glides to the level, a step a brief brightening; muted, grey; it fades out
  * OCT_SHOW after the last press */
 #define BIG_R 40                                 /* (1.4.0) the big rings' radius (the level's, a knob's) */
+#define BIG_CY 64                                /* (1.4.0, the user's: their name over them, large; the ring a little
+                                                  * lower for it, the help under it) */
+/* over a big ring: its name, large, the page's name and SOLO out of its way for the moment */
+static void big_title(const char *name, uint16_t col)
+{
+    char t[24];
+    caps(t, name, sizeof t);
+    cv_rect(54, 0, 184, BIG_CY - BIG_R - 4, K_BG);
+    cv_rect(150, 0, 88, 31, K_BG);               /* (the page's name, all of it, clear of the ring's top) */
+    text_c(CX, -2, &FONT_C, t, col);
+}
 #define HELP_W 232                               /* (the help under the big ring: two lines at most, this wide) */
 /* a help line in one line or two, split at the space that keeps the wider of the two narrowest: the lines' count
  * (0: it doesn't fit) */
@@ -3222,7 +3228,7 @@ static int help_lines(const char *h, char *a, char *b, int n)
 static void draw_oct(uint32_t now)
 {
     static const uint16_t C[NLAYER] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE};
-    const int32_t r = BIG_R, cy = 46;   /* (1.4.0: as large as the big ring, and as high) */
+    const int32_t r = BIG_R, cy = BIG_CY;   /* (1.4.0: as large as the big ring, and as high) */
     int l = oct_ring_on(now) - 1, f;
     int32_t f2;
     uint16_t c, tr, tx;
@@ -3247,14 +3253,12 @@ static void draw_oct(uint32_t now)
     }
     arc_th(CX, cy, r, 6.0f, ui.oct_v, tr, c, K_BG, 0);
     if ((ui.mutes & LAYER_MUTE[l]) == LAYER_MUTE[l]) {
-        text_c(CX, cy - 17, &FONT_C, "MUTED", tx);
+        text_c(CX, cy - 11, &FONT_C, "MUTED", tx);
     } else {
         itoa_u((uint32_t)proj.par[LAYER_LEVEL[l]], t);
-        text_c(CX, cy - 22, &FONT_L, t, tx);
+        text_c(CX, cy - 16, &FONT_L, t, tx);   /* (the level, in the ring's middle) */
     }
-    {
-        text_c(CX, cy + 8, &FONT_XS, LAYER_NAME[l], c);   /* (inside the ring, under the level) */
-    }
+    big_title(LAYER_NAME[l], c);                 /* (its name over the ring, large) */
 }
 
 /* (1.4.0) the big ring: a knob turning (or SELECT's filter) over the middle, its value large inside (the filter: the
@@ -3262,7 +3266,7 @@ static void draw_oct(uint32_t now)
  * the top, a switch its place; Motion's regions marked; it fades out OCT_SHOW after the last click */
 static void draw_big(uint32_t now)
 {
-    const int32_t r = BIG_R, cy = 46;            /* (high: the lane below it free, the user asked) */
+    const int32_t r = BIG_R, cy = BIG_CY;        /* (1.4.0: its name over it now; a little lower for it) */
     int k = ui.big_k, v, f, lo, hi;
     int32_t f2;
     uint16_t c, tr, tx;
@@ -3312,9 +3316,12 @@ static void draw_big(uint32_t now)
     } else {
         knob_text(k, t);
     }
-    fn = text_w(&FONT_L, t) <= 2 * r - 16 ? &FONT_L : text_w(&FONT_C, t) <= 2 * r - 10 ? &FONT_C : &FONT_B;
-    text_c(CX, cy - (fn == &FONT_L ? 22 : fn == &FONT_C ? 17 : 14), fn, t, tx);
-    text_c(CX, cy + 8, &FONT_XS, under, c);      /* (its name inside the ring, under the value) */
+    fn = text_w(&FONT_L, t) <= 2 * r - 12 ? &FONT_L : text_w(&FONT_C, t) <= 2 * r - 10 ? &FONT_C : &FONT_B;
+    text_c(CX, cy - (fn == &FONT_L ? 16 : fn == &FONT_C ? 11 : 8) - (k == K_FILTER && v ? 5 : 0), fn, t, tx);
+    if (k == K_FILTER && v)                      /* (the filter: Shut or Open under its amount) */
+        text_c(CX, cy + 12, &FONT_XS, under, c);
+    big_title(k == K_FILTER ? "Filter" : ui.big_name, c);   /* (1.4.0, the user's: the name over the ring, large;
+                                                  * the header the piece's alone) */
     if (ui.big_help) {                           /* what it does, under the name: one line or two, centred */
         char a[48], b[48];
         int nl = help_lines(ui.big_help, a, b, (int)sizeof a);
@@ -3461,6 +3468,11 @@ static void draw_main(void)
             ui.sig[1] = h;
             cv_begin(240, MAIN_H, K_BG);
             draw_slots();
+            {   /* (1.4.0, the user's) its name top right, as the other pages' */
+                char pn[16];
+                caps(pn, VIEW_NAME[ui.view], sizeof pn);
+                cv_text(232 - text_w(&FONT_B, pn), 12, &FONT_B, pn, K_ACC);
+            }
             draw_big(now);
             cv_blit(0, MAIN_Y);
         }

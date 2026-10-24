@@ -762,6 +762,18 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   goes on to the next piece); Endless starts full, as now (a user can save a piece in a state good for a gradual
   start). The plan: build/design/SONG.md (Endless, Song, Set; Intro, Main, Outro in bars, a phrase a click; the
   outro now on HOME + PLAY; Set stops after the eighth piece; on HOME's Song page: Mode, Intro, Main, Outro).
+- **The header and the big ring** (the user, 2026-10-24): the header the piece's name alone (the scale gone; a
+  knob's or a level's name not there any more: its ring names it); the ring's name over it, large (FONT_C), the
+  value bigger in its middle, the ring a little lower (BIG_CY 64), the page's name stepping aside meanwhile.
+  Built. The Chords page's name top right (it lacked it). Still in the header: the event messages (ADDED F#, KICK
+  OFF...); maybe over the middle later.
+- **The Chord's pages, agreed (to build next):** Chord (part) Density, Throws, **Change** (how long a chord lasts:
+  Form's Drift, here for now; it belongs on the Chords page, no room), **Vary** (how often the stab pattern turns:
+  Evolve's, the chord's own); Chord voice Cutoff, Reso, Attack, Decay; Chord FM (for every voice; only Colour on
+  the non-FM ones) Algo, Ratio, Feedback, Colour; Chord LFO Depth, Rate, Shape, Drift, ALGORITHM the Destination.
+  Form: Energy (KNOB 1, the Filter on SELECT only), Evolve, Motion, and a free fourth. Wet to the channel strip.
+  "Vary" the word for each layer's how-often-it-changes knob. Song Mode (Endless, Song, Set) on GLO; the Song page
+  on HOME: Intro, Main, Outro, the intro's kind.
 - **Still missing (the user, 2026-10-24: "don't forget"):**
   - **The virtual dub mixer** (the Arrangement page's Mixer knob, grey now): how much it rides the faders and the
     sends by itself.
