@@ -109,6 +109,10 @@ enum {
     P_CLWALK, P_NLWALK,                               /* (1.4.0, format 20, the user's: REPORT10's drift its own knob,
                                                        * always on, the LFO's wave over it) how far the slow random walk
                                                        * wanders: the chord's filter, the noise's */
+    /* (1.4.0, format 21, the user's: the Chord's pages) the chord's Vary, 0..100: how often its stabs' pattern turns,
+     * Evolve over it (50: as Evolve alone turned it; 0: still, the stabs all played; 100: three times as often); and
+     * where its LFO and drift go (EN_CLDEST_NAME: Cutoff, Reso, Colour; ALGORITHM on the Chord LFO page) */
+    P_CVARY, P_CLDEST,
     P_NPARAMS
 };
 typedef struct {
@@ -253,9 +257,16 @@ extern const char *const EN_LFO_SHAPE[EN_NLSHAPE];
 #define EN_LFO_DRIFT 6 /* (before 20, a rate: Drift; now its own knob, P_CLWALK) */                           /* (the rate's last: Drift) */
 extern volatile int8_t en_lfo_tr[2][EN_LFO_N];
 extern volatile uint32_t en_lfo_w;
-extern volatile float en_lfo_now, en_lfo_reach;   /* (1.4.0, the user's) the chord's LFO and drift on its Cutoff now,
-                                                   * and how far they reach either way, in octaves (the Chord page's
-                                                   * Cutoff knob shows them) */
+extern volatile float en_lfo_now, en_lfo_reach;   /* (1.4.0, the user's) the chord's LFO and drift now, and how far
+                                                   * they reach either way, in octaves of its Cutoff (a 5.5th of the
+                                                   * knob's sweep an octave: Reso's and Colour's alike, its Destination's
+                                                   * knob shows them) */
+#define EN_NCLDEST 3                             /* (1.4.0) the chord's LFO's destinations: its Cutoff, Reso, Colour */
+enum { EN_CLD_CUTOFF, EN_CLD_RESO, EN_CLD_COLOUR };
+extern const char *const EN_CLDEST_NAME[EN_NCLDEST];
+extern volatile uint32_t en_stab_turns;          /* (1.4.0) the stabs' pattern's turns so far (for tests: Vary) */
+extern volatile float en_lfo_at[EN_NCLDEST];     /* (1.4.0, for tests) what the chord's LFO puts on each destination
+                                                  * now: the Cutoff in octaves, Reso and Colour -1..1 of their knob */
 extern volatile uint32_t en_lfo_picks[2];        /* the drifts' new places so far (for tests) */
 int en_lfo_bars(int v);                          /* a rate's bars (0: Drift) */
 int en_nlfo18(int old);                          /* (format 19) a Noise LFO before 19 as 19's (its depth kept) */

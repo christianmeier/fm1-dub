@@ -66,6 +66,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     {"Chord rate", 0, EN_LFO_DRIFT - 1, 2}, {"Noise rate", 0, EN_LFO_DRIFT - 1, 2},
     {"Chord shape", 0, EN_NLSHAPE - 1, 0}, {"Noise shape", 0, EN_NLSHAPE - 1, 0},
     {"Chord drift", 0, 100, 0}, {"Noise wander", 0, 100, 0},
+    {"Chord vary", 0, 100, 50}, {"Chord LFO to", 0, EN_NCLDEST - 1, 0},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
 
@@ -78,7 +79,8 @@ const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PAR
  *                  then the chord's Ghost, the kick's density, the echo's Blur, Tone and Width, the noise's Decay;
  *                  then the noise's Width, Plate and Echo, the hats' length; then the noise's LFO, the kick's rumble;
  *                  then the chord's and the noise's LFO rates, their waves (0 Sine), their drifts (the random walk);
- *                  then the chord's LFO's rate and the noise's (0..5: 1 2 4 8 16 32 bars, 6: Drift; 1.4.0)
+ *                  then the chord's LFO's rate and the noise's (0..5: 1 2 4 8 16 32 bars, 6: Drift; 1.4.0);
+ *                  then the chord's Vary (50: as Evolve alone turned its stabs), its LFO's destination (0: Cutoff)
  * (Dri: Drift, 2 4 8 16 32 64 bars or Hold; ET: Echo time, 1/8 1/8. 1/4 1/4. 1/2 1 bar; Grv: the knob's, Drone,
  *  Offbeat, Dotted, Sync, Roller (GROOVE_NAME); CV, PV, BV, Kit: the voices, EN_CV_NAME ...) */
 static const struct {
@@ -98,7 +100,8 @@ static const struct {
                     25, 20,
                     2, 2,
                     0, 0,
-                    30, 20}},
+                    30, 20,
+                    50, 0}},
     {"Chamber",    {55, 20, 62, 72, 20, 35, 6, 40, 70, 4, 45, 72, 50, 55, 30, 30, 0, 1, 128, 9, 5, 0,
                     2, 0, 0, 10, 0, 40, 5, 12, 45, 70, 45, 2, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -112,7 +115,8 @@ static const struct {
                     30, 15,
                     2, 3,
                     0, 0,
-                    45, 25}},
+                    45, 25,
+                    50, 0}},
     {"Steppers",   {52, 35, 80, 82, 35, 35, 6, 45, 50, 1, 30, 50, 55, 25, 50, 25, 0, 1, 126, 2, 1, 0,
                     0, 0, 2, 35, 45, 60, 25, 5, 60, 50, 20, 1, 1, 2,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -126,7 +130,8 @@ static const struct {
                     30, 25,
                     1, 2,
                     0, 0,
-                    25, 20}},
+                    25, 20,
+                    50, 0}},
     {"Fog",        {50, 34, 58, 62, 40, 55, 5, 42, 75, 2, 55, 72, 46, 80, 25, 72, 0, 1, 120, 7, 5, 0,
                     3, -1, 0, 15, 0, 30, 5, 30, 35, 80, 60, 0, 0, 3,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -140,7 +145,8 @@ static const struct {
                     0, 30,
                     2, 2,
                     0, 0,
-                    45, 35}},
+                    45, 35,
+                    50, 0}},
     {"Concrete",   {58, 45, 70, 85, 25, 50, 4, 55, 50, 1, 25, 62, 60, 20, 60, 35, 0, 1, 136, 0, 7, 0,
                     6, 0, 4, 30, 10, 75, 30, 5, 50, 45, 15, 2, 3, 2,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -154,7 +160,8 @@ static const struct {
                     45, 40,
                     2, 1,
                     0, 0,
-                    35, 25}},
+                    35, 25,
+                    50, 0}},
     {"Night Drive", {48, 45, 68, 78, 45, 60, 3, 35, 60, 3, 35, 65, 50, 40, 45, 45, 0, 1, 120, 10, 1, 0,
                     1, 0, 1, 25, 13, 55, 20, 15, 50, 60, 35, 4, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -168,7 +175,8 @@ static const struct {
                     40, 25,
                     3, 3,
                     0, 0,
-                    40, 25}},
+                    40, 25,
+                    50, 0}},
     {"Pressure",   {55, 20, 75, 92, 20, 45, 6, 38, 55, 1, 20, 55, 48, 30, 35, 25, 0, 1, 126, 4, 2, 0,
                     5, 0, 1, 10, 5, 65, 25, 30, 70, 40, 40, 3, 4, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -182,7 +190,8 @@ static const struct {
                     20, 35,
                     2, 2,
                     0, 0,
-                    25, 20}},
+                    25, 20,
+                    50, 0}},
     {"Haze",       {45, 42, 58, 55, 50, 60, 4, 35, 80, 3, 60, 70, 45, 80, 25, 62, 0, 1, 116, 3, 0, 1,
                     3, 0, 0, 20, 10, 35, 5, 20, 30, 85, 70, 2, 0, 4,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -196,7 +205,8 @@ static const struct {
                     0, 10,
                     2, 2,
                     0, 0,
-                    45, 30}},
+                    45, 30,
+                    50, 0}},
 };
 
 const char *en_piece_name(int i) { return PIECES[(unsigned)i < EN_NPIECES ? i : 0].name; }
@@ -211,6 +221,7 @@ void en_piece(int i, int16_t *par, uint16_t *pool)
 
 const char *const EN_CV_NAME[EN_NCV] = {"Saws", "Keys", "Organ", "Pad", "Bell", "Tonewheel", "Noise"};
 const char *const EN_LFO_SHAPE[EN_NLSHAPE] = {"Sine", "Triangle", "Ramp up", "Ramp down"};
+const char *const EN_CLDEST_NAME[EN_NCLDEST] = {"Cutoff", "Reso", "Colour"};
 const char *const EN_PV_NAME[EN_NPV] = {"Blip", "Marimba", "Glass", "Wood", "Drop"};
 const char *const EN_BV_NAME[EN_NBV] = {"Sub", "Punch", "Rubber", "Pluck", "Growl"};
 const char *const EN_KIT_NAME[EN_NKIT] = {"Tight", "Deep", "Punch", "Soft", "Dusty"};
@@ -298,6 +309,8 @@ void en_param_text(int i, int v, char *b)
         s = "1 bar";
     else if (i == P_CLSHAPE || i == P_NLSHAPE)
         s = EN_LFO_SHAPE[(unsigned)v < EN_NLSHAPE ? v : 0];
+    else if (i == P_CLDEST)
+        s = EN_CLDEST_NAME[(unsigned)v < EN_NCLDEST ? v : 0];   /* (1.4.0: where the chord's LFO goes) */
     if (s) {
         int k = 0;
         while (s[k] && k < 9) {
@@ -1469,6 +1482,11 @@ static void bell_ring(int l, int slot)
 /* ------------------------------------------------------------- the stabs --- */
 static int stab_k, stab_kb, stab_rot;
 static uint32_t stab_home;                      /* the pattern, before this bar's gaps */
+/* (1.4.0, the user's: Vary, the chord's own, Evolve over it) how often the pattern turns, times Evolve's (1 at 50: as
+ * Evolve alone had it; 0 at 0; 3 at 100); and its gaps (a stab left out, a bar with none), as often up to 50, none at
+ * 0: at Vary 0 the pattern still, every stab played */
+static float vary_t = 1.0f, vary_g = 1.0f;
+volatile uint32_t en_stab_turns;
 
 static void stabs_home(void)                    /* Stabs: one a bar .. six, off the beat */
 {
@@ -1479,6 +1497,7 @@ static void stabs_home(void)                    /* Stabs: one a bar .. six, off 
 
 static void stabs_evolve(void)                  /* the pattern turns a step, or gains or loses a stab */
 {
+    en_stab_turns++;
     if (frand() < 0.6f) {
         stab_rot = (stab_rot + (frand() < 0.5f ? 1 : 15)) % 16;
     } else {
@@ -1505,16 +1524,17 @@ static void stabs_bar(void)                     /* this bar's stabs: the pattern
     first = 1;
     for (i = 0; i < 16; i++)
         if (p >> i & 1u) {
-            if (first || frand() >= 0.3f * evolve)
+            if (first || frand() >= 0.3f * evolve * vary_g)
                 out |= 1u << i;
             first = 0;
         }
-    if (sec != SEC_BREAK && frand() < 0.5f * evolve)   /* (1.3.0: now and then a bar with none: the echo carries it;
-                                                      * ~20% at Evolve 40) */
+    if (sec != SEC_BREAK && frand() < 0.5f * evolve * vary_g)   /* (1.3.0: now and then a bar with none: the echo
+                                                      * carries it; ~20% at Evolve 40, Vary 50) */
         out = 0;
     en_stab_pat = out;
 }
 
+static float cc_col(void);
 static void stab_fire(float vel, int throw_it)
 {
     int i;
@@ -1523,7 +1543,8 @@ static void stab_fire(float vel, int throw_it)
             midi(0x80, stab[i].midi_note, 0);
     for (i = 0; i < EN_NPAD; i++) {
         float f = mtof((float)stab[i].note);
-        float dt = 0.00202f * fm_exp2f(2.0f * rel(P_CCOL));   /* +-3.5 cents (Colour: +-0.9 .. +-14) */
+        float dt = 0.00202f * fm_exp2f(2.0f * cc_col());   /* +-3.5 cents (Colour: +-0.9 .. +-14; the LFO's, if it
+                                                  * goes there, render_stabs) */
         stab[i].inc[0] = f * (1.0f - dt) * (1.0f / EN_SR);
         stab[i].inc[1] = CV[cvoice].ratio > 0.0f ? f * CV[cvoice].ratio * (1.0f / EN_SR)   /* FM: the modulator */
                                                  : f * (1.0f + dt) * (1.0f / EN_SR);
@@ -1930,7 +1951,8 @@ static void bar_start(void)
     }
     en_drift = db ? fm_clampf((float)chord_bars / (float)db, 0.0f, 1.0f) : 0.0f;
     chord_bars++;
-    if ((bar & 1u) == 0u && bar > 0 && frand() < evolve * 0.6f)   /* (1.3.0: every two bars, was four) */
+    if ((bar & 1u) == 0u && bar > 0 && frand() < evolve * 0.6f * vary_t)   /* (1.3.0: every two bars, was four;
+                                                  * 1.4.0: Vary's, the chord's own, Evolve over it) */
         stabs_evolve();
     if (pb == 0 && !lock && frand() < evolve * 0.8f)   /* (1.3.0: the shaker's steps trade places at a phrase's start, not
                                                   * any bar: the A bars the same) */
@@ -2617,6 +2639,13 @@ static float lfo_ch, lfo_n;                      /* the chord's, in octaves on i
                                                   * (the sines' crests: the noise's on beat 2, the chord's on beat 3).
                                                   * (1.4.0: the chord's was lfo_c, the plate's own name too: one
                                                   * variable, the chord's LFO pulling the plate's wobble about) */
+/* (1.4.0, the user's: the LFO's Destination) an octave of the Cutoff's as far along another knob: Reso's and Colour's
+ * -1..1 (rel), the Cutoff's 5.5 octaves their whole sweep; and the chord's Colour as it sounds, the LFO's on it or not */
+#define LFO_KNOB (2.0f / 5.5f)
+static float cc_col(void)
+{
+    return par[P_CLDEST] == EN_CLD_COLOUR ? fm_clampf(rel(P_CCOL) + LFO_KNOB * lfo_ch, -1.0f, 1.0f) : rel(P_CCOL);
+}
 static float lfo_cr = 1.0f, lfo_nr = 1.0f;       /* (the reach now, the wave's and the walk's together: the chord's in
                                                   * octaves, the noise's 0..2; the traces' scale) */
 static struct {
@@ -2627,6 +2656,7 @@ static struct {
 } lfo_dr[2];
 volatile int8_t en_lfo_tr[2][EN_LFO_N] EN_POOL;   /* (in the pool: read only as far as written) */
 volatile uint32_t en_lfo_w, en_lfo_picks[2];
+volatile float en_lfo_at[EN_NCLDEST];
 volatile float en_lfo_now, en_lfo_reach;
 static float dr_rand(int k)
 {
@@ -2757,6 +2787,10 @@ static void apply(int p, int v)
     case P_PTONE: case P_PTON: btone = fm_clampf((float)(par[P_PTONE] + par[P_PTON]), 0.0f, 100.0f) * 0.01f; break;
     case P_MOTION: motion = (float)v * 0.01f; break;
     case P_EVOLVE: evolve = (float)v * 0.01f; break;
+    case P_CVARY:                                /* (1.4.0: 50 as before, exactly: 1) */
+        vary_t = v <= 50 ? (float)v / 50.0f : 1.0f + (float)(v - 50) / 25.0f;
+        vary_g = fm_minf(vary_t, 1.0f);
+        break;
     case P_CRACKLE:                              /* (1.3.0: straight, not squared: a bed at 15 too; 35 as before,
                                                   * 100 -9 dB; the palette widening as it turns up) */
         crackle_vol = (float)v * 0.0035f;
@@ -3298,10 +3332,18 @@ static void render_stabs(uint32_t n)
     const int cv = cvoice;
     /* the sound page: Attack (a swell up, a snap down), Colour (as each voice has it: the detune, the FM index, the
      * drawbars, the noise against the saw), Resonance, Env (how far each stab opens the filter) */
-    const float xa = (float)par[P_CATT] * 0.01f, xc = rel(P_CCOL), up = fm_clampf(1.0f + xc, 0.0f, 2.0f), fx = fm_exp2f(1.5f * xc);
+    /* (1.4.0, the user's: the LFO and the drift where its Destination is: the Cutoff, in octaves; or Reso or Colour, as
+     * far along their knob as it would go along the Cutoff's, a 5.5th of its sweep an octave, within the knob's ends) */
+    const int dst = par[P_CLDEST];
+    const float xa = (float)par[P_CATT] * 0.01f, xc = cc_col(), up = fm_clampf(1.0f + xc, 0.0f, 2.0f), fx = fm_exp2f(1.5f * xc),
+                lco = dst == EN_CLD_CUTOFF ? lfo_ch : 0.0f,
+                xr = dst == EN_CLD_RESO ? fm_clampf(rel(P_CRES) + LFO_KNOB * lfo_ch, -1.0f, 1.0f) : rel(P_CRES);
     const float g = chord_vol * 0.5f * CV[cv].gain,
-                k = fm_clampf(1.1f - 0.6f * fm_clampf(0.5f + 0.5f * arcm, 0.0f, 1.0f) - 0.55f * rel(P_CRES) -
+                k = fm_clampf(1.1f - 0.6f * fm_clampf(0.5f + 0.5f * arcm, 0.0f, 1.0f) - 0.55f * xr -
                                  0.22f * fm_maxf(perf_sw, 0.0f), 0.12f, 2.0f);   /* (Open: it sings) */
+    en_lfo_at[EN_CLD_CUTOFF] = lco;              /* (for tests: what the LFO puts on each, now) */
+    en_lfo_at[EN_CLD_RESO] = xr - rel(P_CRES);
+    en_lfo_at[EN_CLD_COLOUR] = xc - rel(P_CCOL);
     const float att = fm_clampf(CV[cv].att * fm_exp2f(-(xa > 0.0f ? 9.0f : 3.0f) * xa), 0.00004f, 0.3f),
                 fe = CV[cv].fenv * fm_maxf(1.0f + rel(P_CENV), 0.0f);
     float pc = 0.0f, ck = click;
@@ -3323,10 +3365,19 @@ static void render_stabs(uint32_t n)
             en_pad_amp[i] = 0.0f;
         return;
     }
+    if (dst == EN_CLD_COLOUR && (cv == CV_SAWS || cv == CV_PAD)) {   /* (1.4.0: the saws' Colour, their detune, with
+                                                  * the LFO a block at a time; the others' each sample, through up and fx) */
+        const float dt = 0.00202f * fm_exp2f(2.0f * xc);
+        for (i = 0; i < EN_NPAD; i++) {
+            const float b = 0.5f * (stab[i].inc[0] + stab[i].inc[1]);
+            stab[i].inc[0] = b * (1.0f - dt);
+            stab[i].inc[1] = b * (1.0f + dt);
+        }
+    }
     for (j = 0; j < n; j++) {
         float l = 0.0f, r = 0.0f, v1, v2, v3, yl, yr, e;
         if (!(j & 31u)) {                        /* the filter: its base, its envelope, the sweep */
-            float fc = cut_base * fm_exp2f(fe * st_fenv + 1.6f * arcm + st_cofs + lfo_ch + perf_sw + 0.3f * motion * mod[0].v);
+            float fc = cut_base * fm_exp2f(fe * st_fenv + 1.6f * arcm + st_cofs + lco + perf_sw + 0.3f * motion * mod[0].v);
             svf_coefs(st_c, fm_clampf(fc, 90.0f, 12000.0f), k);
             st_fenv *= st_fdec;
             pc = st_fenv * st_fenv;              /* (Tonewheel: the percussion, quicker still) */

@@ -10,7 +10,9 @@
 #define EN_VERSION "DEV"
 #endif
 #define PROJ_MAGIC 0x31425544u           /* "DUB1": AMB-1's projects ("ENO1") give the recipes */
-#define PROJ_FORMAT 20u                  /* 20: the LFOs' waves (P_CLSHAPE, P_NLSHAPE; 8-19 read, they Sine);
+#define PROJ_FORMAT 21u                  /* 21: the Chord's pages: its Vary, its LFO's Destination (P_CVARY,
+                                         * P_CLDEST; 8-20 read, they from the recipes);
+                                         * 20: the LFOs' waves (P_CLSHAPE, P_NLSHAPE; 8-19 read, they Sine);
                                          * 19: the chord's and the noise's LFO rates (P_CLRATE, P_NLRATE; 8-18 read,
                                          * they from the recipes, the noise's LFO depth converted: its scale shallower);
                                          * 18: the noise's Density and Air 0..100, 0 none (8-17 read, converted);

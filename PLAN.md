@@ -767,13 +767,25 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   value bigger in its middle, the ring a little lower (BIG_CY 64), the page's name stepping aside meanwhile.
   Built. The Chords page's name top right (it lacked it). Still in the header: the event messages (ADDED F#, KICK
   OFF...); maybe over the middle later.
-- **The Chord's pages, agreed (to build next):** Chord (part) Density, Throws, **Change** (how long a chord lasts:
+- **The Chord's pages, agreed (built: below):** Chord (part) Density, Throws, **Change** (how long a chord lasts:
   Form's Drift, here for now; it belongs on the Chords page, no room), **Vary** (how often the stab pattern turns:
   Evolve's, the chord's own); Chord voice Cutoff, Reso, Attack, Decay; Chord FM (for every voice; only Colour on
   the non-FM ones) Algo, Ratio, Feedback, Colour; Chord LFO Depth, Rate, Shape, Drift, ALGORITHM the Destination.
   Form: Energy (KNOB 1, the Filter on SELECT only), Evolve, Motion, and a free fourth. Wet to the channel strip.
   "Vary" the word for each layer's how-often-it-changes knob. Song Mode (Endless, Song, Set) on GLO; the Song page
   on HOME: Intro, Main, Outro, the intro's kind.
+  **Built** (branch dub-1.4-chord, 2026-10-24): the four pages as agreed (V_CSND named Chord voice); Change the same
+  P_DRIFT; **Vary** (P_CVARY, 0..100, 50 every recipe's): the turns' odds Evolve's times 0 .. 1 (at 50) .. 3 (at 100),
+  and the gaps (a stab left out, a bar with none) as Evolve's up to 50, none at 0, so Vary 0 holds the pattern still
+  at any Evolve; at 50 the engine bit for bit as before (every piece's sound the same, the tests' bars changed the
+  same); the **Destination** (P_CLDEST: Cutoff, Reso, Colour; ALGORITHM on the Chord LFO page, its big ring
+  DESTINATION, the rule TO CUTOFF, the trace's line "4 BARS + DRIFT ON RESO"): on Reso and Colour the LFO goes as
+  far along the knob as along the Cutoff's (an octave a 5.5th of the sweep: ±45 of 100 at Depth 100), within the
+  knob's ends (the resonance never past the knob's own top); the saws' Colour, their detune, retuned a block at a
+  time; the moving knob on the destination's knob, on its page. The Chord FM page's Colour turns on every voice
+  ("IS NOT FM: ITS COLOUR ALONE"). Form: Energy, Evolve, Motion, the fourth free. Format 21. A nudge shows the page
+  whose knob moved most (Colour: Chord FM). **Pending:** the chord's Wet (P_CGHOST) has no knob now: each piece
+  keeps its own (the Arrangement page's Wet still moves it); it goes to the channel strip (step 2).
 - **Bigger visualisations** (the user, 2026-10-24; a plan, after the song structure's own display is decided): with
   the strips gone and the header freed, the middle's pictures can grow. The ripples further up and to the sides,
   the deepest layer (whatever is on top covers them: the section and bar cells, the page's name, the big ring, the
@@ -782,10 +794,10 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
 - **Still missing (the user, 2026-10-24: "don't forget"):**
   - **The virtual dub mixer** (the Arrangement page's Mixer knob, grey now): how much it rides the faders and the
     sends by itself.
-  - **The LFO's Destination:** send the chord's LFO and drift to another control (Cutoff, Resonance, Colour...),
-    the moving knob display following it; the noise's too (its filter has no knob yet: give it one, or a
-    Destination among Filter, Tone, Air).
-  - The Arrangement page's channel strip (step 2: Level, Echo send, Plate send, Low cut on a held white key).
+  - **The LFO's Destination:** the chord's built (Cutoff, Reso, Colour; dub-1.4-chord); the noise's still to do
+    (its filter has no knob yet: give it one, or a Destination among Filter, Tone, Air).
+  - The Arrangement page's channel strip (step 2: Level, Echo send, Plate send, Low cut on a held white key); the
+    chord's Wet, off its page since the Chord's pages, its home there.
 
 - **An install stalled** (the user, 2026-10-24, dub-1.4.0zc.fwsc, tools/fm1_install.py): "the loader stopped
   answering after 562 requests" (about half the package), the screen blank (the loader's), then "FM-1 not found";

@@ -72,18 +72,23 @@ wait 300
 said Dub page: Echo 0, Echo time 1 bar, Feedback 1.5 s, Reverb 0
 tap HOME
 wait 300
-said Form page
-# Drift in bars
-spin K4 -20
-wait 300
-said Drift 2 bars
-# the Filter: down, the low-pass; it stops at the middle on the way back
+said Form page: Energy 0, Evolve
+# (1.4.0, the user's) Energy, the Arrangement page's too: down, sparse and dry; it stops at the middle on the way back
 spin K1 -102
 wait 300
-said Filter Shut 100
+said Energy -100
 spin K1 80
 wait 300
-said Filter Off
+said Energy 0
+# the chord's Change (the Drift that was the Form page's) in bars, on the Chord page
+tap ENV
+wait 300
+said Chord page, voice Saws: Density
+spin K3 -20
+wait 300
+said Change 2 bars
+tap HOME
+wait 300
 # HOME again: the Key page
 tap HOME
 wait 300
@@ -300,10 +305,14 @@ said Tempo 92
 tap HOME
 wait 300
 said Form page
-# Drift Hold, and Evolve and Motion to known values
-spin K4 20
+# Change Hold (the Chord page's), and Evolve and Motion to known values
+tap ENV
 wait 300
-said Drift Hold
+spin K3 20
+wait 300
+said Change Hold
+tap HOME
+wait 300
 spin K2 -100
 wait 300
 said Evolve 0
@@ -312,6 +321,6 @@ wait 300
 said Motion 100
 # WHERE: everything again (the chord held now)
 where
-said Form page: Filter Off, Evolve 0, Motion 100, Drift Hold. Piece Basic, F Dorian, tempo 92, resting
+said Form page: Energy 0, Evolve 0, Motion 100. Piece Basic, F Dorian, tempo 92, resting
 where
 said , held. Section 

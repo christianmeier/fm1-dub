@@ -1,6 +1,8 @@
 # the FM pages: a third press on an FM voice; the algorithm overridden, kept by the piece; a non-FM voice: greyed.
 # (1.4.0) The chord's fourth press: its LFO page (Depth, Rate: 1 to 32 bars, Shape; Drift, the random walk); then back. The pings' and the
-# bass's FM pages: their fourth knob none now (their LFO gone)
+# bass's FM pages: their fourth knob none now (their LFO gone). (1.4.0, the user's) The Chord FM page for every voice,
+# its fourth knob Colour (on a voice not FM the only one); ALGORITHM on the Chord LFO page its Destination (Cutoff,
+# Reso, Colour), the big ring naming it, the moving knob on its page
 listen
 wait 3000
 tap ENV
@@ -11,7 +13,7 @@ said VOICE Keys
 tap ENV
 tap ENV
 wait 400
-said Chord FM page, voice Keys: Algo Voice, Ratio 0, Feedback 0
+said Chord FM page, voice Keys: Algo Voice, Ratio 0, Feedback 0, Colour 0
 expect view 12
 spin K1 1
 wait 300
@@ -25,7 +27,22 @@ expect peak_db_max -0.5
 tap ENV
 wait 400
 expect view 22
-said Chord LFO page, voice Keys: Depth 25, Rate 4 bars, Shape Sine, Drift 30
+said Chord LFO page, destination Cutoff: Depth 25, Rate 4 bars, Shape Sine, Drift 30
+# ALGORITHM: the Destination, round (Cutoff, Reso, Colour), the voice left be
+turn ALGO 1
+wait 300
+expect par134 1
+said DESTINATION Reso
+expect par22 1
+shot lfo_dest.png
+turn ALGO 1
+wait 300
+expect par134 2
+said DESTINATION Colour
+turn ALGO 1
+wait 300
+expect par134 0
+said DESTINATION Cutoff
 spin K2 1
 wait 300
 expect par127 3
@@ -61,13 +78,22 @@ tap ENV
 tap ENV
 wait 300
 expect view 12
-# (Saws isn't FM: the page's knobs grey at 0, and turning them changes nothing; Keys' feedback, 40, kept)
+# (Saws isn't FM: the page's knobs grey at 0, and turning them changes nothing; Keys' feedback, 40, kept; but Colour,
+# every voice's, turns)
+said Chord FM page, voice Saws, not FM: Colour 0
 spin K3 -40
 spin K1 3
 wait 300
 expect par54 40
 expect par52 1
+spin K4 22
+wait 300
+expect par37 20
+said Colour +20
 shot fm_off.png
+spin K4 -20
+wait 300
+expect par37 0
 tap ENV
 tap ENV
 wait 300

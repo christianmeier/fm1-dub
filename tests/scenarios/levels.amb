@@ -54,21 +54,32 @@ said ARRANGEMENT OFF
 expect view 2
 tap HOME
 wait 300
-# the knobs: Density first on every layer's page; Chord's Throws and Wet, Pings' Octave and Wet, Bass's Density (and
-# Groove's five), Drums' Density (the kick) and Hats, Noise's Density and Level
+# the knobs: Density first on every layer's page; Chord's Throws, Change and Vary (1.4.0: its Wet to the channel strip,
+# to come), Pings' Octave and Wet, Bass's Density (and Groove's five), Drums' Density (the kick) and Hats, Noise's
+# Density and Level
 tap ENV
 wait 300
-said Chord page, voice Saws: Density 30, Throws 70, Wet 45, Cutoff 40
+said Chord page, voice Saws: Density 30, Throws 70, Change 64 bars, Vary 50
 shot chord_page.png
 spin K2 10
 wait 300
 said Throws 80
 expect par111 80
-spin K3 10
+spin K4 10
 wait 300
-said Wet 55
-expect par115 55
-spin K3 -10
+said Vary 60
+expect par133 60
+spin K4 -10
+wait 300
+expect par133 50
+spin K3 -1
+wait 300
+said Change 32 bars
+expect par6 4
+spin K3 1
+wait 300
+expect par6 5
+expect par115 45
 tap ARP
 wait 300
 said Pings page, voice Blip: Density 30, Octave 0, Wet 70, Cloud 30
@@ -345,7 +356,7 @@ wait 300
 store12 5
 reboot
 wait 1000
-expect format 20
+expect format 21
 expect piece 0
 expect par24 3
 expect par113 65
@@ -371,7 +382,7 @@ expect par112 80
 store13
 reboot
 wait 1000
-expect format 20
+expect format 21
 expect par112 80
 expect par115 45
 expect par116 100
