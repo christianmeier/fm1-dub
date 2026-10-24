@@ -745,6 +745,19 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
     the dub mixer on KNOB 2.
   - After the LFO work is merged (both touch ui.c).
 
+- **Song structure, the user's answers** (2026-10-24; the records' intros and outros in REPORT9: 3-37% of the bars,
+  layers coming in over a steady pulse, atmosphere first or pulse first, the hats last, outros the mirror):
+  each piece chooses its own intro (atmosphere first or pulse first); a song ends in silence (or, as an option,
+  goes on to the next piece); Endless starts full, as now (a user can save a piece in a state good for a gradual
+  start). The plan to write next: build/design/SONG.md.
+- **Still missing (the user, 2026-10-24: "don't forget"):**
+  - **The virtual dub mixer** (the Arrangement page's Mixer knob, grey now): how much it rides the faders and the
+    sends by itself.
+  - **The LFO's Destination:** send the chord's LFO and drift to another control (Cutoff, Resonance, Colour...),
+    the moving knob display following it; the noise's too (its filter has no knob yet: give it one, or a
+    Destination among Filter, Tone, Air).
+  - The Arrangement page's channel strip (step 2: Level, Echo send, Plate send, Low cut on a held white key).
+
 - **An install stalled** (the user, 2026-10-24, dub-1.4.0zc.fwsc, tools/fm1_install.py): "the loader stopped
   answering after 562 requests" (about half the package), the screen blank (the loader's), then "FM-1 not found";
   unplugging and replugging the USB and installing again finished it. To look into: why the loader stopped
