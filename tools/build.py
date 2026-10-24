@@ -203,7 +203,7 @@ def build_loader():
 
 def build_app():
     flags = [*CFLAGS, *FPU, "-Ifirmware/hal", "-Ifirmware/src", "-Ibuild/gen"]
-    for flag in ("EN_CDC",):
+    for flag in ("EN_CDC", "EN_METER_CLASSIC"):   # (EN_METER_CLASSIC: the Arrangement page's meters, 1.4.0: 1 classic, 0 the layers' colours)
         v = os.environ.get(flag)    # unset: the default in firmware/src/main.c
         if v in ("0", "1"):
             flags.append(f"-D{flag}={v}")

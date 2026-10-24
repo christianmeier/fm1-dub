@@ -217,6 +217,15 @@ extern volatile uint8_t en_view_layer;
 extern volatile uint32_t en_hits[5];
 extern volatile float en_hit_vel[5];
 extern volatile float en_echo_pk;               /* the echo's output, its peak since the screen last took it */
+/* (1.4.0, the Arrangement page's meters) each part's peak since the screen last took it (it sets them back to 0): the
+ * chord's, the pings', the bass's, the drums' (the kick and the hats), the noise's, each its dry as it goes into the
+ * mix (before the duck), every 4th sample, only while en_meter_on; and the master's, every sample, always (the clip
+ * light): after the gain, going into the output's soft clip (1.0: full scale; over it, squashed). In the output's
+ * units, the MASTER pot's gain in. And the duck's deepest gain since taken (set back to 1): on the music, on the bass */
+enum { EN_MT_CHORD, EN_MT_PINGS, EN_MT_BASS, EN_MT_DRUMS, EN_MT_NOISE, EN_MT_MASTER, EN_NMETER };
+extern volatile float en_meter[EN_NMETER];
+extern volatile uint8_t en_meter_on;
+extern volatile float en_duck_lo[2];
 /* the noise's events, for the screen's specks: a ring of the last few (kind: 0 a click, 1 a pop, 2 a dust grain; its
  * strength as heard, 0..255; its side, 0 left .. 255 right), en_nev_w where the next goes */
 /* the audio's load, the last block's time against its budget, in % (set by the device's audio handler; 0 elsewhere):

@@ -9,11 +9,13 @@
  *                  on the white keys while they're held
  *   OCT- / OCT+    on a layer's page (Chord, Pings, Bass, Drums, Noise, and their sound pages): its level -5 / +5
  *                  (held: on); both together, quickly: the layer muted or back (held 5 s: the update mode)
- *   SEL            PERFORM: the keys mute (white 1-5) and solo (black 1-5) the layers and, held, make the dub moves
- *                  (white 7-11); the knobs the master actions (Filter, Dub, Energy, Space), with white 6 held the mix
+ *   SEL            the ARRANGEMENT page (PERFORM's that was): the keys mute (white 1-5) and solo (black 1-5) the
+ *                  layers and, held, make the dub moves (white 7-11); the knobs Energy, Mixer (to come), Wet, Duck,
+ *                  with white 6 held the mix; the screen the parts' meters
  *   SELECT         the DJ filter, on every page (1.4.0; with HOME held: the tempo)   ALGORITHM the voice, the walk
  *                  (Chords), the noise's character, else the screen   PRESETS the piece
- *   FX ENV LFO GLO / HOME SAVE ARP SEQ   the pages: SPACE, CHORD, BASS, SETUP / DUB, NOISE, PINGS, DRUMS
+ *   FX ENV LFO GLO / HOME SAVE ARP SEQ   the pages: DUB, CHORD, BASS, SETUP / FORM, NOISE, PINGS, DRUMS (1.4.0's
+ *                  names: Space was Dub, Dub Form)
  *   KNOB 1-4       the page's four values
  *   GLO held       saves (it also saves by itself a few seconds after a change, while resting);
  *                  held on 1.5 s: the piece back to its recipe */
@@ -25,12 +27,14 @@
  * pages, the layer's button pressed again) */
 enum { V_DUB, V_CHORD, V_TEXTURE, V_BASS, V_DRUMS, V_SPACE, V_SETUP, NPAGES, V_MIX = NPAGES, V_CSND, V_PSND, V_BSND,
        V_DSND, V_CFM, V_PFM, V_BFM, V_CHORDS, V_PAT, V_PERF, V_KEY, V_NSND, V_ESND, V_NSND2, V_CLFO, V_NLFO, NVIEWS };
-/* (V_PERF: PERFORM's knobs, the master actions; V_MIX while white 6 is held. V_KEY: HOME again, the key and the
- * tempo, the Dub page's second. V_CLFO, V_NLFO (1.4.0): the chord's LFO, ENV a fourth time (after its FM page), and
+/* (V_PERF: PERFORM's knobs, the Arrangement page; V_MIX while white 6 is held. V_KEY: HOME again, the key and the
+ * tempo, the Form page's second. V_CLFO, V_NLFO (1.4.0): the chord's LFO, ENV a fourth time (after its FM page), and
  * the noise's, SAVE a third time; for now, till the big redesign) */
-static const char *const VIEW_NAME[NVIEWS] = {"Dub", "Chord", "Pings", "Bass", "Drums", "Space", "Setup", "Mix",
+/* (1.4.0, the user's: the names; the identifiers kept: V_DUB the Form page, HOME's; V_SPACE the Dub page, FX's, the echo
+ * and the plate; V_PERF the Arrangement page, SEL's, PERFORM's that was) */
+static const char *const VIEW_NAME[NVIEWS] = {"Form", "Chord", "Pings", "Bass", "Drums", "Dub", "Setup", "Mix",
                                               "Chord sound", "Ping sound", "Bass sound", "Drum sound",
-                                              "Chord FM", "Ping FM", "Bass FM", "Chords", "Pattern", "Perform", "Key", "Noise",
+                                              "Chord FM", "Ping FM", "Bass FM", "Chords", "Pattern", "Arrangement", "Key", "Noise",
                                               "Echo", "Noise space", "Chord LFO", "Noise LFO"};
 #define B_NONE 0xFFu
 static const uint8_t VIEW_BTN[NVIEWS] = {B_HOME, B_ENV, B_ARP, B_LFO, B_SEQ, B_FX, B_GLO, B_NONE, B_NONE, B_NONE, B_NONE,
@@ -95,7 +99,7 @@ static const uint16_t VIEW_KNOB[NVIEWS][4] = {
     {P_STABS, P_CTHROW, P_CGHOST, P_CUTOFF},
     {P_DENSITY, P_POCT, P_PGHOST, P_CLOUD},
     {P_BNOTES, P_BASSOCT, P_GROOVE, P_FIFTH},
-    {K_KSHAPE, P_HITS, P_HATSLVL, P_HTONE},      /* (Duck: PERFORM's, a master action; the kick a switch, 1.4.0) */
+    {K_KSHAPE, P_HITS, P_HATSLVL, P_HTONE},      /* (Duck: the Arrangement page's; the kick a switch, 1.4.0) */
     {P_ECHO, P_ETIME, P_FEEDBACK, P_REVERB},
     {P_TUNE, P_MIDI, K_LEDS, K_SAVE},
     {P_CHORD, P_PINGS, P_BASS, P_DRUMS},
@@ -108,7 +112,8 @@ static const uint16_t VIEW_KNOB[NVIEWS][4] = {
     {P_BALG, P_BFRAT, P_BFB, K_NONE},
     {K_SLOT, K_CQ, K_CX, K_PLAY},
     {K_LANE, P_DACCENT, K_LCH, P_DMODE},
-    {K_FILTER, K_DUB, K_ENERGY, P_DUCK},         /* (Wet, Energy: offsets for playing; Duck the piece's own) */
+    {K_ENERGY, K_NONE, K_DUB, P_DUCK},           /* (Energy, Wet: offsets for playing; Duck the piece's own. 1.4.0, the
+                                                  * user's: the Filter on SELECT only; KNOB 2 the dub mixer, to come) */
     {P_TEMPO, P_ROOT, K_MODE, P_SWING},
     {P_NGRAIN, P_NROOM, P_NCOL, P_NTUNE},     /* (the level on OCT- / OCT+, as the layers'; Drift the recipes') */
     {P_EBLUR, P_ETONE, P_EWIDTH, P_SIZE},
@@ -135,7 +140,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Algo", "Ratio", "Feedback", ""},
     {"Slot", "Chord", "Type", "Play"},
     {"Lane", "Accent", "Chance", "Play"},
-    {"Filter", "Wet", "Energy", "Duck"},
+    {"Energy", "Mixer", "Wet", "Duck"},
     {"Tempo", "Root", "Mode", "Swing"},
     {"Density", "Air", "Tone", "Decay"},
     {"Blur", "Tone", "Width", "Size"},
@@ -175,7 +180,7 @@ static const char *const KNOB_HELP[NVIEWS][4] = {
      "Endless, or the slots in a loop"},
     {"The lane you're writing", "How much quieter the other steps", "How likely the lane's steps play",
      "Auto patterns, or your own"},
-    {"Shut: under water. Open: thin", "The whole music dry, or drowned", "Sparse and dry, to busy and bright",
+    {"Sparse and dry, to busy and bright", "The dub mixer: not yet", "The whole music dry, or drowned",
      "How far each beat pushes the rest down"},
     {"Beats a minute", "The key's root note", "The scale: Minor, Dorian, ...", "Off sixteenths late: the whole groove"},
     {"How many hits ring, in two bars", "The hiss under it, softer or more", "The rings darker, or brighter",
@@ -846,7 +851,7 @@ static void perf_set(int on)                     /* on: the mixer on the knobs; 
         if (ui.view == V_MIX || ui.view == V_PERF)
             set_view(ui.perf_from);
     }
-    say("PERFORM", on ? "ON" : "OFF");
+    say("ARRANGEMENT", on ? "ON" : "OFF");
 }
 
 /* ------------------------------------------------------- the effects grid --- */
@@ -1526,8 +1531,8 @@ static void input(void)
                 itoa_u((uint32_t)proj.par[P_TEMPO], t);
                 say("TEMPO", t);
             }
-        } else {                                 /* (1.4.0, the user's: the DJ filter, on every page, as PERFORM's
-                                                  * KNOB 1; its notch at Off; a ring while it turns) */
+        } else {                                 /* (1.4.0, the user's: the DJ filter, on every page, as the Form
+                                                  * page's KNOB 1; its notch at Off; a ring while it turns) */
             char t[12];
             turn(EN_SELECT, K_FILTER, e);
             knob_text(K_FILTER, t);
@@ -1856,10 +1861,11 @@ static void draw_battery(int32_t bx)
 /* the header: the piece in a tag, its root and mode; on the right, the tempo with a slow beat light
  * (a play triangle while resting) and a dot while there is something unsaved. Messages take its place
  * for a moment. */
+static int clip_on(uint32_t now);
 static void draw_header(void)
 {
     char t[24];
-    int msg = plat_ms() < ui.msg_until;
+    int msg = plat_ms() < ui.msg_until, clip = clip_on(plat_ms());
     uint32_t h = hash(hash(hash(2166136261u, proj.piece | (uint32_t)proj.par[P_ROOT] << 8 | (uint32_t)proj.pool << 12),
                            en_playing | ui.dirty << 4 | (uint32_t)msg << 5 | (uint32_t)en_ext << 6 | (uint32_t)proj.par[P_MODE] << 8),
                       (uint32_t)proj.par[P_TEMPO] | (uint32_t)(ui.view == V_SETUP ? batt_pct() : 0) << 22 | (uint32_t)batt_bars() << 29 | (uint32_t)plat_usb_power() << 31 |
@@ -1869,6 +1875,7 @@ static void draw_header(void)
         h = hash(hash(h, (uint32_t)ui.msg[0][0] << 8 | ui.msg[0][1]), ui.msg_until);
     if (en_playing)
         h = hash(h, (en_bars / 4u) & 1u);
+    h = hash(h, (uint32_t)clip);
     if (h == ui.sig[0])
         return;
     ui.sig[0] = h;
@@ -1925,6 +1932,7 @@ static void draw_header(void)
             }
             x -= text_w(&FONT_XS, c);
             cv_text(x, 8, &FONT_XS, c, K_DIM);   /* (the leftmost on the right: its changing width moves nothing) */
+            x += 8;                              /* (the clip light's place, as by the beat light) */
         } else {                                 /* elsewhere: the tempo and the beat light */
         x -= text_w(&FONT_S, t);
         cv_text(x, 6, &FONT_S, t, en_playing ? K_TEXT : K_DIM);
@@ -1937,6 +1945,12 @@ static void draw_header(void)
             for (j = 0; j < 5; j++)
                 cv_rect(x + 2 + j, 9 + j, 1, 11 - 2 * j, K_DIM);
         }
+        }
+        if (clip) {                              /* (1.4.0, the user's) the master clipping: a red "!", a second; on
+                                                  * a red tag of its own, not Setup's grey "!n" (the dropouts) */
+            const int32_t w = text_w(&FONT_B, "!") + 6;
+            cv_round(x - 6 - w, 5, w, 18, 4, RGB(236, 64, 56));
+            cv_text(x - 6 - w + 3, 6, &FONT_B, "!", K_TEXT);
         }
         w = text_w(&FONT_B, piece_name(proj.piece)) + 12;   /* the piece, in a coral tag */
         cv_round(4, 4, w, 20, 6, K_TEXT);
@@ -2496,34 +2510,126 @@ static void draw_alg(int layer)
     text_c(120, -1, &FONT_XS, tt, K_DIM);
 }
 
-static void draw_meters(void)                    /* left: the four layers */
+/* (1.4.0, the user's: "the levels are of course the most important part") the Arrangement page: a desk's meters, a
+ * row a part (the chord, the pings, the bass, the drums, the noise) and the master under them, LED segments left to
+ * right, -48 .. 0 dB, 2 dB a segment; the peak held a second, then falling back; the part's level (its knob: OCT on its
+ * page, the mix's) a fader's marker on its row; a part muted dark, soloed out dimmed; under the master the duck, as a
+ * compressor's gain reduction, eating segments from the right. The other pages' level strips and duck meter gone (a
+ * red dot in the header if the master clips). Two builds to try on the FM-1, the colours apart (EN_METER_CLASSIC):
+ * 1 green, yellow, red on every row; 0 each row its layer's colour, its top two amber and red */
+#ifndef EN_METER_CLASSIC
+#define EN_METER_CLASSIC 1
+#endif
+#define MT_SEG 24                                /* segments a row, MT_DB dB each, up to 0 dB */
+#define MT_DB 2.0f
+#define MT_X0 40                                 /* the first segment's left; MT_P apart, MT_W wide */
+#define MT_P 8
+#define MT_W 6
+#define MT_Y0 35                                 /* the first row; MT_ROW apart, MT_H high */
+#define MT_ROW 16
+#define MT_H 10
+static struct {
+    float db[EN_NMETER], hold[EN_NMETER];        /* each meter as shown (dB), its peak held */
+    uint32_t hold_t[EN_NMETER];
+    float gr;                                    /* the duck's gain reduction as shown, dB */
+    uint32_t t, clip_t;                          /* the last frame; the master's last clip (0: none yet) */
+} mt;
+static float mt_db(float pk) { return pk > 1e-6f ? 6.0206f * fm_log2f(pk) : -120.0f; }
+static int clip_on(uint32_t now) { return mt.clip_t && now - mt.clip_t < 1000u; }
+static void meter_take(uint32_t now)             /* every frame: the engine's peaks since the last, into the meters:
+                                                  * at once up, 20 dB a second down; the hold a second, then 30 dB a
+                                                  * second down; the clip: the master at full scale, lit a second */
 {
-    static const uint16_t C[4] = {K_PAD, K_BELL, K_BASS, K_PULSE}, T[4] = {K_PAD_T, K_BELL_T, K_BASS_T, K_PULSE_T};
-    float lv[4], bm = 0.0f, dm = 0.0f;
+    const float dt = mt.t ? (float)(now - mt.t) * 0.001f : 0.0f;
     int i;
-    for (i = 0; i < EN_NLOOP; i++)
-        bm = fm_maxf(bm, en_loop_glow[i]);
-    for (i = 0; i < EN_NDRUM; i++)
-        dm = fm_maxf(dm, en_drum_glow[i]);
-    lv[0] = en_pad_level * (float)proj.par[P_CHORD] * 0.01f;
-    lv[1] = bm * (float)proj.par[P_PINGS] * 0.01f;
-    lv[2] = en_bass_level * (float)proj.par[P_BASS] * 0.01f;
-    lv[3] = dm * (float)proj.par[P_DRUMS] * 0.01f;
-    for (i = 0; i < 4; i++) {
-        int32_t x = 8 + i * 11, h = (int32_t)(fm_clampf(lv[i], 0.0f, 1.0f) * 52.0f + 0.5f);
-        cv_round(x, 32, 8, 56, 3, T[i]);
-        if (h > 0)
-            cv_round(x, 32 + 56 - h - 2, 8, h + 2, 3, C[i]);
+    mt.t = now;
+    en_meter_on = ui.view == V_PERF || ui.view == V_MIX;   /* (the parts measured on this page only: the master always) */
+    for (i = 0; i < EN_NMETER; i++) {
+        const float pk = en_meter[i], d = mt_db(pk);
+        en_meter[i] = 0.0f;
+        if (i == EN_MT_MASTER && pk >= 1.0f)
+            mt.clip_t = now | 1u;
+        mt.db[i] = d > mt.db[i] ? d : fm_maxf(mt.db[i] - 20.0f * dt, -120.0f);
+        if (d >= mt.hold[i]) {
+            mt.hold[i] = d;
+            mt.hold_t[i] = now;
+        } else if (now - mt.hold_t[i] > 1000u) {
+            mt.hold[i] = fm_maxf(mt.hold[i] - 30.0f * dt, mt.db[i]);
+        }
+    }
+    {   /* the duck: on the bass while it plays (the deepest, the pump), else on the rest of the music (a few dB) */
+        const float g = en_duck_lo[mt.db[EN_MT_BASS] > -60.0f ? 1 : 0], d = -mt_db(fm_maxf(g, 0.01f));
+        en_duck_lo[0] = en_duck_lo[1] = 1.0f;
+        mt.gr = d > mt.gr ? d : fm_maxf(mt.gr - 80.0f * dt, 0.0f);
     }
 }
-
-static void draw_duck(void)                      /* right: the kick's ducking, falling from the top */
+static int mt_lit(float db)                      /* the segments lit for a level */
 {
-    int32_t h = (int32_t)(fm_clampf(en_duck * (float)proj.par[P_DUCK] * 0.01f, 0.0f, 1.0f) * 52.0f + 0.5f);
-    cv_round(220, 32, 8, 56, 3, K_PULSE_T);
-    if (h > 0)
-        cv_round(220, 32, 8, h + 2, 3, K_PULSE);
-    cv_text(216 - text_w(&FONT_XS, "DUCK"), 76, &FONT_XS, "DUCK", K_DIM);
+    int n = db > -MT_DB * MT_SEG ? (int)((db + MT_DB * MT_SEG) * (1.0f / MT_DB)) + 1 : 0;
+    return n > MT_SEG ? MT_SEG : n;
+}
+static uint16_t mt_col(int row, int i)           /* a segment's colour, lit */
+{
+#if EN_METER_CLASSIC
+    (void)row;
+    return i >= MT_SEG - 2 ? RGB(236, 64, 56) : i >= MT_SEG - 6 ? RGB(236, 210, 80) : RGB(84, 204, 108);
+#else
+    static const uint16_t C[EN_NMETER] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE, K_TEXT};
+    return i == MT_SEG - 1 ? RGB(236, 64, 56) : i == MT_SEG - 2 ? RGB(248, 196, 56) : C[row];
+#endif
+}
+static const char *const MT_TAG[EN_NMETER] = {"CHD", "PNG", "BAS", "DRM", "NOI", "MST"};
+static const uint16_t MT_TAGC[EN_NMETER] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE, K_TEXT};
+static int mt_state(int row)                     /* 0 heard, 1 soloed out (dimmed), 2 muted (dark) */
+{
+    const uint32_t m = row < NLAYER ? LAYER_MUTE[row] : 0u, eng = ui.mutes | (ui.solo ? 0x1Fu & ~ui.solo : 0u);
+    return !m ? 0 : (ui.mutes & m) == m ? 2 : (eng & m) == m ? 1 : 0;
+}
+static int32_t mt_y(int row) { return MT_Y0 + row * MT_ROW + (row == EN_MT_MASTER ? 4 : 0); }
+static int32_t mt_mark(int row)                  /* the level's marker: its x (-1: none, the master's on its pot) */
+{
+    return row < NLAYER ? MT_X0 + (proj.par[LAYER_LEVEL[row]] * (MT_SEG * MT_P - MT_P + MT_W - 2) + 50) / 100 : -1;
+}
+static uint32_t desk_sig(void)                   /* what the meters show, for the redraw */
+{
+    uint32_t h = 2166136261u;
+    int r;
+    for (r = 0; r < EN_NMETER; r++)
+        h = hash(h, (uint32_t)mt_lit(mt.db[r]) | (uint32_t)mt_lit(mt.hold[r]) << 6 | (uint32_t)mt_state(r) << 12 |
+                    (uint32_t)(mt_mark(r) + 1) << 16);
+    return hash(h, (uint32_t)(mt.gr * (1.0f / MT_DB) + 0.5f));
+}
+static void draw_desk(void)
+{
+    int r, i;
+    for (r = 0; r < EN_NMETER; r++) {
+        const int32_t y = mt_y(r), mx = mt_mark(r);
+        const int st = mt_state(r), n = st == 2 ? 0 : mt_lit(mt.db[r]), hs = st == 2 ? -1 : mt_lit(mt.hold[r]) - 1;
+        cv_text(8, y - 3, &FONT_XS, MT_TAG[r], st == 2 ? K_LINE : st == 1 ? mix(K_BG, MT_TAGC[r], 8) : MT_TAGC[r]);
+        for (i = 0; i < MT_SEG; i++) {
+            const uint16_t c = mt_col(r, i);
+            uint16_t f;
+            if (st == 2)
+                f = mix(K_BG, K_LINE, 5);
+            else if (i < n || i == hs)
+                f = st == 1 ? mix(K_BG, c, 8) : c;
+            else
+                f = mix(K_BG, c, st == 1 ? 2 : 3);
+            cv_rect(MT_X0 + i * MT_P, y, MT_W, MT_H, f);
+        }
+        if (mx >= 0) {                           /* the fader's marker: a notch through the row, out above and below */
+            const uint16_t mc = st == 2 ? K_DIM : K_TEXT;
+            cv_rect(mx - 1, y - 3, 4, MT_H + 6, K_BG);
+            cv_rect(mx, y - 3, 2, MT_H + 6, mc);
+        }
+    }
+    {   /* under the master: the duck's gain reduction, from the right, a segment each MT_DB */
+        const int32_t y = mt_y(EN_MT_MASTER) + MT_H + 4;
+        const int g = (int)(mt.gr * (1.0f / MT_DB) + 0.5f);
+        cv_text(8, y - 5, &FONT_XS, "GR", proj.par[P_DUCK] ? K_DIM : K_LINE);
+        for (i = 0; i < MT_SEG; i++)
+            cv_rect(MT_X0 + i * MT_P, y, MT_W, 4, i >= MT_SEG - g ? K_PULSE : mix(K_BG, K_PULSE, 3));
+    }
 }
 
 /* below: the bar, a lane a layer. On a layer's page (and its sound pages) its lanes as ever, the others in grey (the
@@ -3164,12 +3270,66 @@ static void draw_card(uint32_t now)
     text_c(CX, y + 28, &FONT_XS, ui.card_text, tc);
 }
 
+/* the corners of the main screen: the phrase's section and its eight bars, the way to the next chord (top left); the
+ * page's name, SOLO, hold and lock (top right) */
+static void draw_where(uint32_t now)
+{
+    {   /* top left: the phrase's section and its eight bars; under it, the mode the keys are in */
+        char t[12];
+        int b;
+        caps(t, EN_SEC_NAME[en_section], sizeof t);
+        cv_text(8, 2, &FONT_XS, t, en_section == SEC_FULL ? K_DIM : K_ACC);
+        for (b = 0; b < 8; b++) {                /* (1.3.0: bars 4 and 8, the B bars, whiter; the 8th blinking on its
+                                                  * bar when the next phrase brings a change) */
+            const int bb = (b == 3 || b == 7) && !ui.lock, lit = en_playing && b <= en_phrase_bar;   /* (Lock: all alike) */
+            uint16_t c = lit ? (bb ? K_TEXT : K_DIM) : (bb ? K_DIM : K_LINE);   /* (B bars: ahead, as bright as one played) */
+            if (b == 7 && en_playing && en_phrase_bar == 7 && en_change_next)
+                c = (now / 200u) & 1u ? K_ACC : K_LINE;
+            cv_round(9 + b * 5, 22, 3, 3, 1, c);
+        }
+        if (!en_frozen && en_drift_bars(proj.par[P_DRIFT])) {   /* under them, the way to the next chord (Drift) */
+            int32_t f = (int32_t)(en_drift * 38.0f + 0.5f);
+            cv_rect(9, 27, 38, 1, K_LINE);
+            if (f > 0)
+                cv_rect(9, 27, f, 1, K_PAD);
+        }
+    }
+    {   /* (1.3.0) top right: the page's name (PERFORM's too); to its left, LOCK and SOLO while on */
+        char pn[16];
+        int32_t x;
+        caps(pn, VIEW_NAME[ui.view], sizeof pn);
+        x = 232 - text_w(&FONT_B, pn);
+        cv_text(x, 12, &FONT_B, pn, K_ACC);
+        /* (1.4.0, the user's: the round's dots under it gone; SELECT doesn't circle the pages any more) */
+        if (ui.solo) {                           /* (a solo on, in PERFORM or kept after it) */
+            x -= 6 + text_w(&FONT_XS, "SOLO");
+            cv_text(x, 14, &FONT_XS, "SOLO", K_CLAP);
+        }
+    }
+    {   /* above the page's name: dub hold ("hold") and Lock ("lock"), alike, in red */
+        int32_t x = 232;
+        if (en_frozen) {
+            x -= text_w(&FONT_XS, "hold");
+            cv_text(x, -2, &FONT_XS, "hold", K_FROST);
+            x -= 6;
+        }
+        if (ui.lock)
+            cv_text(x - text_w(&FONT_XS, "lock"), -2, &FONT_XS, "lock", K_FROST);
+    }
+}
+static uint32_t where_sig(uint32_t h)            /* (what they show, for a redraw) */
+{
+    return hash(h, (uint32_t)(en_drift * 40.0f) | en_section << 8 | (uint32_t)en_phrase_bar << 12 | (uint32_t)en_playing << 16 |
+                       ui.solo << 20 | (uint32_t)ui.lock << 28 | (uint32_t)en_frozen << 29 | (uint32_t)ui.view << 30);
+}
+
 static void draw_main(void)
 {
     uint32_t now = plat_ms(), h = hash(2166136261u, (uint32_t)en_frozen << 16 | proj.piece << 24 | (uint32_t)en_playing << 17), i;
     static uint8_t moving;
     en_view_layer = (uint8_t)(scr_layer(ui.view) + 1);   /* (the scope and spectrum: this page's layer, or the whole) */
     echo_take(now);                              /* (the ripples: each frame, so the repeats are measured on time) */
+    meter_take(now);                             /* (the meters too, and the clip light) */
     ripples_take(now);
     if (ui.frame % 3u)                           /* 20 frames a second is plenty */
         return;
@@ -3218,11 +3378,25 @@ static void draw_main(void)
         }
         return;
     }
+    if (ui.view == V_PERF || ui.view == V_MIX) { /* (1.4.0) the Arrangement page: the meters */
+        h = hash(where_sig(hash(desk_sig(), ui.view)), (uint32_t)card_on(now) | (uint32_t)big_on(now) << 1 |
+                 (en_phrase_bar == 7 && en_change_next ? (now / 200u & 1u) << 2 : 0u) | (uint32_t)en_drift_bars(proj.par[P_DRIFT]) << 3);
+        if (h != ui.sig[1] || big_on(now) || card_on(now)) {
+            ui.sig[1] = h;
+            cv_begin(240, MAIN_H, K_BG);
+            draw_desk();
+            draw_where(now);
+            draw_big(now);
+            draw_card(now);
+            cv_blit(0, MAIN_Y);
+        }
+        return;
+    }
     for (i = 0; i < EN_NPAD; i++)
         h = hash(h, en_chord[i]);
     for (i = 0; i < 6; i++)
         h = hash(h, en_lane[i] | (uint32_t)proj.par[i < 4 ? i : 0] << 16);
-    h = hash(h, en_drum_pos[0] | (uint32_t)q16(en_duck) << 4 | (uint32_t)q16(en_pad_level) << 9 | (uint32_t)q16(en_bass_level) << 14);
+    h = hash(h, en_drum_pos[0]);                 /* (1.4.0: the level strips and the duck meter gone, their redraws too) */
     h = hash(h, (uint32_t)(en_prog_pos + 1) << 12);
     h = hash(h, (uint32_t)(en_drift * 40.0f) | en_section << 8 | (uint32_t)en_phrase_bar << 12 | (uint32_t)ui.perf << 16 | ui.solo << 20 |
                 (uint32_t)ui.lock << 28);
@@ -3315,50 +3489,7 @@ static void draw_main(void)
             text_c(CX, CY + 11, &FONT_XS, t, K_DIM);
         }
     }
-    {   /* top left: the phrase's section and its eight bars; under it, the mode the keys are in */
-        char t[12];
-        int b;
-        caps(t, EN_SEC_NAME[en_section], sizeof t);
-        cv_text(8, 2, &FONT_XS, t, en_section == SEC_FULL ? K_DIM : K_ACC);
-        for (b = 0; b < 8; b++) {                /* (1.3.0: bars 4 and 8, the B bars, whiter; the 8th blinking on its
-                                                  * bar when the next phrase brings a change) */
-            const int bb = (b == 3 || b == 7) && !ui.lock, lit = en_playing && b <= en_phrase_bar;   /* (Lock: all alike) */
-            uint16_t c = lit ? (bb ? K_TEXT : K_DIM) : (bb ? K_DIM : K_LINE);   /* (B bars: ahead, as bright as one played) */
-            if (b == 7 && en_playing && en_phrase_bar == 7 && en_change_next)
-                c = (now / 200u) & 1u ? K_ACC : K_LINE;
-            cv_round(9 + b * 5, 22, 3, 3, 1, c);
-        }
-        if (!en_frozen && en_drift_bars(proj.par[P_DRIFT])) {   /* under them, the way to the next chord (Drift) */
-            int32_t f = (int32_t)(en_drift * 38.0f + 0.5f);
-            cv_rect(9, 27, 38, 1, K_LINE);
-            if (f > 0)
-                cv_rect(9, 27, f, 1, K_PAD);
-        }
-    }
-    {   /* (1.3.0) top right: the page's name (PERFORM's too); to its left, LOCK and SOLO while on */
-        char pn[16];
-        int32_t x;
-        caps(pn, VIEW_NAME[ui.view], sizeof pn);
-        x = 232 - text_w(&FONT_B, pn);
-        cv_text(x, 12, &FONT_B, pn, K_ACC);
-        /* (1.4.0, the user's: the round's dots under it gone; SELECT doesn't circle the pages any more) */
-        if (ui.solo) {                           /* (a solo on, in PERFORM or kept after it) */
-            x -= 6 + text_w(&FONT_XS, "SOLO");
-            cv_text(x, 14, &FONT_XS, "SOLO", K_CLAP);
-        }
-    }
-    {   /* above the page's name: dub hold ("hold") and Lock ("lock"), alike, in red */
-        int32_t x = 232;
-        if (en_frozen) {
-            x -= text_w(&FONT_XS, "hold");
-            cv_text(x, -2, &FONT_XS, "hold", K_FROST);
-            x -= 6;
-        }
-        if (ui.lock)
-            cv_text(x - text_w(&FONT_XS, "lock"), -2, &FONT_XS, "lock", K_FROST);
-    }
-    draw_meters();
-    draw_duck();
+    draw_where(now);
     draw_lanes();
     draw_oct(now);
     draw_big(now);
@@ -3437,6 +3568,15 @@ static void draw_knobs(void)
         char t[16];
         static const uint16_t MIXC[4] = {K_PAD, K_BELL, K_BASS, K_PULSE};   /* (the Mix page: the layers' colours) */
         uint16_t bg = hot ? K_PANEL : K_BG, fill = off || moff ? K_LINE : ui.view == V_MIX ? MIXC[i] : hot ? K_ACC : K_PAD;
+        if (k == K_NONE && KNOB_LABEL[ui.view][i][0]) {   /* (1.4.0: a knob to come, the Arrangement page's Mixer:
+                                                  * its name greyed, its ring empty) */
+            caps(t, KNOB_LABEL[ui.view][i], sizeof t);
+            if (i)
+                cv_rect(x, 16, 1, 46, K_LINE);
+            text_c(cx, 12, &FONT_XS, t, K_LINE);
+            arc(cx, 37, 12, 0.0f, mix(K_BG, K_LINE, 10), K_LINE, K_BG, 0);
+            continue;
+        }
         if (k == K_NONE)
             continue;
         if (i)
@@ -3838,7 +3978,7 @@ static void speak_dump(void)
     static const char *const MSG[][2] = {{"UPDATE MODE IN", "3.."}, {"UPDATE MODE", "CANCELLED"},
                                          {"NEXT CHORD", "ON THE BAR"}, {"NEXT CHORD", 0}, {"RESTING", 0},
                                          {"PLAYING", 0}, {"DUB HOLD", "ON"}, {"DUB HOLD", "OFF"}, {"SAVED", 0},
-                                         {"PERFORM", "ON"}, {"PERFORM", "OFF"}};
+                                         {"ARRANGEMENT", "ON"}, {"ARRANGEMENT", "OFF"}};
     static const char *const WARN[][2] = {{"THE ROOT STAYS", "(SETUP)"}, {"3 NOTES", "AT LEAST"},
                                           {"NOT SAVED", "FLASH ERROR"}};
     project_t keep = proj;
