@@ -99,5 +99,22 @@ wait 300
 spin K1 35
 wait 40000
 shot screen-chord-lfo.png
+# (1.4.0, the user's: the Chord's pages) ALGORITHM there: the Destination, Reso, its big ring; then the Chord voice page
+# (ENV again from Chord), Reso moving on its knob; the Chord FM page, Saws not FM, its Colour alone
+turn ALGO 1
+wait 300
+shot screen-chord-lfo-dest.png
+wait 1500
+tap ENV
+tap ENV
+wait 3000
+shot screen-chord-voice.png
+tap ENV
+wait 1500
+shot screen-chord-fm.png
+tap ENV
+wait 300
+turn ALGO 2
+wait 300
 spin K1 -35
 tap HOME
