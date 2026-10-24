@@ -2784,8 +2784,10 @@ static void draw_desk(void)
 #define LN_Y0 94                                 /* the first row's top; LN_ROW apart, the notes LN_H high */
 #define LN_ROW 7
 #define LN_H 5
-#define LN_X0 40                                 /* the overview's grid: a step LN_P apart */
-#define LN_P 11
+#define LN_X0 40                                 /* the overview's grid: step i at LN_XI(i), 12.4 px apart, the last
+                                                  * ending 8 px from the right as the meters start 8 px from the left
+                                                  * (1.4.0, the user's: the duck bar's old room filled) */
+#define LN_XI(i) (LN_X0 + (int32_t)(i) * 186 / 15)
 #define LM_X 8                                   /* the meters: LM_W wide, LM_H high, in the row's middle */
 #define LM_W 22
 #define LM_H 4                                   /* (1.4.0, the user's: 1 px taller) */
@@ -3138,7 +3140,7 @@ static void draw_lanes(void)
         float ghost[16];
         int l, i, k;
         if (en_playing)                          /* the step playing: a column */
-            cv_round(LN_X0 - 2 + pos * LN_P, LN_Y0 - 2, 10, LN_ROWS * LN_ROW + 2, 2, K_PANEL);
+            cv_round(LN_XI(pos) - 2, LN_Y0 - 2, 10, LN_ROWS * LN_ROW + 2, 2, K_PANEL);
         for (i = 0; i < 16; i++)
             ghost[i] = 0.0f;
         if (!en_ext && proj.par[P_TEMPO] > 0) {  /* the stabs' echoes: where each repeat lands, as faint as it is */
@@ -3161,7 +3163,7 @@ static void draw_lanes(void)
             const uint32_t p = l == 0 ? en_lane[0] : l == 1 ? en_lane_png : l == 2 ? en_lane[5] : l == 3 ? en_lane[1]
                              : l == 4 ? en_lane[2] : l == 5 ? en_lane[3] : nz, p2 = l == 5 ? en_lane[4] : 0u;
             for (i = 0; i < 16; i++) {
-                const int32_t x = LN_X0 + i * LN_P;
+                const int32_t x = LN_XI(i);
                 const int now = en_playing && i == pos, two = (p >> i & 1u) && (p2 >> i & 1u);
                 int h;
                 if (!((p | p2) >> i & 1u)) {
