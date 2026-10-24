@@ -26,7 +26,7 @@ shot round_noise.png
 tap SAVE
 expect view 25
 tap SAVE
-expect view 21
+expect view 23
 tap HOME
 expect view 0
 tap SEQ
@@ -390,7 +390,7 @@ wait 300
 store12 5
 reboot
 wait 1000
-expect format 22
+expect format 23
 expect piece 0
 expect par24 3
 expect par113 65
@@ -416,7 +416,7 @@ expect par32 40
 store13
 reboot
 wait 1000
-expect format 22
+expect format 23
 expect par32 40
 expect par115 45
 expect par116 100

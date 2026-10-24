@@ -10,7 +10,10 @@
 #define EN_VERSION "DEV"
 #endif
 #define PROJ_MAGIC 0x31425544u           /* "DUB1": AMB-1's projects ("ENO1") give the recipes */
-#define PROJ_FORMAT 22u                  /* 22: the layers' pages: their Vary (P_PVARY, P_BVARY, P_DVARY, P_NVARY),
+#define PROJ_FORMAT 23u                  /* 23: the Arrangement page's channel strips: each part's Echo and Plate
+                                         * sends, its Low cut (P_CECHO .. P_NLOW; 8-22 read, they from the recipes:
+                                         * the sends as each piece sent, the Low cuts off);
+                                         * 22: the layers' pages: their Vary (P_PVARY, P_BVARY, P_DVARY, P_NVARY),
                                          * the chord's Cutoff a knob around the piece's own (P_CCUT; 8-21 read, the
                                          * Varys from the recipes, a Cutoff you'd set its offset from the recipe's);
                                          * 21: the Chord's pages: its Vary, its LFO's Destination (P_CVARY,

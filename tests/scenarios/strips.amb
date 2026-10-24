@@ -1,0 +1,101 @@
+# (1.4.0, the user's) the Arrangement page's channel strips: a part's white key held (white 1-5: the chord, the pings,
+# the bass, the drums, the noise, as the meters' rows), the knobs that part's Level, Echo send, Plate send and Low cut;
+# let go, back to the page, no mute; a tap still mutes (on its release); the sends and Low cuts kept by the piece,
+# saved; a 1.4.0 layers' pages project (format 22) read, the strips from the recipes
+listen
+wait 2000
+tap SEL
+wait 300
+expect view 17
+# white 1 held: the chord's strip
+key w0 down
+wait 700
+expect view 26
+said Chord strip page
+shot strip_chord.png
+spin K2 10
+wait 300
+expect par140 60
+said Echo 60
+shot strip_chord_echo.png
+spin K4 30
+wait 300
+expect par148 30
+said Low cut 30
+spin K1 -2
+wait 300
+expect par0 50
+key w0 up
+wait 300
+expect view 17
+expect mutes 0
+# a tap: a mute, as before (the levels kept)
+tapkey w0
+wait 300
+expect mutes 1
+expect view 17
+tapkey w0
+wait 300
+expect mutes 0
+# a knob turned at once, the key just down: the strip at once (the pings')
+key w1 down
+spin K3 -20
+wait 300
+expect view 26
+expect par143 30
+key w1 up
+wait 300
+expect view 17
+expect mutes 0
+# white 4 held: the drums' strip; white 5: the noise's (its sends the Noise space page's were)
+key w3 down
+wait 700
+expect view 26
+said Drums strip page
+spin K2 20
+wait 300
+expect par146 70
+key w3 up
+wait 200
+key w4 down
+wait 700
+said Noise strip page
+spin K3 -10
+wait 300
+expect par122 40
+shot strip_noise.png
+key w4 up
+wait 300
+expect view 17
+expect mutes 0
+# the bass's echo: none in a piece (0); turned up, heard
+key w2 down
+wait 400
+expect par144 0
+spin K2 30
+wait 300
+expect par144 30
+key w2 up
+wait 3000
+expect peak_db_max -0.5
+# kept by a save (GLO held), and read again
+press GLO
+wait 600
+release GLO
+reboot
+wait 1000
+expect format 23
+expect par140 60
+expect par148 30
+expect par144 30
+# a 1.4.0 layers' pages project (format 22): a piece changed kept (its chord level), the strips from the recipe (50
+# and 50, the bass's echo 0, the Low cuts off)
+store22
+reboot
+wait 1000
+expect format 23
+expect par0 50
+expect par140 50
+expect par148 0
+expect par144 0
+expect par146 50

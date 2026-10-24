@@ -1501,6 +1501,78 @@ int main(void)
         }
     }
 
+    /* (1.4.0, the user's) the Arrangement page's channel strips: each part's Echo and Plate sends and its Low cut reach
+     * the engine (heard against 0; the defaults are the recipes' own: the sound as before, checked by the scenarios and
+     * the renders); a Low cut takes a part's lows (the bass alone: under ~120 Hz, 100 against 0) */
+    {
+        static const uint8_t SP[] = {P_CECHO, P_CPLATE, P_PECHO, P_PPLATE, P_BECHO, P_BPLATE, P_DECHO, P_DPLATE,
+                                     P_NECHO, P_NPLATE};
+        static const uint8_t LP[] = {P_CLOW, P_PLOW, P_BLOW, P_DLOW, P_NLOW};
+        int16_t pp[P_NPARAMS];
+        uint16_t pl;
+        unsigned k;
+        int heard = 0, low0 = 0, lowh = 0;
+        fresh();
+        en_piece(0, pp, &pl);
+        for (k = 0; k < P_NPARAMS; k++)
+            if (k != P_TUNE && k != P_MIDI)
+                en_set((int)k, pp[k]);
+        en_pool(pl);
+        en_set(P_PINGS, 80);
+        en_set(P_CRACKLE, 80);
+        en_regrow();
+        en_play(1);
+        run(4.0f);
+        for (k = 0; k < sizeof SP; k++)
+            heard += same_with(SP[k], 100) == 0;
+        for (k = 0; k < sizeof LP; k++) {
+            low0 += same_with(LP[k], 0) == 1;
+            lowh += same_with(LP[k], 80) == 0;
+        }
+        printf("  the strips: %d of %u sends heard at 100 against 0; the Low cuts at 0 as off %d of %u, at 80 heard %d\n",
+               heard, (unsigned)sizeof SP, low0, (unsigned)sizeof LP, lowh);
+        CHECK(heard == (int)sizeof SP && low0 == (int)sizeof LP && lowh == (int)sizeof LP,
+              "the strips: sends heard %d, Low cuts off at 0 %d, heard at 80 %d", heard, low0, lowh);
+        {   /* the bass alone, its lows: the Low cut at 0 (here) and at 100 (a fork), the same minute otherwise */
+            int fd[2], w, b, j;
+            pid_t pid;
+            double lo[2] = {0.0, 0.0};
+            en_mute(0x1Fu & ~(uint32_t)EN_M_BASS);
+            fflush(stdout);
+            if (pipe(fd))
+                fd[0] = fd[1] = -1;
+            pid = fork();
+            for (w = 0; w < 2; w++) {
+                float l1 = 0.0f;
+                if ((pid == 0) != (w == 1))
+                    continue;
+                en_set(P_BLOW, w ? 100 : 0);
+                for (b = 0; b < 8 * 172; b++) {
+                    en_render(buf, 256, 2048);
+                    for (j = 0; j < 256; j++) {
+                        l1 += 0.017f * ((float)(buf[2 * j] + buf[2 * j + 1]) * (0.5f / 8388608.0f) - l1);   /* (~120 Hz) */
+                        lo[w] += (double)(l1 * l1);
+                    }
+                }
+            }
+            if (pid == 0) {
+                if (write(fd[1], &lo[1], sizeof lo[1]) != (ssize_t)sizeof lo[1])
+                    _exit(1);
+                _exit(0);
+            }
+            if (read(fd[0], &lo[1], sizeof lo[1]) != (ssize_t)sizeof lo[1])
+                lo[1] = lo[0];
+            waitpid(pid, 0, 0);
+            close(fd[0]);
+            close(fd[1]);
+            en_mute(0);
+            printf("  the bass's Low cut at 100: its lows under ~120 Hz %.1f dB against 0\n",
+                   10.0 * log10((lo[1] + 1e-20) / (lo[0] + 1e-20)));
+            CHECK(lo[0] > 1e-3 && lo[1] < 0.25 * lo[0], "the bass's Low cut at 100: its lows %.1f dB (want under -6)",
+                  10.0 * log10((lo[1] + 1e-20) / (lo[0] + 1e-20)));
+        }
+    }
+
     /* stop: the tails die away (but the vinyl turns on) */
     fresh();
     en_play(1);

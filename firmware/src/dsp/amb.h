@@ -120,6 +120,13 @@ enum {
      * Cutoff as a knob around the piece's own (-50..+50: 0 its recipe's, P_CUTOFF, now the base, on no knob; a step
      * 0.055 octave, as P_CUTOFF's) */
     P_PVARY, P_BVARY, P_DVARY, P_NVARY, P_CCUT,
+    /* (1.4.0, format 23, the user's: the Arrangement page's channel strips, a part's white key held) each part's Echo
+     * send and Plate send, 0..100: the part's own sends times a fader's share (50: as the piece sent before, 0: none,
+     * 100: twice, +6 dB; the noise's are P_NECHO and P_NPLATE, as they were); the bass's echo none before (0); the
+     * drums' the hats', the rim's and the clap's (the kick's none, and none now); then each part's Low cut, 0..100: a
+     * gentle high-pass (6 dB an octave) before its sends, 0 off, ~20 Hz at 1 to ~600 Hz at 100 */
+    P_CECHO, P_CPLATE, P_PECHO, P_PPLATE, P_BECHO, P_BPLATE, P_DECHO, P_DPLATE,
+    P_CLOW, P_PLOW, P_BLOW, P_DLOW, P_NLOW,
     P_NPARAMS
 };
 typedef struct {

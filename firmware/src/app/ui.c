@@ -27,7 +27,7 @@
  * pages, the layer's button pressed again) */
 enum { V_DUB, V_CHORD, V_TEXTURE, V_BASS, V_DRUMS, V_SPACE, V_SETUP, NPAGES, V_MIX = NPAGES, V_CSND, V_PSND, V_BSND,
        V_DSND, V_CFM, V_PFM, V_BFM, V_CHORDS, V_PAT, V_PERF, V_KEY, V_NSND, V_ESND, V_NSND2, V_CLFO, V_NLFO, V_HATS, V_NVOX,
-       NVIEWS };
+       V_STRIP, NVIEWS };
 /* (V_PERF: PERFORM's knobs, the Arrangement page; V_MIX while white 6 is held. V_KEY: HOME again, the key and the
  * tempo, the Form page's second. V_CLFO, V_NLFO (1.4.0): the chord's LFO, ENV a fourth time (after its FM page), and
  * the noise's, SAVE a third time; for now, till the big redesign) */
@@ -37,11 +37,12 @@ enum { V_DUB, V_CHORD, V_TEXTURE, V_BASS, V_DRUMS, V_SPACE, V_SETUP, NPAGES, V_M
 static const char *const VIEW_NAME[NVIEWS] = {"Form", "Chord", "Pings", "Bass", "Drums", "Dub", "Setup", "Mix",
                                               "Chord voice", "Pings voice", "Bass voice", "Kick",
                                               "Chord FM", "Pings FM", "Bass FM", "Chords", "Pattern", "Arrangement", "Key", "Noise",
-                                              "Echo", "Noise space", "Chord LFO", "Noise LFO", "Hats", "Noise voice"};
+                                              "Echo", "Noise space", "Chord LFO", "Noise LFO", "Hats", "Noise voice",
+                                              "Strip"};
 #define B_NONE 0xFFu
 static const uint8_t VIEW_BTN[NVIEWS] = {B_HOME, B_ENV, B_ARP, B_LFO, B_SEQ, B_FX, B_GLO, B_NONE, B_NONE, B_NONE, B_NONE,
                                          B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_SAVE, B_NONE, B_NONE,
-                                         B_NONE, B_NONE, B_NONE, B_NONE};
+                                         B_NONE, B_NONE, B_NONE, B_NONE, B_NONE};
 static int sound_of(int v) { return v == V_CHORD ? V_CSND : v == V_TEXTURE ? V_PSND : v == V_BASS ? V_BSND : v == V_DRUMS ? V_DSND : -1; }
 static int fm_of(int v) { return v == V_CHORD ? V_CFM : v == V_TEXTURE ? V_PFM : v == V_BASS ? V_BFM : -1; }
 static int parent_of(int v)
@@ -50,6 +51,12 @@ static int parent_of(int v)
          : v == V_DSND || v == V_HATS || v == V_PAT ? V_DRUMS : -1;
 }
 static int noise_page(int v) { return v == V_NSND || v == V_NVOX || v == V_NSND2 || v == V_NLFO; }   /* (SAVE's) */
+/* (1.4.0, the user's) the Arrangement page's channel strips: a part's white key held, V_STRIP, the knobs that part's
+ * Level, Echo send, Plate send and Low cut; the part (0..4: the chord, the pings, the bass, the drums, the noise, as
+ * the meters' rows) */
+static uint8_t strip_part;
+#define NSTRIP 5
+static const char *const STRIP_NAME[NSTRIP] = {"Chord", "Pings", "Bass", "Drums", "Noise"};
 static int layer_of(int v) { v = parent_of(v) >= 0 ? parent_of(v) : v; return v == V_CHORD ? 0 : v == V_TEXTURE ? 1 : v == V_BASS ? 2 : 3; }
 static int fm_off(int v) { return v >= V_CFM && v <= V_BFM && !en_voice_fm(v - V_CFM); }   /* an FM page, not FM */
 static int fm_knob_off(int v, int i)             /* a knob there doing nothing: the voice not FM, or operators 3 and 4's
@@ -88,6 +95,8 @@ static int round_pos(int v)                      /* a page's place in the round 
 static int oct_layer(int v)
 {
     v = parent_of(v) >= 0 ? parent_of(v) : v;
+    if (v == V_STRIP)                            /* (a strip: its part's, OCT- / OCT+ its level too) */
+        return strip_part;
     return v == V_CHORD ? 0 : v == V_TEXTURE ? 1 : v == V_BASS ? 2 : v == V_DRUMS ? 3 : noise_page(v) ? 4 : -1;
 }
 /* the four knobs of each page: a parameter, or one of these; and what the knob is called there */
@@ -138,8 +147,22 @@ static const uint16_t VIEW_KNOB[NVIEWS][4] = {
                                                   * drift (the user's: the records' random walk, its own, always on) */
     {P_NLFO, P_NLRATE, P_NLSHAPE, P_NLWALK},
     {P_HATSLVL, P_HTONE, P_HLEN, K_NONE},        /* (1.4.0) the Hats page: SEQ a third time, the Pattern after it */
-    {P_NROOM, P_NCOL, P_NTUNE, K_NONE},          /* (1.4.0) the Noise voice: SAVE again */
+    {P_NROOM, P_NCOL, P_NTUNE, P_NWIDTH},        /* (1.4.0) the Noise voice: SAVE again; its Width from the Noise space
+                                                  * page (gone: its sends the noise's channel strip) */
+    {P_CHORD, P_CECHO, P_CPLATE, P_CLOW},        /* (1.4.0) a strip: the chord's here; vknob() the part's (STRIP_PAR) */
 };
+static const uint16_t STRIP_PAR[NSTRIP][4] = {
+    {P_CHORD, P_CECHO, P_CPLATE, P_CLOW}, {P_PINGS, P_PECHO, P_PPLATE, P_PLOW}, {P_BASS, P_BECHO, P_BPLATE, P_BLOW},
+    {P_DRUMS, P_DECHO, P_DPLATE, P_DLOW}, {P_CRACKLE, P_NECHO, P_NPLATE, P_NLOW}};
+static int vknob(int v, int i)                   /* a page's knob i: VIEW_KNOB's, a strip's its part's */
+{
+    return v == V_STRIP ? STRIP_PAR[strip_part][i] : VIEW_KNOB[v][i];
+}
+static const char *view_name(int v)              /* a page's name (a strip's: its part's, "Chord strip") */
+{
+    static const char *const SN[NSTRIP] = {"Chord strip", "Pings strip", "Bass strip", "Drums strip", "Noise strip"};
+    return v == V_STRIP ? SN[strip_part] : VIEW_NAME[v];
+}
 static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Energy", "Evolve", "Motion", ""},
     {"Density", "Throws", "Change", "Vary"},
@@ -166,7 +189,8 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Depth", "Rate", "Shape", "Drift"},
     {"Depth", "Rate", "Shape", "Drift"},
     {"Level", "Tone", "Length", ""},
-    {"Air", "Tone", "Decay", ""},
+    {"Air", "Tone", "Decay", "Width"},
+    {"Level", "Echo", "Plate", "Low cut"},
 };
 /* what each knob does, a line: on the rule above the knobs while it's being turned (in capitals; each fits the
  * rule's 228 px: the host's expect helpfit) */
@@ -214,7 +238,10 @@ static const char *const KNOB_HELP[NVIEWS][4] = {
     {"How deep the noise filter's wave", "How long the wave: 1 to 32 bars", "The wave's shape",
      "A slow random wander, as a hand on the filter"},
     {"The hats' level against the kick", "The hats, dark to bright", "How long the hats ring", ""},
-    {"The hiss under it, softer or more", "The rings darker, or brighter", "How long each hit rings on the chord", ""},
+    {"The hiss under it, softer or more", "The rings darker, or brighter", "How long each hit rings on the chord",
+     "The noise mono, to wide"},
+    {"The part's level", "How much it sends into the echo", "How much it sends into the plate",
+     "Its lows thinned, before the sends"},
 };
 
 /* the screen's colours: a dark room, as a dub techno sleeve (grey on black, a cold blue). The chord and
@@ -246,6 +273,9 @@ static struct {
     uint8_t view;
     uint8_t perf, perf_from;           /* PERFORM (SEL): the keys play the mutes and the moves, the knobs
                                         * the mix; the page it was started from */
+    uint8_t strip_key, strip_used;     /* (1.4.0) a part's white key down (its index + 1; 0: none), a strip knob
+                                        * turned while it is (its release then no mute) */
+    uint32_t strip_t;                  /* when it went down */
     uint32_t mutes, moves;             /* the layers muted (EN_M_*), the moves held (EN_PF_*) */
     uint32_t solo;                     /* the layers soloed (EN_M_*): the others muted while any is */
     int8_t mac[EN_NMAC];               /* the master actions (HOME's Filter, PERFORM's knobs): -50..50, never saved */
@@ -835,9 +865,22 @@ static void perf_key(uint32_t key, int down)
         }
         return;
     }
-    if (i < 5) {                                 /* the chord, pings, bass, kick, hats: a mute (the levels kept) */
-        if (!down)
+    if (i < 5) {                                 /* the chord, pings, bass, kick, hats: a tap, a mute (the levels kept);
+                                                  * (1.4.0, the user's) held, the part's channel strip (strip_tick):
+                                                  * the mute then on the key's release, if it was a tap */
+        if (down) {
+            ui.strip_key = (uint8_t)(i + 1);
+            ui.strip_t = plat_ms();
+            ui.strip_used = 0;
             return;
+        }
+        if (ui.strip_key != i + 1)
+            return;                              /* (its press went elsewhere: SEL, or another key's strip) */
+        ui.strip_key = 0;
+        if (ui.view == V_STRIP) {                /* a hold: back to the page, no mute */
+            set_view(V_PERF);
+            return;
+        }
         ui.mutes ^= 1u << i;
         perf_mutes();
         if (ui.view == V_MIX) {                  /* the layer's Mix knob lit (the kick and the hats: Drums) */
@@ -860,11 +903,24 @@ static void perf_key(uint32_t key, int down)
 }
 
 static void set_view(int v);
+#define STRIP_HOLD 300u                          /* ms a part's white key is held before its strip shows */
+static void strip_open(void)                     /* the held key's part's strip on the knobs (white 1-5: the chord, the
+                                                  * pings, the bass; the drums (the kick's key), the noise (the hats'):
+                                                  * the meters' rows) */
+{
+    strip_part = (uint8_t)(ui.strip_key - 1);
+    set_view(V_STRIP);                           /* (the reader: the page, "Chord strip page: Level 52, ...") */
+}
+static void strip_tick(void)                     /* a part's key held long enough: its strip */
+{
+    if (ui.strip_key && ui.perf && ui.view == V_PERF && plat_ms() - ui.strip_t >= STRIP_HOLD)
+        strip_open();
+}
 static void perf_set(int on)                     /* on: the mixer on the knobs; off: back to the page */
 {
     ui.perf = (uint8_t)on;
     if (on) {
-        if (ui.view != V_MIX && ui.view != V_PERF)
+        if (ui.view != V_MIX && ui.view != V_PERF && ui.view != V_STRIP)
             ui.perf_from = ui.view;
         set_view(V_PERF);
     } else {
@@ -872,7 +928,8 @@ static void perf_set(int on)                     /* on: the mixer on the knobs; 
             ui.moves = 0;
             en_perf(0);
         }
-        if (ui.view == V_MIX || ui.view == V_PERF)
+        ui.strip_key = 0;
+        if (ui.view == V_MIX || ui.view == V_PERF || ui.view == V_STRIP)
             set_view(ui.perf_from);
     }
     say("ARRANGEMENT", on ? "ON" : "OFF");
@@ -1079,7 +1136,7 @@ static void button(int b)
                                                   * SELECT leaves it) */
         if (!ui.perf)
             perf_set(1);
-        else if (ui.view == V_MIX)
+        else if (ui.view == V_MIX || ui.view == V_STRIP)
             set_view(V_PERF);
         break;
     case B_EDIT:                                 /* (its release: edit_released, in input) */
@@ -1106,7 +1163,7 @@ static void button(int b)
                                                   * KNOB 4) */
         if (noise_page(ui.view)) {               /* (1.3.0: two pages now, 1.4.0 four, the user's: its part, its
                                                   * voice, its space, its LFO; SAVE again steps through) */
-            set_view(ui.view == V_NSND ? V_NVOX : ui.view == V_NVOX ? V_NSND2 : ui.view == V_NSND2 ? V_NLFO : V_NSND);
+            set_view(ui.view == V_NSND ? V_NVOX : ui.view == V_NVOX ? V_NLFO : V_NSND);   /* (1.4.0: the Noise space page gone, its sends the noise's channel strip, its Width the Noise voice's) */
         } else {
             ui.noise_from = (uint8_t)ui.view;
             ui.noise_round = 0;
@@ -1426,7 +1483,7 @@ static void nudge(int layer, int how)
         }
         set_view(sv);
         for (j = 0; j < 4; j++)
-            if (VIEW_KNOB[ui.view][j] == best && how == NUDGE_HAND) {
+            if (vknob(ui.view, j) == best && how == NUDGE_HAND) {
                 ui.touched = (int8_t)j;
                 ui.touch_until = plat_ms() + 1500u;
             }
@@ -1633,27 +1690,45 @@ static void input(void)
         card_show("RESET", piece_name(proj.piece), K_FROST, 1);
         mark_dirty();
     }
+    strip_tick();
     for (i = 0; i < 4; i++)
         if ((e = plat_enc(EN_K1 + (int)i)) != 0) {
             if (grid_up())
                 continue;                        /* (the grid on the screen: the knobs rest) */
-            if (fm_knob_off(ui.view, (int)i) || VIEW_KNOB[ui.view][i] == K_NONE)
+            if (ui.strip_key && ui.perf && ui.view == V_PERF)
+                strip_open();                    /* (a part's key down and a knob turned: its strip at once) */
+            if (ui.view == V_STRIP)
+                ui.strip_used = 1;
+            if (fm_knob_off(ui.view, (int)i) || vknob(ui.view, i) == K_NONE)
                 continue;                        /* (an FM page on a voice that isn't FM: the knobs rest, greyed; a
                                                   * knob of none, 1.4.0, rests too) */
-            turn(EN_K1 + (int)i, VIEW_KNOB[ui.view][i], e);
+            turn(EN_K1 + (int)i, vknob(ui.view, i), e);
             /* (1.4.0, the user's: no more the knob's name in the header: the big ring names it, over it; the header
              * the piece's) */
             {   /* (1.4.0) the big ring: the knob's value large over the middle (not where the page itself is the
                  * picture: the Chords and the Pattern pages; nor Save and the CPU) */
                 static const uint16_t LC[NLAYER] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE};
                 static const uint16_t MC[4] = {K_PAD, K_BELL, K_BASS, K_PULSE};
-                const int k = VIEW_KNOB[ui.view][i], l = oct_layer(ui.view);
+                const int k = vknob(ui.view, i), l = oct_layer(ui.view);
                 if (ui.view != V_CHORDS && ui.view != V_PAT && ui.view != V_MIX && k != K_SAVE && k != K_CPU &&
                     k != K_NONE)                 /* (1.4.0, the user's: nor the Mix, white 6 held, the meters its
                                                   * picture: the notches show the change; Arrangement's own knobs keep
                                                   * the ring) */
-                    big_show_help(k, KNOB_LABEL[ui.view][i], ui.view == V_MIX ? MC[i] : l >= 0 ? LC[l] : K_ACC,
-                                  KNOB_HELP[ui.view][i]);
+                {
+                    char sn[24];                 /* (a strip's: its part's name first, "CHORD ECHO") */
+                    const char *nm = KNOB_LABEL[ui.view][i];
+                    if (ui.view == V_STRIP) {
+                        int a = 0, b = 0;
+                        while (STRIP_NAME[strip_part][a])
+                            sn[a] = STRIP_NAME[strip_part][a], a++;
+                        sn[a++] = ' ';
+                        while (nm[b] && a < (int)sizeof sn - 1)
+                            sn[a++] = nm[b++];
+                        sn[a] = 0;
+                        nm = sn;
+                    }
+                    big_show_help(k, nm, ui.view == V_MIX ? MC[i] : l >= 0 ? LC[l] : K_ACC, KNOB_HELP[ui.view][i]);
+                }
             }
             ui.touched = (int8_t)i;
             ui.touch_until = plat_ms() + 1200u;
@@ -2665,6 +2740,10 @@ static void draw_desk(void)
     for (r = 0; r < EN_NMETER; r++) {
         const int32_t y = mt_y(r), mx = mt_mark(r);
         const int st = mt_state(r), n = st == 2 ? 0 : mt_lit(mt.db[r]), hs = st == 2 ? -1 : mt_lit(mt.hold[r]) - 1;
+        if (ui.view == V_STRIP && r == strip_part) {   /* (1.4.0) a strip on the knobs: its part's row lit behind */
+            cv_round(3, y - 3, MT_X0 + MT_SEG * MT_P - 1, MT_H + 6, 3, K_PANEL);
+            cv_rect(3, y - 3, 2, MT_H + 6, MT_TAGC[r]);
+        }
         cv_text(8, y - 3, &FONT_XS, MT_TAG[r], st == 2 ? K_LINE : st == 1 ? mix(K_BG, MT_TAGC[r], 8) : MT_TAGC[r]);
         for (i = 0; i < MT_SEG; i++) {
             const uint16_t c = mt_col(r, i);
@@ -3446,7 +3525,7 @@ static void draw_where(uint32_t now)
     {   /* (1.3.0) top right: the page's name (PERFORM's too); to its left, LOCK and SOLO while on */
         char pn[16];
         int32_t x;
-        caps(pn, VIEW_NAME[ui.view], sizeof pn);
+        caps(pn, view_name(ui.view), sizeof pn);
         x = 232 - text_w(&FONT_B, pn);
         cv_text(x, 12, &FONT_B, pn, K_ACC);
         /* (1.4.0, the user's: the round's dots under it gone; SELECT doesn't circle the pages any more) */
@@ -3524,7 +3603,7 @@ static void draw_main(void)
             draw_slots();
             {   /* (1.4.0, the user's) its name top right, as the other pages' */
                 char pn[16];
-                caps(pn, VIEW_NAME[ui.view], sizeof pn);
+                caps(pn, view_name(ui.view), sizeof pn);
                 cv_text(232 - text_w(&FONT_B, pn), 12, &FONT_B, pn, K_ACC);
             }
             draw_big(now);
@@ -3532,7 +3611,7 @@ static void draw_main(void)
         }
         return;
     }
-    if (ui.view == V_PERF || ui.view == V_MIX) { /* (1.4.0) the Arrangement page: the meters */
+    if (ui.view == V_PERF || ui.view == V_MIX || ui.view == V_STRIP) {   /* (1.4.0) the Arrangement page: the meters */
         h = hash(where_sig(hash(desk_sig(), ui.view)), (uint32_t)card_on(now) | (uint32_t)big_on(now) << 1 |
                  (en_phrase_bar == 7 && en_change_next ? (now / 200u & 1u) << 2 : 0u) | (uint32_t)en_drift_bars(proj.par[P_DRIFT]) << 3);
         if (h != ui.sig[1] || big_on(now) || card_on(now)) {
@@ -3561,12 +3640,12 @@ static void draw_main(void)
         h = hash(h, (uint32_t)q16(en_loop_glow[i]) | (uint32_t)en_loop_pos[i] << 8);
     for (i = 0; i < EN_NDRUM; i++)
         h = hash(h, (uint32_t)q16(en_drum_glow[i]));
-    h = hash(h, ui.view | (uint32_t)oct_ring_on(now) << 8);
+    h = hash(h, ui.view | (uint32_t)oct_ring_on(now) << 8 | (uint32_t)strip_part << 12);
     if (lfo_page(ui.view))                       /* (the LFO pages: the trace, a sixteenth at a time) */
         h = hash(h, en_lfo_w);
     if (parent_of(ui.view) >= 0) {               /* a sound or FM page: redrawn as its values move */
         for (i = 0; i < 4; i++)
-            h = hash(h, (uint32_t)(knob_get(VIEW_KNOB[ui.view][i]) + 64));   /* (1.4.0: K_NONE's too, no parameter) */
+            h = hash(h, (uint32_t)(knob_get(vknob(ui.view, i)) + 64));   /* (1.4.0: K_NONE's too, no parameter) */
         h = hash(h, (uint32_t)proj.par[view_voice(ui.view)] | (uint32_t)proj.par[P_DECAY] << 8 | (uint32_t)proj.par[P_GROOVE] << 16 |
                     (uint32_t)proj.par[P_CLDEST] << 24);   /* (1.4.0: the Chord LFO page's Destination) */
     }
@@ -3673,8 +3752,8 @@ static void draw_knobs(void)
         h = hash(h, ui.mutes);
     int now_touch = plat_ms() < ui.touch_until;
     for (i = 0; i < 4; i++) {
-        h = hash(h, (uint32_t)knob_get(VIEW_KNOB[ui.view][i]));
-        if (VIEW_KNOB[ui.view][i] == lfo_knob())   /* (the chord's LFO moving its knob: redrawn as it moves) */
+        h = hash(h, (uint32_t)knob_get(vknob(ui.view, i)));
+        if (vknob(ui.view, i) == lfo_knob())   /* (the chord's LFO moving its knob: redrawn as it moves) */
             h = hash(h, (uint32_t)(int32_t)(en_lfo_now * 80.0f) ^ (uint32_t)(int32_t)(en_lfo_reach * 80.0f) << 12);
     }
     h = hash(h, (uint32_t)now_touch);
@@ -3725,11 +3804,13 @@ static void draw_knobs(void)
         const int off = fm_knob_off(ui.view, (int)i);   /* (a voice not FM: all grey; Ratio on two ops) */
         const int moff = ui.view == V_MIX && (ui.mutes & LAYER_MUTE[i]) == LAYER_MUTE[i];   /* (the mix: a muted
                                                                                        * layer grey, its level kept) */
-        int k = VIEW_KNOB[ui.view][i], lo, hi, v, hot = now_touch && ui.touched == (int)i && !off;
+        int k = vknob(ui.view, i), lo, hi, v, hot = now_touch && ui.touched == (int)i && !off;
         int32_t x = (int32_t)i * 60, cx = x + 30;
         char t[16];
         static const uint16_t MIXC[4] = {K_PAD, K_BELL, K_BASS, K_PULSE};   /* (the Mix page: the layers' colours) */
-        uint16_t bg = hot ? K_PANEL : K_BG, fill = off || moff ? K_LINE : ui.view == V_MIX ? MIXC[i] : hot ? K_ACC : K_PAD;
+        static const uint16_t STC[NSTRIP] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE};   /* (a strip: its part's) */
+        uint16_t bg = hot ? K_PANEL : K_BG, fill = off || moff ? K_LINE : ui.view == V_MIX ? MIXC[i]
+                                                  : ui.view == V_STRIP ? STC[strip_part] : hot ? K_ACC : K_PAD;
         if (k == K_NONE && KNOB_LABEL[ui.view][i][0]) {   /* (1.4.0: a knob to come, the Arrangement page's Mixer:
                                                   * its name greyed, its ring empty) */
             caps(t, KNOB_LABEL[ui.view][i], sizeof t);
@@ -3900,7 +3981,7 @@ static void sp_knob(int view, int i)           /* "Stabs 30": the name the page 
 {
     sp_cat(KNOB_LABEL[view][i]);
     sp_cat(" ");
-    sp_value(VIEW_KNOB[view][i]);
+    sp_value(vknob(view, i));
 }
 
 static void sp_chord_q(int root, const char *q)   /* "E minor 7" */
@@ -3930,7 +4011,7 @@ static void sp_page(int all)
     int i;
     sp_n = 0;
     sp_buf[0] = 0;
-    sp_cat(VIEW_NAME[ui.view]);
+    sp_cat(view_name(ui.view));
     sp_cat(" page");
     if (noise_page(ui.view)) {
         sp_cat(", character ");
@@ -3954,7 +4035,7 @@ static void sp_page(int all)
     {
         int first = 1;
         for (i = 0; i < 4; i++) {
-            if (VIEW_KNOB[ui.view][i] == K_NONE || fm_knob_off(ui.view, i))
+            if (vknob(ui.view, i) == K_NONE || fm_knob_off(ui.view, i))
                 continue;
             sp_cat(first ? ": " : ", ");
             first = 0;
@@ -4071,7 +4152,7 @@ static void sp_snap(void)
 {
     int i;
     for (i = 0; i < 4; i++)
-        sp.val[i] = (int16_t)knob_get(VIEW_KNOB[ui.view][i]);
+        sp.val[i] = (int16_t)knob_get(vknob(ui.view, i));
     sp.view = ui.view;
     sp.ext = en_ext;
     sp.chord = sp_chord_sig();
@@ -4122,7 +4203,7 @@ static void speak(void)
         return;
     }
     for (i = 0; i < 4; i++) {                         /* a knob turning */
-        int v = knob_get(VIEW_KNOB[ui.view][i]);
+        int v = knob_get(vknob(ui.view, i));
         if (v != sp.val[i]) {
             sp.val[i] = (int16_t)v;
             if (changed < 0)
@@ -4166,7 +4247,7 @@ static void speak_dump(void)
         sp_page(0);
         sp_print("SCREEN", sp_buf);
         for (i = 0; i < 4; i++) {
-            int k = VIEW_KNOB[v][i];
+            int k = vknob(v, i);
             if (k == K_NONE)
                 continue;
             knob_range(k, &lo, &hi);
