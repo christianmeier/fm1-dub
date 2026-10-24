@@ -695,7 +695,8 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   The drift's pace fixed for now (a new place every 8-32 bars; the user, 2026-10-24: "keep it fixed, I'll test it"); if
   it wants one, a pace switch in the redesign (Slow 16-64, Medium 8-32, Fast 4-16 bars).
 - **The LFO seen on its knob** (the user, 2026-10-24): the Chord page's Cutoff ring shows the chord's LFO and drift,
-  their reach a light teal arc just outside the ring, a white dot where the filter is now (built). Next, with the
+  their reach two pale lines, just outside and inside the ring, a white dot where the filter is now, the knob's own
+  dot left out (the teal's end its place) (built; the user's: "unclutter"). Next, with the
   redesign: an LFO **Destination** for the chord (Cutoff, Reso, Colour...), the moving knob following it on its page.
 - **The noise's LFO seen** (the user's idea): a sine moving behind the Noise page's two rows of hits, its crest
   where the rings are brightest. (Built, fb2fb65; 1.4.0's rates: a bar's slice of the cycle, none on Drift, whose path

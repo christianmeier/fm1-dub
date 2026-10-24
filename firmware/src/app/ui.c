@@ -1715,6 +1715,8 @@ static void arc_th(int32_t cx, int32_t cy, int32_t r, float th, float v, uint16_
     const float a0 = 0.375f, sweep = 0.75f;
     float ro = (float)r, ri = ro - th, rm = ro - th * 0.5f, fx = (float)cx + 0.5f, fy = (float)cy + 0.5f, lo, hi;
     int32_t x, y;
+    const int nohandle = bipolar & 2;            /* (1.4.0: an LFO's dot in its place: the fill alone says where) */
+    bipolar &= 1;
     v = fm_clampf(v, 0.0f, 1.0f);
     lo = bipolar ? (v < 0.5f ? v : 0.5f) : 0.0f;
     hi = bipolar ? (v < 0.5f ? 0.5f : v) : v;
@@ -1739,8 +1741,13 @@ static void arc_th(int32_t cx, int32_t cy, int32_t r, float th, float v, uint16_
         disc(fx + fm_cosf(e1) * rm - 0.5f, fy + fm_sinf(e1) * rm - 0.5f, th * 0.5f, hi >= 1.0f ? fill : track);
         if (hi > lo)
             disc(fx + fm_cosf(el) * rm - 0.5f, fy + fm_sinf(el) * rm - 0.5f, th * 0.5f, fill);
-        disc(fx + fm_cosf(ev) * rm - 0.5f, fy + fm_sinf(ev) * rm - 0.5f, th * 0.5f + 1.3f, bg);
-        disc(fx + fm_cosf(ev) * rm - 0.5f, fy + fm_sinf(ev) * rm - 0.5f, th * 0.5f + 0.6f, fill);
+        if (!nohandle) {
+            disc(fx + fm_cosf(ev) * rm - 0.5f, fy + fm_sinf(ev) * rm - 0.5f, th * 0.5f + 1.3f, bg);
+            disc(fx + fm_cosf(ev) * rm - 0.5f, fy + fm_sinf(ev) * rm - 0.5f, th * 0.5f + 0.6f, fill);
+        } else if (hi > lo) {
+            disc(fx + fm_cosf(ev) * rm - 0.5f, fy + fm_sinf(ev) * rm - 0.5f, th * 0.5f, fill);   /* (the fill's end
+                                                  * round) */
+        }
     }
 }
 
@@ -1753,14 +1760,16 @@ static void arc(int32_t cx, int32_t cy, int32_t r, float v, uint16_t track, uint
 static void arc_span(int32_t cx, int32_t cy, int32_t r, float f0, float f1, float fn, uint16_t col, uint16_t dot)
 {
     const float a0 = 0.375f, sweep = 0.75f, th = 3.4f, rm = (float)r - th * 0.5f,
-                ro = (float)r + 2.7f, ri = (float)r + 1.0f;   /* (the span just outside the ring, under 2 px: the knob's own
-                                                  * fill left to read) */
+                ro = (float)r + 2.7f, ri = (float)r + 1.0f,   /* (the span just outside the ring, under 2 px: the knob's
+                                                  * own fill left to read) */
+                io = (float)r - th - 0.6f, ii = io - 1.5f;   /* (and just inside it, the user's: the reach doubled) */
     int32_t x, y;
     f0 = fm_clampf(f0, 0.0f, 1.0f), f1 = fm_clampf(f1, 0.0f, 1.0f), fn = fm_clampf(fn, 0.0f, 1.0f);
     for (y = -r - 5; y <= r + 5; y++)
         for (x = -r - 5; x <= r + 5; x++) {
             float dx = (float)x, dy = (float)y, d = fm_sqrtf(dx * dx + dy * dy), t, a;
-            a = fm_clampf(ro + 0.5f - d, 0.0f, 1.0f) * fm_clampf(d - ri + 0.5f, 0.0f, 1.0f);
+            a = fm_clampf(ro + 0.5f - d, 0.0f, 1.0f) * fm_clampf(d - ri + 0.5f, 0.0f, 1.0f) +
+                fm_clampf(io + 0.5f - d, 0.0f, 1.0f) * fm_clampf(d - ii + 0.5f, 0.0f, 1.0f);
             if (a <= 0.0f)
                 continue;
             t = turns(dy, dx) - a0;
@@ -1768,7 +1777,7 @@ static void arc_span(int32_t cx, int32_t cy, int32_t r, float f0, float f1, floa
                 t += 1.0f;
             t /= sweep;
             if (t >= f0 && t <= f1)
-                px_blend(cx + x, cy + y, col, (uint32_t)(a * 16.0f + 0.5f));
+                px_blend(cx + x, cy + y, col, (uint32_t)(fm_minf(a, 1.0f) * 16.0f + 0.5f));
         }
     {
         const float e = (a0 + sweep * fn) * FM_TWO_PI;
@@ -3445,12 +3454,13 @@ static void draw_knobs(void)
             for (j = 0; j < n; j++)
                 cv_round(cx - w0 / 2 + j * (pw + gap), 33, pw, 8, 2, j == v - lo ? fill : K_LINE);
         } else if (k != K_CPU) {
-            arc(cx, 37, 12, hi > lo ? (float)(v - lo) / (float)(hi - lo) : 0.0f, K_LINE, fill, bg, lo < 0);
-            if (k == P_CUTOFF && en_lfo_reach > 0.001f) {   /* (1.4.0, the user's) the chord's LFO and drift on it:
+            const int lfo_on = k == P_CUTOFF && en_lfo_reach > 0.001f;   /* (the chord's LFO on it: its dot the one) */
+            arc(cx, 37, 12, hi > lo ? (float)(v - lo) / (float)(hi - lo) : 0.0f, K_LINE, fill, bg, (lo < 0) | (lfo_on ? 2 : 0));
+            if (lfo_on) {   /* (1.4.0, the user's) the chord's LFO and drift on it:
                                                   * their reach a brighter teal, a dot where the filter is now (the
                                                   * knob a step of 0.055 octave) */
                 const float c = (float)v * 0.01f, rr = en_lfo_reach * (1.0f / 5.5f), nw = en_lfo_now * (1.0f / 5.5f);
-                arc_span(cx, 37, 12, c - rr, c + rr, c + nw, mix(fill, K_TEXT, 9), en_playing ? K_TEXT : mix(fill, K_TEXT, 9));
+                arc_span(cx, 37, 12, c - rr, c + rr, c + nw, mix(fill, K_TEXT, 11), en_playing ? K_TEXT : mix(fill, K_TEXT, 11));
             }
             if (k == P_MOTION) {                 /* (Motion's three regions: the loop held, variations, Breaks) */
                 arc_mark(cx, 37, 12, 0.4f, K_TEXT);
