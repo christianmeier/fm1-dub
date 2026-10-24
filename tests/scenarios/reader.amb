@@ -321,6 +321,6 @@ wait 300
 said Motion 100
 # WHERE: everything again (the chord held now)
 where
-said Form page: Energy 0, Evolve 0, Motion 100, Width 40. Piece Basic, F Dorian, tempo 92, resting
+said Form page: Energy 0, Evolve 0, Motion 100. Piece Basic, F Dorian, tempo 92, resting
 where
 said , held. Section 

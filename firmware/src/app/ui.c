@@ -135,9 +135,9 @@ enum { K_LEDS = 200, K_CPU, K_NONE, K_SLOT, K_CQ, K_CX,    /* (the Chords page: 
 static const char *const LANE_NAME[EN_NDRUM] = {"Kick", "Shaker", "Open", "Rim", "Clap"};
 _Static_assert(P_NPARAMS <= K_LEDS, "the knobs' own codes must come after the parameters");
 static const uint16_t VIEW_KNOB[NVIEWS][4] = {
-    {K_ENERGY, P_EVOLVE, P_MOTION, P_EWIDTH},    /* (1.4.0, the user's: Energy, the Arrangement page's too; the Filter
-                                                  * on SELECT only; Drift the Chord page's Change; Width, the whole
-                                                  * mix's, from the Echo page) */
+    {K_ENERGY, P_EVOLVE, P_MOTION, K_NONE},      /* (1.4.0, the user's: Energy here alone (the Arrangement page's
+                                                  * until its Width); the Filter on SELECT only; Drift the Chord page's
+                                                  * Change; the fourth free) */
     {P_STABS, P_CTHROW, P_DRIFT, P_CVARY},       /* (1.4.0, the user's: the chord's part: Change, how long a chord lasts
                                                   * (Drift, from the Form page), Vary; Wet to the channel strip, to come) */
     {P_DENSITY, P_PVARY, K_NONE, K_NONE},        /* (1.4.0, the user's: the layers' parts, the empty places kept: the
@@ -161,8 +161,10 @@ static const uint16_t VIEW_KNOB[NVIEWS][4] = {
     {P_BALG, P_BFRAT, P_BFB, P_BBITE},           /* (Bite on every voice, the only one on a voice not FM) */
     {K_SLOT, K_CQ, K_CX, K_PLAY},
     {K_LANE, P_DACCENT, K_LCH, P_DMODE},
-    {K_ENERGY, K_NONE, K_DUB, P_DUCK},           /* (Energy, Wet: offsets for playing; Duck the piece's own. 1.4.0, the
-                                                  * user's: the Filter on SELECT only; KNOB 2 the dub mixer, to come) */
+    {P_EWIDTH, K_NONE, K_DUB, P_DUCK},           /* (Wet: an offset for playing; Duck the piece's own. 1.4.0, the
+                                                  * user's: the Filter on SELECT only; KNOB 2 the dub mixer, to come;
+                                                  * KNOB 1 the desk's Width, the whole mix's stereo field (from the
+                                                  * Echo page), Energy on the Form page alone) */
     {P_TEMPO, P_ROOT, K_MODE, P_SWING},
     {P_NGRAIN, P_NVARY, K_NONE, K_NONE},         /* (the noise's part, its groove; the level on OCT- / OCT+, as the
                                                   * layers'; its Drift the recipes') */
@@ -207,7 +209,7 @@ static const char *view_name(int v)              /* a page's name (a strip's: it
     return v == V_STRIP ? SN[strip_part] : VIEW_NAME[v];
 }
 static const char *const KNOB_LABEL[NVIEWS][4] = {
-    {"Energy", "Evolve", "Motion", "Width"},
+    {"Energy", "Evolve", "Motion", ""},
     {"Density", "Throws", "Change", "Vary"},
     {"Density", "Vary", "", ""},
     {"Groove", "Vary", "Density", "Fifth"},
@@ -224,7 +226,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Algo", "Ratio", "Feedback", "Bite"},
     {"Slot", "Chord", "Type", "Play"},
     {"Lane", "Accent", "Chance", "Play"},
-    {"Energy", "Mixer", "Wet", "Duck"},
+    {"Width", "Mixer", "Wet", "Duck"},
     {"Tempo", "Root", "Mode", "Swing"},
     {"Density", "Vary", "", ""},
     {"Blur", "Tone", "Size", "Cloud"},
@@ -239,7 +241,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
  * rule's 228 px: the host's expect helpfit) */
 static const char *const KNOB_HELP[NVIEWS][4] = {
     {"Sparse and dry, to busy and bright", "How restless: stabs come and go", "How often it leaves Full, and sweeps",
-     "The whole mix mono, to wide"},
+     ""},
     {"Stabs a bar, one to six", "How often a stab is thrown to the echo", "How long a chord lasts",
      "How often the stabs' pattern turns"},
     {"How many notes each loop holds", "How often the loops change", "", ""},
@@ -269,7 +271,7 @@ static const char *const KNOB_HELP[NVIEWS][4] = {
      "Endless, or the slots in a loop"},
     {"The lane you're writing", "How much quieter the other steps", "How likely the lane's steps play",
      "Auto patterns, or your own"},
-    {"Sparse and dry, to busy and bright", "The dub mixer: not yet", "The whole music dry, or drowned",
+    {"The whole mix mono, to wide", "The dub mixer: not yet", "The whole music dry, or drowned",
      "How far each beat pushes the rest down"},
     {"Beats a minute", "The key's root note", "The scale: Minor, Dorian, ...", "Off sixteenths late: the whole groove"},
     {"How many hits ring, in two bars", "How often its groove changes", "", ""},
