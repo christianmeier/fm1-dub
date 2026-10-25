@@ -266,8 +266,8 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Mode", "", "", ""},
     {"Walk", "Change", "", ""},
 };
-/* what each knob does, a line: on the rule above the knobs while it's being turned (in capitals; each fits the
- * rule's 228 px: the host's expect helpfit) */
+/* what each knob does, a line: under the big ring in the middle while it's being turned (each fits 228 px: the
+ * host's expect helpfit) */
 static const char *const KNOB_HELP[NVIEWS][4] = {
     {"Sparse and dry, to busy and bright", "How restless: stabs come and go", "How often it leaves Full, and sweeps",
      ""},
@@ -2188,26 +2188,90 @@ static void draw_battery(int32_t bx)
         cv_rect(bx + 2 + k * 4, 11, 3, 5, c);
 }
 
-/* the header: the piece in a tag, its root and mode; on the right, the tempo with a slow beat light
- * (a play triangle while resting) and a dot while there is something unsaved. Messages take its place
- * for a moment. */
+/* the header (1.4.0, the user's: "where we are" moved up here, read at a glance, the main area's corner free): the
+ * piece in a tag; then the phrase: the section's word (or the song's part: INTRO, OUTRO) and its eight bars as cells,
+ * the B bars (4 and 8) taller, the bar playing lit and flashing white on each beat, the 8th blinking on its bar when
+ * the next phrase brings a change; resting, the cells dim and a play triangle after them. On the right, only what
+ * matters now: the battery when low or charging (Setup: always, with its charge), a dot while unsaved, EXT while an
+ * external clock leads, the red "!" while the master clips; Setup's audio load. In a song, a hairline along the
+ * bottom: the whole song, the intro and the outro tinted, filled as far as it has gone. (The tempo lives on the Key
+ * page, and the big ring shows it as HOME held + SELECT turns it.) Messages take its place for a moment. */
 static int clip_on(uint32_t now);
+static int hdr_song(void) { return en_song_ph != EN_SG_OFF && en_song_be > 0u; }
+static int hdr_batt(void)                        /* the battery shown: on Setup, or low (under 20%), or charging (USB) */
+{
+    if (plat_battery() < 0 && !plat_usb_power())
+        return 0;
+    return ui.view == V_SETUP || plat_usb_power() || batt_pct() < 20;
+}
+static void hdr_phrase(int32_t x0, int32_t x1, uint32_t now)   /* the word and the cells, between x0 and x1 */
+{
+    char t[12];
+    const int song_part = en_song_ph == EN_SG_INTRO || en_song_ph == EN_SG_OUTRO;
+    int32_t tw, cs = 6, gap = 3, cw, x, b;
+    caps(t, en_song_ph == EN_SG_INTRO ? "Intro" : en_song_ph == EN_SG_OUTRO ? "Outro" : EN_SEC_NAME[en_section], sizeof t);
+    tw = text_w(&FONT_XS, t);
+    cw = 8 * cs + 7 * gap;
+    if (x0 + tw + 6 + cw > x1)                    /* (a long name: the cells smaller; then the word left out) */
+        cs = 5, gap = 2, cw = 8 * cs + 7 * gap;
+    if (x0 + tw + 6 + cw > x1)
+        tw = -6;
+    if (x0 + tw + 6 + cw > x1)
+        return;                                   /* (no room at all: Setup's load, a long name) */
+    if (tw > 0)
+        cv_text(x0, 6, &FONT_XS, t, en_section == SEC_FULL && !song_part ? K_DIM : K_ACC);
+    x = x0 + tw + 6;
+    for (b = 0; b < 8; b++) {
+        const int bb = (b == 3 || b == 7) && !ui.lock, lit = en_playing && b <= en_phrase_bar,   /* (Lock: all alike) */
+                  now_b = en_playing && b == en_phrase_bar;
+        uint16_t c = !en_playing ? (bb ? mix(K_BG, K_LINE, 12) : mix(K_BG, K_LINE, 9))
+                   : now_b ? ((en_bars & 3u) == 0u ? K_TEXT : K_ACC)   /* (a white flash on each beat) */
+                   : lit ? (bb ? K_TEXT : K_DIM) : (bb ? K_DIM : K_LINE);
+        if (b == 7 && now_b && en_change_next)
+            c = (now / 200u) & 1u ? K_ACC : K_LINE;
+        cv_round(x + b * (cs + gap), bb ? 8 : 10, cs, bb ? 11 : 9, 1, c);
+    }
+    if (!en_playing) {                            /* resting: a play triangle after them */
+        const int32_t px = x + cw + 7;
+        int32_t j;
+        if (px + 6 <= x1)
+            for (j = 0; j < 5; j++)
+                cv_rect(px + j, 9 + j, 1, 11 - 2 * j, K_DIM);
+    }
+}
+static void hdr_song_line(void)                  /* a song: a hairline along the bottom, its parts, how far it has gone */
+{
+    const float k = 224.0f / (float)en_song_be, at = fm_minf((float)en_bars * (1.0f / 16.0f), (float)en_song_be);
+    const int32_t xi = 8 + (int32_t)((float)en_song_b0 * k + 0.5f), xo = 8 + (int32_t)((float)en_song_bo * k + 0.5f),
+                  xd = 8 + (int32_t)(at * k + 0.5f), y = HDR_H - 1;
+    int32_t x;
+    for (x = 8; x < 232; x++) {
+        const int edge = x < xi || x >= xo, done = x < xd;
+        cv_rect(x, y, 1, 1, edge ? mix(K_BG, K_ACC, done ? 12 : 5) : done ? K_DIM : mix(K_BG, K_LINE, 10));
+    }
+    if (en_song_ph != EN_SG_END)
+        cv_rect(xd - 1 < 8 ? 8 : xd - 1, y - 1, 3, 2, K_TEXT);   /* (where it is) */
+}
 static void draw_header(void)
 {
-    char t[24];
-    int msg = plat_ms() < ui.msg_until && !big_on(plat_ms()) && !oct_ring_on(plat_ms()), clip = clip_on(plat_ms());
+    const uint32_t now = plat_ms();
+    int msg = now < ui.msg_until && !big_on(now) && !oct_ring_on(now), clip = clip_on(now);
                                                  /* (1.4.0, the user's: a ring names itself; the header keeps the
                                                   * piece) */
-    uint32_t h = hash(hash(hash(2166136261u, proj.piece | (uint32_t)proj.par[P_ROOT] << 8 | (uint32_t)proj.pool << 12),
-                           en_playing | ui.dirty << 4 | (uint32_t)msg << 5 | (uint32_t)en_ext << 6 | (uint32_t)proj.par[P_MODE] << 8),
-                      (uint32_t)proj.par[P_TEMPO] | (uint32_t)(ui.view == V_SETUP ? batt_pct() : 0) << 22 | (uint32_t)batt_bars() << 29 | (uint32_t)plat_usb_power() << 31 |
-                      (plat_usb_power() ? (plat_ms() / 600u) % 3u << 7 : 0u) | (ui.view == V_SETUP ? plat_cpu_pct() << 8 | plat_cpu_peak() << 15 |
+    const int song = hdr_song(), batt = hdr_batt();
+    uint32_t h = hash(hash(hash(2166136261u, proj.piece | (uint32_t)ui.view << 8 | (uint32_t)batt << 16),
+                           en_playing | ui.dirty << 4 | (uint32_t)msg << 5 | (uint32_t)en_ext << 6 | (uint32_t)ui.lock << 7),
+                      (uint32_t)(ui.view == V_SETUP ? batt_pct() : 0) << 22 | (uint32_t)batt_bars() << 29 | (uint32_t)plat_usb_power() << 31 |
+                      (plat_usb_power() ? (now / 600u) % 3u << 7 : 0u) | (ui.view == V_SETUP ? plat_cpu_pct() << 8 | plat_cpu_peak() << 15 |
                                                                            (plat_xruns() & 0x1FFu) << 22 : 0u));
+    h = hash(h, (uint32_t)en_section | (uint32_t)en_song_ph << 4 | (uint32_t)en_phrase_bar << 8 | (uint32_t)en_change_next << 12);
     if (msg)
         h = hash(hash(h, (uint32_t)ui.msg[0][0] << 8 | ui.msg[0][1]), ui.msg_until);
     if (en_playing)
-        h = hash(h, (en_bars / 4u) & 1u);
-    h = hash(h, (uint32_t)clip);
+        h = hash(h, (uint32_t)((en_bars & 3u) == 0u) | (en_phrase_bar == 7 && en_change_next ? (now / 200u) & 1u : 0u) << 1);
+    if (song)
+        h = hash(h, (uint32_t)((float)en_bars * (1.0f / 16.0f) * 224.0f / (float)en_song_be) | en_song_be << 12 | en_song_bo << 22);
+    h = hash(h, (uint32_t)clip | (uint32_t)(ui.solo != 0) << 1 | (uint32_t)en_frozen << 2);
     if (h == ui.sig[0])
         return;
     ui.sig[0] = h;
@@ -2217,11 +2281,11 @@ static void draw_header(void)
         cv_text(x + 8, 6, &FONT_B, ui.msg[1], K_ACC);
     } else {
         int32_t x = 232, w;
-        if (plat_battery() >= 0 || plat_usb_power()) {   /* the battery, at the right edge */
+        if (batt) {                              /* the battery, at the right edge, when it matters */
             draw_battery(219);
             x = 213;
         }
-        if (ui.view == V_SETUP && (plat_battery() >= 0 || plat_usb_power())) {   /* Setup: the charge, by the icon */
+        if (ui.view == V_SETUP && batt) {        /* Setup: the charge, by the icon */
             char c[8];
             if (plat_usb_power()) {
                 c[0] = 'U', c[1] = 'S', c[2] = 'B', c[3] = 0;
@@ -2240,14 +2304,6 @@ static void draw_header(void)
             cv_round(x - 5, 12, 5, 5, 2, K_DIM);
             x -= 11;
         }
-        if (en_ext) {
-            t[0] = 'E';
-            t[1] = 'X';
-            t[2] = 'T';
-            t[3] = 0;
-        } else {
-            itoa_u((uint32_t)proj.par[P_TEMPO], t);
-        }
         if (ui.view == V_SETUP) {                 /* Setup: the audio load (now/peak), and any dropouts ("!n") */
             char c[24] = "CPU ";
             uint32_t k;
@@ -2264,30 +2320,37 @@ static void draw_header(void)
             }
             x -= text_w(&FONT_XS, c);
             cv_text(x, 8, &FONT_XS, c, K_DIM);   /* (the leftmost on the right: its changing width moves nothing) */
-            x += 8;                              /* (the clip light's place, as by the beat light) */
-        } else {                                 /* elsewhere: the tempo and the beat light */
-        x -= text_w(&FONT_S, t);
-        cv_text(x, 6, &FONT_S, t, en_playing ? K_TEXT : K_DIM);
-        x -= 16;
-        if (en_playing) {                         /* a slow beat light */
-            int on = ((en_bars / 4u) & 1u) == 0u;
-            cv_round(x, 9, 10, 10, 5, on ? K_PAD : K_PAD_T);
-        } else {
-            int32_t j;                            /* resting: a play triangle */
-            for (j = 0; j < 5; j++)
-                cv_rect(x + 2 + j, 9 + j, 1, 11 - 2 * j, K_DIM);
+            x -= 4;
+        } else if (en_ext) {                      /* an external clock leads: said, small */
+            x -= text_w(&FONT_XS, "EXT");
+            cv_text(x, 8, &FONT_XS, "EXT", K_DIM);
+            x -= 6;
         }
+        {   /* (1.4.0, the user's) dub hold, Lock and a solo: at the right end, in red (SOLO in the clap's colour) */
+            static const char *const W[3] = {"SOLO", "LOCK", "HOLD"};
+            const int on[3] = {ui.solo != 0, ui.lock != 0, en_frozen != 0};
+            int k;
+            for (k = 0; k < 3; k++)
+                if (on[k]) {
+                    x -= text_w(&FONT_XS, W[k]);
+                    cv_text(x, 8, &FONT_XS, W[k], k ? K_FROST : K_CLAP);
+                    x -= 6;
+                }
         }
         if (clip) {                              /* (1.4.0, the user's) the master clipping: a red "!", a second; on
                                                   * a red tag of its own, not Setup's grey "!n" (the dropouts) */
-            const int32_t w = text_w(&FONT_B, "!") + 6;
-            cv_round(x - 6 - w, 5, w, 18, 4, RGB(236, 64, 56));
-            cv_text(x - 6 - w + 3, 6, &FONT_B, "!", K_TEXT);
+            const int32_t cw = text_w(&FONT_B, "!") + 6;
+            cv_round(x - 2 - cw, 5, cw, 18, 4, RGB(236, 64, 56));
+            cv_text(x - 2 - cw + 3, 6, &FONT_B, "!", K_TEXT);
+            x -= cw + 6;
         }
         w = text_w(&FONT_B, piece_name(proj.piece)) + 12;   /* the piece, in a coral tag */
         cv_round(4, 4, w, 20, 6, K_TEXT);
         cv_text(10, 6, &FONT_B, piece_name(proj.piece), K_BG);
         /* (1.4.0, the user's: the piece's name alone; its key on the Key page) */
+        hdr_phrase(4 + w + 10, x - 6, now);       /* then where we are */
+        if (song)
+            hdr_song_line();
     }
     cv_blit(0, 0);
 }
@@ -3799,90 +3862,11 @@ static void draw_card(uint32_t now)
     text_c(CX, y + 28, &FONT_XS, ui.card_text, tc);
 }
 
-/* the corners of the main screen: the phrase's section and its eight bars, the way to the next chord (top left); the
- * page's name, SOLO, hold and lock (top right) */
-static int32_t draw_page_pos(void)               /* under the page's name, in grey, level with the bar cells: "2/3"
-                                                  * (none on a page alone); its left edge back (232: none) */
+static void draw_where(uint32_t now)           /* (1.4.0, the user's: the main area's corners free for the pictures:
+                                                  * the section, its bars and the song in the header; the page's name and
+                                                  * its place on the knobs' rule; hold, lock and SOLO in the header) */
 {
-    int n, m;
-    char t[6];
-    page_pos(ui.view, &n, &m);
-    if (m < 2)
-        return 232;
-    t[0] = (char)('0' + n), t[1] = '/', t[2] = (char)('0' + m), t[3] = 0;
-    cv_text(232 - text_w(&FONT_XS, t), 16, &FONT_XS, t, K_DIM);
-    return 232 - text_w(&FONT_XS, t);
-}
-static void draw_where(uint32_t now)
-{
-    {   /* top left: the phrase's section and its eight bars; under it, the mode the keys are in */
-        char t[12];
-        int b;
-        caps(t, en_song_ph == EN_SG_INTRO ? "Intro" : en_song_ph == EN_SG_OUTRO ? "Outro" : EN_SEC_NAME[en_section],
-             sizeof t);                          /* (1.4.0: a song's intro and outro, by name) */
-        {   /* (1.4.0) a dark ground under them: the rings reach the screen's sides now, behind */
-            const int32_t tw = text_w(&FONT_XS, t) + 8;
-            cv_round(4, 0, tw > 48 ? tw : 48, en_song_ph != EN_SG_OFF && en_song_be ? 37 : 33, 4, K_BG);
-        }
-        cv_text(8, 2, &FONT_XS, t, en_section == SEC_FULL && (en_song_ph != EN_SG_INTRO && en_song_ph != EN_SG_OUTRO)
-                                       ? K_DIM : K_ACC);
-        for (b = 0; b < 8; b++) {                /* (1.3.0: bars 4 and 8, the B bars, whiter; the 8th blinking on its
-                                                  * bar when the next phrase brings a change) */
-            const int bb = (b == 3 || b == 7) && !ui.lock, lit = en_playing && b <= en_phrase_bar,   /* (Lock: all alike) */
-                      now_b = en_playing && b == en_phrase_bar;
-            uint16_t c = now_b ? K_ACC : lit ? (bb ? K_TEXT : K_DIM) : (bb ? K_DIM : K_LINE);   /* (B bars: ahead, as
-                                                  * bright as one played; 1.4.0, the user's: a cell a bar, the one
-                                                  * playing lit) */
-            if (b == 7 && en_playing && en_phrase_bar == 7 && en_change_next)
-                c = (now / 200u) & 1u ? K_ACC : K_LINE;
-            cv_round(9 + b * 5, 21, 4, 6, 1, c);
-            if (bb)                              /* (the B bars: a tick over them) */
-                cv_rect(9 + b * 5, 19, 4, 1, lit ? K_TEXT : K_DIM);
-        }
-        if (!en_frozen && en_drift_bars(proj.par[P_DRIFT])) {   /* under them, the way to the next chord (Drift) */
-            int32_t f = (int32_t)(en_drift * 39.0f + 0.5f);
-            cv_rect(9, 29, 39, 1, K_LINE);
-            if (f > 0)
-                cv_rect(9, 29, f, 1, K_PAD);
-        }
-        if (en_song_ph != EN_SG_OFF && en_song_be) {   /* (1.4.0, the user's) under them, the song: its whole length a
-                                                  * thin line, the intro and the outro marked, a dot where it is */
-            const float k = 39.0f / (float)en_song_be, at = (float)en_bars * (1.0f / 16.0f);
-            const int32_t xi = 9 + (int32_t)((float)en_song_b0 * k + 0.5f), xo = 9 + (int32_t)((float)en_song_bo * k + 0.5f),
-                          xd = 9 + (int32_t)(fm_minf(at, (float)en_song_be) * k + 0.5f);
-            cv_rect(9, 33, xi - 9, 1, mix(K_BG, K_ACC, 9));
-            cv_rect(xi, 33, xo - xi, 1, K_LINE);
-            cv_rect(xo, 33, 48 - xo, 1, mix(K_BG, K_ACC, 9));
-            cv_rect(xi, 32, 1, 3, K_DIM), cv_rect(xo, 32, 1, 3, K_DIM);
-            cv_rect(xd - 1, 32, 3, 3, en_song_ph == EN_SG_END ? K_DIM : K_TEXT);
-        }
-    }
-    {   /* (1.3.0) top right: the page's name (PERFORM's too); to its left, LOCK and SOLO while on */
-        char pn[16];
-        int32_t x;
-        caps(pn, view_name(ui.view), sizeof pn);
-        x = 232 - text_w(&FONT_B, pn);
-        cv_round(x - 4, 0, 240 - x, 30, 4, K_BG);   /* (1.4.0: its ground, the rings behind; the place, n/m, on it) */
-        cv_text(x, 1, &FONT_B, pn, K_ACC);       /* (1.4.0, the user's: level with the section's word, its baseline) */
-        /* (1.4.0, the user's: the round's dots under it gone; SELECT doesn't circle the pages any more) */
-        if (ui.solo) {                           /* (a solo on, in PERFORM or kept after it) */
-            x -= 6 + text_w(&FONT_XS, "SOLO");
-            cv_text(x, 2, &FONT_XS, "SOLO", K_CLAP);
-        }
-    }
-    {   /* under the page's name, level with the bar cells: its place ("2/4"), and to its left dub hold ("hold") and
-         * Lock ("lock"), alike, in red */
-        int32_t x = draw_page_pos();
-        if (x < 232)
-            x -= 6;
-        if (en_frozen) {
-            x -= text_w(&FONT_XS, "hold");
-            cv_text(x, 16, &FONT_XS, "hold", K_FROST);
-            x -= 6;
-        }
-        if (ui.lock)
-            cv_text(x - text_w(&FONT_XS, "lock"), 16, &FONT_XS, "lock", K_FROST);
-    }
+    (void)now;
 }
 static uint32_t where_sig(uint32_t h)            /* (what they show, for a redraw) */
 {
@@ -4154,12 +4138,6 @@ static void draw_main(void)
             ui.sig[1] = h;
             cv_begin(240, MAIN_H, K_BG);
             draw_slots();
-            {   /* (1.4.0, the user's) its name top right, as the other pages' */
-                char pn[16];
-                caps(pn, view_name(ui.view), sizeof pn);
-                cv_text(232 - text_w(&FONT_B, pn), 1, &FONT_B, pn, K_ACC);
-            }
-            (void)draw_page_pos();
             draw_big(now);
             cv_blit(0, MAIN_Y);
         }
@@ -4364,13 +4342,16 @@ static void draw_knobs(void)
         return;
     ui.sig[2] = h;
     cv_begin(240, KNB_H, K_BG);
-    {   /* the rule; at its right end, where you are: the page, then the dots */
-        char t[12];
-        int k;
-        int32_t xd = 237 - NROUND * 6, xt;
-        int32_t x0 = 4;
-        if (view_voice(ui.view) >= 0 || ui.view == V_CHORDS || noise_page(ui.view)) {   /* a layer's page: its voice, at the rule's start;
-                                                                   * the Chords page: the walk's; Noise: its character */
+    {   /* the rule (1.4.0, the user's): at its left, where you are: the page's name in the accent and its place in
+         * grey ("CHORD VOICE 2/4"); at its right, the page's voice (the kit, the noise's character, the walk, the
+         * LFO's destination); always (the user's: a knob's help line is the big ring's, in the middle) */
+        char t[12], pn[20];
+        int32_t xl, xr = 234;
+        int n, m;
+        caps(pn, view_name(ui.view), sizeof pn);
+        t[0] = 0;
+        if (view_voice(ui.view) >= 0 || ui.view == V_CHORDS || noise_page(ui.view)) {   /* a layer's page: its voice; the
+                                                  * Chords page: the walk's; Noise: its character */
             char vn[12];
             if (ui.view == V_CHORDS || noise_page(ui.view) || ui.view == V_CLFO) {
                 const char *w = ui.view == V_CLFO ? EN_CLDEST_NAME[proj.par[P_CLDEST] % EN_NCLDEST]
@@ -4388,21 +4369,26 @@ static void draw_knobs(void)
                 en_param_text(view_voice(ui.view), proj.par[view_voice(ui.view)], vn);
             }
             caps(t, vn, sizeof t);
-            x0 = cv_text(6, -1, &FONT_XS, t, K_DIM) + 5;
         }
-        if (now_touch && ui.touched >= 0 && ui.touched < 4 && !fm_knob_off(ui.view, ui.touched) &&
-            !big_on(plat_ms())) {   /* a knob turning (no big ring: the Chords, the Pattern pages): what it does, the rule's
-                                                                          * whole width */
-            char hp[48];
-            caps(hp, KNOB_HELP[ui.view][ui.touched], sizeof hp);
-            cv_rect(0, 0, 240, 12, K_BG);
-            xt = cv_text(6, -1, &FONT_XS, hp, K_TEXT) + 5;
-            if (xt < 234)
-                cv_rect(xt, 5, 234 - xt, 1, K_LINE);
-        } else {
-            xt = 234;                            /* (1.3.0: the page's name and its dots top right now; here the rule) */
-            cv_rect(x0, 5, xt - x0, 1, K_LINE);
-            (void)xd, (void)k;
+        {
+            xl = cv_text(6, -1, &FONT_XS, pn, K_ACC);
+            page_pos(ui.view, &n, &m);
+            if (m > 1) {
+                char d[6];
+                d[0] = (char)('0' + n), d[1] = '/', d[2] = (char)('0' + m), d[3] = 0;
+                xl = cv_text(xl + 5, -1, &FONT_XS, d, K_DIM);
+            }
+            xl += 5;
+            if (t[0]) {                           /* (the voice at the right, if it fits: else left out) */
+                const int32_t tw = text_w(&FONT_XS, t);
+                if (234 - tw - 10 >= xl) {
+                    xr = 234 - tw;
+                    cv_text(xr, -1, &FONT_XS, t, K_DIM);
+                    xr -= 5;
+                }
+            }
+            if (xr > xl)
+                cv_rect(xl, 5, xr - xl, 1, K_LINE);
         }
     }
     for (i = 0; i < 4; i++) {
