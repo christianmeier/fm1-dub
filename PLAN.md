@@ -958,13 +958,19 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   answering after 562 requests" (about half the package), the screen blank (the loader's), then "FM-1 not found";
   unplugging and replugging the USB and installing again finished it. To look into: why the loader stopped
   mid-write (a USB drop? the loader's USB poll, its retries), and whether the installer could reconnect by itself.
-- **The knobs without numbers** (the user, 2026-10-25; to prototype after dub-1.4-rule lands, the same code): the
+- **The knobs without numbers** (the user, 2026-10-25; **prototyped**, branch dub-1.4-knobs: the rule below; with
+  the big ring's panel, the user's: "more conspicuous ... a rectangle with semi-transparent background"): the
   continuous knobs (0-100, centred) lose their number (the ring shows it; the big ring gives it exactly while
   turning), their rings bigger (r 12 -> ~15, a thicker arc), the knob names brighter (white) and a size up; the knobs
   whose value is a word or a unit keep it (Wander, Endless, 64 bars, Four, Minor, LP 800 Hz, Rate 4 bars, To Reso);
   centred knobs a small mark at the ring's top (the 0); a **peek**: the numbers shown ~1.5 s when a page opens, then
   fading (the encoders can't be read without moving them); a Setup option to keep the numbers always (with the aids'
-  switch); the reader unchanged.
+  switch); the reader unchanged. Built: a ring's number hidden unless it's a number alone (digits, a sign, %): the
+  switches (pips) and words/units always shown; the rings r 14, 4.2 thick (were 12, 3.4); the names white, FONT_S where
+  they fit 56 px; a centred knob's 0 a tick over its ring; the peek 1.5 s fading 0.3 s on every page change; Setup's
+  second page KNOB 2 **Values** (Peek, Always), proj.values in the project's reserved byte (no format step). The big
+  rings (a knob's, the level's) on a panel: a rounded rectangle under the ring, its name and its help, what's behind
+  darkened to a quarter (cv_shade, only while it shows), a thin edge in its colour.
 - **A dub siren engine with more options** (the user, 2026-10-25: "to the list"). Today's Siren (the grid's effect 14,
   white key G5 on the Arrangement page) is one fixed voice: a square-ish tone swept ±1.3 octaves round 480 Hz by a
   0.8 Hz triangle, faded in over 20 ms and out over 150 ms, into the mix. A proper dub siren (the NJD / "dub siren"
