@@ -79,6 +79,13 @@ static void cv_band(int32_t y0, int32_t h)
     cv_y1 = y0 + h;
 }
 
+/* (1.4.0) draw only into rows y0 .. y1-1 of the canvas (the pictures kept off the lanes); cv_clip(0, cv_h) undoes it */
+static void cv_clip(int32_t y0, int32_t y1)
+{
+    cv_y0 = cv_oy + y0;
+    cv_y1 = cv_oy + y1;
+}
+
 static void cv_blit(uint32_t x, uint32_t y) { lcd_blit(x, y, cv_w, cv_h, cv_px); }
 
 /* canvas rows r0 .. cv_h-1 only, to screen row y + r0 */

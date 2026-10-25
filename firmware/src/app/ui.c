@@ -2170,8 +2170,10 @@ static void draw_header(void)
 #define CX 120
 #define CY 48
 #define RIP_N 10
-#define RIP_R 46                                 /* a ring is gone by this radius */
-#define RIP_V 0.04f                              /* px a millisecond: ~1.3 s across */
+#define RIP_R 124                                /* a ring is gone by this radius (1.4.0, the user's: the screen's sides
+                                                  * free, the rings out to them; was 46) */
+#define RIP_V 0.068f                             /* px a millisecond: ~1.8 s to the sides */
+#define PIC_Y1 90                                /* (1.4.0) the pictures' last row + 1: the lanes below kept clear */
 #define RIP_K 8                                  /* a ring and up to seven repeats */
 #define RIP_W 64                                 /* a ring's outline: the sound's wave, round the circle */
 static struct {
@@ -2350,7 +2352,7 @@ static void wave_ring(float r, const float *w, float d, uint16_t c)
     if (cs[0] == 0.0f)
         for (j = 0; j < RIP_W; j++)
             cs[j] = fm_cosf(6.2831853f * (float)j / RIP_W), sn[j] = fm_sinf(6.2831853f * (float)j / RIP_W);
-    d *= fm_minf(r * (1.0f / 14.0f), 1.0f);
+    d *= fm_minf(r * (1.0f / 14.0f), 1.0f) * (1.0f + r * (1.0f / 70.0f));   /* (deeper as they grow: 1.4.0) */
     for (j = 0; j <= RIP_W; j++) {
         float rr = r + d * w[j % RIP_W];
         x1 = CX + (int32_t)(rr * cs[j % RIP_W] + 0.5f);
@@ -2425,11 +2427,11 @@ static void specks_take(uint32_t now)
         spk_rng = spk_rng * 1664525u + 1013904223u;
         a = (float)(spk_rng >> 8) * (6.2831853f / 16777216.0f);
         spk_rng = spk_rng * 1664525u + 1013904223u;
-        r = 10.0f + 34.0f * (float)(spk_rng >> 8) * (1.0f / 16777216.0f);
+        r = 12.0f + 84.0f * (float)(spk_rng >> 8) * (1.0f / 16777216.0f);   /* (1.4.0: out to the sides) */
         p = (float)en_nev_p[spk_r % EN_NEV_N] * (1.0f / 255.0f) - 0.5f;
         spk[o].t0 = now | 1u;
-        spk[o].x = (int16_t)(CX + (int32_t)(r * fm_cosf(a) + 40.0f * p));
-        spk[o].y = (int16_t)(CY + (int32_t)(r * 0.8f * fm_sinf(a)));
+        spk[o].x = (int16_t)(CX + (int32_t)(r * fm_cosf(a) + 60.0f * p));
+        spk[o].y = (int16_t)(CY + (int32_t)(r * 0.44f * fm_sinf(a)));
         spk[o].k = en_nev_k[spk_r % EN_NEV_N];
         spk[o].s = en_nev_s[spk_r % EN_NEV_N];
     }
@@ -2457,8 +2459,8 @@ static void draw_orbits(void)                    /* the ping loops, around the r
     int i;
     for (i = 0; i < EN_NLOOP; i++) {             /* (a loop a step a turn's step; the loops of unequal length) */
         float a = 6.2831853f * (float)en_loop_pos[i] / (float)EN_LOOP_LEN[i] - 1.5707963f + (float)i * 1.9f,
-              rr = 24.0f + 6.0f * (float)i, g = en_loop_glow[i];
-        int32_t x = CX + (int32_t)(rr * fm_cosf(a) + 0.5f), y = CY + (int32_t)(rr * fm_sinf(a) + 0.5f);
+              rr = 30.0f + 13.0f * (float)i, g = en_loop_glow[i];   /* (1.4.0: wider, flattened: the room's to the sides) */
+        int32_t x = CX + (int32_t)(rr * fm_cosf(a) + 0.5f), y = CY + (int32_t)(0.6f * rr * fm_sinf(a) + 0.5f);
         if (!en_playing)
             g = 0.0f;
         cv_disc(x, y, g > 0.5f ? 3 : 2, mix(mix(K_BELL_T, K_BELL, 5), K_BELL, q16(g * 1.3f)));
@@ -2468,10 +2470,11 @@ static void draw_orbits(void)                    /* the ping loops, around the r
 /* the middle as a scope: the output (mono), from a rising zero crossing so it stands, a thick line with a
  * glow over the two traces before it, fading; its height following the level shown (the gain rises for a
  * quiet moment) */
-#define SC_X 56
-#define SC_W 128
-#define SC_Y 58
-#define SC_H 26
+#define SC_X 8                                   /* (1.4.0, the user's: nearly the screen's width; was 128 wide at 56) */
+#define SC_W 224
+#define SC_Y 59
+#define SC_H 28
+#define SC_STEP 0.75f                            /* (samples a pixel: 168 of the 256 shown, room left to find a crossing) */
 static void draw_scope(void)
 {
     static int16_t s[EN_SCOPE_N];
@@ -2483,12 +2486,12 @@ static void draw_scope(void)
     int32_t x;
     for (i = 0; i < EN_SCOPE_N; i++)             /* (the oldest first) */
         s[i] = en_scope[(w + (uint32_t)i) & (EN_SCOPE_N - 1u)];
-    for (i = 2; i < EN_SCOPE_N - SC_W; i++)
+    for (i = 2; i < EN_SCOPE_N - (int)(SC_W * SC_STEP) - 2; i++)
         if (s[i - 1] < 0 && s[i] >= 0 && s[i + 1] - s[i - 2] > 200) {
             t0 = i;
             break;
         }
-    for (x = 0; x < SC_W; x++)
+    for (x = 0; x < (int32_t)(SC_W * SC_STEP); x++)
         m = s[t0 + x] > m ? s[t0 + x] : -s[t0 + x] > m ? -s[t0 + x] : m;
     gain += (fm_minf(0.85f * 32000.0f / (float)(m > 600 ? m : 600), 30.0f) - gain) * 0.25f;
     for (x = 0; x <= SC_W; x += 4)               /* the graticule: the middle dotted, ticks along the edges */
@@ -2501,7 +2504,9 @@ static void draw_scope(void)
         for (x = 1; x < SC_W; x++)
             line(SC_X + x - 1, SC_Y - was[i][x - 1], SC_X + x, SC_Y - was[i][x], ph[i]);
     for (x = 0; x < SC_W; x++) {
-        float v = (float)s[t0 + x] * (1.0f / 32000.0f) * gain;
+        const float u = (float)x * SC_STEP, f = u - (float)(int)u;
+        const int k = t0 + (int)u;
+        float v = ((float)s[k] + f * (float)(s[k + 1] - s[k])) * (1.0f / 32000.0f) * gain;
         was[1][x] = was[0][x];
         was[0][x] = (int8_t)(fm_clampf(v, -1.0f, 1.0f) * (float)SC_H + (v < 0.0f ? -0.5f : 0.5f));
     }
@@ -2521,8 +2526,10 @@ static void draw_scope(void)
  * in 18 bands a third of an octave or more wide, 43 Hz to 11 kHz; each a column of segments, teal low, brass,
  * amber, red at the top, rising at once and falling slowly, a cap held at its peak a moment */
 #define SP_NB 18
-#define SP_X 58
-#define SP_BOT 86
+#define SP_X 13                                  /* (1.4.0, the user's: nearly the screen's width; was 126 wide at 58) */
+#define SP_PITCH 12                              /* (a band's column and its gap) */
+#define SP_BW 10
+#define SP_BOT 88
 #define SP_SEG 18                                /* segments a column, 3 px each */
 static void fft512(float *re, float *im)         /* in place, radix 2 */
 {
@@ -2571,7 +2578,7 @@ static void draw_spec(void)
     fft512(re, im);
     for (b = 0; b < SP_NB; b++) {
         float pw = 1e-9f, db, f;
-        int32_t x = SP_X + b * 7, n;
+        int32_t x = SP_X + b * SP_PITCH, n;
         for (i = EDGE[b]; i < EDGE[b + 1]; i++)
             pw += re[i] * re[i] + im[i] * im[i];
         db = 3.0103f * fm_log2f(pw) - 42.1f + 1.5f * (float)b;   /* dB of full scale, tilted up 1.5 dB a band */
@@ -2592,10 +2599,10 @@ static void draw_spec(void)
             uint16_t c = g >= SP_SEG - 3 ? K_FROST : g >= SP_SEG * 2 / 3 ? K_PULSE : g >= SP_SEG / 3 ? K_BASS : K_PAD;
             if (en_frozen)
                 c = K_FROST;
-            cv_rect(x, SP_BOT - 3 * g - 2, 6, 2, g < n ? c : g == 0 ? K_LINE : K_BG);
+            cv_rect(x, SP_BOT - 3 * g - 2, SP_BW, 2, g < n ? c : g == 0 ? K_LINE : K_BG);
         }
         if (cap[b] > 0.03f)
-            cv_rect(x, SP_BOT - 3 * (int32_t)(cap[b] * (float)SP_SEG + 0.5f) - 1, 6, 1, K_TEXT);
+            cv_rect(x, SP_BOT - 3 * (int32_t)(cap[b] * (float)SP_SEG + 0.5f) - 1, SP_BW, 1, K_TEXT);
     }
 }
 
@@ -3646,6 +3653,10 @@ static void draw_where(uint32_t now)
         int b;
         caps(t, en_song_ph == EN_SG_INTRO ? "Intro" : en_song_ph == EN_SG_OUTRO ? "Outro" : EN_SEC_NAME[en_section],
              sizeof t);                          /* (1.4.0: a song's intro and outro, by name) */
+        {   /* (1.4.0) a dark ground under them: the rings reach the screen's sides now, behind */
+            const int32_t tw = text_w(&FONT_XS, t) + 8;
+            cv_round(4, 0, tw > 48 ? tw : 48, en_song_ph != EN_SG_OFF && en_song_be ? 37 : 33, 4, K_BG);
+        }
         cv_text(8, 2, &FONT_XS, t, en_section == SEC_FULL && (en_song_ph != EN_SG_INTRO && en_song_ph != EN_SG_OUTRO)
                                        ? K_DIM : K_ACC);
         for (b = 0; b < 8; b++) {                /* (1.3.0: bars 4 and 8, the B bars, whiter; the 8th blinking on its
@@ -3684,6 +3695,7 @@ static void draw_where(uint32_t now)
         int32_t x;
         caps(pn, view_name(ui.view), sizeof pn);
         x = 232 - text_w(&FONT_B, pn);
+        cv_round(x - 4, 0, 240 - x, 30, 4, K_BG);   /* (1.4.0: its ground, the rings behind; the place, n/m, on it) */
         cv_text(x, 1, &FONT_B, pn, K_ACC);       /* (1.4.0, the user's: level with the section's word, its baseline) */
         /* (1.4.0, the user's: the round's dots under it gone; SELECT doesn't circle the pages any more) */
         if (ui.solo) {                           /* (a solo on, in PERFORM or kept after it) */
@@ -3836,12 +3848,14 @@ static void draw_main(void)
         moving = 1;
     } else {
         specks_take(now);
+        cv_clip(0, PIC_Y1);                      /* (1.4.0: the rings out to the sides, above the lanes) */
         moving = rip_src < 0 || rip_src == 4 ? (uint8_t)draw_specks(now) : 0;   /* (the noise, under the rings: on
                                                   * the whole, and alone on the Noise pages: they follow HOME's screen
                                                   * as the others do, 1.4.0) */
         moving |= (uint8_t)draw_ripples(now);
         if (rip_src < 0 || rip_src == 1)         /* (the ping loops: on the whole, and the Pings page) */
             draw_orbits();
+        cv_clip(0, MAIN_H);
     }
     const int named = (parent_of(ui.view) < 0 || scr_layer(ui.view) >= 0) && !lfo_page(ui.view);   /* (a sound page:
                                                   * as its layer's; the LFO pages: the trace there) */
