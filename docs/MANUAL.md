@@ -448,7 +448,9 @@ GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
     three heads: the record head lit with the output, the play head with the echo coming back. The
     reels turn with the tempo, the smaller one faster. Through a song the tape winds from the left reel
     to the right one, so the reels show where the song is; in Endless it winds back and forth over 128
-    bars.
+    bars. Its counter shows what no other screen does: at the left, where the song is (INTRO, MAIN,
+    OUTRO, or ENDLESS) and the bars left of that part; at the right, the time since PLAY (minutes and
+    seconds) and, in a song, its whole length at this tempo ("OF 7:20").
 - The levels in full and the duck are on the Arrangement page (SEL), on its meters; the other pages
   show a short meter at each lane's left (since 1.4.0; the duck meter is the Arrangement page's).
 - **The lanes** (Form, Dub, Echo, Setup, Key): the bar as it plays, sixteen steps, seven rows, top to
