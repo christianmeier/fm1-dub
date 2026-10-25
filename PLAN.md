@@ -895,6 +895,19 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   25, Steppers 20, Pressure 30, Concrete 35, Chamber 45, Night Drive 55, Fog and Haze 60. Host CPU unchanged; RAM
   +552 B. Renders: build/mixer/ (Fog and Basic at 0, the recipe's, 100). To judge by ear: the rates, the depths,
   how often a part leaves.
+- **The variety study, its first step** (the user, 2026-10-25: "the first step is cheap, let's do it";
+  build/variety/REPORT-variety.md, build/design/REPORT-variety1.md): no format step, no knob moved.
+  - **Energy leans, it doesn't lock:** past -25 a Groove Motion picks comes as a Thin, past +25 a Break as a Groove;
+    Motion's sections work at any Energy (it fixed the phrases Thin or Full before).
+  - **The filter's sweep the slow movement's, not Motion's:** its depth (and the stabs' filter's, the echo heads',
+    the band-pass's wander) from the chord LFO's Drift and Depth (0.015 a point of Drift, 0.005 of Depth, to 1; a
+    Break 0.6 at least, a Thin 0.4, a Groove 0.3, eased over two bars); a Full's sweep a new place every 4-14 bars,
+    off the phrase's line (it was redrawn on every phrase's first bar). Motion is the arrangement alone.
+  - **The recipes against their models** (the suite's measures, two seeds, before/after in the report): the loop
+    calmer (Fog, Pressure, Haze, Chamber, Basic, Night Drive), the sound moving more (Drift, Depth, Mixer up), Change
+    64 bars on Concrete and Haze (32 on Night Drive).
+  - **Pending, for discussion:** the bigger proposal (Vary, Drift, Motion on the Form page; the layer Varys as trims;
+    the kick's short drop-outs).
 - **Bigger visualisations** (the user, 2026-10-24; a plan, after the song structure's own display is decided): with
   the strips gone and the header freed, the middle's pictures can grow. The ripples further up and to the sides,
   the deepest layer (whatever is on top covers them: the section and bar cells, the page's name, the big ring, the
@@ -1018,7 +1031,8 @@ loop held, the kick never leaving, an echo you hear, movement by hand rather tha
   - **Hits** (Drums): 15 (the open hat comes in, on the off-beats), 40 (two more), 70 (the rim on two and four).
   - **Kick density** (Drums sound / Drums): 90 (from here four in every Full bar) and the ladder's shapes at 25, 50,
     75 (one, half, ghosted: where the draw centres).
-  - **Energy** (PERFORM): -25 (from here the next phrase Thin) and +25 (Full, with a fill into it).
+  - **Energy** (PERFORM): -25 (from here a Groove comes as a Thin) and +25 (a Break as a Groove; the variety study: it
+    no longer fixes the phrases).
   - **Notes** (Bass): 30 (under it the B bars never fill).
   - **Evolve** (Dub): 40 (the playing as loose as it gets; past it only the change's rate rises).
   - Not for smooth knobs (levels, Feedback, Width): their notch (0) or nothing.
