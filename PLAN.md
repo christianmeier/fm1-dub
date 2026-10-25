@@ -947,6 +947,15 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   answering after 562 requests" (about half the package), the screen blank (the loader's), then "FM-1 not found";
   unplugging and replugging the USB and installing again finished it. To look into: why the loader stopped
   mid-write (a USB drop? the loader's USB poll, its retries), and whether the installer could reconnect by itself.
+- **A dub siren engine with more options** (the user, 2026-10-25: "to the list"). Today's Siren (the grid's effect 14,
+  white key G5 on the Arrangement page) is one fixed voice: a square-ish tone swept ±1.3 octaves round 480 Hz by a
+  0.8 Hz triangle, faded in over 20 ms and out over 150 ms, into the mix. A proper dub siren (the NJD / "dub siren"
+  boxes): its own page or a hold-page, with the classic controls: **Pitch**, **LFO Rate**, **LFO Depth**, **LFO shape**
+  (triangle, square for the two-tone "nee-naw", ramp up / down for the rising and falling "whoop"), the **wave**
+  (square, saw, sine), **Decay / release** (the tail as the key lets go, the pitch falling with it, the classic sound),
+  maybe a **second oscillator** or a sub; how it's triggered (held, one-shot, repeat in time); and its send into the
+  echo (sirens live in the echo: a high send, the feedback pushed). To design with the user: where its knobs live
+  (a Siren page under FX? a hold on its key?), presets, the CPU (one voice, cheap).
 - **Requests from a user, Robert** (GitHub issue, 2026-10-25, "Not an Issue, more of a request list"; 1.4.0
   candidates, the user's: add them):
   1. **A filter per part** ("separate filter for each voice and drum section"): each strip's KNOB 4, Low cut, becomes
