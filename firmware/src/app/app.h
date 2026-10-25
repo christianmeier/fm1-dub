@@ -10,7 +10,11 @@
 #define EN_VERSION "DEV"
 #endif
 #define PROJ_MAGIC 0x31425544u           /* "DUB1": AMB-1's projects ("ENO1") give the recipes */
-#define PROJ_FORMAT 27u                  /* 27: the virtual dub mixer (P_MIXER, each piece's; 8-26 read, it
+#define PROJ_FORMAT 28u                  /* 28: Robert's: each strip's Low cut a centred Filter (P_CLOW .. P_NLOW,
+                                         * P_KLOW, -50..+50: left a low-pass, right a high-pass; 27's 0..100
+                                         * converted to the high-pass's same cutoff), five Japanese scales (P_MODE's
+                                         * range), the tempo from 40 BPM; 27 read;
+                                         * 27: the virtual dub mixer (P_MIXER, each piece's; 8-26 read, it
                                          * from the recipes);
                                          * 26: song structure (P_SMODE, the player's, global as Tune: Endless;
                                          * each piece's Intro, Main, Outro and Kind, P_SINTRO .. P_SKIND; 8-25 read,

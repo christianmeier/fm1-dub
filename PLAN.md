@@ -974,20 +974,28 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   maybe a **second oscillator** or a sub; how it's triggered (held, one-shot, repeat in time); and its send into the
   echo (sirens live in the echo: a high send, the feedback pushed). To design with the user: where its knobs live
   (a Siren page under FX? a hold on its key?), presets, the CPU (one voice, cheap).
-- **Requests from a user, Robert** (GitHub issue, 2026-10-25, "Not an Issue, more of a request list"; 1.4.0
-  candidates, the user's: add them):
-  1. **A filter per part** ("separate filter for each voice and drum section"): each strip's KNOB 4, Low cut, becomes
-     a centred **Filter** as the DJ filter: left a low-pass closing, right a high-pass opening, the middle off (no
-     cost there); today's Low cut values to the right half (a format step). CPU checked with all six on.
-  2. **Japanese scales** (5-note, as Pent maj and Pent min already are): Hirajoshi (1 2 b3 5 b6), In / Miyako-bushi
-     (1 b2 4 5 b6), Iwato (1 b2 4 b5 b7), Yo (1 2 4 5 6), Insen (1 b2 4 5 b7); names of 8 characters; the walk's
-     chords from them checked by ear (the half-step ones give clustered chords: a rule if needed); the Mode knob's
-     range (a format step).
-  3. **Slower tempos** ("down to 20 BPM or even lower"): today 90-140; down to about 40 BPM, the echo's synced times
-     that would pass its tape (5.6 s at TAPE_SR) capped at the longest that fits, the screen showing the real echo
-     time; the kick's and the bass's envelopes, the bar-counted timings (Mixer, LFOs, song) checked at slow tempos.
-     The floor (40, or lower with the echo capped) to confirm with the user.
-  A reply drafted for the user to post (build/design/REPLY-robert.md).
+- **Requests from a user, Robert** (GitHub issue, 2026-10-25, "Not an Issue, more of a request list"; the user's:
+  "build the filter and scales, but I'm afraid of the CPU cost; floor at 40 BPM"). **Built** (dub-1.4-robert, format
+  28; build/design/REPORT-robert.md):
+  1. **A filter per part**: each strip's KNOB 4, the Low cut, a centred **Filter** (P_CLOW .. P_NLOW, P_KLOW,
+     -50..+50): 0 off and not run; right a high-pass, 6 dB, the Low cut's own one-pole (bit for bit), 20 Hz at +1 ..
+     2.5 kHz at +50 (the old 600 Hz near +36); left a low-pass, 12 dB (two one-poles), 18 kHz at -1 .. 200 Hz at -50;
+     before the sends (the echo and plate filtered too), the rumble fed from before it; the noise's low-pass in its own
+     filters (as its LFO's: free). Shown "Off", "LP 800", "HP 2.5k". Host CPU, the best of 3 on all 8 pieces: off
+     +0% (bit for bit); one filter on, up to ~2% (noise +-1.5%); all six on: the high-pass +0.6..+4.7%, the
+     low-pass +1.3..+6.0%. The policy for the worst: while the engine sheds (en_load past 75%), the low-pass drops to
+     its 6 dB stage (as cheap as the high-pass), the 12 dB back without a step. 27's Low cut read as the high-pass's
+     same cutoff (a step's 0.07 octave at most).
+  2. **Japanese scales**: Hirajoshi (shown "Hirajosh"), In, Iwato, Yo, Insen, after the pentatonics (P_MODE 8..12,
+     last in the Mode knob's order); their chords stacked in fourths as the pentatonics'; a five-note scale's half-step
+     never two neighbouring voices in a stab (the upper an octave up: a minor ninth); the pentatonics unchanged.
+  3. **Slower tempos**: 40-140 BPM; the echo already kept to its tape (5.6 s): under ~43 BPM a bar's echo stays at
+     5.6 s, the Dub page showing "5.6 s"; the grid's rate checked at 40, 60 and 90. Not changed: Stutter catches 160
+     ms (its buffer), less than a sixteenth under ~94 BPM, as before.
+  A reply drafted for the user to post (build/design/REPLY-robert.md). Open: the 12 dB low-pass and the policy to
+  try on the FM-1 (the device's own load with all six on); a resonance near the extremes (the brief's "DJ
+  filter's character") not built: a one-pole has none, an SVF a part would cost ~5% each (the noise's, measured
+  earlier).
 - **Hardware and installer** (the user, 2026-10-25; from build/design/REPORT-reddit.md: u/ZenLegume's r/MVaveFM1 post
   "All right stop, collaborate and listen", its comments and the repos they link; the findings from the repos are
   the agent's, to verify before acting). In order:

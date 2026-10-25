@@ -126,6 +126,31 @@ static uint32_t out_hash(float secs)
     }
     return h;
 }
+static int same_pair(int p, int a, int b)       /* (1.4.0: a centred knob) the same with p at a as at b */
+{
+    int fd[2];
+    pid_t pid;
+    uint32_t h0, h1 = 0;
+    fflush(stdout);
+    if (pipe(fd))
+        return -1;
+    pid = fork();
+    if (pid == 0) {
+        en_set(p, a);
+        h1 = out_hash(12.0f);
+        if (write(fd[1], &h1, sizeof h1) != (ssize_t)sizeof h1)
+            _exit(1);
+        _exit(0);
+    }
+    en_set(p, b);
+    h0 = out_hash(12.0f);
+    if (read(fd[0], &h1, sizeof h1) != (ssize_t)sizeof h1)
+        h1 = ~h0;
+    waitpid(pid, 0, 0);
+    close(fd[0]);
+    close(fd[1]);
+    return h0 == h1;
+}
 static int same_with(int p, int v)
 {
     int fd[2];
@@ -1619,7 +1644,9 @@ int main(void)
 
     /* (1.4.0, the user's) the Arrangement page's channel strips: each part's Echo and Plate sends and its Low cut reach
      * the engine (heard against 0; the defaults are the recipes' own: the sound as before, checked by the scenarios and
-     * the renders); a Low cut takes a part's lows (the bass alone: under ~120 Hz, 100 against 0) */
+     * the renders); a Filter (1.4.0, format 28: the Low cut before) heard on each part either way (+25 a high-pass,
+     * -25 a low-pass, against 0, off); its high-pass takes a part's lows (the bass alone: under ~120 Hz, +36, the old
+     * Low cut's 100, against 0) */
     {
         static const uint8_t SP[] = {P_CECHO, P_CPLATE, P_PECHO, P_PPLATE, P_BECHO, P_BPLATE, P_DECHO, P_DPLATE,
                                      P_NECHO, P_NPLATE, P_KECHO, P_KPLATE, P_KLVL};   /* (1.4.0: the Kick strip's too) */
@@ -1642,13 +1669,13 @@ int main(void)
         for (k = 0; k < sizeof SP; k++)
             heard += same_with(SP[k], 100) == 0;
         for (k = 0; k < sizeof LP; k++) {
-            low0 += same_with(LP[k], 0) == 1;
-            lowh += same_with(LP[k], 80) == 0;
+            low0 += same_pair(LP[k], -25, 0) == 0;   /* (low0: the low-pass heard; lowh: the high-pass) */
+            lowh += same_pair(LP[k], 25, 0) == 0;
         }
-        printf("  the strips: %d of %u sends heard at 100 against 0; the Low cuts at 0 as off %d of %u, at 80 heard %d\n",
+        printf("  the strips: %d of %u sends heard at 100 against 0; the Filters' low-pass heard %d of %u, their high-pass %d\n",
                heard, (unsigned)sizeof SP, low0, (unsigned)sizeof LP, lowh);
         CHECK(heard == (int)sizeof SP && low0 == (int)sizeof LP && lowh == (int)sizeof LP,
-              "the strips: sends heard %d, Low cuts off at 0 %d, heard at 80 %d", heard, low0, lowh);
+              "the strips: sends heard %d, Filters' low-pass heard %d, high-pass %d", heard, low0, lowh);
         {   /* the bass alone, its lows: the Low cut at 0 (here) and at 100 (a fork), the same minute otherwise */
             int fd[2], w, b, j;
             pid_t pid;
@@ -1662,7 +1689,7 @@ int main(void)
                 float l1 = 0.0f;
                 if ((pid == 0) != (w == 1))
                     continue;
-                en_set(P_BLOW, w ? 100 : 0);
+                en_set(P_BLOW, w ? 36 : 0);   /* (+36: ~600 Hz, the old Low cut's 100) */
                 for (b = 0; b < 8 * 172; b++) {
                     en_render(buf, 256, 2048);
                     for (j = 0; j < 256; j++) {
@@ -1717,6 +1744,9 @@ int main(void)
                 en_set(P_HITS, 90);
                 en_set(P_PINGS, 80);
                 en_set(P_CRACKLE, 80);
+                if (q == 2)                      /* (the bass on Growl: its upper harmonics, what the echo takes; a
+                                                  * Sub's, near none, left the check to the random stream's order) */
+                    en_set(P_BVOICE, 4);
                 en_seed(5);
                 en_regrow();
                 en_mute(0x3Fu & ~(w ? EN_M_KICK : AL[q]));
@@ -1775,7 +1805,7 @@ int main(void)
                     en_set((int)k, pp[k]);
             en_pool(pl);
             en_set(P_RUMBLE, t & 1 ? 60 : 0);
-            en_set(P_KLOW, t & 2 ? 100 : 0);
+            en_set(P_KLOW, t & 2 ? 36 : 0);   /* (+36: the old Low cut's 100) */
             en_seed(5);
             en_regrow();
             en_mute(0x3Fu & ~(uint32_t)EN_M_KICK);
@@ -2068,6 +2098,168 @@ int main(void)
                   (double)mlv, en_mx_moves - mm);
         }
         printf("  the dub mixer: off at 0, riding within bounds, Lock resting it, a song's intro left to the song\n");
+    }
+
+    /* (1.4.0, format 28, Robert's) a strip's Filter, either way: the chord alone, a fork from one moment, the filter
+     * off in one and on in the other; the low-pass at -40 (~500 Hz) takes its highs (over ~2 kHz), the high-pass at +36 its lows
+     * (under ~150 Hz), on the dry and on what it sent (the echo's tail, everything muted after: the filter before the
+     * sends); the bass, not filtered, left as it is */
+    {
+        static const int16_t FV[2] = {-40, 36};
+        int16_t pp[P_NPARAMS];
+        uint16_t pl;
+        unsigned k;
+        int w;
+        for (w = 0; w < 2; w++) {
+            double r[2][2], bs[2];
+            int t, fd[2];
+            pid_t pid;
+            fresh();
+            en_piece(0, pp, &pl);
+            for (k = 0; k < P_NPARAMS; k++)
+                if (k != P_TUNE && k != P_MIDI)
+                    en_set((int)k, pp[k]);
+            en_pool(pl);
+            en_seed(9);
+            en_regrow();
+            en_mute(0x3Fu & ~(uint32_t)EN_M_CHORD);
+            en_play(1);
+            run(4.0f);
+            fflush(stdout);
+            if (pipe(fd))
+                break;
+            pid = fork();
+            t = pid == 0;
+            en_set(P_CLOW, t ? FV[w] : 0);
+            {
+                int ph, b, j;
+                for (ph = 0; ph < 2; ph++) {     /* (ph 0 the chord, 1 its echo's tail alone) */
+                    float lp = 0.0f, hp = 0.0f, x0 = 0.0f;
+                    double e = 0.0;
+                    if (ph == 1) {
+                        en_mute(0x3Fu);
+                        run(0.3f);
+                    }
+                    for (b = 0; b < (ph ? 172 : 4 * 172); b++) {
+                        en_render(buf, 256, 2048);
+                        for (j = 0; j < 256; j++) {
+                            const float x = (float)(buf[2 * j] + buf[2 * j + 1]) * (0.5f / 8388608.0f);
+                            lp += 0.021f * (x - lp);                    /* (~150 Hz) */
+                            hp = 0.75f * (hp + x - x0), x0 = x;        /* (over ~2 kHz) */
+                            e += w ? (double)(lp * lp) : (double)(hp * hp);
+                        }
+                    }
+                    r[ph][t] = e;
+                }
+            }
+            if (t) {
+                if (write(fd[1], r, sizeof r) != (ssize_t)sizeof r)
+                    _exit(1);
+                _exit(0);
+            }
+            {
+                double rc[2][2];
+                if (read(fd[0], rc, sizeof rc) != (ssize_t)sizeof rc)
+                    rc[0][1] = rc[1][1] = -1.0;
+                r[0][1] = rc[0][1], r[1][1] = rc[1][1];
+            }
+            waitpid(pid, 0, 0);
+            close(fd[0]);
+            close(fd[1]);
+            bs[0] = r[0][0], bs[1] = r[1][0];
+            printf("  the chord's Filter at %+d: its %s %.1f dB, its echo's %.1f dB, against off\n", FV[w], w ? "lows" : "highs",
+                   10.0 * log10((r[0][1] + 1e-20) / (bs[0] + 1e-20)), 10.0 * log10((r[1][1] + 1e-20) / (bs[1] + 1e-20)));
+            CHECK(r[0][1] < 0.5 * bs[0] && r[1][1] < 0.5 * bs[1] && bs[1] > 1e-6,
+                  "the chord's Filter at %+d: the dry %g against %g, the echo %g against %g", FV[w], r[0][1], bs[0], r[1][1], bs[1]);
+        }
+        en_mute(0);
+    }
+
+    /* (1.4.0, format 28) the low-pass while the engine sheds (the FM-1's load past 75%: en_load): its 6 dB stage
+     * alone, then the 12 dB back, clean both ways (no NaN, no jump in the output over a soft bound) */
+    {
+        int b, j;
+        float last = 0.0f, jump = 0.0f;
+        fresh();
+        en_set(P_CLOW, -40);
+        en_set(P_PLOW, -40);
+        en_set(P_BLOW, -40);
+        en_play(1);
+        run(2.0f);
+        bad = 0;
+        for (b = 0; b < 6 * 172; b++) {
+            en_load = (uint8_t)((b / 172) & 1 ? 0 : 90);   /* (a second heavy, a second light, in turn) */
+            en_render(buf, 256, 2048);
+            for (j = 0; j < 256; j++) {
+                const float x = (float)buf[2 * j] / 8388608.0f, d = fabsf(x - last);
+                if (x != x)
+                    bad++;
+                if (d > jump)
+                    jump = d;
+                last = x;
+            }
+        }
+        en_load = 0;
+        printf("  the low-pass shedding and back: the biggest step a sample %.3f\n", (double)jump);
+        CHECK(!bad && jump < 0.5f, "the low-pass shedding: %d bad, a step of %f", bad, (double)jump);
+        en_set(P_CLOW, 0);
+        en_set(P_PLOW, 0);
+        en_set(P_BLOW, 0);
+    }
+
+    /* (1.4.0, format 28, Robert's) the tempo from 40 BPM: at 40, 60 and 90 the grid runs at its rate, the sound clean
+     * (no NaN, no clipping), the echo's longest times capped to its tape and shown as they are ("5.6 s" at 40 for a bar:
+     * 6 s would not fit; at 90, "1 bar") */
+    {
+        static const int TT[3] = {40, 60, 90};
+        int i;
+        char tb[16];
+        for (i = 0; i < 3; i++) {
+            uint32_t b0;
+            fresh();
+            en_set(P_TEMPO, TT[i]);
+            en_set(P_ETIME, 5);
+            en_play(1);
+            run(1.0f);
+            b0 = en_bars;
+            peak = 0.0f;
+            bad = 0;
+            run(10.0f);
+            {
+                const float rate = (float)(en_bars - b0) / 10.0f, want = (float)TT[i] * 4.0f / 60.0f;
+                printf("  tempo %d: %.2f sixteenths a second (%.2f), peak %.2f\n", TT[i], (double)rate, (double)want,
+                       (double)peak);
+                CHECK(fabsf(rate - want) < 0.3f && !bad && peak < 1.0f, "tempo %d: %.2f sixteenths a second, peak %f",
+                      TT[i], (double)rate, (double)peak);
+            }
+            en_param_text(P_ETIME, 5, tb);
+            CHECK(!strcmp(tb, TT[i] == 40 ? "5.6 s" : "1 bar"), "tempo %d: a bar's echo shown \"%s\"", TT[i], tb);
+        }
+        en_set(P_TEMPO, 122);
+        en_set(P_ETIME, 1);
+    }
+
+    /* (1.4.0, format 28, Robert's) the Japanese scales: five notes each, in the table; their chords' voicings never with
+     * two neighbours a semitone apart (spread to a ninth) */
+    {
+        static const struct { int m; uint16_t pool; } JS[5] = {
+            {MODE_HIRAJOSHI, 1u | 1u << 2 | 1u << 3 | 1u << 7 | 1u << 8}, {MODE_IN, 1u | 1u << 1 | 1u << 5 | 1u << 7 | 1u << 8},
+            {MODE_IWATO, 1u | 1u << 1 | 1u << 5 | 1u << 6 | 1u << 10}, {MODE_YO, 1u | 1u << 2 | 1u << 5 | 1u << 7 | 1u << 9},
+            {MODE_INSEN, 1u | 1u << 1 | 1u << 5 | 1u << 7 | 1u << 10}};
+        int i, d, sh, k, near = 0;
+        for (i = 0; i < 5; i++) {
+            CHECK(EN_MODE_POOL[JS[i].m] == JS[i].pool && strlen(EN_MODE_NAME[JS[i].m]) <= 8, "the scale %s: its notes",
+                  EN_MODE_NAME[JS[i].m]);
+            for (d = 0; d < 5; d++)
+                for (sh = 0; sh < 2; sh++) {
+                    int iv[4];
+                    en_voicing(JS[i].pool, d, sh, iv);
+                    for (k = 1; k < 4; k++)
+                        near += iv[k] - iv[k - 1] == 1;
+                }
+        }
+        printf("  the Japanese scales: their voicings' semitone neighbours %d\n", near);
+        CHECK(near == 0, "the Japanese scales' voicings: %d semitone neighbours", near);
     }
 
     /* stop: the tails die away (but the vinyl turns on) */

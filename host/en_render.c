@@ -3,7 +3,7 @@
  *
  *   en_render OUT.wav SECS [piece=N] [NAME=V ...] [freeze=T0-T1] [seed=S] [outro=T] [log]
  *
- * piece=N takes piece N's recipe (0..7) first; NAME=V sets a parameter by its name as amb.c's table
+ * piece=N takes piece N's recipe (0..7) first; mode=N a scale (MODE_*), its notes too; NAME=V sets a parameter by its name as amb.c's table
  * has it, spaces as underscores (Echo_time=2, Cutoff=60); freeze=T0-T1 holds from T0 to T1 seconds;
  * NAME=V@T sets it at T seconds instead; fx=N@T0-T1 holds the effects grid's effect N (0..15) from T0 to T1; outro=T asks
  * for the outro at T seconds (HOME held + PLAY; a song: Song_mode=1 Intro=2 Main=4 Outro=2, in phrases); log prints each
@@ -52,7 +52,7 @@ int main(int argc, char **argv)
     struct { double t; int p, v; } ev[64];
     int nev = 0, e;
     if (argc < 3) {
-        fprintf(stderr, "usage: en_render OUT.wav SECS [piece=N] [NAME=V ...] [freeze=T0-T1] [seed=S] [log]\n");
+        fprintf(stderr, "usage: en_render OUT.wav SECS [piece=N] [mode=N] [NAME=V ...] [freeze=T0-T1] [seed=S] [log]\n");
         return 2;
     }
     secs = atof(argv[2]);
@@ -78,6 +78,10 @@ int main(int argc, char **argv)
             outro_t = atof(a + 6);
         } else if (!strncmp(a, "seed=", 5)) {
             seed = (unsigned)atoi(a + 5);
+        } else if (!strncmp(a, "mode=", 5)) {    /* (1.4.0) a scale, its notes too (Mode= sets its name alone) */
+            const int m = atoi(a + 5);
+            en_set(P_MODE, m);
+            en_pool(EN_MODE_POOL[(unsigned)m < EN_NMODES ? m : 0]);
         } else if (eq && strncmp(a, "piece=", 6)) {
             int p = find_param(a, (int)(eq - a));
             const char *at = strchr(eq, '@');

@@ -98,13 +98,13 @@ wait 300
 said Key page: Tempo
 spin K1 -100
 wait 300
-said Tempo 90
+said Tempo 40
 # HOME + SELECT: the tempo (the Key page's first knob says it)
 press HOME
 turn SELECT 2 200
 release HOME
 wait 300
-said Tempo 92
+said Tempo 42
 # the keys: a note out of the scale and back in; the root stays
 tapkey w1
 said REMOVED G
@@ -130,7 +130,7 @@ said PIECE Chamber, A Minor, tempo
 wait 300
 said_none Level
 turn PRESET -1
-said PIECE Basic, F Dorian, tempo 92
+said PIECE Basic, F Dorian, tempo 42
 wait 300
 # the buttons' messages, said once
 tap REC
@@ -304,7 +304,7 @@ midi FC 00 00
 wait 300
 said RESTING
 wait 1000
-said Tempo 92
+said Tempo 42
 tap HOME
 wait 300
 said Form page
@@ -324,6 +324,6 @@ wait 300
 said Motion 100
 # WHERE: everything again (the chord held now)
 where
-said Form page: Energy 0, Evolve 0, Motion 100. Piece Basic, F Dorian, tempo 92, resting
+said Form page: Energy 0, Evolve 0, Motion 100. Piece Basic, F Dorian, tempo 42, resting
 where
 said , held. Section 

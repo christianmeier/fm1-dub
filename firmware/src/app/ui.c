@@ -60,7 +60,7 @@ static int parent_of(int v)
 }
 static int noise_page(int v) { return v == V_NSND || v == V_NVOX || v == V_NSND2 || v == V_NLFO; }   /* (SAVE's) */
 /* (1.4.0, the user's) the Arrangement page's channel strips: a part's white key held, V_STRIP, the knobs that part's
- * Level, Echo send, Plate send and Low cut; the part (0..5: the chord, the pings, the bass, the kick, the hats (with
+ * Level, Echo send, Plate send and Filter (a Low cut before format 28); the part (0..5: the chord, the pings, the bass, the kick, the hats (with
  * the rim and the clap), the noise: white 1-6, the meters' rows; the user's: the kick and the hats apart, the noise its
  * own key) */
 static uint8_t strip_part;
@@ -208,7 +208,7 @@ static const uint16_t STRIP_PAR[NSTRIP][4] = {
     {P_CHORD, P_CECHO, P_CPLATE, P_CLOW}, {P_PINGS, P_PECHO, P_PPLATE, P_PLOW}, {P_BASS, P_BECHO, P_BPLATE, P_BLOW},
     {P_KLVL, P_KECHO, P_KPLATE, P_KLOW}, {P_HATSLVL, P_DECHO, P_DPLATE, P_DLOW}, {P_CRACKLE, P_NECHO, P_NPLATE, P_NLOW}};
 /* (the Kick strip's level its own, x1 at 50; the Hats strip's the Hats page's Level, the shaker's and the open hat's
- * (the rim and the clap in its sends and its Low cut, their level the kit's: P_DRUMS, the Drums pages' OCT, over both)) */
+ * (the rim and the clap in its sends and its Filter, their level the kit's: P_DRUMS, the Drums pages' OCT, over both)) */
 static int vknob(int v, int i)                   /* a page's knob i: VIEW_KNOB's, a strip's its part's */
 {
     return v == V_STRIP ? STRIP_PAR[strip_part][i] : VIEW_KNOB[v][i];
@@ -261,7 +261,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Depth", "Rate", "Shape", "Drift"},
     {"Level", "Tone", "Length", ""},
     {"Air", "Tone", "Decay", "Width"},
-    {"Level", "Echo", "Plate", "Low cut"},
+    {"Level", "Echo", "Plate", "Filter"},   /* (1.4.0, format 28, Robert's: the Low cut a centred filter) */
     {"Intro", "Main", "Outro", "Kind"},
     {"Mode", "", "", ""},
     {"Walk", "Change", "", ""},
@@ -315,7 +315,7 @@ static const char *const KNOB_HELP[NVIEWS][4] = {
     {"The hiss under it, softer or more", "The rings darker, or brighter", "How long each hit rings on the chord",
      "The noise mono, to wide"},
     {"The part's level", "How much it sends into the echo", "How much it sends into the plate",
-     "Its lows thinned, before the sends"},
+     "Left darker, right thinner, before the sends"},
     {"The parts coming in, a phrase a click", "The piece itself, before the outro", "The parts leaving, then silence",
      "Ambient first, or the kick and the bass"},
     {"Endless, a song, or a set of the pieces", "", "", ""},
@@ -523,7 +523,8 @@ static const char *mode_name(void)
 /* the modes as they're stepped through (ALGORITHM, the Key page's Mode): the most common first. (The values kept
  * are the engine's, MODE_*) */
 static const uint8_t MODE_ORDER[EN_NMODES] = {MODE_AEOLIAN, MODE_IONIAN, MODE_DORIAN, MODE_MIXOLYDIAN, MODE_PENT_MIN,
-                                              MODE_PENT_MAJ, MODE_PHRYGIAN, MODE_LYDIAN};
+                                              MODE_PENT_MAJ, MODE_PHRYGIAN, MODE_LYDIAN, MODE_HIRAJOSHI, MODE_IN,
+                                              MODE_IWATO, MODE_YO, MODE_INSEN};   /* (1.4.0, Robert's: the Japanese last) */
 static int mode_pos(int m)
 {
     int i;

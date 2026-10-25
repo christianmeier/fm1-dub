@@ -686,6 +686,16 @@ static void from26(const project26_t *o)        /* 1.4.0's song structure (26): 
         proj.slot[i].screen = o->slot[i].screen;
     }
 }
+static void lowcut27(int16_t *par)               /* (27's Low cut, 1..100: ~20 Hz .. ~600 Hz, 4.907 octaves over 99 steps;
+                                                  * the Filter's high-pass, +1..+50: 20 Hz .. 2.5 kHz, 6.966 over 49) */
+{
+    static const uint8_t LC[6] = {P_CLOW, P_PLOW, P_BLOW, P_DLOW, P_NLOW, P_KLOW};
+    int k;
+    for (k = 0; k < 6; k++) {
+        const int v = par[LC[k]];
+        par[LC[k]] = (int16_t)(v <= 0 ? 0 : 1 + (int)((float)(v - 1) * (4.907f * 49.0f / (99.0f * 6.966f)) + 0.5f));
+    }
+}
 static void cut21(int16_t *par, int piece)      /* before 22: the chord's Cutoff the knob itself; now the knob around
                                                   * the piece's own (its recipe's, P_CUTOFF): what you'd set, kept as
                                                   * the knob's offset from it (as far as the knob goes) */
@@ -904,6 +914,12 @@ int project_load(void)
             fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR26, o->slot[i].pool, i);
         }
         from26((const project26_t *)(const void *)&buf);
+    } else if (n >= 8 && buf.magic == PROJ_MAGIC && buf.format == 27u && n >= (int)sizeof(project_t)) {
+        old = 27;                                /* (27: today's layout; the strips' Low cut, now their Filter) */
+        for (i = 0; i < NPIECES; i++)
+            fresh[i] = (uint8_t)untouched_raw(buf.slot[i].par, P_NPARAMS, buf.slot[i].pool, i);
+        proj = buf;
+        proj.format = PROJ_FORMAT;
     } else {
         proj = buf;
     }
@@ -957,6 +973,12 @@ int project_load(void)
         proj.par[P_KLOW] = proj.par[P_DLOW];
         for (i = 0; i < NPIECES; i++)
             proj.slot[i].par[P_KLOW] = proj.slot[i].par[P_DLOW];
+    }
+    if (old && old < 28) {                       /* (before 28: each strip's Low cut, 0..100; now its Filter, centred,
+                                                  * the high-pass its right: the same cutoff, as near as a step goes) */
+        lowcut27(proj.par);
+        for (i = 0; i < NPIECES; i++)
+            lowcut27(proj.slot[i].par);
     }
     if (n >= 8 && proj.magic == PROJ_MAGIC && proj.format == PROJ_FORMAT) {   /* (the ranges as they are now) */
         proj.screen = ui_screen_ok(proj.screen);   /* (1.4.0: the echo trail and the fifths gone: the ripples) */

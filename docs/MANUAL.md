@@ -210,7 +210,7 @@ meters under it show the effect): a mute ("PINGS muted", in the part's colour), 
 (the mutes and solos stay), and SEL brings it back.
 
 **Hold white 1–6** for a part's **channel strip**, as on a mixing desk: KNOB 1–4 that part's
-**Level**, **Echo** send, **Plate** send and **Low cut**, until you let go. White 1 the chord, 2 the
+**Level**, **Echo** send, **Plate** send and **Filter**, until you let go. White 1 the chord, 2 the
 pings, 3 the bass, 4 the kick, 5 the hats (with the rim and the clap), 6 the noise: the meters' rows,
 top to bottom. The strip comes up after a third of a second held, or at once if you turn a knob; its
 name shows on the rule above the knobs ("KICK STRIP"), its row on the meters is lit behind, its knobs are in
@@ -219,20 +219,22 @@ Arrangement page. A **tap** still mutes the part: the mute comes as you let go (
 (Until 1.4.0's last builds, white 6 held was the Mix page, the four levels on the knobs: each part's
 Level is its strip's now, the noise's too.)
 
-![A channel strip: white 1 held, the chord's: its meter row lit, CHORD ECHO 60 in the big ring, LEVEL 52, ECHO 60, PLATE 50, LOW CUT 0](img/screen-strip.png "A channel strip")
+![A channel strip: white 1 held, the chord's: its meter row lit, CHORD ECHO 60 in the big ring, LEVEL 52, ECHO 60, PLATE 50, FILTER Off](img/screen-strip.png "A channel strip")
 
 | Knob | What it does |
 |---|---|
 | KNOB 1 · **Level** | the part's level: the same as OCT− / OCT+ on its page (the noise's too). The kick's and the hats' are their own: 50 as the piece has them (×1), about 12 dB down at 0 and 12 dB up at 100; the hats' is the Hats page's Level (the shaker and the open hat; the rim and the clap go with the drums' level, OCT− / OCT+ on the Drums pages, which moves the kick and the hats too) |
 | KNOB 2 · **Echo** | how much it sends into the echo: 50 as the piece sends it, 0 none, 100 twice as much (+6 dB). The bass sends none in every piece (0): turn it up for a dub bass throw. The hats' is the hats', the rim's and the clap's. The kick sends none in every piece (0): turn it up and it goes into the echo too (100 a full send) |
 | KNOB 3 · **Plate** | how much it sends into the plate, the same way: 50 the piece's, 0 none, 100 twice (the kick's from 0, as its Echo) |
-| KNOB 4 · **Low cut** | a gentle high-pass (6 dB an octave) on the part, before its sends: 0 off, then from about 20 Hz up to about 600 Hz at 100, an octave every 20 or so. The chord keeps its own gentle cut at about 160 Hz under it; the kick's leaves the rumble be (its own knob, on the Kick page) |
+| KNOB 4 · **Filter** | a filter on the part, before its sends (so its echo and its plate are filtered too), centred like the DJ filter: **0 off** (nothing run). **Left, a low-pass** (12 dB an octave; 6 dB while the FM-1 is near its limit, the engine shedding work, then 12 again): the part darker, from about 18 kHz at −1 to about 200 Hz at −50 ("LP 800"). **Right, a high-pass** (6 dB an octave, as the Low cut was): the part thinner, from about 20 Hz at +1 to about 2.5 kHz at +50 ("HP 290"); the old Low cut's 600 Hz is near +36. The chord keeps its own gentle cut at about 160 Hz under it; the kick's leaves the rumble be (its own knob, on the Kick page). (Until 1.4.0's last builds, the Low cut: the high-pass alone, 0–100) |
 
-![The Kick strip: white 4 held, its meter row lit, KICK LOW CUT 20 in the big ring, LEVEL 50, ECHO 0, PLATE 0, LOW CUT 20](img/screen-strip-kick.png "The Kick strip")
+![The chord's strip, its Filter turned left: CHORD FILTER LP 2.6k in the big ring, the low-pass darkening the chord and what it sends](img/screen-strip-filter.png "A strip's Filter, a low-pass")
 
-![The Hats strip: white 5 held, HATS ECHO 60 in the big ring, LEVEL 40, ECHO 60, PLATE 50, LOW CUT 0](img/screen-strip-hats.png "The Hats strip")
+![The Kick strip: white 4 held, its meter row lit, KICK FILTER HP 110 in the big ring, LEVEL 50, ECHO 0, PLATE 0, FILTER HP 110](img/screen-strip-kick.png "The Kick strip")
 
-![The Noise strip: white 6 held, NOISE PLATE 60 in the big ring, LEVEL 8, ECHO 50, PLATE 60, LOW CUT 0](img/screen-strip-noise.png "The Noise strip")
+![The Hats strip: white 5 held, HATS ECHO 60 in the big ring, LEVEL 40, ECHO 60, PLATE 50, FILTER Off](img/screen-strip-hats.png "The Hats strip")
+
+![The Noise strip: white 6 held, NOISE PLATE 60 in the big ring, LEVEL 8, ECHO 50, PLATE 60, FILTER Off](img/screen-strip-noise.png "The Noise strip")
 
 A thrown stab (and any part thrown with its black key) still goes into the echo whatever its Echo, and the Arrangement page's Wet
 moves everything on top. The strips are the piece's, saved with it.
@@ -802,7 +804,7 @@ noise's groove (drawn anew, or kept).
 The layers' **levels** aren't on their pages: OCT− / OCT+ set them on each layer's pages (the
 noise's on the Noise pages), 5 a press, and both together mute it (see
 [Controls](#3-controls)); the Arrangement page's meters show them all, and each part's level, its sends and its
-Low cut are its **channel strip** there (white 1–6 held: the kick and the hats each their own).
+Filter are its **channel strip** there (white 1–6 held: the kick and the hats each their own).
 
 ### The voices
 
@@ -1020,9 +1022,16 @@ comes in to where it leaves, dimmer as it fades in and out; while a song plays, 
 The piece's key and time, which a dub track seldom changes. HOME blinks while you're here; HOME
 again goes back to the Form page.
 
-- **Tempo:** 90 to 140. Also HOME + SELECT, from any page.
+- **Tempo:** 40 to 140 (from 1.4.0; it was 90 to 140). Also HOME + SELECT, from any page. Under about 43 BPM the
+  echo's longest time (a bar) no longer fits its tape (5.6 s): it stays at 5.6 s, and the Dub page shows its time as
+  it is ("5.6 s" in place of "1 bar"); the other times fit at any tempo.
 - **Root:** the key's root note. The scale moves with it, and the chord at once.
-- **Mode:** **Minor** (Aeolian), **Major** (Ionian), Dorian, Mixolydian, pentatonic minor and major, Phrygian, Lydian (the most common first; the screen shows Aeolian as Minor and Ionian as Major); it
+- **Mode:** **Minor** (Aeolian), **Major** (Ionian), Dorian, Mixolydian, pentatonic minor and major, Phrygian, Lydian (the most common first; the screen shows Aeolian as Minor and Ionian as Major), and five
+  Japanese scales, five notes each (1.4.0): **Hirajoshi** (1 2 ♭3 5 ♭6, shown "Hirajosh"), **In** or Miyako-bushi
+  (1 ♭2 4 5 ♭6), **Iwato** (1 ♭2 4 ♭5 ♭7), **Yo** (1 2 4 5 6) and **Insen** (1 ♭2 4 5 ♭7). Their chords are built
+  as the pentatonics' are (stacked in fourths, three tones a chord); where a scale has a half-step, the stabs never
+  sound its two notes side by side: the upper one goes up an octave, a minor ninth (the koto's colour, not a
+  cluster). It
   loads the mode's scale. Editing the scale with the keys
   makes it Custom.
 - **Swing:** the off sixteenths late, from straight (50%) to a heavy lilt (70%): everything on them, the stabs, the bass, the pings and the drums, together.
@@ -1053,7 +1062,7 @@ then back to Chord.
 
 The chord's **Wet** (the stabs dry against their echo) left this page in 1.4.0's Chord pages. Its
 sends are now the chord's **channel strip** on the Arrangement page (white 1 held: Level, Echo,
-Plate, Low cut); the dry against them stays each piece's own, on no knob, and the Arrangement page's
+Plate, Filter); the dry against them stays each piece's own, on no knob, and the Arrangement page's
 Wet moves it on top. The stab's sound, the voice, comes with the piece (ALGORITHM changes it).
 
 ### ENV again: Chord voice
@@ -1164,7 +1173,8 @@ Room, Concrete on Vinyl too, Haze on Dust, Pressure a quieter, darker Vinyl.
 **Where the noise sits.** Its Width is on the Noise voice (above). How much of it rings in the
 plate and how much goes into the echo are its **channel strip**'s (the Arrangement page, white 5
 held: Plate and Echo, 50 as the pieces have it, none at 0, twice at 100; a thrown stab still sends
-more), with its Level and a Low cut (its rings and its clicks; the hiss is above it). The Noise space
+more), with its Level and a Filter: its high-pass on its rings and its clicks (the hiss is above it), its
+low-pass on all of it, the hiss too, in the noise's own filters (as its LFO's Filter), at no cost. The Noise space
 page that held them (SAVE a third time, until 1.4.0's channel strips) is gone.
 
 How fast its levels, tone and decay drift is each piece's own (its recipe), and so is the pace its
@@ -1410,7 +1420,9 @@ strips (format 24), the noise LFO's Destination comes from the recipe (Filter, a
 the Cloud and the Width are kept, on their new pages. From 1.4.0's noise LFO Destination (format 25),
 each piece's song comes from its recipe (Intro 32, Main 160, Outro 32 bars, its Kind), and the Song mode is
 Endless, as it played before. From 1.4.0's song structure (format 26), each piece's Mixer comes from its
-recipe. To get a changed piece's
+recipe. From 1.4.0's dub mixer (format 27), each strip's Low cut (0–100, a high-pass) becomes its
+Filter's high-pass at the same cutoff, as near as a step goes (a Low cut of 100, about 600 Hz, is +36);
+the tempo and the scales keep their values (the new range only reaches further). To get a changed piece's
 whole new recipe, hold GLO for 1.5 s on it.
 Projects saved by AMB-1 aren't read by DUB-1: the first start after installing it begins with the
 eight recipes.
@@ -1508,9 +1520,9 @@ The defaults are Basic's; each piece has its own.
 | Bass | Fifth | 0–100 | 20 |
 | Bass voice | Octave | −1 – +1 | 0 |
 | Bass voice | Shape, Gate, Glide | −50 – +50 | 0 |
-| Key | Tempo | 90–140 | 122 |
+| Key | Tempo | 40–140 | 122 |
 | Key | Root | C – B | F |
-| Key | Mode | 8 modes, or Custom | Dorian |
+| Key | Mode | 13 modes (8, and 5 Japanese), or Custom | Dorian |
 | Key | Swing | 50%–70% | 51% |
 | Drums | Kick (its shape) | Four, Ghost, Half, One | Four |
 | Drums | Hits | 0–100 | 10 |
@@ -1539,7 +1551,7 @@ The defaults are Basic's; each piece has its own.
 | Arrangement | Duck | 0–100 (to −12 dB); the piece's, saved | 50 |
 | Strip (white 1–6 held) | Level | the part's level (as OCT− / OCT+; the kick's and the hats' their own, ×1 at 50) | 52, 30, 68, 50, 40, 8 |
 | Strip | Echo, Plate | 0–100 (0 none – 50 as the piece sends – 100 twice; the kick's 0 none – 100 a full send) | 50 (the bass's Echo 0, the kick's 0) |
-| Strip | Low cut | 0–100 (off – about 20 Hz at 1 – about 600 Hz) | 0 |
+| Strip | Filter | −50–+50 (a low-pass to about 200 Hz – off – a high-pass to about 2.5 kHz) | 0 (off) |
 | SEL held | Lock | Off, On; not saved | Off |
 | ALGORITHM | Screen (all pages but a layer's, the Noise and LFO pages and the Chords pages) | Ripples, Scope, Spectrum, Tape | Ripples |
 | ALGORITHM | The walk (Chords and Walk pages; the Walk page's KNOB 1 too) | Home, Wander, Free | Wander |
