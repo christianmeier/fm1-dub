@@ -3190,9 +3190,17 @@ static void apply(int p, int v)
                                                   * as the rim's into the echo, the clap's into the plate) */
         kick_snd[p - P_KECHO] = (float)v * (p == P_KECHO ? 0.008f : 0.006f);
         break;
-    case P_SMODE:                                /* (1.4.0) song structure: Endless now, the song let go (a song's
-                                                  * from the next PLAY) */
+    case P_SMODE:                                /* (1.4.0) song structure: Endless now, the song let go; a song
+                                                  * while playing: its main now; from its intro at the next PLAY */
         song_mode = (uint8_t)v;
+        if (v && song_ph == EN_SG_OFF && en_playing) {   /* (the user's: turned to a song while playing: its main at
+                                                  * once, from this phrase, the outro after Main's bars) */
+            song_b0 = bar & ~7u;
+            song_bo_on = 1, song_fixed = 0, song_ask = 0;
+            song_ph = EN_SG_MAIN;
+            song_plan();
+            song_publish();
+        }
         if (!v && song_ph != EN_SG_OFF && song_ph != EN_SG_END) {
             song_ph = EN_SG_OFF, song_bo_on = 0, song_ask = 0, song_fixed = 0;
             song_back();

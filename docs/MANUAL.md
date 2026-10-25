@@ -1233,7 +1233,9 @@ same for every piece, and saved. GLO again goes back to Setup.
 
 - **Mode:** **Endless** (as ever: it starts full and plays on), **Song** (PLAY: an intro, the main,
   an outro, then silence, PLAY off), **Set** (the same, then the next piece from its intro, to the
-  last). A change takes effect at the next PLAY; to Endless, at once (the song let go, playing on).
+  last). Turned to Song or Set while playing, the song starts at once from its main (the section word
+  as ever, the song line under the bar cells, the outro after Main's bars); PLAY again starts it from
+  its intro. Turned to Endless, at once (the song let go, playing on).
 
 ---
 
