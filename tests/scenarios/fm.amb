@@ -29,7 +29,8 @@ expect peak_db_max -0.5
 tap ENV
 wait 400
 expect view 22
-said Chord LFO page, destination Cutoff: Depth 25, Rate 4 bars, Shape Sine, Drift 30
+said Chord LFO page, destination Cutoff: Depth 30, Rate 4 bars, Shape Sine, Drift 45
+# (the variety study: Basic's Depth 30, Drift 45)
 # ALGORITHM: the Destination, round (Cutoff, Reso, Colour), the voice left be
 turn ALGO 1
 wait 300
@@ -58,17 +59,17 @@ wait 300
 expect par127 2
 spin K1 10
 wait 300
-expect par55 35
-said Depth 35
+expect par55 40
+said Depth 40
 spin K3 1
 wait 300
 expect par129 1
 said Shape Triangle
 spin K4 5
 wait 300
-expect par131 35
-said Drift 35
-expect par55 35
+expect par131 50
+said Drift 50
+expect par55 40
 expect par127 2
 tap ENV
 wait 300
@@ -161,7 +162,7 @@ wait 300
 expect view 22
 spin K1 30
 wait 300
-expect par55 65
+expect par55 70
 tap ENV
 wait 300
 expect view 1

@@ -40,7 +40,7 @@ wait 500
 expect par11 62
 expect par29 8
 # (1.4.0) a 1.4.0 test build's save (format 18, tests/host/proj-1.4.0-test18.bin: every piece its recipe then, as the
-# user's FM-1 holds them): today's recipe, the LFOs' rates with it (Basic's 4 bars; Fog's chord its drift, 45, the wave off),
+# user's FM-1 holds them): today's recipe, the LFOs' rates with it (Basic's 4 bars; Fog's chord, since the variety study, a wave of 35 over 32 bars on its drift, 90),
 # the noise's LFO as the recipe has it (25: not converted, as a changed piece's would be)
 storefile tests/host/proj-1.4.0-test18.bin
 reboot
@@ -53,13 +53,13 @@ expect par128 2
 turn PRESET 3
 wait 300
 expect piece 3
-expect par55 0
-expect par127 2
+expect par55 35
+expect par127 5
 expect par128 2
-expect par131 45
+expect par131 90
 # (1.4.0, the user's: the Chord's pages) a 1.4.0 LFO pages save (format 20, as the user's FM-1 holds it): a piece
 # changed kept as it is (Fog's Change, 16 bars), the chord's Vary and its LFO's Destination from
-# the recipe (50, Cutoff); one never changed (Basic), today's recipe
+# the recipe (Fog's Vary 30 since the variety study, Cutoff); one never changed (Basic), today's recipe
 expect par134 0
 tap ENV
 wait 300
@@ -72,7 +72,7 @@ wait 500
 expect format 27
 expect piece 3
 expect par6 3
-expect par133 50
+expect par133 30
 expect par134 0
 turn PRESET -3
 wait 300
@@ -81,7 +81,7 @@ expect par133 50
 expect par6 5
 # (1.4.0, the user's: the layers' pages) a 1.4.0 Chord pages save (format 21, as the user's FM-1 holds it): a piece
 # changed kept, its Cutoff (then the knob itself) the knob's offset from the recipe's (Fog's 46: 54 is +8; the knob stops a moment at 0), the layers'
-# Vary from the recipe (50); one never changed (Basic), today's recipe (its Cutoff knob 0, its base 40)
+# Vary from the recipe (50; Fog's Pings Vary 30 since the variety study); one never changed (Basic), today's recipe (its Cutoff knob 0, its base 40)
 turn PRESET 3
 wait 300
 expect piece 3
@@ -100,7 +100,7 @@ expect piece 3
 expect par6 3
 expect par12 46
 expect par139 8
-expect par135 50
+expect par135 30
 expect par136 50
 expect par137 50
 expect par138 50
@@ -190,8 +190,9 @@ wait 500
 expect format 27
 expect piece 0
 expect par161 3
-expect par163 25
+# (the variety study: Basic's Mixer 45, Fog's 90)
+expect par163 45
 turn PRESET 3
 wait 300
 expect piece 3
-expect par163 60
+expect par163 90

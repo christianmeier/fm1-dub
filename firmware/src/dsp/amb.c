@@ -108,10 +108,10 @@ static const struct {
     const char *name;
     int16_t v[P_NPARAMS];
 } PIECES[EN_NPIECES] = {
-    {"Basic",      {52, 30, 68, 80, 30, 55, 5, 10, 55, 1, 35, 62, 40, 25, 40, 30, 0, 1, 122, 5, 1, 0,
+    {"Basic",      {52, 30, 68, 80, 30, 45, 5, 10, 55, 1, 35, 62, 40, 25, 40, 30, 0, 1, 122, 5, 1, 0,
                     0, 0, 1, 20, 5, 50, 30, 8, 50, 55, 30, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 25, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 30, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
                     0, 56, 66, 0, 0,
@@ -121,15 +121,15 @@ static const struct {
                     25, 21,
                     2, 2,
                     0, 0,
-                    30, 20,
+                    45, 20,
                     50, 0,
                     50, 50, 50, 50, 0,
                     50, 50, 50, 50, 0, 50, 50, 50,
                     0, 0, 0, 0, 0,
                     50, 0, 0, 0,
                     0,
-                    0, 4, 20, 4, 1, 25}},
-    {"Chamber",    {55, 20, 62, 72, 20, 35, 6, 40, 70, 4, 45, 72, 50, 55, 30, 30, 0, 1, 128, 9, 5, 0,
+                    0, 4, 20, 4, 1, 45}},
+    {"Chamber",    {55, 20, 62, 72, 20, 25, 6, 40, 70, 4, 45, 72, 50, 55, 30, 30, 0, 1, 128, 9, 5, 0,
                     2, 0, 0, 10, 0, 40, 5, 12, 45, 70, 45, 2, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -142,18 +142,18 @@ static const struct {
                     30, 35,
                     2, 3,
                     0, 0,
-                    45, 25,
+                    25, 25,
                     50, 0,
-                    50, 50, 50, 50, 0,
+                    15, 25, 20, 20, 0,
                     50, 50, 50, 50, 0, 50, 50, 50,
                     0, 0, 0, 0, 0,
                     50, 0, 0, 0,
                     0,
-                    0, 4, 20, 4, 0, 45}},
+                    0, 4, 20, 4, 0, 55}},
     {"Steppers",   {52, 35, 80, 82, 35, 35, 6, 45, 50, 1, 30, 50, 55, 25, 50, 25, 0, 1, 126, 2, 1, 0,
                     0, 0, 2, 35, 45, 60, 25, 5, 60, 50, 20, 1, 1, 2,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 20, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 35, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
                     5, 63, 61, 0, 0,
@@ -163,18 +163,18 @@ static const struct {
                     30, 14,
                     1, 2,
                     0, 0,
-                    25, 20,
+                    35, 20,
                     50, 0,
-                    50, 50, 50, 50, 0,
+                    30, 50, 20, 50, 0,
                     50, 50, 50, 50, 0, 50, 50, 50,
                     0, 0, 0, 0, 0,
                     50, 0, 0, 0,
                     0,
                     0, 4, 20, 4, 1, 20}},
-    {"Fog",        {50, 34, 58, 62, 40, 55, 5, 42, 75, 2, 55, 72, 46, 80, 25, 72, 0, 1, 120, 7, 5, 0,
+    {"Fog",        {50, 34, 58, 62, 40, 40, 5, 42, 75, 2, 55, 72, 46, 80, 25, 72, 0, 1, 120, 7, 5, 0,
                     3, -1, 0, 15, 0, 30, 5, 30, 35, 80, 60, 0, 0, 3,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 35, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
                     -10, 44, 75, 10, 1,
@@ -182,20 +182,20 @@ static const struct {
                     55, 75, 50, 50, 85, 50,
                     85, 50, 50, 0,
                     0, 62,
-                    2, 2,
+                    5, 2,
                     0, 0,
-                    45, 35,
-                    50, 0,
-                    50, 50, 50, 50, 0,
+                    90, 50,
+                    30, 0,
+                    30, 50, 50, 50, 0,
                     50, 50, 50, 50, 0, 50, 50, 50,
                     0, 0, 0, 0, 0,
                     50, 0, 0, 0,
                     0,
-                    0, 4, 20, 4, 0, 60}},
-    {"Concrete",   {58, 45, 70, 85, 25, 50, 4, 55, 50, 1, 25, 62, 60, 20, 60, 35, 0, 1, 136, 0, 7, 0,
+                    0, 4, 20, 4, 0, 90}},
+    {"Concrete",   {58, 45, 70, 85, 25, 50, 5, 55, 50, 1, 25, 62, 60, 20, 60, 35, 0, 1, 136, 0, 7, 0,
                     6, 0, 4, 30, 10, 75, 30, 5, 50, 45, 15, 2, 3, 2,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 45, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 75, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
                     0, 56, 66, 10, 0,
@@ -205,18 +205,18 @@ static const struct {
                     45, 56,
                     2, 1,
                     0, 0,
-                    35, 25,
+                    75, 25,
                     50, 0,
                     50, 50, 50, 50, 0,
                     50, 50, 50, 50, 0, 50, 50, 50,
                     0, 0, 0, 0, 0,
                     50, 0, 0, 0,
                     0,
-                    0, 4, 20, 4, 1, 35}},
-    {"Night Drive", {48, 45, 68, 78, 45, 60, 3, 35, 60, 3, 35, 65, 50, 40, 45, 45, 0, 1, 120, 10, 1, 0,
+                    0, 4, 20, 4, 1, 90}},
+    {"Night Drive", {48, 45, 68, 78, 45, 40, 4, 35, 60, 3, 35, 65, 50, 40, 45, 45, 0, 1, 120, 10, 1, 0,
                     1, 0, 1, 25, 13, 55, 20, 15, 50, 60, 35, 4, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 40, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 45, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
                     0, 38, 58, 0, 1,
@@ -226,18 +226,18 @@ static const struct {
                     40, 49,
                     3, 3,
                     0, 0,
-                    40, 25,
+                    55, 25,
                     50, 0,
-                    50, 50, 50, 50, 0,
+                    50, 30, 30, 50, 0,
                     50, 50, 50, 50, 0, 50, 50, 50,
                     0, 0, 0, 0, 0,
                     50, 0, 0, 0,
                     0,
-                    0, 4, 20, 4, 0, 55}},
-    {"Pressure",   {55, 20, 75, 92, 20, 45, 6, 38, 55, 1, 20, 55, 48, 30, 35, 25, 0, 1, 126, 4, 2, 0,
+                    0, 4, 20, 4, 0, 45}},
+    {"Pressure",   {55, 20, 75, 92, 20, 30, 6, 38, 55, 1, 20, 55, 48, 30, 35, 25, 0, 1, 126, 4, 2, 0,
                     5, 0, 1, 10, 5, 65, 25, 30, 70, 40, 40, 3, 4, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                    0, 0, 0, 20, 0, 0, 0, 0, 0, 0, 0, 0,
+                    0, 0, 0, 35, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
                     -10, 19, 69, -10, 1,
@@ -247,15 +247,15 @@ static const struct {
                     20, 42,
                     2, 2,
                     0, 0,
-                    25, 20,
-                    50, 0,
-                    50, 50, 50, 50, 0,
+                    45, 20,
+                    25, 0,
+                    25, 25, 25, 50, 0,
                     50, 50, 50, 50, 0, 50, 50, 50,
                     0, 0, 0, 0, 0,
                     50, 0, 0, 0,
                     0,
-                    0, 4, 20, 4, 1, 30}},
-    {"Haze",       {45, 42, 58, 55, 50, 60, 4, 35, 80, 3, 60, 70, 45, 80, 25, 62, 0, 1, 116, 3, 0, 1,
+                    0, 4, 20, 4, 1, 40}},
+    {"Haze",       {45, 42, 58, 55, 50, 20, 5, 35, 80, 3, 60, 70, 45, 80, 25, 35, 0, 1, 116, 3, 0, 1,
                     3, 0, 0, 20, 10, 35, 5, 20, 30, 85, 70, 2, 0, 4,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -268,9 +268,9 @@ static const struct {
                     0, 28,
                     2, 2,
                     0, 0,
-                    45, 30,
-                    50, 0,
-                    50, 50, 50, 50, 0,
+                    55, 30,
+                    20, 0,
+                    20, 20, 50, 20, 0,
                     50, 50, 50, 50, 0, 50, 50, 50,
                     0, 0, 0, 0, 0,
                     50, 0, 0, 0,
@@ -933,7 +933,14 @@ static float vary_of(int v) { return v <= 50 ? (float)v / 50.0f : 1.0f + (float)
 volatile uint32_t en_vary_turns[VY_N];           /* (for tests) each layer's changes so far: a loop's note moved, a new
                                                   * plan, the shaker's steps traded, a new noise groove */
 static float loose(void) { return fm_minf(evolve * 2.5f, 1.0f); }   /* (1.3.0: how loose the playing is; 0 at Evolve 0) */
-static float arcm;                              /* the sweep, -1 dark .. +1 open, times Motion */
+static float arcm;                              /* the sweep, -1 dark .. +1 open, times its depth (sl_d) */
+static float sl_d, sl_ds;                       /* (1.4.0, the variety study) the slow movement's depth: the chord LFO's
+                                                  * Drift and Depth (its knobs), not Motion's; and its eased value */
+static void sl_set(void)                         /* (the slow movement's depth: 0.015 a point of the chord's Drift and
+                                                  * 0.005 of its LFO's Depth, to 1: the recipes' 0.45-0.9) */
+{
+    sl_d = fm_minf(0.015f * (float)par[P_CLWALK] + 0.005f * (float)par[P_CFDEC], 1.0f);
+}
 
 /* -------------------------------------------------------------- chord --- */
 /* The stab: four voices struck together, one envelope, one filter. Saws: two a voice, 7 cents apart;
@@ -1397,7 +1404,9 @@ static int loop_count(int l)
 
 static int loop_target(void)                    /* 0..5 notes: Density, thinned in the dark */
 {
-    float d = (float)pe(P_DENSITY) * 0.05f * (1.0f + 0.5f * arcm);
+    /* (the variety study: the sweep wider now, the lift in the light capped where Motion's had it, +0.35: the notes, and
+     * the CPU, as before) */
+    float d = (float)pe(P_DENSITY) * 0.05f * (1.0f + 0.5f * fm_minf(arcm, 0.35f));
     return (int)(fm_clampf(d, 0.0f, 5.0f) + frand());
 }
 static uint8_t loop_rest[EN_NLOOP];             /* this pass: silent (Evolve) */
@@ -2239,6 +2248,7 @@ static void mixer_set(int v)                     /* Mixer turned (P_MIXER) */
 static void section_set(int s)
 {
     float bl = 16.0f * step_len;
+    const int was = sec;
     sec = (uint8_t)s;
     en_section = (uint8_t)s;
     lay_kick = lay_hats = lay_open = lay_bass = lay_stabs = 1;
@@ -2259,8 +2269,11 @@ static void section_set(int s)
         arc_tau = 3.0f * bl;
         break;
     default:
-        arc_tgt = -0.1f + 1.1f * frand();
-        arc_tau = 4.0f * bl;
+        if (was != SEC_FULL) {                   /* (back to Full: a place; within Full, control's timer moves it, off
+                                                  * the phrase's line) */
+            arc_tgt = -0.1f + 1.1f * frand();
+            arc_tau = 4.0f * bl;
+        }
         break;
     }
     en_pulse_rest = (uint8_t)!lay_kick;
@@ -2441,12 +2454,12 @@ static void bar_start(void)
         if (sec_next != SEC_BREAK && (sec == SEC_BREAK || (motion >= 0.4f && (sec_next != sec ||
                                                                              frand() < 0.5f * (motion - 0.4f)))))
             fill = 1;
-        /* Energy far down: the next phrase Thin (no bass, no shaker); far up: Full, with a fill into it (after the
-         * draws, which stay as they were: at Energy 0 the music is the same) */
-        if (mac[EN_MAC_ENERGY] <= -25)
+        /* (the variety study: Energy no longer pins the section, Motion's at any Energy; Energy far up keeps a
+         * Break from coming (a Groove instead), far down makes a Thin of a Groove: a lean, never a lock) */
+        if (mac[EN_MAC_ENERGY] >= 25 && sec_next == SEC_BREAK)
+            sec_next = SEC_GROOVE;
+        else if (mac[EN_MAC_ENERGY] <= -25 && sec_next == SEC_GROOVE)
             sec_next = SEC_THIN;
-        else if (mac[EN_MAC_ENERGY] >= 25)
-            sec_next = SEC_FULL, fill = 1;
         if (song_ph != EN_SG_OFF && (bar + 1u < song_b0 || (song_bo_on && bar + 1u >= song_bo)))
             sec_next = SEC_FULL;                 /* (1.4.0: the song's intro and outro, Full: no sections) */
         /* (1.3.0) the next phrase's kick and plan, decided now, so the screen can say a change is coming */
@@ -2876,7 +2889,7 @@ static void heads_step(uint32_t n)
     /* the band-pass: ~220..800 Hz below (1.3.0: from ~60..500, so the repeats thin; the classics pass: from ~165..700), ~1.1..2.6 kHz above, moving
      * up together */
     dub_up = 0.0f;                               /* (1.3.0: PERFORM's second knob is Wet now, not Dub) */
-    sw = fm_clampf(0.45f + 0.5f * arcm + 0.3f * perf_sw + 0.5f * motion * mod[5].v - 0.3f * dub_up, 0.0f, 1.0f);   /* (Dub up: darker) */
+    sw = fm_clampf(0.45f + 0.5f * arcm + 0.3f * perf_sw + 0.5f * sl_ds * mod[5].v - 0.3f * dub_up, 0.0f, 1.0f);   /* (Dub up: darker) */
     tape_hpc = 0.12f + 0.24f * sw * sw;          /* (the classics pass: ~220 Hz at the bottom, was ~165) */
     tape_lpc = 0.58f + 0.3f * sw;
 }
@@ -2936,7 +2949,7 @@ static inline void echoes(float in, float *el, float *er, float *xl, float *xr)
                                                   * the hold below reads echo_len itself. Reported by genkigenki) */
             echo_len = (float)(TAPE_N - 8);
         head2 += head2_v;
-        d = echo_len * (1.0f + 0.002f * motion * mod[5].v);   /* wow */
+        d = echo_len * (1.0f + 0.002f * sl_ds * mod[5].v);   /* wow */
         if (d > (float)(TAPE_N - 4))
             d = (float)(TAPE_N - 4);
         h1 = tape_read(d);                       /* (the heads: what comes out, on its time) */
@@ -3329,6 +3342,7 @@ static void apply(int p, int v)
         break;
     case P_PTONE: case P_PTON: btone = fm_clampf((float)(par[P_PTONE] + par[P_PTON]), 0.0f, 100.0f) * 0.01f; break;
     case P_MOTION: motion = (float)v * 0.01f; break;
+    case P_CLWALK: case P_CFDEC: sl_set(); break;   /* (and the chord's LFO, below) */
     case P_EVOLVE: evolve = (float)v * 0.01f; break;
     case P_CVARY:                                /* (1.4.0: 50 as before, exactly: 1) */
         vary_t = vary_of(v);
@@ -3604,7 +3618,7 @@ void en_init(void)
     throw_dec = fm_expf(-1.0f / (0.5f * EN_SR));
     bite_dec = fm_expf(-1.0f / (0.07f * EN_SR));
     gate_dec = fm_expf(-6.9f / (1.5f * EN_SR));
-    arcm = arc = 0.0f;
+    arcm = arc = sl_ds = 0.0f;
     lfo_reset();
     mixer_reset();
     for (i = 0; i < P_NPARAMS; i++)
@@ -4026,7 +4040,7 @@ static void render_stabs(uint32_t n)
     for (j = 0; j < n; j++) {
         float l = 0.0f, r = 0.0f, v1, v2, v3, yl, yr, e;
         if (!(j & 31u)) {                        /* the filter: its base, its envelope, the sweep */
-            float fc = cut_base * fm_exp2f(fe * st_fenv + 1.6f * arcm + st_cofs + lco + perf_sw + 0.3f * motion * mod[0].v +
+            float fc = cut_base * fm_exp2f(fe * st_fenv + 1.6f * arcm + st_cofs + lco + perf_sw + 0.3f * sl_ds * mod[0].v +
                                            song_co + mx_co);   /* (the song's intro: darker, opening) */
             svf_coefs(st_c, fm_clampf(fc, 90.0f, 12000.0f), k);
             st_fenv *= st_fdec;
@@ -5180,9 +5194,25 @@ static void control(uint32_t n)                 /* once a chunk: the slow things
     mods_step(n);
     fx_ctl(n);
     heads_step(n);
-    if (en_playing)
+    if (en_playing) {
+        static uint32_t arc_left;                /* (a Full's sweep: a new place every 4-14 bars, off the phrase's line;
+                                                  * a section's own, as it starts, set by section_set) */
+        const float bl = 16.0f * step_len;
         arc += (arc_tgt - arc) * fm_minf((float)n / arc_tau, 1.0f);
-    arcm = arc * motion;
+        if (sec == SEC_FULL && arc_left <= n) {
+            arc_tgt = -0.6f + 1.6f * frand();
+            arc_tau = (2.0f + 3.0f * frand()) * bl;
+            arc_left = (uint32_t)((4.0f + 10.0f * frand()) * bl);
+        } else {
+            arc_left = arc_left > n ? arc_left - n : 0u;
+        }
+    }
+    {   /* (the variety study: the sweep's depth the slow movement's, Motion the arrangement alone; a Break or a Thin
+         * still dark, a Groove a little: at least 0.6, 0.4, 0.3, eased over two bars) */
+        const float fl = sec == SEC_BREAK ? 0.6f : sec == SEC_THIN ? 0.4f : sec == SEC_GROOVE ? 0.3f : 0.0f;
+        sl_ds += (fm_maxf(sl_d, fl) - sl_ds) * fm_minf((float)n / (32.0f * step_len), 1.0f);
+    }
+    arcm = arc * sl_ds;
     en_arc = arcm;
     pl_decay += ((en_frozen ? 0.9995f : pl_decay_t) - pl_decay) * 0.002f;
     pl_dd2 = fm_clampf(pl_decay + 0.15f, 0.25f, 0.5f);

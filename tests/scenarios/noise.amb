@@ -191,7 +191,7 @@ expect par121 95
 expect par126 62
 # (from 16: the noise's LFO as it was, Fog's 0)
 expect par125 0
-# a 1.4.0 test build's project (format 18): kept, the LFOs' rates from the recipe (Fog's: 4 bars, its drifts its own),
+# a 1.4.0 test build's project (format 18): kept, the LFOs' rates from the recipe (Fog's: 32 bars since the variety study, its drifts its own),
 # the noise's LFO as it was
 tap SAVE
 tap SAVE
@@ -209,5 +209,5 @@ wait 1000
 expect format 27
 expect par121 95
 expect par125 20
-expect par127 2
+expect par127 5
 expect par128 2
