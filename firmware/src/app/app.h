@@ -6,6 +6,9 @@
 #include "plat.h"
 #include "../dsp/amb.h"
 
+#ifndef EN_BUILD
+#define EN_BUILD "host"
+#endif
 #ifndef EN_VERSION                       /* a release build passes its own (tools/build.py --release) */
 #define EN_VERSION "DEV"
 #endif

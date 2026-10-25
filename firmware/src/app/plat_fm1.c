@@ -109,9 +109,4 @@ uint32_t plat_clock_mhz(void)                  /* (once: the cycle counter again
     }
     return mhz;
 }
-void plat_clock_regs(uint32_t r[3])              /* (felucca-bsp's fm1_clock.h's addresses; stock: 6, 0940022B, 0750310C) */
-{
-    r[0] = *(volatile uint32_t *)0x10014u;
-    r[1] = *(volatile uint32_t *)0x119A8u;
-    r[2] = *(volatile uint32_t *)0x119ACu;
-}
+void plat_clock_regs(uint32_t r[3]) { fm1_clock_regs(r); }   /* (hal/fm1_clock.h; stock: 6, 0940022B, 0750310C) */

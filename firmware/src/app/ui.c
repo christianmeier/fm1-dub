@@ -4451,6 +4451,7 @@ static void draw_main(void)
         }
         t[k - 1] = 0;
         cv_text(8, MAIN_SHIFT + 18, &FONT_XS, t, mix(K_BG, K_DIM, 10));
+        cv_text(8, MAIN_SHIFT + 32, &FONT_XS, "BUILD " EN_BUILD, mix(K_BG, K_DIM, 10));   /* (which build runs) */
     }
     draw_oct(now);
     draw_big(now);

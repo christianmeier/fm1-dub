@@ -201,6 +201,17 @@ def build_loader():
 
 # ---- app
 
+def build_stamp():
+    """the commit and the time of this build ("abf5889+ 10-26 09:41"; + when the tree has changes)"""
+    import time
+    try:
+        h = subprocess.run(["git", "rev-parse", "--short=7", "HEAD"], capture_output=True, text=True).stdout.strip()
+        d = subprocess.run(["git", "status", "--porcelain", "--untracked-files=no"], capture_output=True, text=True).stdout.strip()
+    except OSError:
+        h, d = "", ""
+    return f"{h or 'nogit'}{'+' if d else ''} {time.strftime('%m-%d %H:%M')}"
+
+
 def build_app():
     flags = [*CFLAGS, *FPU, "-Ifirmware/hal", "-Ifirmware/src", "-Ibuild/gen"]
     for flag in ("EN_CDC", "EN_METER_CLASSIC"):   # (EN_METER_CLASSIC: the Arrangement page's meters, 1.4.0: 1 classic, 0 the layers' colours)
@@ -210,6 +221,7 @@ def build_app():
     flags.append(f'-DFELUCCA_ID="{PRODUCT}"')
     if VERSION:
         flags.append(f'-DEN_VERSION="{VERSION}"')
+    flags.append(f'-DEN_BUILD="{build_stamp()}"')   # (1.4.0: which build is running, on the Setup page)
     o2 = [f if f != "-Os" else "-O2" for f in flags]
     units = [("cc", "-c", FW / "crt0.S", "-o", OUT / "crt0.o"),
              ("cc", "-c", FW / "hal" / "fm1_vec.S", "-o", OUT / "fm1_vec.o"),
