@@ -172,6 +172,8 @@ int plat_store_save(uint32_t obj, const void *src, uint32_t len)
 static uint32_t cpu_pct;
 uint32_t plat_cpu_pct(void) { return cpu_pct; }
 uint32_t plat_xruns(void) { return 0; }
+uint32_t plat_clock_mhz(void) { return 0; }
+void plat_clock_regs(uint32_t r[3]) { r[0] = r[1] = r[2] = 0; }
 uint32_t plat_cpu_peak(void) { return cpu_pct; }
 int32_t plat_battery(void) { return getenv("AMB_BATT") ? atoi(getenv("AMB_BATT")) : -1; }   /* (to see it drawn) */
 int plat_usb_power(void) { return getenv("AMB_USB") != 0; }

@@ -4428,6 +4428,30 @@ static void draw_main(void)
     }
     draw_where(now);
     draw_lanes();
+    if (ui.view == V_SETUP) {                    /* (1.4.0) Setup: the CPU's clock, measured, and its registers */
+        static const char HX[] = "0123456789ABCDEF";
+        uint32_t r[3], m = plat_clock_mhz(), i, j, k = 0;
+        char t[40];
+        plat_clock_regs(r);
+        if (m) {
+            itoa_u(m, t);
+            for (k = 0; t[k]; k++)
+                ;
+            t[k++] = ' ', t[k++] = 'M', t[k++] = 'H', t[k++] = 'z', t[k] = 0;
+        } else {
+            t[0] = '?', t[1] = 0;
+        }
+        cv_text(8, MAIN_SHIFT + 4, &FONT_XS, "CLOCK", K_DIM);
+        cv_text(48, MAIN_SHIFT + 4, &FONT_XS, t, m >= 350u ? K_PAD : m ? K_CLAP : K_DIM);
+        k = 0;
+        for (i = 0; i < 3; i++) {
+            for (j = 0; j < 8; j++)
+                t[k++] = HX[r[i] >> (28u - 4u * j) & 15u];
+            t[k++] = ' ';
+        }
+        t[k - 1] = 0;
+        cv_text(8, MAIN_SHIFT + 18, &FONT_XS, t, mix(K_BG, K_DIM, 10));
+    }
     draw_oct(now);
     draw_big(now);
     draw_card(now);

@@ -48,5 +48,10 @@ enum { OBJ_PROJ, OBJ_PANEL, OBJ_NOBJ };
 uint32_t plat_cpu_pct(void);
 uint32_t plat_xruns(void);
 uint32_t plat_cpu_peak(void);            /* the heaviest block of the last ~2 s, % of its time */
+/* (1.4.0) the CPU's clock, for the Setup page: measured once (the core's cycles against the 24 MHz crystal over
+ * 20 ms; 0 if the cycle counter doesn't run), and the clock controller's registers as read (source, PLL1's two
+ * words): stock is M-VAVE's bootloader's 360 MHz (PLL1 540 MHz x 2/3), m-bootloader 1.2 leaves 320 */
+uint32_t plat_clock_mhz(void);
+void plat_clock_regs(uint32_t r[3]);
 int32_t plat_battery(void);              /* the battery divider's reading, raw (0..1023, smoothed); -1: none */
 int plat_usb_power(void);                /* a USB host is there (it powers, and charges, the FM-1) */

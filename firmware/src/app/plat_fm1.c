@@ -94,3 +94,24 @@ static int32_t batt_raw = -1;
 int32_t plat_battery(void) { return batt_raw; }
 int plat_usb_power(void) { return usb.config && !usb.suspended; }
 uint32_t plat_xruns(void) { return audio_xruns; }
+uint32_t plat_clock_mhz(void)                  /* (once: the cycle counter against TIMER4, 20 ms) */
+{
+    static uint32_t mhz, done;
+    if (!done) {
+        uint32_t c0, c1, t0, t1;
+        done = 1;
+        c0 = fm1_perf_cycles(), t0 = fm1_ticks();
+        while ((uint32_t)(fm1_ticks() - t0) < 20000u * FM1_TICKS_PER_US)
+            ;
+        c1 = fm1_perf_cycles(), t1 = fm1_ticks();
+        if (c1 != c0 && t1 != t0)
+            mhz = ((c1 - c0) * FM1_TICKS_PER_US + (t1 - t0) / 2u) / (t1 - t0);   /* (32 bits: 7.2 M cycles x 24) */
+    }
+    return mhz;
+}
+void plat_clock_regs(uint32_t r[3])              /* (felucca-bsp's fm1_clock.h's addresses; stock: 6, 0940022B, 0750310C) */
+{
+    r[0] = *(volatile uint32_t *)0x10014u;
+    r[1] = *(volatile uint32_t *)0x119A8u;
+    r[2] = *(volatile uint32_t *)0x119ACu;
+}
