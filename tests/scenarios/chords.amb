@@ -42,6 +42,12 @@ said Chords page, walk Wander: Slot 1, Chord Minor, Type 7, Play Endless
 expect par64 1
 expect par72 0
 expect progpos 0
+# (1.4.0, the user's) the keyboard under the slots: the walk's Fm7 as the stabs voice it, F3 C4 Eb4 Ab4
+expect kbnote0 53
+expect kbnote1 60
+expect kbnote2 63
+expect kbnote3 68
+expect kbheld 0
 # a key on it: written, its root F, its kind and type kept
 tapkey w0
 wait 200
@@ -53,6 +59,11 @@ spin K3 2
 wait 200
 said Type 9
 expect par80 4
+# (Fm9 written: F3 Eb4 G4 Ab4)
+expect kbnote0 53
+expect kbnote1 63
+expect kbnote2 67
+expect kbnote3 68
 # slot 2: the walk's; a key writes it (root Bb), Empty makes it a gap
 turn K1 1
 wait 200
@@ -66,6 +77,10 @@ wait 200
 said Chord Empty
 expect par73 0
 expect par65 0
+# (a gap: the keyboard the chord it holds, slot 1's Fm9, dimmer)
+expect kbheld 1
+expect kbnote0 53
+expect kbnote2 67
 # Play: Loop and back (the walk's character kept)
 spin K4 1
 wait 200

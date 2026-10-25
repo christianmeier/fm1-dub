@@ -487,6 +487,16 @@ static int expect(const char *what, const char *val)
         got = ping_hash() == ping_mark;
     else if (!strcmp(what, "screen"))
         got = proj.screen;
+    else if (!strncmp(what, "kbnote", 6)) {       /* kbnoteN: the Chords page keyboard's note N (0..3; 0: the root), MIDI
+                                                  * (-1: none) */
+        int nt[4], held, n = slot_notes(ui.slot, nt, &held), k = atoi(what + 6) & 3;
+        got = k < n ? nt[k] : -1;
+    } else if (!strcmp(what, "kbheld"))           /* 1: the keyboard shows the chord a gap holds */
+    {
+        int nt[4], held;
+        (void)slot_notes(ui.slot, nt, &held);
+        got = held;
+    }
     else if (!strncmp(what, "litkey", 6))         /* litkeyN: key N (0..26) lit */
         got = (int)(lit_keys >> (atoi(what + 6) % 27) & 1u);
     else if (!strcmp(what, "mutes"))              /* the layers muted (EN_M_*: 1 chord .. 16 hats, 32 noise) */

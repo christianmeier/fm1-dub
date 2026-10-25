@@ -1141,6 +1141,31 @@ static const char *slot_label(int i, char *nm)   /* written: its name; the walk'
     }
     return en_chord_label(proj.par[P_CR0 + i], proj.par[P_CQ0 + i], proj.par[P_CX0 + i], nm);
 }
+/* (1.4.0, the user's) a slot's chord as the stabs voice it: its four notes (MIDI, ascending; the root first, in C3..B3,
+ * as the engine puts it), from its kind and type (yours) or the scale's degree (the walk's); a gap: the chord before
+ * it, *held set (the one it holds); none before: 0 notes */
+static int slot_notes(int i, int *nt, int *held)
+{
+    int iv[4], r, k, j = i;
+    *held = 0;
+    while (j >= 0 && slot_is_gap(j))
+        j--, *held = 1;
+    if (j < 0)
+        return 0;
+    if (slot_is_walk(j)) {
+        int t[4], d = (proj.par[P_CR0 + j] - 1) % scale_steps();
+        en_chord_tones(proj.pool, proj.par[P_ROOT], d, t);
+        en_voicing(proj.pool, d, proj.par[P_CX0 + j] & 1, iv);
+        r = t[0];
+    } else {
+        en_chord_iv(proj.par[P_CQ0 + j], proj.par[P_CX0 + j], iv);
+        r = proj.par[P_CR0 + j];
+    }
+    r = ((r % 12) + 12) % 12;
+    for (k = 0; k < 4; k++)
+        nt[k] = 48 + r + iv[k];
+    return 4;
+}
 static void prog_take(void)                      /* the engine's slots (the walk writes them, Endless moves them) */
 {
     int i;
@@ -3526,12 +3551,9 @@ static void draw_pattern(void)
  * progression shows that the chord before it goes on */
 static void draw_slots(void)
 {
-    static const char *const HEAD[4] = {"HOME: THE WALK WRITES SLOT 8", "WANDER: THE WALK WRITES SLOT 8",
-                                        "FREE: THE WALK WRITES SLOT 8", "LOOP: THE SLOTS IN TURN"};
     int i, loop = (proj.par[P_PMODE] & EN_PLOOP) != 0, n = loop ? prog_count() : EN_NPROG;
     char nm[16];
-    cv_text(8, 2, &FONT_XS, HEAD[loop ? 3 : (proj.par[P_PMODE] & 3) % EN_NWALK], K_ACC);   /* (at the left, as the
-                                                  * section's word elsewhere: the page's name on its line) */
+    /* (1.4.0, the user's: no mode line on top; the walk's character on ALGORITHM's ring, the Walk page and the reader) */
     for (i = 0; i < EN_NPROG; i++) {
         int32_t x = 12 + (i & 3) * 55, y = 30 + (i >> 2) * 46;   /* (the two rows in the middle) */
         int filled = !slot_is_gap(i), now = en_playing && i == en_prog_pos && n, sel = i == ui.slot;
@@ -3549,6 +3571,45 @@ static void draw_slots(void)
                    now ? K_BG : slot_is_walk(i) ? K_PAD : K_TEXT);
         } else if (i < n) {
             text_c(x + 25, y + 13, &FONT_XS, "(HOLDS)", now ? K_BG : K_DIM);
+        }
+    }
+    {   /* (1.4.0, the user's) under the slots: a keyboard, C3 to G5, the notes of the chord the cursor is on lit as the
+         * stabs voice it (yours in white, the walk's in teal, as their names), its root marked; a gap: the chord it
+         * holds, dimmer; none before it: the keys alone */
+        static const int8_t WK[7] = {0, 2, 4, 5, 7, 9, 11};
+        int nt[4], held, nn = slot_notes(ui.slot, nt, &held), k, w;
+        uint16_t c = K_TEXT;
+        const int32_t X0 = 15, Y0 = 116, WW = 11, WH = 24, BW = 7, BH = 14;
+        {
+            int j = ui.slot;
+            while (j >= 0 && slot_is_gap(j))
+                j--;
+            c = j >= 0 && slot_is_walk(j) ? K_PAD : K_TEXT;
+        }
+        if (held)
+            c = mix(K_BG, c, 9);
+        for (w = 0; w < 19; w++) {               /* the white keys */
+            const int note = 48 + 12 * (w / 7) + WK[w % 7];
+            int lit = 0, root = 0;
+            for (k = 0; k < nn; k++)
+                if (nt[k] == note)
+                    lit = 1, root |= k == 0;
+            cv_rect(X0 + w * WW, Y0, WW - 1, WH, lit ? c : mix(K_BG, K_DIM, 6));
+            if (root)
+                cv_disc(X0 + w * WW + (WW - 1) / 2, Y0 + WH - 5, 2, K_BG);
+        }
+        for (w = 0; w < 18; w++) {               /* the black keys, over the gaps (none after E and B) */
+            const int pc = WK[w % 7] + 1, note = 48 + 12 * (w / 7) + pc;
+            int lit = 0, root = 0;
+            if (w % 7 == 2 || w % 7 == 6)
+                continue;
+            for (k = 0; k < nn; k++)
+                if (nt[k] == note)
+                    lit = 1, root |= k == 0;
+            cv_rect(X0 + (w + 1) * WW - 2 - BW / 2, Y0, BW + 2, BH + 1, K_BG);   /* (a dark rim round it) */
+            cv_rect(X0 + (w + 1) * WW - 1 - BW / 2, Y0, BW, BH, lit ? c : mix(K_BG, K_PANEL, 10));
+            if (root)
+                cv_disc(X0 + (w + 1) * WW - 1, Y0 + BH - 4, 1, K_BG);
         }
     }
 }
@@ -3835,11 +3896,13 @@ static uint32_t where_sig(uint32_t h)            /* (what they show, for a redra
  * save on one comes back on the ripples: ui_screen_ok) */
 static int scr_small_chord(int s) { return s != SCR_RIPPLES; }   /* (the chord small, at the top) */
 
-/* (1.4.0, the user's) the Walk page's picture: the circle of fifths (C at the top, a fifth a step clockwise), the
- * notes named round it, the key's bright, the rest faint; the chord's notes lit and joined (its shape), its root the
- * biggest, white with the kick; round the outside, the way to the next chord (Change). Nothing else on it (the user's:
- * no trail, no slots there: too crowded). At the left, under the section's bars: the chord's name, the walk's
- * character (or Loop and where it is), and the slots in order, the one playing lit (a gap: the chord before holds) */
+/* (1.4.0, the user's) the Walk page's picture: the root's journey round the circle of fifths (C at the top, a fifth
+ * a step clockwise): the notes named round it, the key's bright, the rest faint; the chord's root a single dot, white
+ * with the kick; when the chord changes, an arrow from the root before to the new one, fading over four bars (a
+ * neighbour on the circle: close; across it: far); round the outside, the way to the next chord (Change). No chord
+ * shape, no slots, no trail (the user's: too crowded, "every chord change the whole figure changes"). At the left,
+ * under the section's bars: the chord's name, the walk's character (or Loop and where it is), and the slots in order,
+ * the one playing lit (a gap: the chord before holds) */
 #define WK_X 166
 #define WK_Y 82
 #define WK_R 42
@@ -3849,13 +3912,23 @@ static void fq_xy(int pc, int32_t r, int32_t *x, int32_t *y)
     *x = WK_X + (int32_t)((float)r * fm_cosf(a) + (fm_cosf(a) < 0.0f ? -0.5f : 0.5f));
     *y = WK_Y + (int32_t)((float)r * fm_sinf(a) + (fm_sinf(a) < 0.0f ? -0.5f : 0.5f));
 }
+static int8_t wk_from = -1, wk_to = -1;        /* the arrow: the root before, the root now (-1: none yet) */
+static uint32_t wk_t0;                           /* (when it changed) */
+static uint32_t wk_fade_ms(void) { return proj.par[P_TEMPO] > 0 ? 960000u / (uint32_t)proj.par[P_TEMPO] : 8000u; }   /* (4 bars) */
+static int walk_fading(uint32_t now) { return wk_from >= 0 && now - wk_t0 < wk_fade_ms(); }
+static void wk_root_seen(uint32_t now)           /* (every frame: a new root starts the arrow) */
+{
+    const int r = en_chord_root % 12;
+    if (r != wk_to) {
+        wk_from = wk_to, wk_to = (int8_t)r, wk_t0 = now;
+    }
+}
 static void draw_walk(void)
 {
-    int steps[12], ns = en_scale(proj.pool, steps), i, j, n = 0, inkey[12] = {0}, pcs[EN_NPAD], have[12] = {0};
+    int steps[12], ns = en_scale(proj.pool, steps), i, j, inkey[12] = {0};
     int sr[EN_NPROG], loop = (proj.par[P_PMODE] & EN_PLOOP) != 0, cnt = prog_count();
     int32_t x, y, x0, y0;
     const float kg = en_playing ? en_drum_glow[0] : 0.0f;
-    const uint16_t chc = en_frozen ? K_FROST : K_PAD;
     char nm[16];
     for (i = 0; i < ns; i++)
         inkey[(proj.par[P_ROOT] + steps[i]) % 12] = 1;
@@ -3885,24 +3958,23 @@ static void draw_walk(void)
         }
         sr[i] = rr;
     }
-    for (i = 0; i < EN_NPAD; i++) {               /* the chord: its notes in fifths order, joined round */
-        const int pc = en_chord[i] % 12;
-        if (!have[pc])
-            have[pc] = 1, pcs[n++] = pc;
-    }
-    for (i = 1; i < n; i++)                       /* (sorted by their place on the circle) */
-        for (j = i; j > 0 && (pcs[j] * 7) % 12 < (pcs[j - 1] * 7) % 12; j--) {
-            const int t = pcs[j];
-            pcs[j] = pcs[j - 1], pcs[j - 1] = t;
+    if (walk_fading(plat_ms()) && wk_from != wk_to) {   /* the arrow from the root before, fading */
+        const float f = 1.0f - (float)(plat_ms() - wk_t0) / (float)wk_fade_ms();
+        const uint16_t c = mix(K_BG, K_ACC, 2 + q16(f * 0.85f));
+        float dx, dy, l, ux, uy;
+        fq_xy(wk_from, WK_R, &x0, &y0);
+        fq_xy(wk_to, WK_R, &x, &y);
+        dx = (float)(x - x0), dy = (float)(y - y0), l = fm_maxf(fm_sqrtf(dx * dx + dy * dy), 1.0f);
+        ux = dx / l, uy = dy / l;
+        {   /* (from the old dot's edge to just short of the new one's; the head two strokes back from its tip) */
+            const int32_t xa = x0 + (int32_t)(ux * 4.0f), ya = y0 + (int32_t)(uy * 4.0f),
+                          xb = x - (int32_t)(ux * 9.0f), yb = y - (int32_t)(uy * 9.0f);
+            line(xa, ya, xb, yb, c);
+            line(xa + (int32_t)(-uy), ya + (int32_t)(ux), xb + (int32_t)(-uy), yb + (int32_t)(ux), c);
+            line(xb, yb, xb - (int32_t)(ux * 6.0f - uy * 4.0f), yb - (int32_t)(uy * 6.0f + ux * 4.0f), c);
+            line(xb, yb, xb - (int32_t)(ux * 6.0f + uy * 4.0f), yb - (int32_t)(uy * 6.0f - ux * 4.0f), c);
         }
-    for (i = 0; i < n && n > 1; i++) {
-        fq_xy(pcs[i], WK_R, &x0, &y0);
-        fq_xy(pcs[(i + 1) % n], WK_R, &x, &y);
-        line(x0, y0, x, y, mix(K_BG, chc, 9));
-    }
-    for (i = 0; i < n; i++) {
-        fq_xy(pcs[i], WK_R, &x, &y);
-        cv_disc(x, y, 4, chc);
+        cv_disc(x0, y0, 3, mix(K_BG, K_ACC, 2 + q16(f * 0.6f)));   /* (where it was, fading too) */
     }
     fq_xy(en_chord_root, WK_R, &x, &y);           /* its root */
     cv_disc(x, y, 6, en_frozen ? K_FROST : mix(K_ACC, K_TEXT, q16(kg * 1.4f)));
@@ -4038,6 +4110,7 @@ static void draw_main(void)
     en_view_layer = (uint8_t)(scr_layer(ui.view) + 1);   /* (the scope and spectrum: this page's layer, or the whole) */
     echo_take(now);                              /* (the ripples: each frame, so the repeats are measured on time) */
     meter_take(now);                             /* (the meters too, and the clip light) */
+    wk_root_seen(now);                           /* (the Walk page's arrow: the root's changes, on any page) */
     ripples_take(now);
     if (ui.frame % 3u)                           /* 20 frames a second is plenty */
         return;
@@ -4100,7 +4173,8 @@ static void draw_main(void)
                  (uint32_t)proj.par[P_ROOT] << 13 | (uint32_t)proj.par[P_MODE] << 17 | (uint32_t)proj.par[P_DRIFT] << 22);
         for (i = 0; i < EN_NPAD; i++)
             h = hash(h, en_chord[i]);
-        if (h != ui.sig[1] || big_on(now) || (en_playing && en_drum_glow[0] > 0.01f)) {   /* (the root white with the kick) */
+        if (h != ui.sig[1] || big_on(now) || (en_playing && en_drum_glow[0] > 0.01f) || walk_fading(now)) {   /* (the root
+                                                  * white with the kick; the arrow fading) */
             ui.sig[1] = h;
             cv_begin(240, MAIN_H, K_BG);
             draw_walk();

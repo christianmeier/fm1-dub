@@ -302,6 +302,12 @@ slot is one of three:
 - a chord **you wrote**, in white: as written, whatever the key;
 - a **gap**, "(HOLDS)": the chord before it goes on.
 
+Under the slots, a **keyboard** (C3 to G5) shows the chord of the slot you're editing, its four notes lit as the
+stabs play them (the root marked with a dot): white for yours, teal for the walk's, as their names. On a gap it shows
+the chord the gap holds, dimmer. It follows the slot as you move to it, and the chord as you change it.
+
+![The Chords page on Basic: the eight slots, slot 1 (Fm7) playing and edited; under them the keyboard, F3, C4, Eb4 and Ab4 lit, F3 dotted as the root](img/screen-chords.png "The Chords page")
+
 | | |
 |---|---|
 | KNOB 1 · Slot | the slot you're editing (1–8), outlined on the screen |
@@ -309,7 +315,7 @@ slot is one of three:
 | KNOB 2 · Chord | its kind: Empty (a gap), Major, Minor, Sus2, Sus4, Dim, Aug. Turning a walk's chord makes it yours |
 | KNOB 3 · Type | Triad, 6, 7, Maj7, 9, 11, Add9 |
 | KNOB 4 · Play | **Endless** or **Loop** |
-| ALGORITHM | the walk's character: **Home**, **Wander** or **Free**. Its chords (the teal ones) are walked again at once, all but the one playing; yours and the gaps stay. The character shows at the left of the knob row |
+| ALGORITHM | the walk's character: **Home**, **Wander** or **Free**. Its chords (the teal ones) are walked again at once, all but the one playing; yours and the gaps stay. The character shows at the left of the knob row (no line on top any more) |
 
 **Home, Wander, Free** (ALGORITHM; Wander is the default) set how the walk moves, from the most settled to the
 most varied. Turning ALGORITHM rewrites the walk's chords on the page straight away, so you see and hear the
@@ -334,9 +340,8 @@ leaves the page.
 
 #### The Walk page
 
-**EDIT again** from the Chords page (Chords 1/2, Walk 2/2): where the chords are, and where the walk goes, on the
-**circle of fifths** (C at the top, a fifth a step clockwise, so neighbours are close chords and the far side is far
-away).
+**EDIT again** from the Chords page (Chords 1/2, Walk 2/2): how far the walk moves, on the **circle of fifths** (C at
+the top, a fifth a step clockwise, so neighbours are close chords and the far side is far away).
 
 | | |
 |---|---|
@@ -346,13 +351,14 @@ away).
 
 What it shows:
 - **The twelve notes** named round the circle, the key's bright and the others faint.
-- **The chord playing**: its notes lit and joined, so you see its shape; its root the biggest dot, white with each
-  kick.
+- **The chord's root**: a single dot, white with each kick.
+- **When the chord changes**, an arrow from the root before to the new one, fading over four bars: a step to a
+  neighbour is a close move, a jump across the circle a far one.
 - **Round the outside**, dots filling up on the way to the next chord (Change).
 - **At the left**: the chord's name, the walk's character (or LOOP and where it is, "2/8"), and the eight slots'
   chords in two columns, the one playing lit (a gap: the chord before it holds).
 
-![The Walk page on Basic: the circle of fifths, Fm7's notes joined, the chord's name and the slots' list at the left; WALK Wander, CHANGE 64 bars](img/screen-walk.png "The Walk page")
+![The Walk page on Basic: the circle of fifths, the root's dot and the arrow from the root before, the chord's name and the slots' list at the left; WALK Wander, CHANGE 64 bars](img/screen-walk.png "The Walk page")
 
 **The effects grid** (REC held). After a moment the whole screen shows sixteen effects, four rows of four (the knobs do nothing while it's up);
 the white keys from the lowest play them, each as long as its key is held (even after you let go of
