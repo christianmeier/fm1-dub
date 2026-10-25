@@ -2315,9 +2315,14 @@ static void draw_header(void)
             cv_text(x, 8, &FONT_XS, c, K_TEXT);
             x -= 8;
         }
-        if (ui.dirty) {                            /* unsaved */
-            cv_round(x - 5, 12, 5, 5, 2, K_DIM);
-            x -= 11;
+        if (ui.dirty) {                            /* unsaved: a small disk (1.4.0, the user's: the dot read as nothing) */
+            const int32_t dx = x - 9, dy = 9;
+            cv_rect(dx, dy, 8, 10, K_DIM);         /* (its body, a corner cut at the top right) */
+            cv_rect(dx + 8, dy + 2, 1, 8, K_DIM);
+            cv_rect(dx + 2, dy, 4, 3, K_BG);       /* (the shutter's window, its slot lit) */
+            cv_rect(dx + 4, dy, 1, 2, K_DIM);
+            cv_rect(dx + 2, dy + 6, 5, 3, K_BG);   /* (the label) */
+            x -= 15;
         }
         if (ui.view == V_SETUP) {                 /* Setup: the audio load (now/peak), and any dropouts ("!n") */
             char c[24] = "CPU ";

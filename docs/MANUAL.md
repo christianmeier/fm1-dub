@@ -430,7 +430,7 @@ GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
   them. With a long piece name the cells get a little smaller; on Setup, where the load takes the room,
   the word may be left out.
   - **On the right, only what matters now:** HOLD and LOCK in red (dub hold, Lock) and SOLO in yellow
-    while they are on; a dot when there are unsaved changes; EXT while DUB-1 follows a MIDI clock; a red
+    while they are on; a small disk when there are unsaved changes; EXT while DUB-1 follows a MIDI clock; a red
     **!** for a second when the master clips (the output at full scale: the Arrangement page's meters
     show where; it is not Setup's grey "!n", the audio's dropouts, beside the CPU's load); the battery
     when it is low (under a fifth) or charging on USB (its bars filling in turn), and always on Setup,
@@ -1377,7 +1377,7 @@ mode, the root, the tempo and the pings' octave, each piece's song, plus Tune, M
 
 - **By itself:** a few seconds after a change, but only while resting and once the stabs have
   died away. Writing to the memory interrupts the sound for a moment, so it never happens while
-  the music plays. A dot at the top of the screen means there are unsaved changes.
+  the music plays. A small disk at the top right of the screen means there are unsaved changes.
 - **GLO held** for half a second, then let go: saves now, playing or not ("SAVED").
 - **Setup's KNOB 4 (Save):** shows **Save**, its dot lit, while there are unsaved changes, and
   **Saved** once there aren't; a turn saves.
