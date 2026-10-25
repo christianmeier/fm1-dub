@@ -921,6 +921,29 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   answering after 562 requests" (about half the package), the screen blank (the loader's), then "FM-1 not found";
   unplugging and replugging the USB and installing again finished it. To look into: why the loader stopped
   mid-write (a USB drop? the loader's USB poll, its retries), and whether the installer could reconnect by itself.
+- **Hardware and installer** (the user, 2026-10-25; from build/design/REPORT-reddit.md: u/ZenLegume's r/MVaveFM1 post
+  "All right stop, collaborate and listen", its comments and the repos they link; the findings from the repos are
+  the agent's, to verify before acting). In order:
+  1. **The clock**: DUB-1 never sets it, so it runs at what the bootloader leaves: 360 MHz under M-VAVE's, reportedly
+     320 MHz under the community's m-bootloader 1.2 (11% slower, against peaks of 80-82%). First check it on the
+     user's FM-1, then set 360 MHz at boot (felucca-bsp's fm1_clock.h, MPL-2.0, fits a GPL project) and show the clock
+     on the Setup page.
+  2. **FM1 Open** (M-VAVE's own open firmware) blocks other installers: detect it in both installers (tools/ and the
+     web one) and say "put the stock firmware back first"; a line in the manual (fm1-base already does this).
+  3. **The loader's screen and the stall**: port upstream's "UPDATING / DO NOT UNPLUG" screen and progress bar (ours,
+     from 2026-10-07, is blank: the user's stalled install); then the stall itself (upstream has the same error path):
+     log the last request, retry, wait for the FM-1 to come back and resume.
+  4. **The supply voltages** at M-VAVE's levels, as upstream now sets them.
+  5. **The hot code in SRAM, again, judged by the peaks** (ZenLegume: code from flash shows as erratic, spiky load, not
+     a higher average; our 2026-10-23 test gave the same averages and evener peaks, and was dropped on the averages):
+     redo it with a load-spread figure on the CPU page.
+  6. M-VAVE's compiler and link flags (fm1_open's Build.ps1) benchmarked on the engine, with the CPU audit.
+  7. DUB-1 tested under m-bootloader; M-Flasher in the manual's recovery section.
+  8. After 1.4.0: whether to move DUB-1 onto fm1-base (its migration keeps the GPL) or keep copying fixes over.
+  9. The SMK-37 port reviewed against M-VAVE's new smk37_open SDK.
+  Skipped: CMake, FreeRTOS (nothing gained now). In the thread, worth answering (only with the user's say-so and
+  text): the unanswered "which codebase to start from", the stability-testing question (our CPU page, the dropout
+  counter, safe mode), the SMK-37 port needing a tester, and the m-bootloader clock loss.
 
 ## Now: two lines in parallel (the user, 2026-10-23)
 
