@@ -941,6 +941,17 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   7. DUB-1 tested under m-bootloader; M-Flasher in the manual's recovery section.
   8. After 1.4.0: whether to move DUB-1 onto fm1-base (its migration keeps the GPL) or keep copying fixes over.
   9. The SMK-37 port reviewed against M-VAVE's new smk37_open SDK.
+  10. **The second core** (the user, 2026-10-25; after 1.4.0, its own investigation): DUB-1 runs on one core (the
+      audio in the I2S ISR, the UI in the main loop between blocks); the chip has two. Moving work to the second
+      would about double the headroom (the busiest pieces peak ~80% of one core). Ways: (a) the effects bus (echo,
+      plate, cloud) on core 2, a block behind (5.8 ms on the effects only), as ZenLegume suggests one core owning the
+      audio and the other taking jobs off it; (b) some voices (the four FM chord voices); (c) the UI on core 2 (the
+      least DSP freed, but the engine's code no longer evicted from the I-cache between blocks). Risks: upstream's
+      second-core code is beta; a reported fault of core 1 misreading RAM on some units (fm1-x0x issue #10; to
+      verify); the engine is one render touching shared state (a clean boundary, a hand-off buffer, timing). Steps:
+      the CPU audit first (which part to move), then a prototype of (a) on the user's FM-1 with a test for the RAM
+      fault, then decide; with item 8 (fm1-base already starts both cores) and after the clock and SRAM items, the
+      cheaper headroom.
   Skipped: CMake, FreeRTOS (nothing gained now). In the thread, worth answering (only with the user's say-so and
   text): the unanswered "which codebase to start from", the stability-testing question (our CPU page, the dropout
   counter, safe mode), the SMK-37 port needing a tester, and the m-bootloader clock loss.
