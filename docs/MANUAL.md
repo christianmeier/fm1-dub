@@ -110,7 +110,7 @@ The drawing at the top shows them all; here they are in more detail.
 | ENV · ARP · LFO · SEQ | The layers' pages: Chord, Pings, Bass, Drums, each its part (see [The pages](#8-the-pages)). Again: the layer's voice page (**Chord voice**, **Pings voice**, **Bass voice**; the drums' **Kick**), then its FM page or, for the drums, the **Hats** page and then the Pattern page, then back. The chord has one more: after its FM page (for every chord voice: its Colour is there), the **Chord LFO** page, then back. Held (half a second): a **nudge** to the layer's sound; held on (1.5 s): a **shake** (below). |
 | FX · GLO | The **Dub** page, the echo and the plate (Space until 1.4.0; FX again: the **Echo page**, the echo's blur and tone, the plate's size and its cloud, FX blinking; again, back); the Setup page, for what holds for every piece (GLO again: **Song mode**, Endless, Song or Set; again, back). The lit button shows the page. FX held: a nudge to the space; held on: a shake (a new echo time). **GLO held** (half a second, then let go): **saves** all eight pieces (a card, SAVED); held on (1.5 s): the piece back to its recipe (a red card, RESET). |
 | SELECT | **The DJ filter**, on every page (its only place since 1.4.0's Chord pages; the Arrangement page's Open and Shut keys push on top of it): left shuts it (a low-pass, under water), right opens it (a high-pass, thin and bright), Off in the middle, where it stops on its way through (three clicks to leave it). While it turns, a big ring in the middle shows it (FILTER over it, the amount inside, Shut or Open under it); the page stays. Hold HOME and turn it for the tempo, from any page. The pages are on their buttons; the page's name, top right, says where you are. |
-| ALGORITHM | On a layer's page (Chord, Pings, Bass, Drums): that layer's **voice** (see [The voices](#the-voices)). On the Noise pages: its character. On the LFO pages: where the LFO goes, its **Destination** (the Chord LFO's: Cutoff, Reso, Colour; the Noise LFO's: Filter, Tone, Air). On the Chords page: the walk's character (Home, Wander, Free). Anywhere else: the middle of the screen, as ripples, a scope or a spectrum (see [The screen](#4-the-screen)). The mode, a piece's choice, is on the Key page (HOME again). |
+| ALGORITHM | On a layer's page (Chord, Pings, Bass, Drums): that layer's **voice** (see [The voices](#the-voices)). On the Noise pages: its character. On the LFO pages: where the LFO goes, its **Destination** (the Chord LFO's: Cutoff, Reso, Colour; the Noise LFO's: Filter, Tone, Air). On the Chords page: the walk's character (Home, Wander, Free). Anywhere else: the middle of the screen: ripples, a scope, a spectrum, or (prototypes) the echo trail, the fifths, the tape (see [The screen](#4-the-screen)). The mode, a piece's choice, is on the Key page (HOME again). |
 | PRESETS | The piece (see [The pieces](#7-the-pieces)). |
 | KNOB 1–4 | The four values on the screen. A few clicks are always single steps; a quick turn speeds up, so half a turn sweeps the range. While a knob turns, its value shows large in the middle of the screen, in a big ring with its name and what it does under it (on the Chords and Pattern pages, which show the change themselves, the line above the knobs says what it does). A **centred** knob (0 in the middle: the voice pages' −50…+50 ones, the chord's Cutoff, the Noise voice's Tone, the Filter, Energy (the Form and the Arrangement pages') and the Arrangement page's Wet) has a **notch** at 0: turning through, it stops there, and to leave it takes three clicks the same way (the first two are held back). A switch shows its positions as dots, up to ten (Change, Mode, Algo). A grey knob does nothing there. |
 | OCT− / OCT+ | On a layer's page (Chord, Pings, Bass, Drums or Noise, and their voice, FM, Hats and Pattern pages, and the Noise pages): that layer's **level**, 5 down or up a press (a big ring in the middle, in the layer's colour, BASS over it, the level inside, until a second after the last press); held, it keeps going. **Both together**, let go within a second: the layer **muted** ("BASS MUTED"), its level kept; again, back ("BASS ON"). The drums mute the kick and the hats together. These are the Arrangement page's mutes (white 1–6): a mute made here shows there, and the other way round. Held together for five seconds: the update mode (see [Troubleshooting](#11-troubleshooting)); a long press never mutes. On the other pages they do nothing. (The pings' octave is on the Pings voice page, KNOB 1.) |
@@ -398,7 +398,9 @@ GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
 - **Top right:** the page's name, in teal (ARRANGEMENT on SEL's page). SOLO, in yellow, to its left
   while a solo is on. Under it, in grey, its place among its button's pages (**2/3**: the second of three), and to
   its left, in red: "hold" in dub hold, "lock" under Lock.
-- **The ripples:** each stab drops a ring in the middle that spreads and fades. Its outline is the
+- **The ripples:** each stab drops a ring in the middle that spreads out to the screen's sides (since
+  1.4.0: the whole width, behind the section's word, the page's name and the chord, above the lanes)
+  and fades. Its outline is the
   sound itself at that moment, its wave wrapped round the circle: a soft pad a smooth ring, a
   bright stab a jagged one. The echo's repeats follow it, a ring each echo time, each as strong as
   the echo's output really is then (measured, not worked out), and a little smoother each time
@@ -416,21 +418,37 @@ GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
   (on its side), as bright as it is loud, gone in a moment; a strong hit a brighter one. More
   Level or Density (the Noise page), more specks. The specks show on the whole piece's ripples
   and on the Noise pages (there alone), not on a layer's page.
-- **ALGORITHM** (on any page but a layer's, the Noise page or the Chords page) changes what the middle shows: the ripples, a **scope** or a
-  **spectrum**, and then the ripples again (turned back, the other way round). Each piece keeps its own view, saved with it: Haze on the spectrum, say, and Pressure on the scope. With the
-  scope or the spectrum showing, the chord's name moves to the top.
+- **ALGORITHM** (on any page but a layer's, the Noise page or the Chords page) changes what the middle shows: the ripples, a **scope**, a
+  **spectrum**, and then three more (prototypes in 1.4.0, to be kept or dropped): the **echo trail**, the **fifths**
+  and the **tape**; then the ripples again (turned back, the other way round). Each piece keeps its own view, saved with it: Haze on the spectrum, say, and Pressure on the scope. With the
+  scope, the spectrum, the echo trail or the tape showing, the chord's name moves to the top.
 - On a layer's own page (Chord, Pings, Bass, Drums) and its voice pages, the middle shows **that layer alone**: the ripples its notes, in
   its colour (the stabs on the Chord page, the pings with their loops' dots on the Pings page, a ring a bass note, a
   ring a drum hit), and the scope or the spectrum its sound, dry. Below it, that layer's own lane, large (below), with the
   seven meters at its left, the layer's own bright and the others dimmed. The Noise pages
   follow it too, with the noise alone: its specks, or its scope or spectrum. Form, Dub, Echo and the other pages show the whole piece (the Arrangement page shows its meters).
-  - The **scope** draws the output (left and right mixed) as a thick line. Each trace starts on a
+  - The **scope** draws the output (left and right mixed) as a thick line, nearly the screen's width. Each trace starts on a
     rising zero crossing so the picture stands still, and the two traces before it fade behind.
     Its height follows the level, so a quiet passage still fills it.
   - The **spectrum** splits the output into 18 bands, from the sub bass (43 Hz, left) to the hats
     (11 kHz, right). Each band is a column of segments: teal, then brass, amber and red at the
     top. The columns jump up with the sound and fall back slowly. A white cap stays at each
-    column's peak for a moment before it drops.
+    column's peak for a moment before it drops. The columns span nearly the screen's width.
+  - The **echo trail** (a prototype) draws the echo as tape running from the head at the right
+    edge to the left: each note a bar as tall as it struck, its repeats the bars after it, an echo time
+    apart (the dotted columns), each as tall as the echo really is when it comes back (the ripples'
+    own measure). A long Feedback leaves a long train, a short one a single bar; a throw is in the
+    accent colour.
+  - The **fifths** (a prototype) draws the twelve notes round the circle of fifths, C at the top:
+    the key's notes a dot, the others a point. The chord's notes are lit and joined, so you see its
+    shape; its root is the biggest, white with each kick. The last few roots leave a trail behind it
+    (where the walk has been), and the dots round the outside fill up on the way to the next chord
+    (Change).
+  - The **tape** (a prototype) draws two reels, the tape running from the left one to the right past
+    three heads: the record head lit with the output, the play head with the echo coming back. The
+    reels turn with the tempo, the smaller one faster. Through a song the tape winds from the left reel
+    to the right one, so the reels show where the song is; in Endless it winds back and forth over 128
+    bars.
 - The levels in full and the duck are on the Arrangement page (SEL), on its meters; the other pages
   show a short meter at each lane's left (since 1.4.0; the duck meter is the Arrangement page's).
 - **The lanes** (Form, Dub, Echo, Setup, Key): the bar as it plays, sixteen steps, seven rows, top to
@@ -495,6 +513,8 @@ GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
 ![The Dub page with FEEDBACK lit as it turns, set to 6.7 s, the big ring in the middle saying HOW LONG THE REPEATS GO ON; ECHO 55, ECHO TIME 1/8., REVERB 35](img/screen-turning.png "Turning Feedback on the Dub page")
 ![The scope: the output as a thick teal line over a dotted centre line, the two traces before it fading behind; Fm7 at the top](img/screen-scope.png "ALGORITHM: the scope")
 ![The spectrum: eighteen columns of teal and brass segments, a white cap over each; Fm7 at the top](img/screen-spectrum.png "ALGORITHM: the spectrum")
+
+![The echo trail (a prototype): the stabs as bars from the head at the right edge, their repeats an echo time apart, smaller as the echo dies; Fm7 at the top](img/screen-echo-trail.png "ALGORITHM: the echo trail") ![The fifths (a prototype): the circle of fifths, the key's notes as dots, the chord's notes lit and joined, its root the biggest, Fm7 in the middle](img/screen-fifths.png "ALGORITHM: the fifths") ![The tape (a prototype): two reels, the tape from the left one past three heads to the right one; Fm7 at the top](img/screen-tape.png "ALGORITHM: the tape")
 ![Dub hold: red rings, the chord's name red, and "hold" in red above FORM, top right](img/screen-hold.png "Dub hold")
 ![The Arrangement page with a mute and a solo: PNG dark (muted), the bass soloed (SOLO top right), the other rows dimmed but the noise, which a solo leaves playing](img/screen-arrangement-solo.png "The Arrangement page: a mute, a solo")
 
@@ -890,8 +910,8 @@ the voice and the piece. The bass's Bite and the pings' Ratio are on their FM pa
 
 ![The Form page: ENERGY 0, EVOLVE 55, MOTION 30 (its ring marked at 40 and 70), the fourth knob free](img/screen-main.png "The Form page")
 
-How the piece unfolds (the Dub page until 1.4.0). **ALGORITHM** (here and on any page but a layer's, the Noise page or the Chords page): the middle of the screen as ripples, scope or
-spectrum (see [The screen](#4-the-screen)). **HOME** again: the Song page (below), then the Key page.
+How the piece unfolds (the Dub page until 1.4.0). **ALGORITHM** (here and on any page but a layer's, the Noise page or the Chords page): the middle of the screen as ripples, scope,
+spectrum, echo trail, fifths or tape (see [The screen](#4-the-screen)). **HOME** again: the Song page (below), then the Key page.
 
 - **Energy:** busier or sparser, now: 0 in the middle, the notch there. Down, sparser and drier:
   fewer and quieter pings, fewer and quieter hats, fewer and shorter stabs, a thinner bass line, a
@@ -1466,7 +1486,7 @@ The defaults are Basic's; each piece has its own.
 | Strip | Echo, Plate | 0–100 (0 none – 50 as the piece sends – 100 twice; the kick's 0 none – 100 a full send) | 50 (the bass's Echo 0, the kick's 0) |
 | Strip | Low cut | 0–100 (off – about 20 Hz at 1 – about 600 Hz) | 0 |
 | SEL held | Lock | Off, On; not saved | Off |
-| ALGORITHM | Screen (all pages but a layer's, the Noise and LFO pages and the Chords page) | Ripples, Scope, Spectrum | Ripples |
+| ALGORITHM | Screen (all pages but a layer's, the Noise and LFO pages and the Chords page) | Ripples, Scope, Spectrum, Echo trail, Fifths, Tape (the last three prototypes) | Ripples |
 | ALGORITHM | The walk (Chords page) | Home, Wander, Free | Wander |
 | ALGORITHM | Chord voice (Chord page) | 7 voices | Saws |
 | ALGORITHM | Ping voice (Pings page) | 5 voices | Blip |

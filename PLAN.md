@@ -889,6 +889,17 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   the deepest layer (whatever is on top covers them: the section and bar cells, the page's name, the big ring, the
   lanes); the scope and the spectrum wider (the screen's width, or nearly). To fit with the song line and the
   "where we are" map, so the room is shared out once.
+  **Built** (branch dub-1.4-vis, 2026-10-25; the user: "start directly ... we can even think on other animations"):
+  the ripples out to the sides (radius 124, ~1.8 s across, deeper as they grow), kept above the lanes (cv_clip,
+  rows 0-89), a dark ground under the section's word and bars and under the page's name; the specks and the ping
+  orbits wider and flattened; the scope 224 px (0.75 samples a pixel), the spectrum's 18 bands 216 px. Three
+  prototype views after them on ALGORITHM (UI_NSCREEN 6), to judge on the FM-1: the **Echo trail** (the echo as tape
+  from the head, the measured repeats as bars), the **Fifths** (the circle of fifths: the key, the chord's shape, the
+  walk's trail, the way to the next chord), the **Tape** (two reels at the tempo, winding through a song; record and
+  play heads lit). Previews in build/vis/ (MP4, GIF, still). Cost: the ripples ~7.7k pixels a frame at their
+  busiest (2.2k before), the rest under ~6.5k, against the 34.6k every frame clears and sends. **Open:** which
+  prototypes stay (and their names); more ideas (a dub desk of light
+  columns, the Mixer's rides, the song as a horizon).
 - **Still missing (the user, 2026-10-24: "don't forget"):**
   - ~~**The virtual dub mixer**~~ (built, dub-1.4-mixer, below).
   - ~~**The LFO's Destination**~~: the chord's built (Cutoff, Reso, Colour; dub-1.4-chord); the noise's built

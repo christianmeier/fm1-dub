@@ -15,6 +15,15 @@ turn ALGO 1
 wait 2000
 shot screen-spectrum.png
 turn ALGO 1
+wait 2000
+shot screen-echo-trail.png
+turn ALGO 1
+wait 2000
+shot screen-fifths.png
+turn ALGO 1
+wait 2000
+shot screen-tape.png
+turn ALGO 1
 wait 300
 tap HOME
 wait 1500
