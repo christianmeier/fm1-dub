@@ -1098,7 +1098,13 @@ static void perf_set(int on)                     /* on: the mixer on the knobs; 
         if (ui.view == V_PERF || ui.view == V_STRIP)
             set_view(ui.perf_from);
     }
-    say("ARRANGEMENT", on ? "ON" : "OFF");
+    if (ann_on()) {                              /* (1.4.0, the user's: not on the screen, the page itself shows it; the
+                                                  * reader still hears it) */
+        char t[48];
+        msg_text("ARRANGEMENT", on ? "ON" : "OFF", t);
+        ann_say(t, 0, ANN_NOW);
+        sp_said = 1;
+    }
 }
 
 /* ------------------------------------------------------- the effects grid --- */
