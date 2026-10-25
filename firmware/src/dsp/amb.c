@@ -657,6 +657,18 @@ const char *en_chord_name(const int *pcs, int n, char *buf)
     return buf;
 }
 
+/* (1.4.0: the FM-1's peaks) each render stage's time, added up per en_render call, in en_prof_ticks()'s units (the
+ * FM-1's 24 MHz TIMER4; the host's nanoseconds): main_fm1.c keeps the heaviest block's for the Setup page,
+ * host/en_prof.c reads them. Integer only (the FM-1's FPU is single-precision; a timer read a stage) */
+#ifdef EN_PROF
+volatile uint32_t en_prof[EN_PROF_N];
+#define PROF_B(v) const uint32_t v = en_prof_ticks()
+#define PROF_E(i, v) (en_prof[i] += en_prof_ticks() - (v))
+#else
+#define PROF_B(v) (void)0
+#define PROF_E(i, v) (void)0
+#endif
+
 /* ------------------------------------------------------------ commands --- */
 enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_MUTE, C_PERF, C_FX, C_PINGS, C_MACRO, C_PROT, C_REWALK, C_PNUDGE, C_LOCK, C_OUTRO };
 #define QN 512u                                 /* (a piece is every parameter at once: room for twice over and more) */
@@ -681,6 +693,7 @@ void en_seed(uint32_t s) { post(C_SEED, 0, (int)(s & 0xFFFFu)); }
 void en_panic(void) { post(C_PANIC, 0, 0); }
 void en_clock(int msg) { post(C_CLOCK, msg, 0); }
 void en_regrow(void) { post(C_REGROW, 0, 0); }
+uint32_t en_queue_left(void) { return q_w - q_r; }   /* (1.4.0: the commands still waiting: a piece's, spread) */
 void en_mute(uint32_t m) { post(C_MUTE, (int)(m & 0xFFu), 0); }
 void en_perf(uint32_t f) { post(C_PERF, 0, (int)(f & 0xFFFFu)); }   /* (1.4.0: the throws past 8 bits: in the 16-bit field) */
 void en_fx(uint32_t m) { post(C_FX, 0, (int)(m & 0xFFFFu)); }
@@ -3834,13 +3847,30 @@ static void macro(int i, int v)
         }
 }
 
+/* (1.4.0, the FM-1's peaks: a piece change was every parameter and the regrow in one block, the peak to 100%) the
+ * commands a block takes, by their weight: a parameter 1, a regrow DRAIN_REGROW; the rest wait for the next block, in
+ * order (a piece's ~170 in about seven blocks, 40 ms: unheard). Only a piece is spread (more than DRAIN_BURST waiting
+ * while playing, a regrow among them), until the queue is empty; a knob's, a nudge's, a few at once, as ever; resting,
+ * all at once (nothing to hear, and a piece set up before PLAY plays from its first sample as before) */
+#define DRAIN_BUDGET 28
+#define DRAIN_REGROW 10
+#define DRAIN_BURST 64
 static void drain(void)
 {
-    while (q_r != q_w) {
+    static uint8_t spread;
+    int budget;
+    if (!spread && en_playing && q_w - q_r > DRAIN_BURST) {   /* (a piece: a burst with its regrow in it) */
+        uint32_t i;
+        for (i = q_r; i != q_w && !spread; i++)
+            spread = (uint8_t)((q[i % QN] >> 24) == C_REGROW);
+    }
+    budget = spread && en_playing ? DRAIN_BUDGET : 1 << 30;
+    while (q_r != q_w && budget > 0) {
         uint32_t c = q[q_r % QN];
         int a = (int)(c >> 16 & 0xFFu), b = (int)(int16_t)(c & 0xFFFFu);
         BARRIER();
         q_r++;
+        budget -= (c >> 24) == C_REGROW ? DRAIN_REGROW : 1;
         switch (c >> 24) {
         case C_SET:
             if (a < P_NPARAMS)
@@ -3945,6 +3975,8 @@ static void drain(void)
             break;
         }
     }
+    if (q_r == q_w)
+        spread = 0;                              /* (the burst through) */
 }
 
 /* --------------------------------------------------------------- render --- */
@@ -4498,7 +4530,7 @@ static void render_drums(uint32_t n)
         v->inc = inc;
         v->amp = amp;
         v->att = att;
-        v->clk = clk;
+        v->clk = fm_flush(clk);                 /* (1.4.0: a click long done no denormal on the FM-1) */
         v->x1 = fm_flush(cl);
         v->lc = kc > 0.0f ? fm_flush(l1) : 0.0f;
         v->lc2 = kc > 0.0f ? fm_flush(l2) : 0.0f;
@@ -4537,7 +4569,7 @@ static void render_drums(uint32_t n)
         }
         v->amp = amp;
         v->att = att;
-        v->clk = clk;
+        v->clk = fm_flush(clk);
         v->lc = lc > 0.0f ? fm_flush(l1) : 0.0f;
         v->lc2 = lc > 0.0f ? fm_flush(l2) : 0.0f;
         v->on = amp > 0.0005f;
@@ -5125,25 +5157,29 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         mb_s[0] = mb_s[1] = mb_s[2] = mb_s[3] = 0.0f;
     for (j = 0; j < n; j++)
         mixl[j] = mixr[j] = rsend[j] = esend[j] = kickb[j] = bassb[j] = 0.0f;
+    {
+    PROF_B(pf);
     fader_step(n);                               /* (1.4.0: the parts' faders, the song's) */
     mixer_step(n);                               /* (1.4.0: the dub mixer's rides) */
     lfo_step();
+    PROF_E(2, pf);
+    }
     {   /* (a layer's own part of the dry mix: what its render adds; the bass, the kick and the noise their own) */
         const int tl = en_view_layer, mo = en_meter_on;
-        render_stabs(n);
+        { PROF_B(p3); render_stabs(n); PROF_E(3, p3); }
         if (mo)                                  /* (the meters: the mix is the chord's alone here) */
             mpk[EN_MT_CHORD] = mt_pk(mixl, mixr, n), mt_snap(n);
         if (tl == 1)
             for (j = 0; j < n; j++)
                 tapb[j] = mixl[j] + mixr[j];
-        render_bass(n);
+        { PROF_B(p4); render_bass(n); PROF_E(4, p4); }
         if (tl == 2)
             for (j = 0; j < n; j++)
                 tapb[j] = -(mixl[j] + mixr[j]);
-        render_bells(n);
+        { PROF_B(p5); render_bells(n); PROF_E(5, p5); }
         if (mo)
             mpk[EN_MT_BASS] = mt_pk(bassb, bassb, n), mpk[EN_MT_PINGS] = mt_diff(n, 0);
-        widen(n);                                /* (the chord's and the pings' dry, wider) */
+        { PROF_B(p6); widen(n); PROF_E(6, p6); }                                /* (the chord's and the pings' dry, wider) */
         if (tl == 2)
             for (j = 0; j < n; j++)
                 tapb[j] += mixl[j] + mixr[j];
@@ -5152,7 +5188,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
                 tapb[j] = -(mixl[j] + mixr[j]);
         if (mo)
             mt_snap(n);
-        render_drums(n);
+        { PROF_B(p7); render_drums(n); PROF_E(7, p7); }
         if (mo)
             mpk[EN_MT_KICK] = mt_pk(kickb, kickb, n), mpk[EN_MT_HATS] = mt_diff(n, 0);   /* (1.4.0: the kick its bus, the
                                                   * hats, the rim and the clap the mix's rest) */
@@ -5162,7 +5198,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         if (tl == 3)
             for (j = 0; j < n; j++)
                 tapb[j] = 2.0f * bassb[j];
-        render_crackle(n);
+        { PROF_B(p8); render_crackle(n); PROF_E(8, p8); }
         if (tl == 5)
             for (j = 0; j < n; j++)
                 tapb[j] = crl[j] + crr[j];
@@ -5170,14 +5206,15 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
             mpk[EN_MT_NOISE] = mt_pk(crl, crr, n);
     }
     if (fxm || sir_amp > 0.0005f || ris_amp > 0.0005f)
-        render_fx(n);
+        { PROF_B(p9); render_fx(n); PROF_E(9, p9); }
     eg += (1.0f - eg) * fx_wash;                 /* Wash: everything into the echo */
     epk = en_echo_pk;
     rb_on += ((SHED ? 0.0f : 1.0f) - rb_on) * 0.25f;
     if (rb_amt > 0.0f && rb_on > 0.004f)       /* (the kick's rumble, mono, ducked by the kick) */
-        rumble_block(n);
+        { PROF_B(p10); rumble_block(n); PROF_E(10, p10); }
     else if (rb_c != 0.0f || rb_e != 0.0f)
         rumble_init();
+    PROF_B(p11);
     for (j = 0; j < n; j++) {
         float wl, wr, l, r, el, er, xl, xr, dg, dgb, rin, cl, cr, sd, dry = 1.0f - 0.75f * fx_wash;
         duck_d += (duck_x - duck_d) * 0.08f;
@@ -5301,6 +5338,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
             en_scope_w++;
         }
     }
+    PROF_E(11, p11);
     en_echo_pk = epk;
     {   /* (the meters: in the output's units, the parts' with the master's gain; each the highest since taken) */
         const float og = 0.75f * gain;
@@ -5384,9 +5422,9 @@ static void control(uint32_t n)                 /* once a chunk: the slow things
     if (fx_cf > 0.01f)                          /* (Freeze: the grains thick, even at Cloud 0) */
         cl_dens = fm_maxf(cl_dens, fx_cf);
     for (i = 0; i < EN_NLOOP; i++)
-        en_loop_glow[i] *= 0.985f;
+        en_loop_glow[i] = fm_flush(en_loop_glow[i] * 0.985f);
     for (i = 0; i < EN_NDRUM; i++)
-        en_drum_glow[i] *= 0.93f;
+        en_drum_glow[i] = fm_flush(en_drum_glow[i] * 0.93f);
 }
 
 void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
@@ -5397,7 +5435,7 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
         shed_left = (int32_t)(0.5f * EN_SR);
     else if (shed_left > 0)
         shed_left -= (int32_t)n;
-    drain();
+    { PROF_B(pd); drain(); PROF_E(0, pd); }
     if (en_ext && ++ext_age > 100u)
         en_ext = 0;
     while (n) {
@@ -5405,7 +5443,7 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
         int timed = en_playing && !en_ext;
         if (timed) {
             if (pulse_left <= 0.0f) {
-                clock_pulse();
+                { PROF_B(pc); clock_pulse(); PROF_E(12, pc); }
                 pulse_left += step_len * (1.0f / 6.0f);
             }
             if ((float)k > pulse_left)
@@ -5422,13 +5460,16 @@ void en_render(int32_t *out, uint32_t n, uint32_t gain_q12)
         }
         if (timed)
             pulse_left -= (float)k;
-        control(k);
+        { PROF_B(pk); control(k); PROF_E(1, pk); }
         render_chunk(out, k, gain);
         drums_wait_step((int32_t)k);
         if (tick_wait > 0 && (tick_wait -= (int32_t)k) <= 0) {
             tick_wait = 0;
-            if (en_playing)
+            if (en_playing) {
+                PROF_B(pt);
                 tick();
+                PROF_E(12, pt);
+            }
         }
         out += 2 * k;
         n -= k;

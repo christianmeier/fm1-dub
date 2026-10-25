@@ -166,6 +166,7 @@ void en_freeze(int on);
 void en_seed(uint32_t s);                      /* stir some entropy into the generators */
 void en_panic(void);                           /* everything quiet, now */
 void en_regrow(void);                          /* a new piece: fresh loops and patterns, the home chord */
+uint32_t en_queue_left(void);                  /* (1.4.0) the commands still waiting (a piece's, spread over ~7 blocks) */
 /* the ping loops, packed a byte a step (EN_PINGS_N: every loop's steps, in turn): the note offset in the low
  * nibble (15: a rest), the velocity in the high one (50 + 3 x v). A piece keeps them; en_pings gives them back
  * (0: none kept, the loops grown afresh), taken at once and again after each en_regrow */
@@ -401,3 +402,15 @@ int en_fm_alg(int layer);
 #define EN_NPIECES 8
 const char *en_piece_name(int i);
 void en_piece(int i, int16_t *par, uint16_t *pool);
+
+#if !defined(EN_HOST) && !defined(EN_PROF)    /* (1.4.0) on the FM-1 always: the Setup page's peak by stage */
+#define EN_PROF 1
+#endif
+#ifdef EN_PROF                                 /* the render's stages, timed: 0 drain, 1 control, 2 the faders, the mixer and the
+                                                  * LFOs, 3 stabs, 4 bass, 5 pings, 6 widen, 7 drums, 8 noise, 9 fx, 10 rumble,
+                                                  * 11 the mix loop (echo, cloud, plate, master), 12 the steps' events
+                                                  * (the platform's: en_prof_ticks, a free-running counter) */
+#define EN_PROF_N 13
+uint32_t en_prof_ticks(void);
+extern volatile uint32_t en_prof[EN_PROF_N];
+#endif

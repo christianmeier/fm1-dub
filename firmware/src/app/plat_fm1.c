@@ -109,4 +109,12 @@ uint32_t plat_clock_mhz(void)                  /* (once: the cycle counter again
     }
     return mhz;
 }
-void plat_clock_regs(uint32_t r[3]) { fm1_clock_regs(r); }   /* (hal/fm1_clock.h; stock: 6, 0940022B, 0750310C) */
+void plat_clock_regs(uint32_t r[3]) { fm1_clock_regs(r); }
+uint32_t en_prof_ticks(void) { return fm1_ticks(); }   /* (amb.c's stages: TIMER4, 24 MHz) */
+static volatile uint32_t prof_peak[PLAT_NPROF], prof_mean[PLAT_NPROF];   /* (render_block's: TIMER4 ticks) */
+void plat_prof(uint32_t peak[PLAT_NPROF], uint32_t mean[PLAT_NPROF])
+{
+    int i;
+    for (i = 0; i < PLAT_NPROF; i++)
+        peak[i] = prof_peak[i] / FM1_TICKS_PER_US, mean[i] = prof_mean[i] / FM1_TICKS_PER_US;
+}   /* (hal/fm1_clock.h; stock: 6, 0940022B, 0750310C) */

@@ -25,6 +25,7 @@ struct en_dbg {
 } en_dbg __attribute__((section(".noinit")));
 static uint8_t safe_mode;                           /* two failed boots: no audio, USB on (safe_main) */
 
+_Static_assert(PLAT_NPROF == EN_PROF_N, "plat.h's stages are amb.h's");
 static void render_block(int32_t *o)                /* ALNK0: one half, measured */
 {
     uint32_t t0 = fm1_ticks(), us, budget = HALF_FRAMES * 1000000u / FS;
@@ -34,6 +35,8 @@ static void render_block(int32_t *o)                /* ALNK0: one half, measured
 #endif
     {
         uint32_t k;
+        for (k = 0; k < (uint32_t)EN_PROF_N; k++)
+            en_prof[k] = 0;                         /* (1.4.0: this block's stages, from nothing) */
         for (k = 0; k < HALF_FRAMES; k += REND_FRAMES) {
             en_render(o + 2u * k, REND_FRAMES, master_q12);
 #if FELUCCA_UAC
@@ -44,14 +47,24 @@ static void render_block(int32_t *o)                /* ALNK0: one half, measured
     us = (fm1_ticks() - t0) / FM1_TICKS_PER_US;
     en_dbg.cpu_q8 = (en_dbg.cpu_q8 * 15u + (us * 256u) / budget) / 16u;
     audio_cpu_pct = (en_dbg.cpu_q8 * 100u) >> 8;
-    {   /* the peak: the heaviest block of each ~2 s (344 halves) */
-        static uint32_t win_max, win_n;
-        uint32_t pct = us * 100u / budget;
+    {   /* the peak: the heaviest block of each ~2 s (344 halves); (1.4.0) its stages, and the window's mean by stage */
+        static uint32_t win_max, win_n, win_pk[PLAT_NPROF], win_sum[PLAT_NPROF];
+        uint32_t pct = us * 100u / budget, k;
         en_load = (uint8_t)(pct > 255u ? 255u : pct);   /* (the engine sheds over 80: en_render) */
-        if (pct > win_max)
+        if (pct >= win_max) {
             win_max = pct;
+            for (k = 0; k < PLAT_NPROF; k++)
+                win_pk[k] = en_prof[k];
+        }
+        for (k = 0; k < PLAT_NPROF; k++)
+            win_sum[k] += en_prof[k];
         if (++win_n >= 344u) {
             audio_cpu_peak = win_max;
+            for (k = 0; k < PLAT_NPROF; k++) {
+                prof_peak[k] = win_pk[k];
+                prof_mean[k] = win_sum[k] / 344u;
+                win_sum[k] = 0;
+            }
             win_max = 0;
             win_n = 0;
         }

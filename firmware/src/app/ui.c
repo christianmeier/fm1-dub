@@ -4335,6 +4335,12 @@ static void draw_main(void)
                                                                      proj.par[P_SMODE] << 18) << 4);   /* (1.4.0: the
                                                   * song line, the Song pages) */
     h = hash(h, en_bars / 16u);                  /* (their playhead, a bar at a time) */
+    if (ui.view == V_SETUP) {                    /* (1.4.0: the audio's stages, every ~2 s) */
+        uint32_t pk[PLAT_NPROF], mn[PLAT_NPROF], k;
+        plat_prof(pk, mn);
+        for (k = 0; k < PLAT_NPROF; k++)
+            h = hash(h, pk[k] ^ mn[k] << 16);
+    }
     if (parent_of(ui.view) >= 0) {               /* a sound or FM page: redrawn as its values move */
         for (i = 0; i < 4; i++)
             h = hash(h, (uint32_t)(knob_get(vknob(ui.view, i)) + 64));   /* (1.4.0: K_NONE's too, no parameter) */
@@ -4433,16 +4439,21 @@ static void draw_main(void)
         uint32_t r[3], m = plat_clock_mhz(), i, j, k = 0;
         char t[40];
         plat_clock_regs(r);
-        if (m) {
+        const int stock = r[0] == 6u && r[1] == 0x0940022Bu && r[2] == 0x0750310Cu;   /* (M-VAVE's bootloader's: 360 MHz) */
+        if (m) {                                 /* (measured, if the core's cycle counter runs: it doesn't on the
+                                                  * user's FM-1) */
             itoa_u(m, t);
             for (k = 0; t[k]; k++)
                 ;
             t[k++] = ' ', t[k++] = 'M', t[k++] = 'H', t[k++] = 'z', t[k] = 0;
-        } else {
-            t[0] = '?', t[1] = 0;
+        } else {                                 /* (else from the registers: the stock words, or not) */
+            const char *w = stock ? "360 MHz (stock)" : "OTHER";
+            for (k = 0; w[k]; k++)
+                t[k] = w[k];
+            t[k] = 0;
         }
         cv_text(8, MAIN_SHIFT + 4, &FONT_XS, "CLOCK", K_DIM);
-        cv_text(48, MAIN_SHIFT + 4, &FONT_XS, t, m >= 350u ? K_PAD : m ? K_CLAP : K_DIM);
+        cv_text(48, MAIN_SHIFT + 4, &FONT_XS, t, (m ? m >= 350u : stock) ? K_PAD : K_CLAP);
         k = 0;
         for (i = 0; i < 3; i++) {
             for (j = 0; j < 8; j++)
@@ -4452,6 +4463,48 @@ static void draw_main(void)
         t[k - 1] = 0;
         cv_text(8, MAIN_SHIFT + 18, &FONT_XS, t, mix(K_BG, K_DIM, 10));
         cv_text(8, MAIN_SHIFT + 32, &FONT_XS, "BUILD " EN_BUILD, mix(K_BG, K_DIM, 10));   /* (which build runs) */
+        {   /* (1.4.0, the FM-1's peaks) the audio's time by stage, in ms: the heaviest block of the last ~2 s and the
+             * window's mean, each its total and its four biggest stages */
+            static const char *const SN[PLAT_NPROF] = {"DRN", "CTL", "FAD", "STB", "BAS", "PNG", "WID", "DRM", "NOI",
+                                                       "FX", "RMB", "MIX", "EVT"};
+            uint32_t pk[PLAT_NPROF], mn[PLAT_NPROF], *v, row;
+            plat_prof(pk, mn);
+            for (row = 0; row < 2; row++) {
+                uint32_t tot = 0, used = 0, n;
+                v = row ? mn : pk;
+                for (i = 0; i < PLAT_NPROF; i++)
+                    tot += v[i];
+                k = 0;
+                {
+                    const char *h = row ? "MEAN " : "PEAK ";
+                    for (j = 0; h[j]; j++)
+                        t[k++] = h[j];
+                }
+                for (n = 0; n < 5; n++) {        /* (the total first, then the four biggest) */
+                    uint32_t x = tot, b = 0, best = PLAT_NPROF;
+                    if (n) {
+                        for (i = 0; i < PLAT_NPROF; i++)
+                            if (!(used >> i & 1u) && v[i] >= b)
+                                b = v[i], best = i;
+                        if (best == PLAT_NPROF || !b)
+                            break;
+                        used |= 1u << best;
+                        x = b;
+                        for (j = 0; SN[best][j]; j++)
+                            t[k++] = SN[best][j];
+                    }
+                    x = (x + 50u) / 100u;        /* (tenths of a ms) */
+                    t[k++] = (char)('0' + x / 10u % 10u);
+                    t[k++] = '.';
+                    t[k++] = (char)('0' + x % 10u);
+                    t[k++] = ' ';
+                    if (k > 34)
+                        break;
+                }
+                t[k ? k - 1 : 0] = 0;
+                cv_text(8, MAIN_SHIFT + 46 + 14 * (int32_t)row, &FONT_XS, t, mix(K_BG, K_DIM, 12));
+            }
+        }
     }
     draw_oct(now);
     draw_big(now);

@@ -53,5 +53,9 @@ uint32_t plat_cpu_peak(void);            /* the heaviest block of the last ~2 s,
  * words): stock is M-VAVE's bootloader's 360 MHz (PLL1 540 MHz x 2/3), m-bootloader 1.2 leaves 320 */
 uint32_t plat_clock_mhz(void);
 void plat_clock_regs(uint32_t r[3]);
+/* (1.4.0) the audio's time by stage (amb.h's EN_PROF stages, PLAT_NPROF of them), in microseconds: the heaviest block
+ * of the last ~2 s, and the mean block of the same window (zeros where there is no profile: the host) */
+#define PLAT_NPROF 13
+void plat_prof(uint32_t peak[PLAT_NPROF], uint32_t mean[PLAT_NPROF]);
 int32_t plat_battery(void);              /* the battery divider's reading, raw (0..1023, smoothed); -1: none */
 int plat_usb_power(void);                /* a USB host is there (it powers, and charges, the FM-1) */

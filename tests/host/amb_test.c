@@ -2279,6 +2279,42 @@ int main(void)
     CHECK(peak < 0.01f, "quiet after stopping (%f)", (double)peak);
     CHECK(midi_count > 50u, "MIDI out (%u)", midi_count);
 
+    /* (1.4.0, the FM-1's peaks) a piece sent while playing (every parameter, the pool, a seed, a regrow: as the UI's
+     * set_piece) goes in a few blocks, not one (a block takes 28 commands' worth, a regrow ten); a knob's at once, as
+     * ever; and once through, the piece plays (the regrow's patterns there) */
+    {
+        int16_t pp[P_NPARAMS];
+        uint16_t pl;
+        int k, b, left1 = -1, done_at = -1;
+        fresh();
+        en_seed(5);
+        en_play(1);
+        run(2.0f);
+        en_piece(3, pp, &pl);
+        for (k = 0; k < P_NPARAMS; k++)
+            if (k != P_TUNE && k != P_MIDI)
+                en_set(k, pp[k]);
+        en_pool(pl);
+        en_seed(6);
+        en_regrow();
+        for (b = 0; b < 40 && done_at < 0; b++) {
+            en_render(buf, 256, 2048);
+            if (b == 0)
+                left1 = (int)en_queue_left();
+            if (!en_queue_left())
+                done_at = b;
+        }
+        printf("  a piece sent while playing: %d commands left after its first block, all through by block %d\n", left1,
+               done_at);
+        CHECK(left1 > P_NPARAMS - 40 && done_at > 2 && done_at < 12, "a piece spread: %d left after the first block, through "
+              "by block %d", left1, done_at);
+        en_set(P_ECHO, 60);                      /* (a knob's: at once) */
+        en_render(buf, 256, 2048);
+        CHECK(en_queue_left() == 0, "a knob's change at once (%u left)", en_queue_left());
+        run(4.0f);
+        CHECK(!bad, "a piece spread: NaN");
+    }
+
     printf(fails ? "amb: %d FAILED\n" : "amb: ok\n", fails);
     return fails != 0;
 }
