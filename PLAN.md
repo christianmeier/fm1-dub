@@ -940,6 +940,20 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   answering after 562 requests" (about half the package), the screen blank (the loader's), then "FM-1 not found";
   unplugging and replugging the USB and installing again finished it. To look into: why the loader stopped
   mid-write (a USB drop? the loader's USB poll, its retries), and whether the installer could reconnect by itself.
+- **Requests from a user, Robert** (GitHub issue, 2026-10-25, "Not an Issue, more of a request list"; 1.4.0
+  candidates, the user's: add them):
+  1. **A filter per part** ("separate filter for each voice and drum section"): each strip's KNOB 4, Low cut, becomes
+     a centred **Filter** as the DJ filter: left a low-pass closing, right a high-pass opening, the middle off (no
+     cost there); today's Low cut values to the right half (a format step). CPU checked with all six on.
+  2. **Japanese scales** (5-note, as Pent maj and Pent min already are): Hirajoshi (1 2 b3 5 b6), In / Miyako-bushi
+     (1 b2 4 5 b6), Iwato (1 b2 4 b5 b7), Yo (1 2 4 5 6), Insen (1 b2 4 5 b7); names of 8 characters; the walk's
+     chords from them checked by ear (the half-step ones give clustered chords: a rule if needed); the Mode knob's
+     range (a format step).
+  3. **Slower tempos** ("down to 20 BPM or even lower"): today 90-140; down to about 40 BPM, the echo's synced times
+     that would pass its tape (5.6 s at TAPE_SR) capped at the longest that fits, the screen showing the real echo
+     time; the kick's and the bass's envelopes, the bar-counted timings (Mixer, LFOs, song) checked at slow tempos.
+     The floor (40, or lower with the echo capped) to confirm with the user.
+  A reply drafted for the user to post (build/design/REPLY-robert.md).
 - **Hardware and installer** (the user, 2026-10-25; from build/design/REPORT-reddit.md: u/ZenLegume's r/MVaveFM1 post
   "All right stop, collaborate and listen", its comments and the repos they link; the findings from the repos are
   the agent's, to verify before acting). In order:
