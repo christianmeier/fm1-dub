@@ -252,7 +252,8 @@ extern volatile uint8_t en_drum_pos[EN_NDRUM];
 extern volatile uint32_t en_drum_pat[EN_NDRUM];/* bit i: a hit on step i (all 16 steps) */
 extern volatile float en_drum_glow[EN_NDRUM];
 extern volatile uint32_t en_bars;              /* sixteenths played since start (for tests) */
-extern volatile float en_arc;                  /* the filter's sweep, -1 dark .. +1 open (times Motion) */
+extern volatile float en_arc;                  /* the filter's sweep, -1 dark .. +1 open (times the slow movement's depth:
+                                                  * the chord's Drift and LFO Depth; 1.4.0, the variety study) */
 extern volatile uint8_t en_pulse_rest;         /* the kick is out (a Break) */
 extern volatile uint8_t en_pad_note[EN_NPAD];  /* the note each voice plays (MIDI) */
 extern volatile float en_pad_amp[EN_NPAD];     /* and how loud */

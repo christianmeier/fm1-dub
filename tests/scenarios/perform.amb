@@ -92,11 +92,11 @@ said Width 40
 expect par119 40
 spin K2 10
 wait 300
-said Mixer 35
-expect par163 35
+said Mixer 55
+expect par163 55
 spin K2 -10
 wait 300
-said Mixer 25
+said Mixer 45
 expect view 17
 spin K3 27
 wait 300

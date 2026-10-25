@@ -145,8 +145,8 @@ strips' sends included (below), which stay where they are. Wet is for playing: i
 stays where it is when you change piece, back in the middle when the FM-1 starts.
 
 **Mixer**, the virtual dub mixer, is how much the desk rides itself, as a dub engineer's hand on the
-faders and the sends. It's the piece's own, saved with it: Basic 25, Steppers 20, Pressure 30, Concrete 35,
-Chamber 45, Night Drive 55, Fog and Haze 60 (the source's held loops little, the US records' played desk
+faders and the sends. It's the piece's own, saved with it: Steppers 20, Pressure 40, Basic and Night Drive 45,
+Chamber 55, Haze 60, Fog and Concrete 90 (the source's held loops little, the US records' played desk
 most). At 0 it's off: the desk stays where you set it.
 
 - **The rides:** each part's level, its echo send and its plate send, the chord's filter and the
@@ -630,14 +630,16 @@ In the last bar of each phrase, the next one is chosen. **Motion** has three reg
 ring at 40 and 70):
 
 - **Under 40: the loop holds.** Full only, phrase after phrase, the kick never leaving; the music
-  moves by its filter, its echo and its texture, as the classic records do.
+  moves by its filter, its echo and its texture, as the classic records do (how much: the chord
+  LFO's Drift and Depth, not Motion).
 - **40 to 70: variations.** Now and then a Groove or a Thin for a phrase or two, more often as
   Motion rises; the kick half-time at most, never gone.
 - **70 and over: Breaks too.** A Break now and then (the kick and the bass out for a phrase).
 
 Between two departures there are always at least four phrases (32 bars) of Full. From any other
-section it goes back to Full three times in four. Energy (the Form page) and the Arrangement page's Drop break it by hand at
-any Motion.
+section it goes back to Full three times in four. The Arrangement page's Drop breaks it by hand at
+any Motion; Energy (the Form page) only leans it (far down a Groove becomes a Thin, far up a Break
+becomes a Groove).
 
 **Fills:** the last bar before the kick comes back from a Break is always a fill; from Motion 40 a
 phrase ends with one when the section changes, and now and then otherwise (more often with Motion
@@ -854,6 +856,12 @@ page.
   it never repeats a path, and the chord's and the noise's wander each on their own. It runs under
   the wave, so the wave rides on it. This is how the records move (the study behind it: they drift
   far more than they cycle).
+  On the Chord LFO page, Drift and Depth together also set **how much the whole piece breathes**
+  (1.4.0, after the variety study; Motion's until then): how far the filter's long sweeps go (up to
+  about 1.6 octaves either way, a new place every 4 to 14 bars, off the phrase's line), and how much
+  the stabs' filter, the echo's heads and the band-pass wander. Drift counts three times as much as
+  Depth; at Drift 0 and Depth 0 the piece's sound holds still (a Break still goes dark, and a Thin a
+  little).
 - **Destination** (ALGORITHM, on the Chord LFO page; round, a click a step): what the chord's wave and
   drift move: **Cutoff** (the filter, as ever), **Reso** (the filter's resonance) or **Colour** (the
   voice's colour, the Chord FM page's KNOB 4). On Reso and Colour they go as far along that knob as
@@ -928,9 +936,11 @@ spectrum, echo trail, fifths or tape (see [The screen](#4-the-screen)). **HOME**
 
 - **Energy:** busier or sparser, now: 0 in the middle, the notch there. Down, sparser and drier:
   fewer and quieter pings, fewer and quieter hats, fewer and shorter stabs, a thinner bass line, a
-  sparser kick; past halfway, the next phrases go Thin (no bass, no shaker). Up, busier and brighter:
-  more of each, louder hats, longer stabs, a thin bass filled back in, the kick nearer four on the
-  floor; past halfway, the phrases stay Full, with a fill into each. For playing: not saved, and it
+  sparser kick. Up, busier and brighter: more of each, louder hats, longer stabs, a thin bass filled
+  back in, the kick nearer four on the floor. It leans the arrangement, never locks it (1.4.0, after
+  the variety study: past halfway it used to fix the phrases Thin or Full, and Motion stopped
+  working): past halfway down a Groove Motion picks comes as a Thin; past halfway up a Break comes as
+  a Groove, the kick staying. Motion's sections go on at any Energy. For playing: not saved, and it
   stays where it is when you change piece. (The Arrangement page's KNOB 1 too until 1.4.0's space
   pages, now there the Width; the DJ filter, KNOB 1 here until 1.4.0's Chord pages, is on SELECT, on
   every page.)
@@ -949,8 +959,10 @@ spectrum, echo trail, fifths or tape (see [The screen](#4-the-screen)). **HOME**
   away from home usually lasts a few minutes, so a long run's bass line slowly breathes.
 - **Motion:** the arrangement, in three regions (marks on the ring at 40 and 70): under 40 the loop
   holds, 40 to 70 a variation now and then, from 70 Breaks too (see [The arrangement](#6-the-arrangement)).
-  It also sets how far the filter sweeps and how much the echo's heads, the filter and the
-  band-pass wander.
+  Only the arrangement (1.4.0, after the variety study): how far the filter sweeps and how much the
+  echo's heads, the filter and the band-pass wander are the chord LFO's Drift and Depth now (ENV
+  four times; see [The Chord LFO](#5-the-layers)), so a still arrangement can still breathe, and a
+  busy one can be dry.
 - KNOB 4 is free for now: Drift, how long a chord lasts, went to the Chord page (as Change).
 
 ### HOME again: Song
@@ -1432,7 +1444,7 @@ The defaults are Basic's; each piece has its own.
 | Page | Value | Range | Basic |
 |---|---|---|---|
 | Form | Energy | −100 – 0 – +100 (for playing, not saved) | 0 |
-| Form | Evolve | 0–100 | 55 |
+| Form | Evolve | 0–100 | 45 |
 | Form | Motion | 0–100 (under 40 held, 40–70 variations, 70– Breaks) | 30 |
 | Song | Intro | None, 8 – 128 bars, a phrase a click | 32 bars |
 | Song | Main | 32 – 512 bars, a phrase a click | 160 bars |
@@ -1493,7 +1505,7 @@ The defaults are Basic's; each piece has its own.
 | SELECT | Filter | −100 – 0 – +100 (Shut, Off, Open); for playing, not saved | Off |
 | Arrangement | Width | 0–100 (the whole mix: mono – wide) | 40 |
 | Arrangement | Wet | −100 – 0 – +100; for playing, not saved | 0 |
-| Arrangement | Mixer | 0–100 (off – the desk riding itself most); the piece's, saved | 25, 45, 20, 60, 35, 55, 30, 60 |
+| Arrangement | Mixer | 0–100 (off – the desk riding itself most); the piece's, saved | 45, 55, 20, 90, 90, 45, 40, 60 |
 | Arrangement | Duck | 0–100 (to −12 dB); the piece's, saved | 50 |
 | Strip (white 1–6 held) | Level | the part's level (as OCT− / OCT+; the kick's and the hats' their own, ×1 at 50) | 52, 30, 68, 50, 40, 8 |
 | Strip | Echo, Plate | 0–100 (0 none – 50 as the piece sends – 100 twice; the kick's 0 none – 100 a full send) | 50 (the bass's Echo 0, the kick's 0) |
@@ -1517,10 +1529,10 @@ The defaults are Basic's; each piece has its own.
 | Chord, Pings, Bass FM | Feedback (from the voice's own) | 0–100 | 0 |
 | Chord FM | Colour (every chord voice) | −50 – +50 | 0 |
 | Bass FM | Bite (every bass voice) | −50 – +50 | 0 |
-| Chord LFO | Depth | 0–100 (the filter's wave: to ±2.5 octaves; on Reso, Colour as far along their knob) | 25 |
+| Chord LFO | Depth | 0–100 (the filter's wave: to ±2.5 octaves; on Reso, Colour as far along their knob; with Drift, the piece's breathing) | 30 |
 | Chord LFO | Rate | 1, 2, 4, 8, 16, 32 bars | 4 bars |
 | Chord LFO | Shape | Sine, Triangle, Ramp up, Ramp down | Sine |
-| Chord LFO | Drift | 0–100 (the slow random wander: to ±0.6 octave) | 30 |
+| Chord LFO | Drift | 0–100 (the slow random wander: to ±0.6 octave; with Depth, the piece's breathing) | 45 |
 | OCT− / OCT+ (a layer's page), a strip's Level (Arrangement, white 1–6 held) | Levels: chord, pings, bass, drums, noise (a strip: its part's) | 0–100, 5 a press | 52, 30, 68, 80 (noise 8) |
 
 Set by the piece (no knob of its own): the pings' tone (from a round blip to a metallic clank;
@@ -1542,14 +1554,18 @@ The LFOs, each piece's (all sines):
 
 | Piece | Chord wave (depth, rate) | Chord drift | Noise wave (depth, rate) | Noise drift |
 |---|---|---|---|---|
-| Basic | 25, 4 bars | 30 | 25, 4 bars | 20 |
-| Chamber | off | 45 | 30, 8 bars | 25 |
-| Steppers | 20, 2 bars | 25 | 30, 4 bars | 20 |
-| Fog | off | 45 | off | 35 |
-| Concrete | 45, 4 bars | 35 | 45, 2 bars | 25 |
-| Night Drive | 40, 8 bars | 40 | 40, 8 bars | 25 |
-| Pressure | 20, 4 bars | 25 | 20, 4 bars | 20 |
-| Haze | off | 45 | off | 30 |
+| Basic | 30, 4 bars | 45 | 25, 4 bars | 20 |
+| Chamber | off | 25 | 30, 8 bars | 25 |
+| Steppers | 35, 2 bars | 35 | 30, 4 bars | 20 |
+| Fog | 35, 32 bars | 90 | off | 50 |
+| Concrete | 75, 4 bars | 75 | 45, 2 bars | 25 |
+| Night Drive | 45, 8 bars | 55 | 40, 8 bars | 25 |
+| Pressure | 35, 4 bars | 45 | 20, 4 bars | 20 |
+| Haze | off | 55 | off | 30 |
+
+(1.4.0, after the variety study: the chords' drift and depth up on most pieces, so their sound moves as their
+records' does, about twice a minute, near an octave; Chamber's down, its record barely moving. The chord's Drift and
+Depth also set how far the whole piece's filter breathes.)
 
 ---
 
