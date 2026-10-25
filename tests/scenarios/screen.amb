@@ -1,4 +1,5 @@
-# the Form page's middle: ALGORITHM goes ripples, scope, spectrum, ripples; it is said, and kept by SAVE
+# the Form page's middle: ALGORITHM goes ripples, scope, spectrum (1.4.0: then the prototypes, the echo trail, the
+# fifths, the tape), ripples; it is said, and kept by SAVE
 wait 4000
 listen
 shot ripples.png
@@ -27,13 +28,29 @@ reboot
 wait 1500
 expect screen 2
 turn ALGO 1
+wait 1500
+expect screen 3
+said SCREEN ECHO TRAIL
+shot echo-trail.png
+turn ALGO 1
+wait 1500
+expect screen 4
+said SCREEN FIFTHS
+shot fifths.png
+turn ALGO 1
+wait 1500
+expect screen 5
+said SCREEN TAPE
+shot tape.png
+turn ALGO 1
 wait 200
 expect screen 0
 turn ALGO -1
 wait 200
-expect screen 2
+expect screen 5
 turn ALGO 1
 wait 200
+expect screen 0
 # HOME again: the Song page (1.4.0), again the Key page (the tempo, the root, the mode, swing), and again: back to Form
 tap HOME
 wait 200

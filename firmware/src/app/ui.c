@@ -1750,13 +1750,14 @@ static void input(void)
             big_show(vp, vp == P_KIT ? "Kit" : "Voice", l >= 0 ? LC[l] : K_ACC);   /* (1.4.0: big in the centre) */
         } else {                                 /* the middle of the screen: the ripples, a scope, a spectrum (the mode,
                                                   * a piece's choice, is on the Key page) */
-            static const char *const SCREEN_NAME[3] = {"RIPPLES", "SCOPE", "SPECTRUM"};
-            proj.screen = (uint8_t)(((int)proj.screen + (int)(e % 3) + 3) % 3);
+            static const char *const SCREEN_NAME[UI_NSCREEN] = {"RIPPLES", "SCOPE", "SPECTRUM", "ECHO TRAIL", "FIFTHS",
+                                                                 "TAPE"};
+            proj.screen = (uint8_t)(((int)proj.screen + (int)(e % UI_NSCREEN) + UI_NSCREEN) % UI_NSCREEN);
             mark_dirty();
             say_name("SCREEN", SCREEN_NAME[proj.screen]);
-            {   /* (1.4.0: big in the centre too) */
-                static const char *const SN[3] = {"Ripples", "Scope", "Spectrum"};
-                big_show_text("Screen", SN[proj.screen], (float)proj.screen * 0.5f, K_ACC);
+            {   /* (1.4.0: big in the centre too; the last three prototypes, to judge) */
+                static const char *const SN[UI_NSCREEN] = {"Ripples", "Scope", "Spectrum", "Echo trail", "Fifths", "Tape"};
+                big_show_text("Screen", SN[proj.screen], (float)proj.screen / (float)(UI_NSCREEN - 1), K_ACC);
             }
         }
         ui.turn_t = plat_ms();
@@ -3724,6 +3725,174 @@ static uint32_t where_sig(uint32_t h)            /* (what they show, for a redra
                        ui.solo << 20 | (uint32_t)ui.lock << 28 | (uint32_t)en_frozen << 29 | (uint32_t)ui.view << 30);
 }
 
+/* (1.4.0, the user's: "other animations, more or less informative") three more views for HOME's screen, on ALGORITHM
+ * after the ripples, the scope and the spectrum; prototypes, to be judged on the FM-1 */
+enum { SCR_RIPPLES, SCR_SCOPE, SCR_SPEC, SCR_ECHO, SCR_FIFTHS, SCR_TAPE };
+static int scr_small_chord(int s) { return s != SCR_RIPPLES && s != SCR_FIFTHS; }   /* (the chord small, at the top) */
+
+/* the Echo trail: the echo as tape running right to left from the head at the right edge, each note a bar as tall as
+ * it struck, its repeats the bars after it at the echo's time, as tall as each was measured coming out (the ripples'
+ * own measure: a filtered, ducked or dropped echo shows), their tops joined (the feedback's curve); a throw in the
+ * accent; the dotted columns the echo's taps back from the head */
+static void draw_echo_trail(uint32_t now)
+{
+    static const uint16_t LC[4] = {K_PAD, K_BELL, K_BASS, K_PULSE};
+    const float ms = en_echo_ms > 20.0f ? en_echo_ms : 400.0f, span = fm_clampf(5.0f * ms, 1600.0f, 4200.0f),
+                pp = 222.0f / span;
+    const int32_t yc = 59, xh = 230;
+    float m;
+    int32_t x, y;
+    int i, k;
+    for (m = ms; m < span; m += ms) {             /* the taps */
+        x = xh - (int32_t)(m * pp + 0.5f);
+        for (y = yc - 27; y <= yc + 27; y += 3)
+            cv_rect(x, y, 1, 1, K_LINE);
+    }
+    for (x = 8; x < xh; x += 4)                   /* the tape's middle */
+        cv_rect(x, yc, 1, 1, K_LINE);
+    cv_rect(xh, yc - 29, 2, 59, mix(K_BG, en_frozen ? K_FROST : K_TEXT, 7));   /* the head */
+    for (i = 0; i < RIP_N; i++) {
+        int32_t px = -1, ph = 0;
+        (void)px, (void)ph;
+        if (!rip[i].on)
+            continue;
+        for (k = 0; k < rip[i].nk; k++) {
+            const float age = (float)(int32_t)(now - (rip[i].t0 + (uint32_t)((float)k * ms))), a = rip[i].a[k];
+            int32_t h, w;
+            uint16_t c;
+            if (age < 0.0f)
+                break;
+            x = xh - 2 - (int32_t)(age * pp + 0.5f);
+            if (x < 8 || a < 0.03f) {
+                px = -1;
+                continue;
+            }
+            h = 1 + (int32_t)(a * 26.0f + 0.5f);
+            w = k ? 2 : 4;
+            c = mix(K_BG, en_frozen ? K_FROST : rip[i].thr ? K_ACC : LC[rip[i].lay & 3],
+                    q16(fm_minf((k ? 0.2f : 0.45f) + 1.2f * a, 1.0f)));   /* (a repeat dimmer than its note) */
+            cv_rect(x - w / 2, yc - h, w, 2 * h + 1, c);
+            if (k)                               /* (its tops: a cap each, the feedback's curve in points) */
+                cv_rect(x - 2, yc - h - 1, 6, 1, mix(K_BG, c, 12)), cv_rect(x - 2, yc + h + 1, 6, 1, mix(K_BG, c, 12));
+            px = x, ph = h;
+        }
+    }
+}
+
+/* the Fifths: the twelve notes round the circle of fifths (C at the top), the key's own a dot, the rest a point; the
+ * chord's notes lit and joined (its shape), its root the brightest, white with the kick; the walk's last roots a trail
+ * fading behind it; round the outside, the way to the next chord (Change) */
+#define FQ_N 6
+#define FQ_R 36
+static uint8_t fq_root[FQ_N], fq_n;
+static void fq_xy(int pc, int32_t r, int32_t *x, int32_t *y)
+{
+    const float a = (float)((pc * 7) % 12) * (6.2831853f / 12.0f) - 1.5707963f;
+    *x = CX + (int32_t)((float)r * fm_cosf(a) + (fm_cosf(a) < 0.0f ? -0.5f : 0.5f));
+    *y = CY + (int32_t)((float)r * fm_sinf(a) + (fm_sinf(a) < 0.0f ? -0.5f : 0.5f));
+}
+static void draw_fifths(void)
+{
+    int steps[12], ns = en_scale(proj.pool, steps), i, j, n = 0, inkey[12] = {0}, pcs[EN_NPAD], have[12] = {0};
+    int32_t x, y, x0, y0;
+    const float kg = en_playing ? en_drum_glow[0] : 0.0f;
+    if (!fq_n || fq_root[(fq_n - 1) % FQ_N] != en_chord_root)   /* (a new root: onto the trail) */
+        fq_root[fq_n % FQ_N] = en_chord_root, fq_n++;
+    for (i = 0; i < ns; i++)
+        inkey[(proj.par[P_ROOT] + steps[i]) % 12] = 1;
+    if (!en_frozen && en_drift_bars(proj.par[P_DRIFT]))   /* the way to the next chord, clockwise from the top */
+        for (j = 0; j < (int)(en_drift * 72.0f + 0.5f); j++) {
+            const float a = (float)j * (6.2831853f / 72.0f) - 1.5707963f;
+            cv_rect(CX + (int32_t)(44.0f * fm_cosf(a)), CY + (int32_t)(44.0f * fm_sinf(a)), 2, 2, mix(K_BG, K_PAD, 8));
+        }
+    for (i = 1; i < FQ_N && i < (int)fq_n; i++) {   /* the trail: the roots before, older dimmer */
+        const int a = (int)(fq_n - 1u - (unsigned)i), b = a + 1;
+        fq_xy(fq_root[a % FQ_N], FQ_R, &x0, &y0);
+        fq_xy(fq_root[b % FQ_N], FQ_R, &x, &y);
+        line(x0, y0, x, y, mix(K_BG, K_ACC, 10 - 2 * i > 1 ? 10 - 2 * i : 1));
+    }
+    circle(CX, CY, FQ_R, mix(K_BG, K_LINE, 9));   /* the circle */
+    for (i = 0; i < 12; i++) {                    /* the notes: the key's a dot, the rest a point */
+        fq_xy(i, FQ_R, &x, &y);
+        if (inkey[i])
+            cv_disc(x, y, 2, K_DIM);
+        else
+            cv_disc(x, y, 1, K_LINE);
+    }
+    for (i = 0; i < EN_NPAD; i++) {               /* the chord: its notes in fifths order, joined round */
+        const int pc = en_chord[i] % 12;
+        if (!have[pc])
+            have[pc] = 1, pcs[n++] = pc;
+    }
+    for (i = 1; i < n; i++)                       /* (sorted by their place on the circle) */
+        for (j = i; j > 0 && (pcs[j] * 7) % 12 < (pcs[j - 1] * 7) % 12; j--) {
+            const int t = pcs[j];
+            pcs[j] = pcs[j - 1], pcs[j - 1] = t;
+        }
+    for (i = 0; i < n; i++) {
+        fq_xy(pcs[i], FQ_R, &x0, &y0);
+        fq_xy(pcs[(i + 1) % n], FQ_R, &x, &y);
+        if (n > 1)
+            line(x0, y0, x, y, mix(K_BG, en_frozen ? K_FROST : K_PAD, 8));
+    }
+    for (i = 0; i < n; i++) {
+        fq_xy(pcs[i], FQ_R, &x, &y);
+        cv_disc(x, y, 4, en_frozen ? K_FROST : K_PAD);
+    }
+    fq_xy(en_chord_root, FQ_R, &x, &y);           /* its root */
+    cv_disc(x, y, 6, en_frozen ? K_FROST : mix(K_ACC, K_TEXT, q16(kg * 1.4f)));
+}
+
+/* the Tape: two reels, the tape running from the left one to the right past three heads (erase, record, play: the
+ * record head lit with the output, the play head with the echo coming back); the reels turn with the tempo, faster as
+ * they're smaller (the tape's speed the same); through a song the tape winds from left to right (where it is), in
+ * Endless back and forth over 128 bars */
+static void tp_reel(int32_t cx, int32_t cy, int32_t r, float ang, uint16_t tape)
+{
+    int32_t dy, j;
+    for (dy = -r; dy <= r; dy++) {                /* the tape wound on it: a disc, a row at a time */
+        const int32_t hw = (int32_t)fm_sqrtf((float)(r * r - dy * dy));
+        cv_rect(cx - hw, cy + dy, 2 * hw + 1, 1, tape);
+    }
+    for (j = r - 4; j > 8; j -= 5)                /* (its layers) */
+        circle(cx, cy, j, mix(K_BG, tape, 11));
+    circle(cx, cy, 30, K_LINE);                   /* the flange */
+    for (j = 0; j < 3; j++) {                     /* the spokes, turning */
+        const float a = ang + (float)j * 2.0943951f, c = fm_cosf(a), s = fm_sinf(a);
+        line(cx + (int32_t)(7.0f * c), cy + (int32_t)(7.0f * s), cx + (int32_t)(29.0f * c), cy + (int32_t)(29.0f * s), K_LINE);
+    }
+    cv_disc(cx, cy, 6, K_PANEL);
+    cv_disc(cx, cy, 2, K_DIM);
+}
+static void draw_tape(uint32_t now)
+{
+    static float al, ar;
+    static uint32_t t_last;
+    const int32_t lx = 76, rx = 164, cy = 50;
+    const uint32_t dt = t_last ? (now - t_last > 100u ? 100u : now - t_last) : 0u;
+    const float bars = (float)en_bars * (1.0f / 16.0f),
+                q = en_song_ph != EN_SG_OFF && en_song_be ? fm_minf(bars / (float)en_song_be, 1.0f)
+                  : (float)((uint32_t)bars % 256u) * (1.0f / 128.0f),
+                p = q <= 1.0f ? q : 2.0f - q;
+    const int32_t rl = 9 + (int32_t)(19.0f * (1.0f - p) + 0.5f), rr = 9 + (int32_t)(19.0f * p + 0.5f);
+    const float v = en_playing && !en_frozen ? 0.03f * (float)proj.par[P_TEMPO] * (1.0f / 122.0f) : 0.0f;
+    const uint16_t tape = mix(K_BG, RGB(132, 92, 60), 9), lvl = mix(K_BG, K_ACC, q16((mt.db[EN_MT_MASTER] + 36.0f) * (1.0f / 36.0f))),
+                   ec = mix(K_BG, K_PAD, q16(fm_minf(epk[(epk_w + EPK_N - 1u) % EPK_N].pk * 4.0f, 1.0f)));
+    t_last = now;
+    al += v * (float)dt / (float)rl;              /* (the same tape speed: the smaller reel turns faster) */
+    ar += v * (float)dt / (float)rr;
+    al -= al > 6.2831853f ? 6.2831853f : 0.0f;
+    ar -= ar > 6.2831853f ? 6.2831853f : 0.0f;
+    line(lx, cy + rl, 100, 84, tape), line(lx + 1, cy + rl, 101, 84, tape);   /* the tape's path, under the reels' edges */
+    cv_rect(100, 84, 41, 2, tape);
+    line(rx, cy + rr, 140, 84, tape), line(rx - 1, cy + rr, 139, 84, tape);
+    tp_reel(lx, cy, rl, al, tape);
+    tp_reel(rx, cy, rr, ar, tape);
+    cv_rect(103, 86, 8, 4, K_LINE);               /* erase, record, play */
+    cv_rect(116, 86, 8, 4, lvl);
+    cv_rect(129, 86, 8, 4, ec);
+}
+
 static void draw_main(void)
 {
     uint32_t now = plat_ms(), h = hash(2166136261u, (uint32_t)en_frozen << 16 | proj.piece << 24 | (uint32_t)en_playing << 17), i;
@@ -3840,11 +4009,24 @@ static void draw_main(void)
     } else if (lfo_page(ui.view)) {              /* (1.4.0) an LFO page: its path */
         draw_lfo(ui.view == V_NLFO);
         moving = 0;
-    } else if (proj.screen % 3u == 1u) {         /* (HOME again: a scope, a spectrum, or the ripples) */
+    } else if (proj.screen == SCR_SCOPE) {       /* (HOME again: a scope, a spectrum, the ripples; 1.4.0: three more) */
         draw_scope();
         moving = 1;
-    } else if (proj.screen % 3u == 2u) {
+    } else if (proj.screen == SCR_SPEC) {
         draw_spec();
+        moving = 1;
+    } else if (proj.screen == SCR_ECHO) {
+        cv_clip(0, PIC_Y1);
+        draw_echo_trail(now);
+        cv_clip(0, MAIN_H);
+        moving = 1;
+    } else if (proj.screen == SCR_FIFTHS) {
+        draw_fifths();
+        moving = 1;
+    } else if (proj.screen == SCR_TAPE) {
+        cv_clip(0, PIC_Y1);
+        draw_tape(now);
+        cv_clip(0, MAIN_H);
         moving = 1;
     } else {
         specks_take(now);
@@ -3883,7 +4065,7 @@ static void draw_main(void)
     }
     if (ch_age < 900u)
         moving = 1;
-    if (named && proj.screen % 3u) {          /* the chord: over the scope or the spectrum, small */
+    if (named && scr_small_chord(proj.screen)) {   /* the chord: over the scope, the spectrum, the trail, the tape: small */
         text_c(CX, 1, &FONT_S, nm, ch_c);
     } else if (named) {                          /* the chord, in the middle */
         if ((ch_age < 200u || (ch_age >= 400u && ch_age < 600u)) && text_w(&FONT_L, nm) <= 96) {   /* (big, small, big,

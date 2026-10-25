@@ -345,7 +345,7 @@ static void take(const slot_t *s)                /* a piece's settings into play
         if (!global_par(p))
             proj.par[p] = s->par[p];
     proj.pool = s->pool;
-    proj.screen = (uint8_t)(s->screen % 3u);      /* (each piece its own view) */
+    proj.screen = (uint8_t)(s->screen % UI_NSCREEN);   /* (each piece its own view) */
 }
 
 static void keep(void)                           /* the piece playing, into its slot (with its ping loops) */
