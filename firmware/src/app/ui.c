@@ -151,7 +151,9 @@ enum { K_LEDS = 200, K_CPU, K_NONE, K_SLOT, K_CQ, K_CX,    /* (the Chords page: 
        K_PLAY,                                               /* (the Chords page: Endless or Loop, P_PMODE's bit 2) */
        K_WALK,                                               /* (1.4.0, the Walk page: the walk's character, P_PMODE's
                                                               * bits 0-1: Home, Wander, Free) */
-       K_SAVE };                                             /* (Setup: a turn saves; it shows whether it's saved) */
+       K_SAVE,                                               /* (Setup: a turn saves; it shows whether it's saved) */
+       K_VALUES };                                           /* (1.4.0, the user's: the knobs' numbers, Peek or Always:
+                                                              * proj.values, global) */
 static const char *const LANE_NAME[EN_NDRUM] = {"Kick", "Shaker", "Open", "Rim", "Clap"};
 _Static_assert(P_NPARAMS <= K_LEDS, "the knobs' own codes must come after the parameters");
 static const uint16_t VIEW_KNOB[NVIEWS][4] = {
@@ -200,7 +202,8 @@ static const uint16_t VIEW_KNOB[NVIEWS][4] = {
     {P_CHORD, P_CECHO, P_CPLATE, P_CLOW},        /* (1.4.0) a strip: the chord's here; vknob() the part's (STRIP_PAR) */
     {P_SINTRO, P_SMAIN, P_SOUTRO, P_SKIND},      /* (1.4.0, the user's) the Song page: the song's lengths in its order,
                                                   * in bars (a phrase a click), and which parts come first */
-    {P_SMODE, K_NONE, K_NONE, K_NONE},           /* (the Song mode page: GLO again; the player's, global) */
+    {P_SMODE, K_VALUES, K_NONE, K_NONE},         /* (the Song mode page: GLO again; the player's, global; 1.4.0, the
+                                                  * knobs' numbers, Values) */
     {K_WALK, P_DRIFT, K_NONE, K_NONE},           /* (1.4.0, the user's) the Walk page: EDIT again; the walk's character
                                                   * (also on ALGORITHM, as ever) and Change, the Chord page's too */
 };
@@ -263,7 +266,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Air", "Tone", "Decay", "Width"},
     {"Level", "Echo", "Plate", "Filter"},   /* (1.4.0, format 28, Robert's: the Low cut a centred filter) */
     {"Intro", "Main", "Outro", "Kind"},
-    {"Mode", "", "", ""},
+    {"Mode", "Values", "", ""},
     {"Walk", "Change", "", ""},
 };
 /* what each knob does, a line: under the big ring in the middle while it's being turned (each fits 228 px: the
@@ -318,7 +321,7 @@ static const char *const KNOB_HELP[NVIEWS][4] = {
      "Left darker, right thinner, before the sends"},
     {"The parts coming in, a phrase a click", "The piece itself, before the outro", "The parts leaving, then silence",
      "Ambient first, or the kick and the bass"},
-    {"Endless, a song, or a set of the pieces", "", "", ""},
+    {"Endless, a song, or a set of the pieces", "The knobs' numbers: shown a moment, or always", "", ""},
     {"Home, Wander or Free: how far it roams", "How long a chord lasts", "", ""},
 };
 
@@ -397,6 +400,7 @@ static struct {
     uint32_t msg_until;
     int8_t touched;                    /* the knob turned last (0..3), shown bright for a moment */
     uint32_t touch_until;
+    uint32_t peek_until;                         /* (1.4.0) the knobs' numbers shown till then (a page opened) */
     uint32_t frame;
     uint32_t sig[3];                   /* what each band shows: redrawn when it changes */
 } ui;
@@ -595,6 +599,8 @@ static int knob_get(int k)
         return (proj.par[P_PMODE] & 3) % EN_NWALK;
     if (k == K_SAVE)
         return ui.dirty ? 1 : 0;
+    if (k == K_VALUES)
+        return proj.values ? 1 : 0;
     return 0;
 }
 static void knob_range(int k, int *lo, int *hi)
@@ -607,7 +613,7 @@ static void knob_range(int k, int *lo, int *hi)
         *hi = 50;
     } else {
         *lo = 0;
-        *hi = k == K_PLAY ? 1 : k == K_WALK ? EN_NWALK - 1 : k == K_KSHAPE ? 3 : k == K_MODE ? EN_NMODES - 1 : k == K_LEDS ? 2 : k == K_CPU ? 100 : k == K_SLOT ? EN_NPROG - 1 : k == K_CQ ? EN_NCQ - 1 : k == K_CX ? EN_NCX - 1
+        *hi = k == K_PLAY || k == K_VALUES ? 1 : k == K_WALK ? EN_NWALK - 1 : k == K_KSHAPE ? 3 : k == K_MODE ? EN_NMODES - 1 : k == K_LEDS ? 2 : k == K_CPU ? 100 : k == K_SLOT ? EN_NPROG - 1 : k == K_CQ ? EN_NCQ - 1 : k == K_CX ? EN_NCX - 1
             : k == K_LANE ? EN_NDRUM - 1 : k == K_LCH ? 100 : 0;
     }
 }
@@ -617,7 +623,7 @@ static const char *knob_name(int k)
         return en_param_info(k)->name;
     return k == K_LEDS ? "Lights" : k == K_CPU ? "CPU" : k == K_SLOT ? "Slot" : k == K_CQ ? "Chord" : k == K_CX ? "Type"
          : k == K_LANE ? "Lane" : k == K_LCH ? "Chance" : k == K_FILTER ? "Filter" : k == K_DUB ? "Wet"
-         : k == K_ENERGY ? "Energy" : k == K_SPACE ? "Duck" : k == K_MODE ? "Mode" : k == K_KSHAPE ? "Kick" : k == K_PLAY ? "Play" : k == K_WALK ? "Walk" : k == K_SAVE ? "Save" : "";
+         : k == K_ENERGY ? "Energy" : k == K_SPACE ? "Duck" : k == K_MODE ? "Mode" : k == K_KSHAPE ? "Kick" : k == K_PLAY ? "Play" : k == K_WALK ? "Walk" : k == K_SAVE ? "Save" : k == K_VALUES ? "Values" : "";
 }
 static void knob_text(int k, char *b)
 {
@@ -684,6 +690,10 @@ static void knob_text(int k, char *b)
         const char *n = v ? "Save" : "Saved";
         while ((*b++ = *n++))
             ;
+    } else if (k == K_VALUES) {
+        const char *n = v ? "Always" : "Peek";
+        while ((*b++ = *n++))
+            ;
     } else {
         b[0] = 0;
     }
@@ -716,6 +726,8 @@ static void knob_set(int k, int v)
             en_prog_rotate();                    /* (from Loop, by hand: the slot playing up to slot 1) */
     } else if (k == K_LEDS) {
         proj.leds = (uint8_t)v;
+    } else if (k == K_VALUES) {
+        proj.values = (uint8_t)v;
     } else if (k == K_SLOT) {
         ui.slot = (uint8_t)v;
         return;                                  /* (only where the page looks: nothing saved) */
@@ -1048,6 +1060,7 @@ static void perf_key(uint32_t key, int down)
 }
 
 static void set_view(int v);
+#define KNB_PEEK 1500u                          /* (1.4.0) ms a page's knobs show their numbers as it opens */
 #define STRIP_HOLD 300u                          /* ms a part's white key is held before its strip shows */
 static void strip_open(void)                     /* the held key's part's strip on the knobs (white 1-6: the chord, the
                                                   * pings, the bass, the kick, the hats, the noise: the meters' rows) */
@@ -1263,8 +1276,11 @@ static void pattern_key(uint32_t key, uint32_t keys)
 /* ------------------------------------------------------------ buttons --- */
 static void set_view(int v)
 {
-    if (v != ui.view)
+    if (v != ui.view) {
         ui.big_until = 0;                        /* (a new page: the last page's big ring gone) */
+        ui.peek_until = plat_ms() + KNB_PEEK;    /* (and its knobs' numbers a moment: the encoders can't be read
+                                                  * without turning them) */
+    }
     ui.view = (uint8_t)v;
     ui.touched = -1;
 }
@@ -2000,6 +2016,51 @@ static void text_c(int32_t cx, int32_t y, const felucca_font_t *f, const char *s
     cv_text(cx - text_w(f, s) / 2, y, f, s, c);
 }
 
+/* (1.4.0) a rounded rectangle's corner inset at row j of its r rows (0 the outermost) */
+static int32_t round_in(int32_t r, int32_t j)
+{
+    const float dy = (float)(r - j) - 0.5f;
+    return r - (int32_t)(fm_sqrtf(fm_maxf((float)(r * r) - dy * dy, 0.0f)) + 0.5f);
+}
+/* (1.4.0) a rounded rectangle's pixels blended towards c by a/16 (12: what was there a quarter): a see-through panel */
+static void cv_shade(int32_t x, int32_t y, int32_t w, int32_t h, int32_t r, uint32_t a, uint16_t c)
+{
+    int32_t j, i;
+    const uint32_t cr = (uint32_t)(c >> 11) * a, cg = (uint32_t)((c >> 5) & 63u) * a, cb = (uint32_t)(c & 31u) * a,
+                   na = 16u - a;
+    if (!a)
+        return;
+    for (j = 0; j < h; j++) {
+        const int32_t yy = y + j + cv_oy, in = j < r ? round_in(r, j) : j >= h - r ? round_in(r, h - 1 - j) : 0;
+        int32_t x0, x1;
+        if (yy < cv_y0 || yy >= cv_y1)
+            continue;
+        x0 = x + in < 0 ? 0 : x + in;
+        x1 = x + w - in > (int32_t)cv_w ? (int32_t)cv_w : x + w - in;
+        for (i = x0; i < x1; i++) {
+            uint16_t *q = &cv_px[(uint32_t)yy * cv_w + (uint32_t)i];
+            const uint32_t b = swap16(*q);
+            *q = swap16(((((b >> 11) * na + cr) >> 4) << 11) | (((((b >> 5) & 63u) * na + cg) >> 4) << 5) |
+                        (((b & 31u) * na + cb) >> 4));
+        }
+    }
+}
+/* (1.4.0) a rounded rectangle's edge, 1 px, in c */
+static void cv_round_edge(int32_t x, int32_t y, int32_t w, int32_t h, int32_t r, uint16_t c)
+{
+    int32_t j;
+    cv_rect(x + r, y, w - 2 * r, 1, c);
+    cv_rect(x + r, y + h - 1, w - 2 * r, 1, c);
+    cv_rect(x, y + r, 1, h - 2 * r, c);
+    cv_rect(x + w - 1, y + r, 1, h - 2 * r, c);
+    for (j = 0; j < r; j++) {                    /* (the corners: from this row's inset to the next's) */
+        const int32_t a = round_in(r, j), b = j + 1 < r ? round_in(r, j + 1) : 0, len = a - b > 0 ? a - b : 1;
+        cv_rect(x + b, y + j, len, 1, c);
+        cv_rect(x + w - b - len, y + j, len, 1, c);
+        cv_rect(x + b, y + h - 1 - j, len, 1, c);
+        cv_rect(x + w - b - len, y + h - 1 - j, len, 1, c);
+    }
+}
 /* anti-aliased drawing (X0X's): a pixel blended over the canvas, a disc, and a knob's ring */
 static void px_blend(int32_t x, int32_t y, uint16_t c, uint32_t a)
 {
@@ -3704,14 +3765,32 @@ static void draw_slots(void)
 #define BIG_R 40                                 /* (1.4.0) the big rings' radius (the level's, a knob's) */
 #define BIG_CY 64                                /* (1.4.0, the user's: their name over them, large; the ring a little
                                                   * lower for it, the help under it) */
-/* over a big ring: its name, large, the page's name and SOLO out of its way for the moment */
+/* over a big ring: its name, large */
 static void big_title(const char *name, uint16_t col)
 {
     char t[24];
     caps(t, name, sizeof t);
-    cv_rect(54, 0, 184, BIG_CY - BIG_R - 4, K_BG);
-    cv_rect(150, 0, 88, 31, K_BG);               /* (the page's name, all of it, clear of the ring's top) */
     text_c(CX, -2, &FONT_C, t, col);
+}
+/* (1.4.0, the user's: the big ring more conspicuous) a panel behind a big ring, its name and its help: a rounded
+ * rectangle, what's behind it darkened to a quarter (f: the ring's fade, 16 shown), a thin edge in its colour; as wide
+ * as the widest of the three (wmax: the help's), as tall as they go (y1: its bottom) */
+static void big_panel(const char *name, int32_t wmax, int32_t y1, uint16_t col, int f)
+{
+    char t[24];
+    int32_t w, x0;
+    caps(t, name, sizeof t);
+    w = text_w(&FONT_C, t) + 20;
+    if (w < 2 * BIG_R + 24)
+        w = 2 * BIG_R + 24;
+    if (w < wmax + 16)
+        w = wmax + 16;
+    if (w > 236)
+        w = 236;
+    x0 = CX - w / 2;
+    cv_shade(x0, 0, w, y1, 6, (uint32_t)(f * 12 / 16), K_BG);
+    if (f > 0)
+        cv_round_edge(x0, 0, w, y1, 6, mix(K_BG, col, f * 7 / 16));
 }
 #define HELP_W 232                               /* (the help under the big ring: two lines at most, this wide) */
 /* a help line in one line or two, split at the space that keeps the wider of the two narrowest: the lines' count
@@ -3769,6 +3848,7 @@ static void draw_oct_at(uint32_t now)
         c = mix(c, K_TEXT, 7 - (int)((now - ui.oct_pulse) * 7u / 160u));
     tr = mix(K_BG, K_LINE, f);
     tx = mix(K_BG, K_TEXT, f);
+    big_panel(LAYER_NAME[l], 0, cy + r + 9, C[l], f);   /* (1.4.0, the user's: on its panel, as the big ring) */
     c = mix(K_BG, c, f);
     for (f2 = -(r + 7); f2 <= r + 7; f2++) {     /* (a disc behind it, the middle hidden) */
         int32_t w = (int32_t)fm_sqrtf((float)((r + 7) * (r + 7) - f2 * f2));
@@ -3814,6 +3894,20 @@ static void draw_big_at(uint32_t now)
     c = mix(K_BG, (lo < 0 && !v) ? K_DIM : ui.big_col, f);
     tr = mix(K_BG, K_LINE, f);
     tx = mix(K_BG, K_TEXT, f);
+    {   /* (1.4.0, the user's) the panel behind it all: the ring, its name, its help */
+        int32_t hw = 0, y1 = cy + r + 6;
+        if (ui.big_help) {
+            char a[48], b[48];
+            const int nl = help_lines(ui.big_help, a, b, (int)sizeof a);
+            if (nl) {
+                hw = text_w(&FONT_S, a);
+                if (nl == 2 && text_w(&FONT_S, b) > hw)
+                    hw = text_w(&FONT_S, b);
+                y1 = cy + r + 3 + nl * 14 + 4;
+            }
+        }
+        big_panel(k == K_FILTER ? "Filter" : ui.big_name, hw, y1, ui.big_col, f);
+    }
     for (f2 = -(r + 4); f2 <= r + 4; f2++) {     /* (a disc behind it, the middle hidden) */
         int32_t w = (int32_t)fm_sqrtf((float)((r + 4) * (r + 4) - f2 * f2));
         cv_rect(CX - w, cy + f2, 2 * w + 1, 1, K_BG);
@@ -3854,7 +3948,6 @@ static void draw_big_at(uint32_t now)
             int32_t w = text_w(&FONT_S, a), w2 = nl == 2 ? text_w(&FONT_S, b) : 0;
             if (w2 > w)
                 w = w2;
-            cv_rect(CX - w / 2 - 4, y0, w + 8, nl * 14 + 2, K_BG);
             text_c(CX, y0, &FONT_S, a, hc);
             if (nl == 2)
                 text_c(CX, y0 + 14, &FONT_S, b, hc);
@@ -4352,9 +4445,29 @@ static int ride_on_knob(int k, float *at)        /* a strip's knob the mixer is 
         }
     return 0;
 }
+/* (1.4.0, the user's: the knobs without their numbers) the strip's geometry: a ring's centre, radius and thickness
+ * (bigger than before: 14 and 4.2, were 12 and 3.4), the numbers' peek as a page opens and its fade */
+#define KNB_CY 40
+#define KNB_R 14
+#define KNB_TH 4.2f
+#define KNB_FADE 300u
+static int text_is_number(const char *t)         /* a value that's a number alone ("55", "+20", "-5", "100%"): the ring
+                                                  * says it; a word or a unit kept ("Wander", "64 bars", "LP 800 Hz") */
+{
+    int n = 0;
+    for (; *t; t++, n++)
+        if (!((*t >= '0' && *t <= '9') || *t == '+' || *t == '-' || *t == '%' || *t == '.'))
+            return 0;
+    return n > 0;
+}
+static void knob_label(int32_t cx, const char *t, uint16_t c)   /* a knob's name: a size up where it fits its cell */
+{
+    text_c(cx, 11, text_w(&FONT_S, t) <= 56 ? &FONT_S : &FONT_XS, t, c);
+}
 static void draw_knobs(void)
 {
     uint32_t h = hash(2166136261u, ui.view | (uint32_t)ui.touched << 8), i;
+    int peek;
     if (view_voice(ui.view) >= 0)
         h = hash(h, (uint32_t)proj.par[view_voice(ui.view)]);
     if (ui.view == V_CHORDS || ui.view == V_WALK)
@@ -4374,7 +4487,12 @@ static void draw_knobs(void)
         if (ride_on_knob(vknob(ui.view, i), &ln))   /* (the dub mixer riding it: the same) */
             h = hash(h, (uint32_t)(int32_t)(ln * 4.0f));
     }
-    h = hash(h, (uint32_t)now_touch);
+    {   /* (1.4.0) the numbers' peek: 16 shown, fading over its last KNB_FADE ms, 0 gone; always with Setup's Values */
+        const uint32_t now = plat_ms();
+        peek = proj.values ? 16 : now >= ui.peek_until ? 0 : ui.peek_until - now >= KNB_FADE ? 16
+             : (int)((ui.peek_until - now) * 16u / KNB_FADE);
+    }
+    h = hash(h, (uint32_t)now_touch | (uint32_t)peek << 4);
     if (h == ui.sig[2])
         return;
     ui.sig[2] = h;
@@ -4431,66 +4549,73 @@ static void draw_knobs(void)
     cv_oy = 4;                                   /* (the knobs under it 4 px lower: the strip 72 px, the rule's room) */
     for (i = 0; i < 4; i++) {
         const int off = fm_knob_off(ui.view, (int)i);   /* (a voice not FM: all grey; Ratio on two ops) */
-        int k = vknob(ui.view, i), lo, hi, v, hot = now_touch && ui.touched == (int)i && !off;
+        int k = vknob(ui.view, i), lo, hi, v, hot = now_touch && ui.touched == (int)i && !off, ring = 0;
         int32_t x = (int32_t)i * 60, cx = x + 30;
         char t[16];
         static const uint16_t STC[NSTRIP] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_TEXT, K_NOISE};   /* (a strip: its part's) */
         uint16_t bg = hot ? K_PANEL : K_BG, fill = off ? K_LINE : ui.view == V_STRIP ? STC[strip_part] : hot ? K_ACC : K_PAD;
-        if (k == K_NONE && KNOB_LABEL[ui.view][i][0]) {   /* (1.4.0: a knob to come, the Arrangement page's Mixer:
-                                                  * its name greyed, its ring empty) */
+        if (k == K_NONE && KNOB_LABEL[ui.view][i][0]) {   /* (1.4.0: a knob to come: its name greyed, its ring empty) */
             caps(t, KNOB_LABEL[ui.view][i], sizeof t);
             if (i)
-                cv_rect(x, 16, 1, 46, K_LINE);
-            text_c(cx, 12, &FONT_XS, t, K_LINE);
-            arc(cx, 37, 12, 0.0f, mix(K_BG, K_LINE, 10), K_LINE, K_BG, 0);
+                cv_rect(x, 14, 1, 50, K_LINE);
+            knob_label(cx, t, K_LINE);
+            arc_th(cx, KNB_CY, KNB_R, KNB_TH, 0.0f, mix(K_BG, K_LINE, 10), K_LINE, K_BG, 0);
             continue;
         }
         if (k == K_NONE)
             continue;
         if (i)
-            cv_rect(x, 16, 1, 46, K_LINE);
+            cv_rect(x, 14, 1, 50, K_LINE);
         if (hot)
-            cv_round(x + 3, 11, 54, 57, 6, K_PANEL);
+            cv_round(x + 3, 10, 54, 58, 6, K_PANEL);
         knob_range(k, &lo, &hi);
         v = off ? 0 : knob_get(k);
         caps(t, KNOB_LABEL[ui.view][i], sizeof t);
-        text_c(cx, 12, &FONT_XS, t, hot ? K_TEXT : K_DIM);
+        knob_label(cx, t, off ? K_DIM : K_TEXT);   /* (1.4.0, the user's: the names brighter, a size up) */
         if (k == K_SAVE) {                       /* (Save: a dot, lit while there's something to save) */
-            cv_disc(cx, 37, 5, v ? K_ACC : K_LINE);
+            cv_disc(cx, KNB_CY, 5, v ? K_ACC : K_LINE);
         } else if (k != K_CPU && hi - lo < 10) { /* a switch: its positions as pips (up to ten) */
             int n = hi - lo + 1, j, pw = n > 6 ? 3 : n > 4 ? 6 : 9, gap = n > 6 ? 2 : 3, w0 = n * (pw + gap) - gap;
             for (j = 0; j < n; j++)
-                cv_round(cx - w0 / 2 + j * (pw + gap), 33, pw, 8, 2, j == v - lo ? fill : K_LINE);
+                cv_round(cx - w0 / 2 + j * (pw + gap), KNB_CY - 4, pw, 8, 2, j == v - lo ? fill : K_LINE);
         } else if (k != K_CPU) {
             float nw, rr;
             float ra;
             const int lfo_on = lfo_on_knob(k, &nw, &rr) && !off, ride = !lfo_on && ride_on_knob(k, &ra) && hi > lo;   /* (an
                                                   * LFO on it: its dot the one; the dub mixer riding it, as alike) */
-            arc(cx, 37, 12, hi > lo ? (float)(v - lo) / (float)(hi - lo) : 0.0f, K_LINE, fill, bg,
-                (lo < 0) | (lfo_on || ride ? 2 : 0));
+            ring = 1;
+            if (lo < 0)                          /* (a centred knob: its 0 marked over the ring's top) */
+                cv_rect(cx, KNB_CY - KNB_R - 3, 1, 2, K_DIM);
+            arc_th(cx, KNB_CY, KNB_R, KNB_TH, hi > lo ? (float)(v - lo) / (float)(hi - lo) : 0.0f, K_LINE, fill, bg,
+                   (lo < 0) | (lfo_on || ride ? 2 : 0));
             if (ride) {                          /* (1.4.0, the user's: the dub mixer) from the knob's value to where the
                                                   * ride has it now, a dot there (the LFO's look) */
                 const float c = (float)(v - lo) / (float)(hi - lo), r = (ra - (float)lo) / (float)(hi - lo);
                 /* (the user's: brighter and thicker, a ride of a few dB read at a glance: the band near white, over 3
                  * px outside the ring and inside it, the dot bigger on a dark rim) */
-                arc_span_w(cx, 37, 12, fm_minf(c, r), fm_maxf(c, r), r, mix(fill, K_TEXT, 14), K_TEXT, 1);
+                arc_span_w(cx, KNB_CY, KNB_R, fm_minf(c, r), fm_maxf(c, r), r, mix(fill, K_TEXT, 14), K_TEXT, 1);
             }
             if (lfo_on) {   /* (1.4.0, the user's) the chord's LFO and drift on it (its Destination's knob):
                                                   * their reach a brighter teal, a dot where it is now (the Cutoff a
                                                   * step of 0.055 octave; Reso and Colour as far along theirs) */
                 const float c = (float)(v - lo) / (float)(hi - lo);
-                arc_span(cx, 37, 12, c - rr, c + rr, c + nw, mix(fill, K_TEXT, 11), en_playing ? K_TEXT : mix(fill, K_TEXT, 11));
+                arc_span(cx, KNB_CY, KNB_R, c - rr, c + rr, c + nw, mix(fill, K_TEXT, 11), en_playing ? K_TEXT : mix(fill, K_TEXT, 11));
             }
             if (k == P_MOTION) {                 /* (Motion's three regions: the loop held, variations, Breaks) */
-                arc_mark(cx, 37, 12, 0.4f, K_TEXT);
-                arc_mark(cx, 37, 12, 0.7f, K_TEXT);
+                arc_mark_th(cx, KNB_CY, KNB_R, KNB_TH, 0.4f, K_TEXT);
+                arc_mark_th(cx, KNB_CY, KNB_R, KNB_TH, 0.7f, K_TEXT);
             }
         }
         if (off && k < P_NPARAMS)
             en_param_text(k, 0, t);
         else
             knob_text(k, t);
-        text_c(cx, 50, &FONT_B, t, off ? K_DIM : hot ? K_ACC : K_TEXT);
+        {   /* (1.4.0, the user's) a ring's number only a moment as the page opens (or always, Setup's Values); a word
+             * or a unit always (a switch's, the walk's, the bars, the Hz): the ring says how much, the word what */
+            const int f = ring && text_is_number(t) ? peek : 16;
+            if (f > 0)
+                text_c(cx, 53, &FONT_B, t, mix(K_BG, off ? K_DIM : hot ? K_ACC : K_TEXT, f));
+        }
     }
     cv_blit(0, KNB_Y);
 }

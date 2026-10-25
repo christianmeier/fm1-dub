@@ -488,6 +488,10 @@ static int expect(const char *what, const char *val)
         got = ping_hash() == ping_mark;
     else if (!strcmp(what, "screen"))
         got = proj.screen;
+    else if (!strcmp(what, "values"))            /* (1.4.0) the knobs' numbers: 0 Peek, 1 Always (Setup's Values) */
+        got = proj.values;
+    else if (!strcmp(what, "peek"))              /* (1.4.0) 1 while a page's knobs show their numbers (a page opened) */
+        got = proj.values || plat_ms() < ui.peek_until;
     else if (!strncmp(what, "kbnote", 6)) {       /* kbnoteN: the Chords page keyboard's note N (0..3; 0: the root), MIDI
                                                   * (-1: none) */
         int nt[4], held, n = slot_notes(ui.slot, nt, &held), k = atoi(what + 6) & 3;

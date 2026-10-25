@@ -68,7 +68,8 @@ typedef struct {
     uint8_t leds;                        /* lights: 0 off, 1 keys and the buttons' glow, 2 keys only */
     uint8_t piece;                       /* which piece */
     uint8_t screen;                      /* the Dub page's middle: 0 ripples, 1 scope, 2 spectrum, 5 tape (ui_screen_ok) */
-    uint8_t rsv0;
+    uint8_t values;                      /* (1.4.0) the knobs' numbers: 0 shown a moment as a page opens, 1 always
+                                          * (was rsv0, 0 in older saves: Peek) */
     slot_t slot[NPIECES];                /* every piece as it was left (Tune and MIDI out are global) */
     uint8_t rsv[16];                     /* room to grow */
 } project_t;
