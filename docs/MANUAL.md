@@ -105,7 +105,7 @@ The drawing at the top shows them all; here they are in more detail.
 | PLAY | Play / rest. DUB-1 starts playing by itself when it's switched on. At rest, the echo's feedback eases under 90% so its tails die away, the reverb rings out and the noise fades. Playing again starts from the first bar of a phrase. Lit while playing. In Song or Set mode (GLO again: [Songs](#songs-an-intro-the-main-an-outro)) PLAY starts a song from its intro, and the song stops PLAY by itself at its end. **HOME held + PLAY:** the **outro**, from the next phrase, in any mode (Endless too: a way to land a piece by hand); again, in it or while it waits: back to the main. |
 | REC | A tap: **dub hold**: the echo stops listening and repeats what it holds, sample for sample, for ever; the reverb stops listening too and rings on; the chord doesn't move. The stabs, pings and drums go on, dry, above it. Tap again to let go. Lit while held. Held: the **effects grid** (below). |
 | EDIT | A tap: the **Chords page** (below): the eight chords coming, to see and change (again, it stays). Held (half a second): the next chord, at the start of the next bar (at once while resting; in dub hold, once you let go); a card says NEXT CHORD until the chord changes. Held on (1.5 s): **new chords**, the walk's all walked again (yours, the gaps and the one playing kept); a red card, NEW CHORDS. |
-| SEL | A tap: the **Arrangement page** (PERFORM's until 1.4.0): the screen shows each part's level on a desk's meters, the knobs are Width, Mixer (to come), Wet and Duck, and the keys stop being the scale: they mute and solo the parts (white 1–6 held: a part's channel strip), make the dub moves and throw the hats (see below). Again, it stays; a page's button or SELECT leaves it. Lit while on. **Held** (half a second), on any page: **Lock** on or off (below). |
+| SEL | A tap: the **Arrangement page** (PERFORM's until 1.4.0): the screen shows each part's level on a desk's meters, the knobs are Width, Mixer (the dub mixer), Wet and Duck, and the keys stop being the scale: they mute and solo the parts (white 1–6 held: a part's channel strip), make the dub moves and throw the hats (see below). Again, it stays; a page's button or SELECT leaves it. Lit while on. **Held** (half a second), on any page: **Lock** on or off (below). |
 | HOME | The **Form** page (Dub until 1.4.0): how the piece unfolds (Energy, Evolve, Motion). Again: the **Song** page (its intro, main and outro, 1.4.0); again: the Key page (tempo, root, mode, swing), and again back to Form; HOME blinks on the Song and Key pages. Held on for 1.5 s (nothing turned meanwhile): **a shake of everything**, the chord, the pings, the bass, the drums and the noise at once ("SHAKE ALL"), the page kept; again and again, to explore until something sounds right. Held with SELECT turned: the tempo. |
 | ENV · ARP · LFO · SEQ | The layers' pages: Chord, Pings, Bass, Drums, each its part (see [The pages](#8-the-pages)). Again: the layer's voice page (**Chord voice**, **Pings voice**, **Bass voice**; the drums' **Kick**), then its FM page or, for the drums, the **Hats** page and then the Pattern page, then back. The chord has one more: after its FM page (for every chord voice: its Colour is there), the **Chord LFO** page, then back. Held (half a second): a **nudge** to the layer's sound; held on (1.5 s): a **shake** (below). |
 | FX · GLO | The **Dub** page, the echo and the plate (Space until 1.4.0; FX again: the **Echo page**, the echo's blur and tone, the plate's size and its cloud, FX blinking; again, back); the Setup page, for what holds for every piece (GLO again: **Song mode**, Endless, Song or Set; again, back). The lit button shows the page. FX held: a nudge to the space; held on: a shake (a new echo time). **GLO held** (half a second, then let go): **saves** all eight pieces (a card, SAVED); held on (1.5 s): the piece back to its recipe (a red card, RESET). |
@@ -130,7 +130,7 @@ notch there, so it's easy to find:
 | Knob | Down | Up |
 |---|---|---|
 | KNOB 1 · **Width** | the whole mix narrower, to mono at 0 (the lows are always mono) | wider: the echo's right side a few milliseconds behind its left, a slow crossed chorus on the stabs and the pings; at 100 as wide as the widest records (Fog and Night Drive have 85) |
-| KNOB 2 · **Mixer** | (grey: not built yet; it will be the virtual dub mixer, riding the faders and the sends by itself) | |
+| KNOB 2 · **Mixer** | 0: off, the desk as you set it | up to 100: the desk rides itself, more and further: the parts' levels and sends, the chord's filter, the echo's feedback (below) |
 | KNOB 3 · **Wet** | the whole music drier: the chord and the pings up front, less into the echo, the noise dry | the whole music drowned: the chord and the pings almost all echo, more into the echo, the noise into the echo and the plate |
 | KNOB 4 · **Duck** | 0: the music still, the kick on top of it | up to 100: each beat pushes the rest down, to −12 dB, the music pumping |
 
@@ -144,13 +144,41 @@ music, dry and close or lost in the echo. It's an offset on top of everything el
 strips' sends included (below), which stay where they are. Wet is for playing: it isn't saved, and it
 stays where it is when you change piece, back in the middle when the FM-1 starts.
 
+**Mixer**, the virtual dub mixer, is how much the desk rides itself, as a dub engineer's hand on the
+faders and the sends. It's the piece's own, saved with it: Basic 25, Steppers 20, Pressure 30, Concrete 35,
+Chamber 45, Night Drive 55, Fog and Haze 60 (the source's held loops little, the US records' played desk
+most). At 0 it's off: the desk stays where you set it.
+
+- **The rides:** each part's level, its echo send and its plate send, the chord's filter and the
+  echo's feedback move slowly, each to a new place every 10 to 60 seconds, gliding there over most of
+  the wait. They start anywhere in the bar, not on the phrases' lines: about one in eight lands on one,
+  as chance would have it (the records' changes about a quarter, DUB-1's own arrangement nearly half).
+  How far they go is Mixer's: at 100 a level from −1.5 to −7 dB down and +1 to +3 dB up, never more;
+  a send −8 to +6 dB; the filter half an octave either way. The kick moves least (its level only,
+  ±1.5 dB): it never leaves the classics.
+- **The moves:** now and then (about once a minute at 100, every two at 50), one thing more: a part
+  ridden right out and back over a few bars (the pings, the hats or the noise; the chord or the bass
+  down 12 dB; the kick only above 75, rarely), or a part's echo send swelled for a bar or two, the
+  feedback with it, the repeats left to ring. Half of them start on a phrase's line, half anywhere.
+- **Around your settings:** the rides move offsets around the knobs; your values stay as you set them.
+  Turn a Level and the ride goes on around the new one.
+- **When it rests:** not in a Break or a Thin (Motion's own moves), not in a song's intro or outro
+  (the song's; its rides are half as deep there, no moves); **Lock** and dub hold rest it (nothing
+  new; what's under way ends). Turned to 0, every ride glides home over four bars.
+- **On the screen:** the meters' white notches move with the rides, where each part's level is now; a
+  held strip's Level, Echo and Plate knobs show the ride as the LFO's moving knob does: a band from
+  your setting to where the ride has it, a white dot there.
+
+![The Arrangement page with Mixer at 100 after a minute: the white notches off their settings, where the rides have the levels now; MIXER 100](img/screen-mixer.png "The dub mixer riding")
+![The Chord strip held while the dub mixer rides: LEVEL, ECHO and PLATE each with a light band from the knob's value to a white dot, where the ride has it](img/screen-strip-ride.png "A strip's knobs showing the ride")
+
 **Duck** is the piece's own (it was the Drums page's KNOB 4 until 1.3.0), saved with it: how far
 each beat pushes the rest down, letting it back in over a little more than a tenth of a second. A
 kick ducks it fully; a beat without one a little less, and less again while the arrangement has the
 kick out (a Break), so the music keeps breathing (the ghost duck). The noise is ducked deeper than
 the music.
 
-![The Arrangement page: seven rows of green LED segments, CHD, PNG, BAS, KCK, HAT, NOI and MST, each with a white fader marker, the kick's and the master's reaching yellow; under the master, DUCK, its orange segments from the right; WIDTH 40, MIXER grey, WET 0, DUCK 80](img/screen-perform.png "The Arrangement page")
+![The Arrangement page: seven rows of green LED segments, CHD, PNG, BAS, KCK, HAT, NOI and MST, each with a white fader marker, the kick's and the master's reaching yellow; under the master, DUCK, its orange segments from the right; WIDTH 40, MIXER 25, WET 0, DUCK 80](img/screen-perform.png "The Arrangement page")
 
 **The meters.** A row a part, top to bottom, as the white keys 1–6: the chord (CHD), the pings (PNG),
 the bass (BAS), the kick (KCK), the hats (HAT: the shaker and the open hat, with the rim and the clap),
@@ -161,7 +189,8 @@ the noise (NOI), and under them the master (MST). Each row is a meter of LED seg
   in the master, not in their rows), before the duck; the master as it goes out, after MASTER.
 - **A lone segment above them:** the peak held, for a second; then it falls back.
 - **The white notch** through a row: the part's level setting (its strip's Level, below; OCT− / OCT+ on
-  its page), as a fader's position, 0 at the left, 100 at the right. Turn a level and it moves. The
+  its page), as a fader's position, 0 at the left, 100 at the right. Turn a level and it moves; the
+  dub mixer moves it too, where its ride has the level now. The
   kick's and the hats' are their own faders, 50 in the middle as the piece has them; the drums' level
   (OCT− / OCT+ on the Drums pages) moves both.
 - **Colours** (two builds to try): *classic*, green, yellow from −12 dB, red in the top 4 dB, on
@@ -1305,7 +1334,8 @@ the drums' strip is the Hats strip, its sends and Low cut kept, and the Kick str
 strips (format 24), the noise LFO's Destination comes from the recipe (Filter, as it played before);
 the Cloud and the Width are kept, on their new pages. From 1.4.0's noise LFO Destination (format 25),
 each piece's song comes from its recipe (Intro 32, Main 160, Outro 32 bars, its Kind), and the Song mode is
-Endless, as it played before. To get a changed piece's
+Endless, as it played before. From 1.4.0's song structure (format 26), each piece's Mixer comes from its
+recipe. To get a changed piece's
 whole new recipe, hold GLO for 1.5 s on it.
 Projects saved by AMB-1 aren't read by DUB-1: the first start after installing it begins with the
 eight recipes.
@@ -1430,7 +1460,7 @@ The defaults are Basic's; each piece has its own.
 | SELECT | Filter | −100 – 0 – +100 (Shut, Off, Open); for playing, not saved | Off |
 | Arrangement | Width | 0–100 (the whole mix: mono – wide) | 40 |
 | Arrangement | Wet | −100 – 0 – +100; for playing, not saved | 0 |
-| Arrangement | Mixer | (to come) | |
+| Arrangement | Mixer | 0–100 (off – the desk riding itself most); the piece's, saved | 25, 45, 20, 60, 35, 55, 30, 60 |
 | Arrangement | Duck | 0–100 (to −12 dB); the piece's, saved | 50 |
 | Strip (white 1–6 held) | Level | the part's level (as OCT− / OCT+; the kick's and the hats' their own, ×1 at 50) | 52, 30, 68, 50, 40, 8 |
 | Strip | Echo, Plate | 0–100 (0 none – 50 as the piece sends – 100 twice; the kick's 0 none – 100 a full send) | 50 (the bass's Echo 0, the kick's 0) |

@@ -126,6 +126,17 @@ wait 300
 shot screen-strip-noise.png
 spin K3 -10
 key w5 up
+# (1.4.0, the user's: the dub mixer) Mixer up to 100, a minute riding: the notches where the rides have the levels;
+# then the chord's strip held, its knobs showing the ride
+spin K2 75
+wait 60000
+shot screen-mixer.png
+key w0 down
+wait 600
+shot screen-strip-ride.png
+key w0 up
+spin K2 -75
+wait 1500
 spin K4 -30
 tap HOME
 turn K3 50

@@ -862,21 +862,35 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
 - **The space pages and the noise LFO's Destination** (the user, 2026-10-25: "go ahead with 1 and 2"; built,
   branch dub-1.4-space). The Echo page (FX again) **Blur, Tone, Size, Cloud** (Cloud from the Pings page, now
   Density, Vary and two empty). **Width**, the whole mix's stereo field (P_EWIDTH), the **Arrangement page's
-  KNOB 1** (the user's, changing a first plan for the Form page's fourth): Arrangement = Width, Mixer (grey),
+  KNOB 1** (the user's, changing a first plan for the Form page's fourth): Arrangement = Width, Mixer (then grey),
   Wet, Duck; **Energy on the Form page alone** (one value: it was on both). The Noise LFO page's ALGORITHM its
   **Destination** (P_NLDEST, format 25): Filter (the low-pass folded into the noise's own filters, 69e6aff),
   Tone or Air, within their knobs' ranges (a quarter of the sweep a unit of the reach: Depth 100 and Drift 100
   together, half either way); the moving dot on the Noise voice's Tone or Air (the Filter no knob: the LFO page's
   trace shows it); the character on the other Noise pages. Bit for bit on all eight pieces with the defaults;
   the host's CPU the same.
+- **The virtual dub mixer** (the user, 2026-10-25: "start the dub mixer"; built, branch dub-1.4-mixer). The
+  Arrangement page's **Mixer** (P_MIXER, KNOB 2, the piece's; format 27): how much the desk rides itself. From
+  REPORT9 and REPORT10: the records' movement slow and uneven (60-87% drift, nothing faster than a bar), the filter
+  swept about twice a minute, the levels riding with the arrangement, the hats in slow 30-44 s sweeps, 24% of the
+  changes on an 8-bar line (DUB-1's 46%). Twenty rides (each part's level, echo and plate send; the chord's filter;
+  the echo's feedback), a new place every 10-60 s drawn at any sixteenth and glided over most of the wait, their
+  reach Mixer's (at 100: levels -1.5 .. -7 dB / +1 .. +3, sends -8 .. +6, the filter +-0.55 octave; the kick's level
+  the least, its sends none); rarer moves, one at a time, about one a minute at 100, half on a phrase's line: a part
+  out and back (the pings, hats, noise out; the chord and bass -12 dB; the kick only over 75) or its echo swelled
+  (+4 .. +8 dB, the feedback with it). Offsets times the song's faders, its own random draws; not in a Break or Thin,
+  nor a song's intro or outro (half depth there); Lock and dub hold rest it. Mixer 0: bit for bit as before (all
+  eight pieces, Endless and a song). The meters' notches and a held strip's knobs show the rides. Recipes: Basic
+  25, Steppers 20, Pressure 30, Concrete 35, Chamber 45, Night Drive 55, Fog and Haze 60. Host CPU unchanged; RAM
+  +552 B. Renders: build/mixer/ (Fog and Basic at 0, the recipe's, 100). To judge by ear: the rates, the depths,
+  how often a part leaves.
 - **Bigger visualisations** (the user, 2026-10-24; a plan, after the song structure's own display is decided): with
   the strips gone and the header freed, the middle's pictures can grow. The ripples further up and to the sides,
   the deepest layer (whatever is on top covers them: the section and bar cells, the page's name, the big ring, the
   lanes); the scope and the spectrum wider (the screen's width, or nearly). To fit with the song line and the
   "where we are" map, so the room is shared out once.
 - **Still missing (the user, 2026-10-24: "don't forget"):**
-  - **The virtual dub mixer** (the Arrangement page's Mixer knob, grey now): how much it rides the faders and the
-    sends by itself.
+  - ~~**The virtual dub mixer**~~ (built, dub-1.4-mixer, below).
   - ~~**The LFO's Destination**~~: the chord's built (Cutoff, Reso, Colour; dub-1.4-chord); the noise's built
     (Filter, Tone, Air; dub-1.4-space).
   - ~~The Arrangement page's channel strip~~ (step 2: built, dub-1.4-strips).
