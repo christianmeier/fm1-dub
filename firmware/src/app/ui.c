@@ -3952,7 +3952,8 @@ static void tp_reel(int32_t cx, int32_t cy, int32_t r, float ang, uint16_t tape)
         circle(cx, cy, j, mix(K_BG, tape, 11));
     circle(cx, cy, 30, K_LINE);                   /* the flange */
     for (j = 0; j < 3; j++) {                     /* the spokes, turning */
-        const float a = ang + (float)j * 2.0943951f, c = fm_cosf(a), s = fm_sinf(a);
+        const float a = ang + (float)j * 2.0943951f, c = fm_cosf(a), s = -fm_sinf(a);   /* (anticlockwise, the user's:
+                                                  * the tape leaves and joins both at their bottoms, running right) */
         line(cx + (int32_t)(7.0f * c), cy + (int32_t)(7.0f * s), cx + (int32_t)(29.0f * c), cy + (int32_t)(29.0f * s), K_LINE);
     }
     cv_disc(cx, cy, 6, K_PANEL);
