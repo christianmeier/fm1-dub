@@ -10,7 +10,9 @@
 #define EN_VERSION "DEV"
 #endif
 #define PROJ_MAGIC 0x31425544u           /* "DUB1": AMB-1's projects ("ENO1") give the recipes */
-#define PROJ_FORMAT 26u                  /* 26: song structure (P_SMODE, the player's, global as Tune: Endless;
+#define PROJ_FORMAT 27u                  /* 27: the virtual dub mixer (P_MIXER, each piece's; 8-26 read, it
+                                         * from the recipes);
+                                         * 26: song structure (P_SMODE, the player's, global as Tune: Endless;
                                          * each piece's Intro, Main, Outro and Kind, P_SINTRO .. P_SKIND; 8-25 read,
                                          * they from the recipes);
                                          * 25: the noise LFO's Destination (P_NLDEST: Filter, Tone, Air; 8-24 read,

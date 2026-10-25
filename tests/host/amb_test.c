@@ -1879,6 +1879,115 @@ int main(void)
         printf("  the outro now, in Endless and in a song, and back\n");
     }
 
+    /* (1.4.0, the user's: the dub mixer) Mixer 0: nothing rides; up: each part's level and sends ride slowly, within
+     * their bounds (the levels never over +3 dB), mostly off the phrase lines, a part out and back or a swell now and
+     * then, the master never into the clip; Lock rests it; a song's intro and outro left to the song (no moves, the
+     * rides at half depth); back to 0: every ride home, exactly */
+    {
+        float lo[EN_NPART], hi[EN_NPART], elo = 99.0f, ehi = -99.0f, mp = 0.0f, mp0 = 0.0f, ilv = 0.0f;
+        uint32_t m0, l0, m1;
+        int k, b, ok, evs = 0, was = 0, inev = 0;
+        fresh();
+        en_seed(9);
+        en_meter_on = 1;
+        en_play(1);
+        m0 = en_mx_moves;
+        for (b = 0; b < (int)(60.0f * 44100.0f / 256.0f); b++) {   /* (the master's peak without it) */
+            en_render(buf, 256, 2048);
+            if (en_meter[EN_MT_MASTER] > mp0)
+                mp0 = en_meter[EN_MT_MASTER];
+            for (k = 0; k < EN_NMETER; k++)
+                en_meter[k] = 0.0f;
+        }
+        for (k = 0, ok = 1; k < EN_NPART; k++)
+            ok &= en_mx_db[k] == 0.0f && en_mx_snd[k][0] == 0.0f && en_mx_snd[k][1] == 0.0f;
+        CHECK(ok && en_mx_moves == m0, "Mixer 0: nothing rides (%u moves)", en_mx_moves - m0);
+        en_set(P_MIXER, 100);
+        for (k = 0; k < EN_NPART; k++)
+            lo[k] = 99.0f, hi[k] = -99.0f;
+        m0 = en_mx_moves, l0 = en_mx_line;
+        for (b = 0; b < (int)(480.0f * 44100.0f / 256.0f); b++) {   /* (eight minutes) */
+            en_render(buf, 256, 2048);
+            if (en_meter[EN_MT_MASTER] > mp)
+                mp = en_meter[EN_MT_MASTER];
+            for (k = 0; k < EN_NMETER; k++)
+                en_meter[k] = 0.0f;
+            for (k = 0; k < EN_NPART; k++) {
+                if (en_mx_ev != 1 && en_mx_db[k] < lo[k])   /* (the drift: a part out and back apart) */
+                    lo[k] = en_mx_db[k];
+                if (en_mx_db[k] > hi[k])
+                    hi[k] = en_mx_db[k];
+                if (en_mx_snd[k][0] < elo)
+                    elo = en_mx_snd[k][0];
+                if (en_mx_snd[k][0] > ehi)
+                    ehi = en_mx_snd[k][0];
+            }
+            if (en_mx_ev && !was)
+                evs++;
+            was = en_mx_ev;
+        }
+        for (k = 0, ok = 1; k < EN_NPART; k++)
+            ok &= hi[k] <= 3.01f && hi[k] - lo[k] >= (k == 3 ? 0.3f : 1.5f) && lo[k] >= -7.01f;
+        printf("  the dub mixer at 100, 8 minutes: %u moves, %.0f%% on a phrase's line; %d out-and-back or swells; the "
+               "levels %+.1f..%+.1f dB (the chord), %+.1f..%+.1f (the kick); the echo sends %+.1f..%+.1f dB; the master's "
+               "peak %.2f (%.2f at 0)\n", en_mx_moves - m0, 100.0 * (en_mx_line - l0) / (double)(en_mx_moves - m0 + 1u),
+               evs, (double)lo[0], (double)hi[0], (double)lo[3], (double)hi[3], (double)elo, (double)ehi, (double)mp,
+               (double)mp0);
+        CHECK(ok, "the dub mixer's level rides within their bounds, and riding (the chord %+.1f..%+.1f, the kick %+.1f..%+.1f)",
+              (double)lo[0], (double)hi[0], (double)lo[3], (double)hi[3]);
+        CHECK(en_mx_moves - m0 > 200u, "the dub mixer moves (%u in 8 minutes)", en_mx_moves - m0);
+        CHECK((en_mx_line - l0) * 100u < 35u * (en_mx_moves - m0) && (en_mx_line - l0) * 100u > 4u * (en_mx_moves - m0),
+              "the dub mixer off the phrase lines, mostly (%u of %u on one)", en_mx_line - l0, en_mx_moves - m0);
+        CHECK(evs >= 1, "the dub mixer's moves: a part out and back, or a swell (%d)", evs);
+        CHECK(elo >= -8.01f && ehi <= 16.01f, "the echo sends' rides within bounds (%+.1f..%+.1f dB)", (double)elo, (double)ehi);
+        CHECK(mp < 1.0f && !bad, "the dub mixer at 100: the master never into the clip (%.2f)", (double)mp);
+        en_lock(1);                              /* (Lock: no new places, no new moves) */
+        run(1.0f);
+        m1 = en_mx_moves;
+        run(90.0f);
+        CHECK(en_mx_moves == m1, "Lock rests the dub mixer (%u moves)", en_mx_moves - m1);
+        en_lock(0);
+        en_set(P_MIXER, 0);                      /* (back to 0: home, exactly) */
+        run(30.0f);
+        for (k = 0, ok = 1; k < EN_NPART; k++)
+            ok &= en_mx_db[k] == 0.0f && en_mx_snd[k][0] == 0.0f && en_mx_snd[k][1] == 0.0f;
+        CHECK(ok && !en_mx_ev, "Mixer back to 0: every ride home");
+        /* a song: the intro the song's (no moves; the rides at half depth), the main the mixer's too */
+        fresh();
+        en_seed(5);
+        en_set(P_MIXER, 100);
+        en_set(P_SMODE, 1);
+        en_set(P_SINTRO, 8);
+        en_set(P_SMAIN, 16);
+        en_set(P_SOUTRO, 2);
+        en_play(1);
+        run(0.05f);
+        while (en_playing && en_bars < 64u * 16u) {
+            run(0.1f);
+            inev |= en_mx_ev != 0;
+            for (k = 0; k < EN_NPART; k++)
+                if (fabsf(en_mx_db[k]) > ilv)
+                    ilv = fabsf(en_mx_db[k]);
+        }
+        CHECK(!inev && ilv <= 3.6f, "a song's intro: the dub mixer's moves wait, its rides half deep (%.1f dB)", (double)ilv);
+        {
+            uint32_t mm;
+            float mlv = 0.0f;
+            while (en_playing && en_song_ph == EN_SG_INTRO)
+                run(0.1f);
+            mm = en_mx_moves;
+            while (en_playing && en_song_ph == EN_SG_MAIN) {
+                run(0.5f);
+                for (k = 0; k < EN_NPART; k++)
+                    if (en_mx_ev != 1 && fabsf(en_mx_db[k]) > mlv)
+                        mlv = fabsf(en_mx_db[k]);
+            }
+            CHECK(en_mx_moves > mm + 50u && mlv > ilv, "a song's main: the dub mixer at full depth (%.1f dB, %u moves)",
+                  (double)mlv, en_mx_moves - mm);
+        }
+        printf("  the dub mixer: off at 0, riding within bounds, Lock resting it, a song's intro left to the song\n");
+    }
+
     /* stop: the tails die away (but the vinyl turns on) */
     fresh();
     en_play(1);

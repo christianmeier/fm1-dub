@@ -142,6 +142,10 @@ enum {
      * step: the knobs show bars), and its intro's Kind (EN_SKIND_NAME: Ambient first, the noise and the chord's wash;
      * Pulse first, the kick and the bass) */
     P_SMODE, P_SINTRO, P_SMAIN, P_SOUTRO, P_SKIND,
+    /* (1.4.0, format 27, the user's: the virtual dub mixer, the Arrangement page's KNOB 2) how much DUB-1 rides the
+     * desk by itself, 0..100: 0 off (the music as it was, bit for bit); the parts' faders and sends, the chord's
+     * filter and the echo's feedback moved slowly, off the phrase lines, around the knobs' values (never on them) */
+    P_MIXER,
     P_NPARAMS
 };
 typedef struct {
@@ -193,6 +197,12 @@ extern const char *const EN_SMODE_NAME[EN_NSMODE], *const EN_SKIND_NAME[EN_NSKIN
 void en_outro(void);
 extern volatile uint8_t en_song_ph;
 extern volatile uint32_t en_song_b0, en_song_bo, en_song_be;
+/* (1.4.0) the dub mixer (P_MIXER) as heard now: each part's level ride (dB, a move out and back in it), its echo and
+ * plate sends' (dB); the move under way (0 none, 1 a part out and back, 2 an echo swell); the moves begun and those on
+ * a phrase's first bar (for the tests) */
+extern volatile float en_mx_db[EN_NPART], en_mx_snd[EN_NPART][2];
+extern volatile uint32_t en_mx_moves, en_mx_line;
+extern volatile uint8_t en_mx_ev;
 extern volatile float en_fader[EN_NPART];       /* each part's fader as heard now, 0..1 (for tests and the screen) */
 float en_song_in(int kind, int part);
 float en_song_out(int part);

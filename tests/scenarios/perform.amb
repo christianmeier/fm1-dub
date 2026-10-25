@@ -47,8 +47,8 @@ wait 200
 said NOISE ON
 expect mutes 9
 expect view 17
-# (1.4.0) the Arrangement page's knobs: Width (the whole mix's: the user's, Energy on the Form page alone), Mixer (to
-# come: it rests, said nothing), Wet, Duck (the Filter on SELECT only, every page's)
+# (1.4.0) the Arrangement page's knobs: Width (the whole mix's: the user's, Energy on the Form page alone), Mixer (the
+# dub mixer: how much the desk rides itself; Basic's 25), Wet, Duck (the Filter on SELECT only, every page's)
 spin K1 -20
 wait 300
 said Width 20
@@ -59,7 +59,11 @@ said Width 40
 expect par119 40
 spin K2 10
 wait 300
-said_none Mixer
+said Mixer 35
+expect par163 35
+spin K2 -10
+wait 300
+said Mixer 25
 expect view 17
 spin K3 27
 wait 300

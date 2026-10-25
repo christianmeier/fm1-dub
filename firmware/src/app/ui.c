@@ -11,7 +11,7 @@
  *                  (held: on); both together, quickly: the layer muted or back (held 5 s: the update mode)
  *   SEL            the ARRANGEMENT page (PERFORM's that was): the keys mute (white 1-6; held, a part's channel
  *                  strip) and solo (black 1-5) the parts, throw the hats (black 6) and, held, make the dub moves
- *                  (white 8-12; white 7 the gap); the knobs Energy, Mixer (to come), Wet, Duck; the screen the
+ *                  (white 8-12; white 7 the gap); the knobs Width, Mixer (the dub mixer), Wet, Duck; the screen the
  *                  parts' meters
  *   SELECT         the DJ filter, on every page (1.4.0; with HOME held: the tempo)   ALGORITHM the voice, the walk
  *                  (Chords), the noise's character, else the screen   PRESETS the piece
@@ -97,6 +97,16 @@ static int lfo_on_knob(int k, float *now, float *reach)   /* an LFO moving knob 
     }
     return 0;
 }
+/* (1.4.0, the user's: the dub mixer) a part's knob as the mixer has it now: its level or a send moved by the ride
+ * (en_mx_db, en_mx_snd: dB), in the knob's own units, as its law has it (the chord's, the pings' and the bass's level
+ * squared; the kick's and the hats' 0.24 dB a step; the noise's level and the sends straight) */
+static float ride_knob(int part, int what, float v)
+{
+    const float db = what ? en_mx_snd[part][what - 1] : en_mx_db[part];
+    if (!what && (part == 3 || part == 4))
+        return v + db * (1.0f / 0.2408f);
+    return v * fm_exp2f(db * ((!what && part <= 2) ? 1.0f / 12.041f : 1.0f / 6.0206f));
+}
 static int page_of(int v)                        /* a sound page: its layer's; the Echo page: Space's */
 {
     return v == V_KEY || v == V_SONG ? V_DUB : v == V_SMODE ? V_SETUP : v == V_ESND ? V_SPACE : noise_page(v) ? V_NSND
@@ -164,8 +174,9 @@ static const uint16_t VIEW_KNOB[NVIEWS][4] = {
     {P_BALG, P_BFRAT, P_BFB, P_BBITE},           /* (Bite on every voice, the only one on a voice not FM) */
     {K_SLOT, K_CQ, K_CX, K_PLAY},
     {K_LANE, P_DACCENT, K_LCH, P_DMODE},
-    {P_EWIDTH, K_NONE, K_DUB, P_DUCK},           /* (Wet: an offset for playing; Duck the piece's own. 1.4.0, the
-                                                  * user's: the Filter on SELECT only; KNOB 2 the dub mixer, to come;
+    {P_EWIDTH, P_MIXER, K_DUB, P_DUCK},          /* (Wet: an offset for playing; Duck the piece's own. 1.4.0, the
+                                                  * user's: the Filter on SELECT only; KNOB 2 the dub mixer, how much
+                                                  * the desk rides itself;
                                                   * KNOB 1 the desk's Width, the whole mix's stereo field (from the
                                                   * Echo page), Energy on the Form page alone) */
     {P_TEMPO, P_ROOT, K_MODE, P_SWING},
@@ -279,7 +290,7 @@ static const char *const KNOB_HELP[NVIEWS][4] = {
      "Endless, or the slots in a loop"},
     {"The lane you're writing", "How much quieter the other steps", "How likely the lane's steps play",
      "Auto patterns, or your own"},
-    {"The whole mix mono, to wide", "The dub mixer: not yet", "The whole music dry, or drowned",
+    {"The whole mix mono, to wide", "A hand on the faders and sends, by itself", "The whole music dry, or drowned",
      "How far each beat pushes the rest down"},
     {"Beats a minute", "The key's root note", "The scale: Minor, Dorian, ...", "Off sixteenths late: the whole groove"},
     {"How many hits ring, in two bars", "How often its groove changes", "", ""},
@@ -2797,8 +2808,12 @@ static int mt_state(int row) { return mute_state(MT_OCT[row] >= 0 ? LAYER_MUTE[M
 static int32_t mt_y(int row) { return MT_Y0 + row * MT_ROW + (row == EN_MT_MASTER ? 4 : 0); }
 static int32_t mt_mark(int row)                  /* the level's marker: its x (-1: none, the master's on its pot) */
 {
-    return MT_OCT[row] >= 0 ? MT_X0 + (proj.par[LAYER_LEVEL[MT_OCT[row]]] * (MT_SEG * MT_P - MT_P + MT_W - 2) + 50) / 100
-                            : -1;
+    if (MT_OCT[row] < 0)
+        return -1;
+    {   /* (1.4.0, the user's: the dub mixer's ride moves it, where its level is now) */
+        const float v = fm_clampf(ride_knob(row, 0, (float)proj.par[LAYER_LEVEL[MT_OCT[row]]]), 0.0f, 100.0f);
+        return MT_X0 + (int32_t)((v * (float)(MT_SEG * MT_P - MT_P + MT_W - 2) + 50.0f) * 0.01f);
+    }
 }
 static uint32_t desk_sig(void)                   /* what the meters show, for the redraw */
 {
@@ -3891,6 +3906,19 @@ static void draw_main(void)
  * it a cell a knob: its name, a ring (or pips, for a switch of a few positions), the value. The
  * knob being turned is drawn on a tint. Only redrawn when what it shows changes (the rings cost a
  * square root and an arctangent per pixel). */
+static int ride_on_knob(int k, float *at)        /* a strip's knob the mixer is riding: where it is now (knob units) */
+{
+    int w;
+    if (ui.view != V_STRIP || !proj.par[P_MIXER])
+        return 0;
+    for (w = 0; w < 3; w++)
+        if (STRIP_PAR[strip_part][w] == k) {
+            const float v = (float)proj.par[k];
+            *at = fm_clampf(ride_knob(strip_part, w, v), 0.0f, 100.0f);
+            return fm_fabsf(*at - v) >= 0.5f;
+        }
+    return 0;
+}
 static void draw_knobs(void)
 {
     uint32_t h = hash(2166136261u, ui.view | (uint32_t)ui.touched << 8), i;
@@ -3910,6 +3938,8 @@ static void draw_knobs(void)
         float ln, lr;
         if (lfo_on_knob(vknob(ui.view, i), &ln, &lr))   /* (an LFO moving its knob: redrawn as it moves) */
             h = hash(h, (uint32_t)(int32_t)(ln * 440.0f) ^ (uint32_t)(int32_t)(lr * 440.0f) << 12);
+        if (ride_on_knob(vknob(ui.view, i), &ln))   /* (the dub mixer riding it: the same) */
+            h = hash(h, (uint32_t)(int32_t)(ln * 4.0f));
     }
     h = hash(h, (uint32_t)now_touch);
     if (h == ui.sig[2])
@@ -3991,8 +4021,16 @@ static void draw_knobs(void)
                 cv_round(cx - w0 / 2 + j * (pw + gap), 33, pw, 8, 2, j == v - lo ? fill : K_LINE);
         } else if (k != K_CPU) {
             float nw, rr;
-            const int lfo_on = lfo_on_knob(k, &nw, &rr) && !off;   /* (an LFO on it: its dot the one) */
-            arc(cx, 37, 12, hi > lo ? (float)(v - lo) / (float)(hi - lo) : 0.0f, K_LINE, fill, bg, (lo < 0) | (lfo_on ? 2 : 0));
+            float ra;
+            const int lfo_on = lfo_on_knob(k, &nw, &rr) && !off, ride = !lfo_on && ride_on_knob(k, &ra) && hi > lo;   /* (an
+                                                  * LFO on it: its dot the one; the dub mixer riding it, as alike) */
+            arc(cx, 37, 12, hi > lo ? (float)(v - lo) / (float)(hi - lo) : 0.0f, K_LINE, fill, bg,
+                (lo < 0) | (lfo_on || ride ? 2 : 0));
+            if (ride) {                          /* (1.4.0, the user's: the dub mixer) from the knob's value to where the
+                                                  * ride has it now, a dot there (the LFO's look) */
+                const float c = (float)(v - lo) / (float)(hi - lo), r = (ra - (float)lo) / (float)(hi - lo);
+                arc_span(cx, 37, 12, fm_minf(c, r), fm_maxf(c, r), r, mix(fill, K_TEXT, 11), en_playing ? K_TEXT : mix(fill, K_TEXT, 11));
+            }
             if (lfo_on) {   /* (1.4.0, the user's) the chord's LFO and drift on it (its Destination's knob):
                                                   * their reach a brighter teal, a dot where it is now (the Cutoff a
                                                   * step of 0.055 octave; Reso and Colour as far along theirs) */
