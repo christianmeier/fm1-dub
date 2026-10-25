@@ -1,8 +1,10 @@
 # the Arrangement page (SEL; PERFORM's that was): white 1-6 mute the parts (1.4.0, the user's: the chord, the pings,
-# the bass, the kick, the hats, the noise; held, a part's strip: strips.amb), black 1-5 solo them (the noise with the
-# rest), white 7 none (the gap), white 8-12 held make the dub moves, black F#4 (beside THROW) the hats thrown; the
-# knobs Energy, Mixer, Wet, Duck (the Mix, white 6 held, gone: the levels the strips'); SEL again stays (one page); a
-# page's button or SELECT gives the scale back
+# the bass, the kick, the hats, the noise; held, a part's strip: strips.amb); black 1-5 each the part of the white key
+# on its left (the chord, the pings, the bass, the hats, the noise; the kick none): a tap a solo, held a throw (that
+# part into the echo); white 7 none (the gap), white 8-11 held the global moves (Open, Shut, Drop, Echo), white 12-16
+# held five of the grid's effects (Time x2, Freeze, Tape stop, Stutter, Siren); the knobs Width, Mixer, Wet, Duck (the
+# Mix, white 6 held, gone: the levels the strips'); SEL again stays (one page); a page's button or SELECT gives the
+# scale back
 listen
 wait 3000
 expect pool 0x6AD
@@ -20,21 +22,52 @@ tapkey w6
 wait 200
 expect mutes 9
 expect view 17
+# white 8-11: the global moves, held (Open, Shut, Drop, Echo)
 key w7 down
 wait 200
-said THROW
-wait 1500
+said OPEN
+wait 1000
 key w7 up
-key w11 down
+key w10 down
 wait 200
 said ECHO
 wait 1000
-key w11 up
-# (the hats thrown: black F#4, beside THROW; the kick never with them)
-key b5 down
+key w10 up
+# white 12-16: the grid's effects, held (Time x2 .. Siren), alongside the grid's own
+key w11 down
 wait 200
-said HATS THROW
+said TIME X2
+expect litkey19 0
+expect litkey21 1
+wait 800
+key w11 up
+key w15 down
+wait 200
+said SIREN
+wait 800
+key w15 up
+# (a black key held: its part thrown; the chord's (F#3) every stab, the hats' (C#4) the hats, the rim, the clap; the
+# kick never; F#4 nothing now)
+key b0 down
+wait 500
+said CHORD THROW
 wait 1500
+key b0 up
+wait 200
+said_none SOLO
+key b3 down
+wait 500
+said HATS THROW
+expect litkey8 0
+expect litkey13 0
+expect litkey11 0
+wait 1500
+key b3 up
+wait 200
+said_none SOLO
+key b5 down
+wait 500
+said_none THROW
 key b5 up
 wait 200
 # white 6: the noise, a tap a mute (its level kept), as the others
@@ -88,6 +121,14 @@ tapkey b0
 wait 200
 said CHORD SOLO OFF
 tapkey b2
+wait 200
+said SOLO OFF
+# (the noise's black key, D#4: its solo)
+tapkey b4
+wait 200
+said SOLO NOISE
+expect mutes 9
+tapkey b4
 wait 200
 said SOLO OFF
 tapkey w3

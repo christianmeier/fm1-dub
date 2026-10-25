@@ -344,6 +344,9 @@ static struct {
                                         * turned while it is (its release then no mute) */
     uint32_t strip_t;                  /* when it went down */
     uint32_t mutes, moves;             /* the layers muted (EN_M_*), the moves held (EN_PF_*) */
+    uint8_t bkey, bkey_thr;            /* (1.4.0) a black key down in PERFORM (its index + 1), its throw begun */
+    uint32_t bkey_t;                   /* when it went down */
+    uint32_t pfx;                      /* PERFORM's effects held (EN_FX_* bits), with the grid's */
     uint32_t solo;                     /* the layers soloed (EN_M_*): the others muted while any is */
     int8_t mac[EN_NMAC];               /* the master actions (HOME's Filter, PERFORM's knobs): -50..50, never saved */
     uint32_t fx;                       /* the effects held (EN_FX_*), REC's grid */
@@ -857,27 +860,44 @@ static void set_piece(int i)                    /* the piece playing kept as it 
 
 /* ----------------------------------------------------------- PERFORM --- */
 /* SEL's mode, on the keys from F3 up (1.4.0, the user's: six parts, the noise its own key; an empty white key between
- * the parts and the moves, to tell them apart; the Mix, white 6 held, gone: each part's Level its strip's):
+ * the parts and the moves, to tell them apart; the Mix, white 6 held, gone: each part's Level its strip's. The moves
+ * rethought: a throw a part, on its black key held; the whites after the gap the global moves, then five of the
+ * grid's effects):
  *   white 1-6    the parts, a tap each: muted and back, their levels kept (chord, pings, bass, kick, hats, noise: the
  *                mutes OCT- + OCT+ make on a layer's page, the same); held, the part's channel strip on the knobs
- *   black 1-5    the chord, pings, bass, kick and hats soloed, a press each (more than one: they play together; the
- *                rest muted, the noise too)
+ *   black 1-5    each the part of the white key on its left: the chord (F#3), the pings, the bass, the hats (C#4) and
+ *                the noise (D#4); the kick (B3) has none. A tap: soloed and back (more than one: they play together;
+ *                the rest muted); held: that part thrown into the echo while held (the chord every stab thrown; the
+ *                others their echo send pushed, a little more feedback), the tails left to ring
  *   white 7      none: dark, the gap
- *   white 8-12   dub moves, held as long as the key is: every stab thrown into the echo, the filter pushed
- *                open, pushed shut, the floor dropped (the kick and the bass out), the echo pushed (all in, feeding back)
- *   black 6      (F#4, beside THROW) the hats thrown: the hats, the rim and the clap into the echo while held, the
- *                kick never; their tails left to ring
- * Each key that does something is lit: a part while it sounds, a solo (blinking while on), a move (dark
- * while held). The rest do nothing; MIDI notes in still change the scale */
-#define PERF_N 17
-#define PERF_NP 6                                /* the parts: 0..5; the moves 6..11; the solos 12..16 */
-#define PERF_NM 6
+ *   white 8-11   the global moves, held as long as the key is: the filter pushed open, pushed shut, the floor dropped
+ *                (the kick and the bass out), the echo pushed (all in, feeding back)
+ *   white 12-16  five of the grid's effects (REC held), held as long as the key is: Time x2, Freeze, Tape stop,
+ *                Stutter, Siren
+ * Each key that does something is lit: a part while it sounds, a solo (blinking while on), a move, an effect, a
+ * throw (dark while held). The rest do nothing (F#4 up: unlit); MIDI notes in still change the scale */
+#define PERF_NP 6                                /* the parts: 0..5; the moves 6..9; the effects 10..14; the blacks 15..19 */
+#define PERF_NM 4
+#define PERF_NF 5
+#define PERF_NB 5
+#define PERF_N (PERF_NP + PERF_NM + PERF_NF + PERF_NB)
+#define PERF_F0 (PERF_NP + PERF_NM)
+#define PERF_B0 (PERF_F0 + PERF_NF)
 static const uint8_t PERF_KEY[PERF_N] = {0, 2, 4, 6, 7, 9,           /* white 1-6: the parts */
-                                         12, 14, 16, 18, 19, 13,     /* white 8-12: the moves; black F#4: the hats'
-                                                                      * throw */
-                                         1, 3, 5, 8, 10};            /* black 1-5: the solos */
-static const char *const PERF_NAME[PERF_N] = {"CHORD", "PINGS", "BASS", "KICK", "HATS", "NOISE", "THROW", "OPEN", "SHUT",
-                                              "DROP", "ECHO", "HATS THROW", "CHORD", "PINGS", "BASS", "KICK", "HATS"};
+                                         12, 14, 16, 18,             /* white 8-11: the moves */
+                                         19, 21, 23, 24, 26,         /* white 12-16: the effects */
+                                         1, 3, 5, 8, 10};            /* black 1-5: the parts' solos and throws */
+static const char *const PERF_NAME[PERF_N] = {"CHORD", "PINGS", "BASS", "KICK", "HATS", "NOISE", "OPEN", "SHUT", "DROP",
+                                              "ECHO", "TIME X2", "FREEZE", "TAPE STOP", "STUTTER", "SIREN", "CHORD",
+                                              "PINGS", "BASS", "HATS", "NOISE"};
+static const uint16_t PERF_MBIT[PERF_NM] = {EN_PF_OPEN, EN_PF_CLOSE, EN_PF_KICKDROP, EN_PF_ECHO};
+static const uint8_t PERF_FX[PERF_NF] = {1, 10, 2, 12, 14};   /* (EN_FX_NAME's: Time x2, Freeze, Tape stop, Stutter, Siren) */
+static const uint8_t PERF_BPART[PERF_NB] = {0, 1, 2, 4, 5};   /* each black key's part (EN_M_* bit) */
+static const uint16_t PERF_BTHR[PERF_NB] = {EN_PF_THROW, EN_PF_PTHROW, EN_PF_BTHROW, EN_PF_HATTHROW, EN_PF_NTHROW};
+static const char *const PERF_THRNAME[PERF_NB] = {"CHORD THROW", "PINGS THROW", "BASS THROW", "HATS THROW", "NOISE THROW"};
+static const char *const PERF_THRWHAT[PERF_NB] = {"every stab into the echo", "the pings into the echo",
+                                                  "the bass into the echo", "the hats into the echo",
+                                                  "the noise into the echo"};
 static void perf_mutes(void)                     /* to the engine: the mutes, and with a solo, all but it */
 {
     en_mute(ui.mutes | (ui.solo ? 0x3Fu & ~ui.solo : 0u));
@@ -899,10 +919,39 @@ static void lock_toggle(void)                    /* SEL held: Lock, on or off: t
 }
 /* (1.4.0, the user's) PERFORM's keys said in the middle too, on a card: a mute, a solo, a move */
 static const uint16_t PERF_COL[PERF_NP] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_TEXT, K_NOISE};
-static const char *const PERF_WHAT[PERF_NM] = {"every stab into the echo", "the filter pushed open", "the filter pushed shut",
-                                               "the kick and the bass out", "the echo pushed, feeding back",
-                                               "the hats into the echo"};
-static const char *const PERF_LOW[5] = {"chord", "pings", "bass", "kick", "hats"};
+static const char *const PERF_WHAT[PERF_NM] = {"the filter pushed open", "the filter pushed shut",
+                                               "the kick and the bass out", "the echo pushed, feeding back"};
+static const char *const PERF_LOW[PERF_NP] = {"chord", "pings", "bass", "kick", "hats", "noise"};
+static void perf_fx_send(void) { en_fx(ui.fx | ui.pfx); }   /* (the grid's and PERFORM's effects together) */
+static void perf_solo(int b)                     /* a black key tapped: its part soloed, or not */
+{
+    const int p = PERF_BPART[b];
+    const uint32_t m = 1u << p;
+    ui.solo ^= m;
+    perf_mutes();
+    if (ui.solo & m) {
+        say("SOLO", PERF_NAME[PERF_B0 + b]);
+        card_show("SOLO", PERF_LOW[p], K_CLAP, 0);
+    } else if (ui.solo) {                        /* (one let go, others still soloed) */
+        say(PERF_NAME[PERF_B0 + b], "SOLO OFF");
+        card_show(PERF_NAME[PERF_B0 + b], "solo off", K_CLAP, 0);
+    } else {
+        say("SOLO", "OFF");
+        card_show("SOLO", "off: all heard", K_CLAP, 0);
+    }
+}
+static void perf_throw(int b, int on)            /* a black key held: its part thrown into the echo; let go: no more */
+{
+    if (on)
+        ui.moves |= PERF_BTHR[b];
+    else
+        ui.moves &= ~(uint32_t)PERF_BTHR[b];
+    en_perf(ui.moves);
+    if (on) {
+        say(PERF_THRNAME[b], 0);
+        card_show(PERF_THRNAME[b], PERF_THRWHAT[b], K_FROST, 0);
+    }
+}
 static void perf_key(uint32_t key, int down)
 {
     int i;
@@ -910,23 +959,23 @@ static void perf_key(uint32_t key, int down)
         ;
     if (i >= PERF_N)
         return;
-    if (i >= PERF_NP + PERF_NM) {                /* a solo: on or off, a press each */
-        const int s0 = i - PERF_NP - PERF_NM;
-        uint32_t m = 1u << s0;
-        if (!down)
+    if (i >= PERF_B0) {                          /* a black key: a tap a solo, a hold a throw (decided by how long it is
+                                                  * held: strip_tick starts the throw; the release a solo if none began) */
+        const int bk = i - PERF_B0;
+        if (down) {
+            ui.bkey = (uint8_t)(bk + 1);
+            ui.bkey_t = plat_ms();
+            ui.bkey_thr = 0;
             return;
-        ui.solo ^= m;
-        perf_mutes();
-        if (ui.solo & m) {
-            say("SOLO", PERF_NAME[i]);
-            card_show("SOLO", PERF_LOW[s0], K_CLAP, 0);
-        } else if (ui.solo) {                    /* (one let go, others still soloed) */
-            say(PERF_NAME[i], "SOLO OFF");
-            card_show(PERF_NAME[i], "solo off", K_CLAP, 0);
-        } else {
-            say("SOLO", "OFF");
-            card_show("SOLO", "off: all heard", K_CLAP, 0);
         }
+        if (ui.bkey != bk + 1)
+            return;
+        ui.bkey = 0;
+        if (ui.bkey_thr)
+            perf_throw(bk, 0);
+        else
+            perf_solo(bk);
+        ui.bkey_thr = 0;
         return;
     }
     if (i < PERF_NP) {                           /* the chord, pings, bass, kick, hats, noise: a tap, a mute (the levels
@@ -951,11 +1000,24 @@ static void perf_key(uint32_t key, int down)
         card_show(PERF_NAME[i], ui.mutes >> i & 1u ? "muted" : "on", ui.mutes >> i & 1u ? K_DIM : PERF_COL[i], 0);
         return;
     }
-    i -= PERF_NP;                                /* a move: bit i, EN_PF_THROW .. EN_PF_HATTHROW */
+    if (i >= PERF_F0) {                          /* an effect, the grid's, held as long as the key is */
+        const uint32_t m = 1u << PERF_FX[i - PERF_F0];
+        if (down)
+            ui.pfx |= m;
+        else
+            ui.pfx &= ~m;
+        perf_fx_send();
+        if (down) {
+            say(PERF_NAME[i], 0);
+            card_show(PERF_NAME[i], "held", K_FROST, 0);
+        }
+        return;
+    }
+    i -= PERF_NP;                                /* a move: its bit, EN_PF_OPEN .. EN_PF_ECHO */
     if (down)
-        ui.moves |= 1u << i;
+        ui.moves |= PERF_MBIT[i];
     else
-        ui.moves &= ~(1u << i);
+        ui.moves &= ~(uint32_t)PERF_MBIT[i];
     en_perf(ui.moves);
     if (down) {
         say(PERF_NAME[PERF_NP + i], 0);
@@ -971,10 +1033,14 @@ static void strip_open(void)                     /* the held key's part's strip 
     strip_part = (uint8_t)(ui.strip_key - 1);
     set_view(V_STRIP);                           /* (the reader: the page, "Chord strip page: Level 52, ...") */
 }
-static void strip_tick(void)                     /* a part's key held long enough: its strip */
+static void strip_tick(void)                     /* a part's key held long enough: its strip; a black key: its throw */
 {
     if (ui.strip_key && ui.perf && ui.view == V_PERF && plat_ms() - ui.strip_t >= STRIP_HOLD)
         strip_open();
+    if (ui.bkey && !ui.bkey_thr && ui.perf && plat_ms() - ui.bkey_t >= STRIP_HOLD) {
+        ui.bkey_thr = 1;
+        perf_throw(ui.bkey - 1, 1);
+    }
 }
 static void perf_set(int on)                     /* on: the mixer on the knobs; off: back to the page */
 {
@@ -984,11 +1050,16 @@ static void perf_set(int on)                     /* on: the mixer on the knobs; 
             ui.perf_from = ui.view;
         set_view(V_PERF);
     } else {
-        if (ui.moves) {                          /* the moves let go; the mutes stay */
+        if (ui.moves) {                          /* the moves and throws let go; the mutes stay */
             ui.moves = 0;
             en_perf(0);
         }
+        if (ui.pfx) {                            /* (its effects too; the grid's held on) */
+            ui.pfx = 0;
+            perf_fx_send();
+        }
         ui.strip_key = 0;
+        ui.bkey = 0, ui.bkey_thr = 0;
         if (ui.view == V_PERF || ui.view == V_STRIP)
             set_view(ui.perf_from);
     }
@@ -1016,7 +1087,7 @@ static int fx_key(uint32_t key, int down)        /* 1: the key was an effect's *
     } else {
         ui.fx &= ~(1u << e);
     }
-    en_fx(ui.fx);
+    en_fx(ui.fx | ui.pfx);
     return 1;
 }
 
@@ -1962,12 +2033,14 @@ static void arc(int32_t cx, int32_t cy, int32_t r, float v, uint16_t track, uint
 }
 /* (1.4.0, the user's) over a knob's ring: the span f0..f1 (0..1 of its sweep) in col, and a dot at fn: what an LFO
  * does to it, its reach and where it is now (the Chord page's Cutoff) */
-static void arc_span(int32_t cx, int32_t cy, int32_t r, float f0, float f1, float fn, uint16_t col, uint16_t dot)
+static void arc_span_w(int32_t cx, int32_t cy, int32_t r, float f0, float f1, float fn, uint16_t col, uint16_t dot,
+                      int bold)
 {
     const float a0 = 0.375f, sweep = 0.75f, th = 3.4f, rm = (float)r - th * 0.5f,
-                ro = (float)r + 2.7f, ri = (float)r + 1.0f,   /* (the span just outside the ring, under 2 px: the knob's
-                                                  * own fill left to read) */
-                io = (float)r - th - 0.6f, ii = io - 1.5f;   /* (and just inside it, the user's: the reach doubled) */
+                ro = (float)r + (bold ? 3.7f : 2.7f), ri = (float)r + 1.0f,   /* (the span just outside the ring, under 2
+                                                  * px: the knob's own fill left to read; bold, over 3) */
+                io = (float)r - th - 0.6f, ii = io - (bold ? 2.8f : 1.5f);   /* (and just inside it, the user's: the reach
+                                                  * doubled) */
     int32_t x, y;
     f0 = fm_clampf(f0, 0.0f, 1.0f), f1 = fm_clampf(f1, 0.0f, 1.0f), fn = fm_clampf(fn, 0.0f, 1.0f);
     for (y = -r - 5; y <= r + 5; y++)
@@ -1985,9 +2058,15 @@ static void arc_span(int32_t cx, int32_t cy, int32_t r, float f0, float f1, floa
                 px_blend(cx + x, cy + y, col, (uint32_t)(fm_minf(a, 1.0f) * 16.0f + 0.5f));
         }
     {
-        const float e = (a0 + sweep * fn) * FM_TWO_PI;
-        disc((float)cx + 0.5f + fm_cosf(e) * rm - 0.5f, (float)cy + 0.5f + fm_sinf(e) * rm - 0.5f, th * 0.5f + 0.9f, dot);
+        const float e = (a0 + sweep * fn) * FM_TWO_PI, dx = (float)cx + fm_cosf(e) * rm, dy = (float)cy + fm_sinf(e) * rm;
+        if (bold)                                /* (a dark rim round a bigger dot: it reads on the band and the ring) */
+            disc(dx, dy, th * 0.5f + 2.6f, K_BG);
+        disc(dx, dy, th * 0.5f + (bold ? 1.6f : 0.9f), dot);
     }
+}
+static void arc_span(int32_t cx, int32_t cy, int32_t r, float f0, float f1, float fn, uint16_t col, uint16_t dot)
+{
+    arc_span_w(cx, cy, r, f0, f1, fn, col, dot, 0);
 }
 /* a mark across a knob's ring at v (0..1 of its sweep), a little past both its edges: where a knob's behaviour changes
  * (Motion's regions, 40 and 70) */
@@ -4268,7 +4347,9 @@ static void draw_knobs(void)
             if (ride) {                          /* (1.4.0, the user's: the dub mixer) from the knob's value to where the
                                                   * ride has it now, a dot there (the LFO's look) */
                 const float c = (float)(v - lo) / (float)(hi - lo), r = (ra - (float)lo) / (float)(hi - lo);
-                arc_span(cx, 37, 12, fm_minf(c, r), fm_maxf(c, r), r, mix(fill, K_TEXT, 11), en_playing ? K_TEXT : mix(fill, K_TEXT, 11));
+                /* (the user's: brighter and thicker, a ride of a few dB read at a glance: the band near white, over 3
+                 * px outside the ring and inside it, the dot bigger on a dark rim) */
+                arc_span_w(cx, 37, 12, fm_minf(c, r), fm_maxf(c, r), r, mix(fill, K_TEXT, 14), K_TEXT, 1);
             }
             if (lfo_on) {   /* (1.4.0, the user's) the chord's LFO and drift on it (its Destination's knob):
                                                   * their reach a brighter teal, a dot where it is now (the Cutoff a
@@ -4321,14 +4402,18 @@ static void leds(void)
     } else if (ui.perf) {                        /* PERFORM: the layers heard, the solos, the moves (dark while held) */
         const int blink = (plat_ms() / 250u) & 1u;
         b |= 1u << B_SEL;
-        for (i = 0; i < PERF_NP; i++) {          /* (white 7, the gap: dark) */
+        for (i = 0; i < PERF_NP; i++)            /* (white 7, the gap: dark) */
             if (perf_sounds((int)i))
                 k |= 1u << PERF_KEY[i];
-            if (!(ui.moves >> i & 1u))
+        for (i = 0; i < PERF_NM; i++)
+            if (!(ui.moves & PERF_MBIT[i]))
                 k |= 1u << PERF_KEY[PERF_NP + i];
-            if (i < 5 && (!(ui.solo >> i & 1u) || blink))
-                k |= 1u << PERF_KEY[PERF_NP + PERF_NM + i];
-        }
+        for (i = 0; i < PERF_NF; i++)
+            if (!(ui.pfx >> PERF_FX[i] & 1u))
+                k |= 1u << PERF_KEY[PERF_F0 + i];
+        for (i = 0; i < PERF_NB; i++)            /* (a throw: dark while held; a solo: blinking) */
+            if (!(ui.moves & PERF_BTHR[i]) && (!(ui.solo >> PERF_BPART[i] & 1u) || blink))
+                k |= 1u << PERF_KEY[PERF_B0 + i];
 
     } else if (proj.leds) {
         for (i = 0; i < NKEYS; i++)
@@ -4748,15 +4833,17 @@ static void speak_dump(void)
         msg_text("REMOVED", EN_NOTE_NAME[x], t);
         sp_print("MSG", t);
     }
-    for (x = PERF_NP + PERF_NM; x < PERF_N; x++) {
+    for (x = PERF_B0; x < PERF_N; x++) {
         msg_text("SOLO", PERF_NAME[x], t);
         sp_print("MSG", t);
         msg_text(PERF_NAME[x], "SOLO OFF", t);
         sp_print("MSG", t);
+        msg_text(PERF_THRNAME[x - PERF_B0], 0, t);
+        sp_print("MSG", t);
     }
     msg_text("SOLO", "OFF", t);
     sp_print("MSG", t);
-    for (x = 0; x < PERF_NP + PERF_NM; x++) {
+    for (x = 0; x < PERF_B0; x++) {
         msg_text(PERF_NAME[x], x < PERF_NP ? "OFF" : 0, t);
         sp_print("MSG", t);
         if (x < PERF_NP) {

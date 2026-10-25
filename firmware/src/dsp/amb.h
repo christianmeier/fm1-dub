@@ -174,7 +174,10 @@ void en_pings(const uint8_t *b);
 /* performance (SEL's mode): layers muted (EN_M_*, a mask: set = muted), and the moves held now (EN_PF_*) */
 enum { EN_M_CHORD = 1, EN_M_PINGS = 2, EN_M_BASS = 4, EN_M_KICK = 8, EN_M_HATS = 16, EN_M_NOISE = 32 };   /* (the noise:
                                                 * OCT- + OCT+ on its page; its level kept) */
-enum { EN_PF_THROW = 1, EN_PF_OPEN = 2, EN_PF_CLOSE = 4, EN_PF_KICKDROP = 8, EN_PF_ECHO = 16, EN_PF_HATTHROW = 32 };
+enum { EN_PF_THROW = 1, EN_PF_OPEN = 2, EN_PF_CLOSE = 4, EN_PF_KICKDROP = 8, EN_PF_ECHO = 16, EN_PF_HATTHROW = 32,
+       EN_PF_PTHROW = 64, EN_PF_BTHROW = 128, EN_PF_NTHROW = 256 };   /* (1.4.0, the moves rethink: a throw a part, on
+                                                  * its black key held: the chord's EN_PF_THROW, every stab thrown; the
+                                                  * pings', the bass's, the hats', the noise's, their echo sends pushed) */
 /* (KICKDROP: Drop, the kick and the bass. HATTHROW, 1.4.0, the user's: the hats, the rim and the clap thrown into the
  * echo while held, the kick never; their tails left to ring) */
 void en_mute(uint32_t mask);

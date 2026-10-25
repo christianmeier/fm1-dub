@@ -1622,63 +1622,74 @@ int main(void)
         }
     }
 
-    /* (1.4.0, the user's: "I can throw the hats to the echo") the hats thrown (EN_PF_HATTHROW, black F#4 held): the hats,
-     * the rim and the clap into the echo, their tails ringing after it's let go (the hats alone: the second after it,
-     * well over the same without); the kick never with them (the kick alone: the same, to a hair: the echo's feedback
-     * a little up while held, on nothing). And the Kick strip's Low cut leaves the rumble be (the kick's ear before it) */
+    /* (1.4.0, the user's: "I can throw the hats to the echo"; the moves rethought: a throw a part, its black key held)
+     * the hats, the pings, the bass, the noise thrown (EN_PF_HATTHROW, _PTHROW, _BTHROW, _NTHROW): each into the echo, its
+     * tail ringing after it's let go (the part alone: the second after it, well over the same without); the kick never
+     * with them (the kick alone: the same, to a hair: the echo's feedback a little up while held, on nothing). And the
+     * Kick strip's Low cut leaves the rumble be (the kick's ear before it). (The bass the least: the echo takes nothing
+     * under ~350 Hz, so a Sub is thrown its upper harmonics alone: +1.5 dB at least) */
     {
-        static const uint32_t ALONE[2] = {EN_M_HATS, EN_M_KICK};
+        static const uint32_t TH[4] = {EN_PF_HATTHROW, EN_PF_PTHROW, EN_PF_BTHROW, EN_PF_NTHROW},
+                              AL[4] = {EN_M_HATS, EN_M_PINGS, EN_M_BASS, EN_M_NOISE};
+        static const char *const TN[4] = {"hats", "pings", "bass", "noise"};
         int16_t pp[P_NPARAMS];
         uint16_t pl;
         unsigned k;
-        int w;
+        int w, q;
         double e[2][2];
-        for (w = 0; w < 2; w++) {
-            int t, fd[2];
-            pid_t pid;
-            fresh();
-            en_piece(0, pp, &pl);
-            for (k = 0; k < P_NPARAMS; k++)
-                if (k != P_TUNE && k != P_MIDI)
-                    en_set((int)k, pp[k]);
-            en_pool(pl);
-            en_set(P_HITS, 90);
-            en_seed(5);
-            en_regrow();
-            en_mute(0x3Fu & ~ALONE[w]);
-            en_play(1);
-            run(4.0f);
-            fflush(stdout);                      /* (from here two ways, a fork: thrown or not, the same otherwise; the
+        for (q = 0; q < 4; q++) {
+            for (w = 0; w < 2; w++) {
+                int t, fd[2];
+                pid_t pid;
+                fresh();
+                en_piece(0, pp, &pl);
+                for (k = 0; k < P_NPARAMS; k++)
+                    if (k != P_TUNE && k != P_MIDI)
+                        en_set((int)k, pp[k]);
+                en_pool(pl);
+                en_set(P_HITS, 90);
+                en_set(P_PINGS, 80);
+                en_set(P_CRACKLE, 80);
+                en_seed(5);
+                en_regrow();
+                en_mute(0x3Fu & ~(w ? EN_M_KICK : AL[q]));
+                en_play(1);
+                run(4.0f);
+                fflush(stdout);                  /* (from here two ways, a fork: thrown or not, the same otherwise; the
                                                   * seed XORs into the engine's state, so two runs would differ) */
-            if (pipe(fd))
-                break;
-            pid = fork();
-            t = pid == 0;
-            en_perf(t ? EN_PF_HATTHROW : 0u);
-            run(2.0f);
-            en_perf(0);
-            run(0.05f);
-            en_mute(0x3Fu);                      /* (the tail alone: everything stopped, the echo ringing on) */
-            sum2 = 0.0f;
-            run(1.5f);
-            e[w][t] = (double)sum2;
-            if (t) {
-                if (write(fd[1], &e[w][1], sizeof e[w][1]) != (ssize_t)sizeof e[w][1])
-                    _exit(1);
-                _exit(0);
+                if (pipe(fd))
+                    break;
+                pid = fork();
+                t = pid == 0;
+                en_perf(t ? TH[q] : 0u);
+                run(2.0f);
+                en_perf(0);
+                run(0.05f);
+                en_mute(0x3Fu);                  /* (the tail alone: everything stopped, the echo ringing on; a moment
+                                                  * first, the bass's own release gone) */
+                run(0.4f);
+                sum2 = 0.0f;
+                run(1.5f);
+                e[w][t] = (double)sum2;
+                if (t) {
+                    if (write(fd[1], &e[w][1], sizeof e[w][1]) != (ssize_t)sizeof e[w][1])
+                        _exit(1);
+                    _exit(0);
+                }
+                if (read(fd[0], &e[w][1], sizeof e[w][1]) != (ssize_t)sizeof e[w][1])
+                    e[w][1] = -1.0;
+                waitpid(pid, 0, 0);
+                close(fd[0]);
+                close(fd[1]);
             }
-            if (read(fd[0], &e[w][1], sizeof e[w][1]) != (ssize_t)sizeof e[w][1])
-                e[w][1] = -1.0;
-            waitpid(pid, 0, 0);
-            close(fd[0]);
-            close(fd[1]);
+            en_mute(0);
+            printf("  the %s thrown: their tail %.1f dB over not thrown; the kick's %.2f dB (none)\n", TN[q],
+                   10.0 * log10((e[0][1] + 1e-20) / (e[0][0] + 1e-20)), 10.0 * log10((e[1][1] + 1e-20) / (e[1][0] + 1e-20)));
+            CHECK(e[0][1] > (q == 2 ? 1.3 : 2.0) * e[0][0] && e[0][1] > 1e-4, "the %s thrown: their tail %g against %g", TN[q], e[0][1],
+                  e[0][0]);
+            CHECK(e[1][1] < 1.05 * e[1][0] + 1e-6 && e[1][1] > 0.95 * e[1][0] - 1e-6,
+                  "the kick not thrown with the %s: %g against %g", TN[q], e[1][1], e[1][0]);
         }
-        en_mute(0);
-        printf("  the hats thrown: the hats' tail %.1f dB over not thrown; the kick's %.2f dB (none)\n",
-               10.0 * log10((e[0][1] + 1e-20) / (e[0][0] + 1e-20)), 10.0 * log10((e[1][1] + 1e-20) / (e[1][0] + 1e-20)));
-        CHECK(e[0][1] > 2.0 * e[0][0] && e[0][1] > 1e-3, "the hats thrown: their tail %g against %g", e[0][1], e[0][0]);
-        CHECK(e[1][1] < 1.05 * e[1][0] + 1e-6 && e[1][1] > 0.95 * e[1][0] - 1e-6, "the kick not thrown: %g against %g",
-              e[1][1], e[1][0]);
     }
     {   /* the rumble's bed the same with the kick's Low cut on: the kick alone, under ~60 Hz, the rumble's share (on less
          * off) with the cut at 100 as without it */

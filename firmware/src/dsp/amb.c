@@ -602,7 +602,7 @@ void en_panic(void) { post(C_PANIC, 0, 0); }
 void en_clock(int msg) { post(C_CLOCK, msg, 0); }
 void en_regrow(void) { post(C_REGROW, 0, 0); }
 void en_mute(uint32_t m) { post(C_MUTE, (int)(m & 0xFFu), 0); }
-void en_perf(uint32_t f) { post(C_PERF, (int)(f & 0xFFu), 0); }
+void en_perf(uint32_t f) { post(C_PERF, 0, (int)(f & 0xFFFFu)); }   /* (1.4.0: the throws past 8 bits: in the 16-bit field) */
 void en_fx(uint32_t m) { post(C_FX, 0, (int)(m & 0xFFFFu)); }
 void en_macro(int i, int v) { post(C_MACRO, i, v + 50); }   /* (sent as 0..100) */
 void en_lock(int on) { post(C_LOCK, on != 0, 0); }
@@ -694,7 +694,8 @@ static float sx[4][2] = {{1.0f, 1.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}, {1.0f, 1.0f}}
 /* (1.4.0, format 24, the user's: the kick and the hats apart) sx[3] and lcut[3] the Hats strip's (the shaker, the open hat,
  * the rim, the clap); lcut[5] the Kick strip's Low cut, kick_lvl its level (x1 at 50), kick_snd its Echo and Plate
  * (absolute: the kick sent nothing before); hat_thr the hats' throw, eased (PERFORM's, EN_PF_HATTHROW) */
-static float kick_lvl = 1.0f, kick_snd[2], hat_thr;
+static float kick_lvl = 1.0f, kick_snd[2], hat_thr, png_thr, bas_thr, nz_thr;   /* (1.4.0: the pings', the bass's,
+                                                  * the noise's throws too, as the hats') */
 static float ec_g = 0.6f, ec_lpc = 0.68f, ec_wide = 1.0f;   /* the echo's Blur, Tone, Width (and the chord's and the
                                                              * pings': widen) */
 static int gpat(void) { return GROOVE_PAT[(unsigned)par[P_GROOVE] < NGROOVE ? par[P_GROOVE] : 0]; }   /* the pattern */
@@ -2955,7 +2956,7 @@ static inline void echoes(float in, float *el, float *er, float *xl, float *xr)
                 tape_w = 0;
             tape[tape_w] = s;
         } else {
-            float g = fm_minf(echo_fb + 0.15f * st_throw + 0.12f * perf_echo + 0.1f * dub_up + 0.08f * hat_thr + mx_fb, fb_cap);   /* (Dub:
+            float g = fm_minf(echo_fb + 0.15f * st_throw + 0.12f * perf_echo + 0.1f * dub_up + 0.08f * fm_maxf(fm_maxf(hat_thr, png_thr), fm_maxf(bas_thr, nz_thr)) + mx_fb, fb_cap);   /* (Dub:
                                                   * past the knob; the hats' throw, a little longer, as the stabs') */
             tape_lp += tape_lpc * (f1 + fb_lean * st_throw * (f2 - f1) - tape_lp);   /* each time round: thinner, darker */
             tape_hp += tape_hpc * (tape_lp - tape_hp);
@@ -3763,7 +3764,7 @@ static void drain(void)
                 pings_take();
             break;
         case C_MUTE: mutes = (uint32_t)a; lanes(); break;
-        case C_PERF: perf = (uint32_t)a; lanes(); break;
+        case C_PERF: perf = c & 0xFFFFu; lanes(); break;
         case C_FX: fxm = c & 0xFFFFu; break;
         case C_REWALK: {                         /* the walk's slots walked again, all but the one playing, each from
                                                   * the slot before (yours and the gaps kept) */
@@ -4155,7 +4156,7 @@ static void render_bass(uint32_t n)
     const float bfb = BV_PATCH[bv] ? fm_fb(P_BFB, BV_PATCH[bv]) : 0.0f;
     float ph = bass.ph, env = bass.env, inc, bite = bass_bite, bl = bass_lc;
     int32_t gate = bass.gate;
-    const float lc = lcut[2], be = 0.35f * sx[2][0] * mx_e[2], bp = 0.04f * sx[2][1] * mx_p[2];   /* (the strip: Low cut, sends; its
+    const float lc = lcut[2], be = 0.35f * sx[2][0] * mx_e[2] + 1.5f * bas_thr, bp = 0.04f * sx[2][1] * mx_p[2];   /* (the strip: Low cut, sends; its
                                                   * echo none before: 0) */
     if (env < 1e-5f && gate <= 0) {
         bass.env = 0.0f;
@@ -4220,7 +4221,7 @@ static void render_bells(uint32_t n)
 {
     int i;
     const float g = bell_vol * 1.4f * fd_g[1] * mx_g[1], arate = 0.004f + 0.02f * fm_minf(btone * 2.0f, 1.0f),
-                lc = lcut[1], pp = 0.4f * sx[1][1] * mx_p[1], pe1 = 1.1f * sx[1][0] * mx_e[1];   /* (the strip: Low cut, sends) */
+                lc = lcut[1], pp = 0.4f * sx[1][1] * mx_p[1], pe1 = 1.1f * sx[1][0] * mx_e[1] + 2.0f * png_thr;   /* (the strip: Low cut, sends) */
     for (i = 0; i < NBELL; i++) {
         bell_t *v = &bell[i];
         float amp = v->amp, att = v->att, l1 = v->lc;
@@ -4695,7 +4696,7 @@ static void render_crackle(uint32_t n)
         /* (the second page: Width, Plate, Echo; PERFORM's Wet, -50..+50: the dry x2 .. x0.5, the sends x0.5 .. x2) */
         const float wv = (float)par[P_NWIDTH] * 0.02f, wa = 0.6f + 0.25f * wv, wb = 0.6f - 0.25f * wv,
                     wm = (float)mac[EN_MAC_DUB] * (1.0f / 50.0f), nw = fm_exp2f(-wm),
-                    np = (float)par[P_NPLATE] * 0.02f * fm_exp2f(wm) * mx_p[5], ne = (float)par[P_NECHO] * 0.02f * fm_exp2f(wm) * (1.0f + 3.0f * song_nthr) * mx_e[5];
+                    np = (float)par[P_NPLATE] * 0.02f * fm_exp2f(wm) * mx_p[5], ne = (float)par[P_NECHO] * 0.02f * fm_exp2f(wm) * (1.0f + 3.0f * song_nthr) * mx_e[5] + 4.0f * nz_thr;
         int ph = nz_ph, w = nz_w;
 #define CRU() (cn = cn * 1664525u + 1013904223u, (float)(cn >> 8) * (1.0f / 16777216.0f))
         for (j = 0; j < n; j++) {
@@ -5197,10 +5198,17 @@ static void control(uint32_t n)                 /* once a chunk: the slow things
         perf_echo += ((perf & EN_PF_ECHO || fxm >> EN_FX_SWELL & 1u ? 1.0f : 0.0f) - perf_echo) * fm_minf((float)n / (0.04f * EN_SR), 1.0f);
         /* (1.4.0, the user's) the hats thrown: in over ~15 ms, out over ~60 ms (the send let go, the echo's tails left
          * to ring); off, 0 exactly (the hats' sends as before, to the bit) */
-        hat_thr += ((perf & EN_PF_HATTHROW ? 1.0f : 0.0f) - hat_thr) *
-                   fm_minf((float)n / ((perf & EN_PF_HATTHROW ? 0.015f : 0.06f) * EN_SR), 1.0f);
-        if (!(perf & EN_PF_HATTHROW) && hat_thr < 1e-4f)
-            hat_thr = 0.0f;
+        {   /* (the moves rethink: each part's throw alike, the hats', the pings', the bass's, the noise's) */
+            static const uint32_t TB[4] = {EN_PF_HATTHROW, EN_PF_PTHROW, EN_PF_BTHROW, EN_PF_NTHROW};
+            float *const tv[4] = {&hat_thr, &png_thr, &bas_thr, &nz_thr};
+            int k;
+            for (k = 0; k < 4; k++) {
+                const int on = (perf & TB[k]) != 0;
+                *tv[k] += ((on ? 1.0f : 0.0f) - *tv[k]) * fm_minf((float)n / ((on ? 0.015f : 0.06f) * EN_SR), 1.0f);
+                if (!on && *tv[k] < 1e-4f)
+                    *tv[k] = 0.0f;
+            }
+        }
     }
     if (echo_len > 0.0f)                        /* for the screen's ripples */
         en_echo_ms = echo_len * (1000.0f / TAPE_SR);
