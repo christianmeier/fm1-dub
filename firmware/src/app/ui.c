@@ -3835,17 +3835,15 @@ static uint32_t where_sig(uint32_t h)            /* (what they show, for a redra
  * save on one comes back on the ripples: ui_screen_ok) */
 static int scr_small_chord(int s) { return s != SCR_RIPPLES; }   /* (the chord small, at the top) */
 
-/* (1.4.0, the user's) the Walk page's picture: the circle of fifths (C at the top, a fifth a step clockwise), the
+/* (1.4.0, the user's) the Walk page's picture (the chord's name under the section's bars, clear of them): the circle of fifths (C at the top, a fifth a step clockwise), the
  * notes named round it, the key's bright, the rest faint; the chord's notes lit and joined (its shape), its root the
- * biggest, white with the kick; the walk's last roots a trail fading behind it; inside, the eight slots as a numbered
- * path (each at its chord's root, joined in their order; the one playing lit in Loop; a gap left out: the chord before
+ * biggest, white with the kick (1.4.0, the user's: no trail of the roots before: too crowded); inside, the eight slots numbered
+ * (each at its chord's root, not joined: the user's, too crowded; the one playing lit in Loop; a gap left out: the chord before
  * it holds); round the outside, the way to the next chord (Change). At the left, out of the circle's way: the chord's
  * name, the walk's character (or Loop and where it is), and the slots in order, the one playing lit */
-#define FQ_N 6
 #define WK_X 166
 #define WK_Y 82
 #define WK_R 42
-static uint8_t fq_root[FQ_N], fq_n;
 static void fq_xy(int pc, int32_t r, int32_t *x, int32_t *y)
 {
     const float a = (float)((pc * 7) % 12) * (6.2831853f / 12.0f) - 1.5707963f;
@@ -3860,8 +3858,6 @@ static void draw_walk(void)
     const float kg = en_playing ? en_drum_glow[0] : 0.0f;
     const uint16_t chc = en_frozen ? K_FROST : K_PAD;
     char nm[16];
-    if (!fq_n || fq_root[(fq_n - 1) % FQ_N] != en_chord_root)   /* (a new root: onto the trail) */
-        fq_root[fq_n % FQ_N] = en_chord_root, fq_n++;
     for (i = 0; i < ns; i++)
         inkey[(proj.par[P_ROOT] + steps[i]) % 12] = 1;
     circle(WK_X, WK_Y, WK_R, mix(K_BG, K_LINE, 9));   /* the circle */
@@ -3891,26 +3887,6 @@ static void draw_walk(void)
             ring[rr]++;
         }
         sr[i] = rr;
-    }
-    {   /* the path: the slots joined in their order (in Loop, round back to the first) */
-        int first = -1, prev = -1;
-        for (i = 0; i < EN_NPROG; i++) {
-            if (sr[i] < 0)
-                continue;
-            if (prev >= 0)
-                line(sx[prev], sy[prev], sx[i], sy[i], mix(K_BG, K_DIM, 5));
-            else
-                first = i;
-            prev = i;
-        }
-        if (loop && first >= 0 && prev != first)
-            line(sx[prev], sy[prev], sx[first], sy[first], mix(K_BG, K_DIM, 3));
-    }
-    for (i = 1; i < FQ_N && i < (int)fq_n; i++) {   /* the trail: the roots before, older dimmer */
-        const int a = (int)(fq_n - 1u - (unsigned)i), b = a + 1;
-        fq_xy(fq_root[a % FQ_N], WK_R, &x0, &y0);
-        fq_xy(fq_root[b % FQ_N], WK_R, &x, &y);
-        line(x0, y0, x, y, mix(K_BG, K_ACC, 10 - 2 * i > 1 ? 10 - 2 * i : 1));
     }
     for (i = 0; i < EN_NPAD; i++) {               /* the chord: its notes in fifths order, joined round */
         const int pc = en_chord[i] % 12;
@@ -3944,25 +3920,25 @@ static void draw_walk(void)
     }
     chord_now(nm);                                /* at the left: the chord, how it moves, the slots in order */
     if (text_w(&FONT_C, nm) <= 92)
-        cv_text(8, 30, &FONT_C, nm, en_frozen ? K_FROST : mix(K_TEXT, K_ACC, 16 - q16(kg * 1.4f)));
+        cv_text(8, 40, &FONT_C, nm, en_frozen ? K_FROST : mix(K_TEXT, K_ACC, 16 - q16(kg * 1.4f)));
     else
-        cv_text(8, 34, &FONT_B, nm, en_frozen ? K_FROST : K_TEXT);
+        cv_text(8, 44, &FONT_B, nm, en_frozen ? K_FROST : K_TEXT);
     if (loop && cnt) {
         char t[12] = "LOOP ";
         t[5] = (char)('1' + (en_prog_pos >= 0 ? en_prog_pos : 0)), t[6] = '/', t[7] = (char)('0' + cnt), t[8] = 0;
-        cv_text(8, 58, &FONT_XS, t, K_DIM);
+        cv_text(8, 66, &FONT_XS, t, K_DIM);
     } else {
         char t[12];
         caps(t, EN_WALK_NAME[(proj.par[P_PMODE] & 3) % EN_NWALK], sizeof t);
-        cv_text(8, 58, &FONT_XS, t, K_DIM);
+        cv_text(8, 66, &FONT_XS, t, K_DIM);
     }
     for (i = 0; i < EN_NPROG; i++) {              /* the slots, two columns of four: their chords, the one playing lit */
-        const int32_t x = 8 + (i >> 2) * 46, y = 76 + (i & 3) * 15;   /* (clear of the notes' names) */
+        const int32_t x = 8 + (i >> 2) * 46, y = 82 + (i & 3) * 14;   /* (clear of the notes' names) */
         const int on = loop && en_playing && i == en_prog_pos;
         char d[2], cn[16];
         d[0] = (char)('1' + i), d[1] = 0;
         if (on)
-            cv_round(x - 2, y + 1, 44, 14, 3, K_PAD);
+            cv_round(x - 2, y + 1, 44, 13, 3, K_PAD);
         cv_text(x, y, &FONT_XS, d, on ? K_BG : K_LINE);
         if (sr[i] >= 0) {
             const char *l = slot_label(i, cn);
