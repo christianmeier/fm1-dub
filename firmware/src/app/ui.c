@@ -3835,12 +3835,11 @@ static uint32_t where_sig(uint32_t h)            /* (what they show, for a redra
  * save on one comes back on the ripples: ui_screen_ok) */
 static int scr_small_chord(int s) { return s != SCR_RIPPLES; }   /* (the chord small, at the top) */
 
-/* (1.4.0, the user's) the Walk page's picture (the chord's name under the section's bars, clear of them): the circle of fifths (C at the top, a fifth a step clockwise), the
+/* (1.4.0, the user's) the Walk page's picture: the circle of fifths (C at the top, a fifth a step clockwise), the
  * notes named round it, the key's bright, the rest faint; the chord's notes lit and joined (its shape), its root the
- * biggest, white with the kick (1.4.0, the user's: no trail of the roots before: too crowded); inside, the eight slots numbered
- * (each at its chord's root, not joined: the user's, too crowded; the one playing lit in Loop; a gap left out: the chord before
- * it holds); round the outside, the way to the next chord (Change). At the left, out of the circle's way: the chord's
- * name, the walk's character (or Loop and where it is), and the slots in order, the one playing lit */
+ * biggest, white with the kick; round the outside, the way to the next chord (Change). Nothing else on it (the user's:
+ * no trail, no slots there: too crowded). At the left, under the section's bars: the chord's name, the walk's
+ * character (or Loop and where it is), and the slots in order, the one playing lit (a gap: the chord before holds) */
 #define WK_X 166
 #define WK_Y 82
 #define WK_R 42
@@ -3853,8 +3852,8 @@ static void fq_xy(int pc, int32_t r, int32_t *x, int32_t *y)
 static void draw_walk(void)
 {
     int steps[12], ns = en_scale(proj.pool, steps), i, j, n = 0, inkey[12] = {0}, pcs[EN_NPAD], have[12] = {0};
-    int sr[EN_NPROG], ring[12] = {0}, loop = (proj.par[P_PMODE] & EN_PLOOP) != 0, cnt = prog_count();
-    int32_t x, y, x0, y0, sx[EN_NPROG], sy[EN_NPROG];
+    int sr[EN_NPROG], loop = (proj.par[P_PMODE] & EN_PLOOP) != 0, cnt = prog_count();
+    int32_t x, y, x0, y0;
     const float kg = en_playing ? en_drum_glow[0] : 0.0f;
     const uint16_t chc = en_frozen ? K_FROST : K_PAD;
     char nm[16];
@@ -3876,15 +3875,13 @@ static void draw_walk(void)
         else
             cv_disc(x, y, 1, K_LINE);
     }
-    for (i = 0; i < EN_NPROG; i++) {              /* the slots: each at its chord's root, inside (a second on a root: further in) */
+    for (i = 0; i < EN_NPROG; i++) {              /* the slots' chords, for the list at the left */
         int rr = -1, q, xx;
         if (!slot_is_gap(i) && (!loop || i < cnt)) {
             rr = proj.par[P_CR0 + i] % 12;
             if (slot_is_walk(i))
                 walk_written(i, &rr, &q, &xx);
             rr %= 12;
-            fq_xy(rr, WK_R - 12 - 10 * (ring[rr] < 2 ? ring[rr] : 2), &sx[i], &sy[i]);
-            ring[rr]++;
         }
         sr[i] = rr;
     }
@@ -3909,15 +3906,6 @@ static void draw_walk(void)
     }
     fq_xy(en_chord_root, WK_R, &x, &y);           /* its root */
     cv_disc(x, y, 6, en_frozen ? K_FROST : mix(K_ACC, K_TEXT, q16(kg * 1.4f)));
-    for (i = 0; i < EN_NPROG; i++) {              /* the slots' numbers, over the path */
-        const int on = loop && en_playing && i == en_prog_pos;
-        char d[2];
-        if (sr[i] < 0)
-            continue;
-        d[0] = (char)('1' + i), d[1] = 0;
-        cv_disc(sx[i], sy[i], 5, on ? K_PAD : i == ui.slot ? K_PANEL : mix(K_BG, K_PANEL, 10));
-        text_c(sx[i], sy[i] - 7, &FONT_XS, d, on ? K_BG : slot_is_walk(i) ? K_PAD : K_TEXT);
-    }
     chord_now(nm);                                /* at the left: the chord, how it moves, the slots in order */
     if (text_w(&FONT_C, nm) <= 92)
         cv_text(8, 40, &FONT_C, nm, en_frozen ? K_FROST : mix(K_TEXT, K_ACC, 16 - q16(kg * 1.4f)));

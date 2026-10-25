@@ -348,13 +348,11 @@ What it shows:
 - **The twelve notes** named round the circle, the key's bright and the others faint.
 - **The chord playing**: its notes lit and joined, so you see its shape; its root the biggest dot, white with each
   kick.
-- **The eight slots**, numbered, inside the circle: each at its chord's root (a walk's chord in teal, yours in
-  white); in Loop the slot playing is lit. A gap is left out (the chord before it holds). Write a slot on the Chords page, or let the walk choose a new one, and it moves to where it lands.
 - **Round the outside**, dots filling up on the way to the next chord (Change).
 - **At the left**: the chord's name, the walk's character (or LOOP and where it is, "2/8"), and the eight slots'
-  chords in two columns, the one playing lit.
+  chords in two columns, the one playing lit (a gap: the chord before it holds).
 
-![The Walk page on Basic: the circle of fifths, Fm7's notes joined, the eight slots numbered inside, the chord's name and the slots' list at the left; WALK Wander, CHANGE 64 bars](img/screen-walk.png "The Walk page")
+![The Walk page on Basic: the circle of fifths, Fm7's notes joined, the chord's name and the slots' list at the left; WALK Wander, CHANGE 64 bars](img/screen-walk.png "The Walk page")
 
 **The effects grid** (REC held). After a moment the whole screen shows sixteen effects, four rows of four (the knobs do nothing while it's up);
 the white keys from the lowest play them, each as long as its key is held (even after you let go of
