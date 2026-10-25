@@ -958,6 +958,13 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   answering after 562 requests" (about half the package), the screen blank (the loader's), then "FM-1 not found";
   unplugging and replugging the USB and installing again finished it. To look into: why the loader stopped
   mid-write (a USB drop? the loader's USB poll, its retries), and whether the installer could reconnect by itself.
+- **The knobs without numbers** (the user, 2026-10-25; to prototype after dub-1.4-rule lands, the same code): the
+  continuous knobs (0-100, centred) lose their number (the ring shows it; the big ring gives it exactly while
+  turning), their rings bigger (r 12 -> ~15, a thicker arc), the knob names brighter (white) and a size up; the knobs
+  whose value is a word or a unit keep it (Wander, Endless, 64 bars, Four, Minor, LP 800 Hz, Rate 4 bars, To Reso);
+  centred knobs a small mark at the ring's top (the 0); a **peek**: the numbers shown ~1.5 s when a page opens, then
+  fading (the encoders can't be read without moving them); a Setup option to keep the numbers always (with the aids'
+  switch); the reader unchanged.
 - **A dub siren engine with more options** (the user, 2026-10-25: "to the list"). Today's Siren (the grid's effect 14,
   white key G5 on the Arrangement page) is one fixed voice: a square-ish tone swept ±1.3 octaves round 480 Hz by a
   0.8 Hz triangle, faded in over 20 ms and out over 150 ms, into the mix. A proper dub siren (the NJD / "dub siren"
