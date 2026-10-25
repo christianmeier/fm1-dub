@@ -3,6 +3,17 @@
 #include "amb.h"
 #include "fastmath.h"
 
+/* (1.4.0, the FM-1's peaks) on the device the engine's code runs from RAM (app.ld's FAST, copied at boot: the
+ * I-cache, 32 KB over the SPI flash, can't hold its ~90 KB with the UI's between the blocks); what's cold (a step's
+ * events, a parameter, a piece, the start) kept in the flash: EN_COLD. (A function in another section isn't inlined
+ * into one here, so the hot path stays one section) */
+#ifdef EN_HOST
+#define EN_COLD
+#else
+#define EN_COLD __attribute__((section(".text.amb_cold"), noinline))
+#endif
+
+
 #ifdef EN_HOST
 #define EN_POOL
 #else
@@ -282,7 +293,7 @@ static const struct {
 };
 
 const char *en_piece_name(int i) { return PIECES[(unsigned)i < EN_NPIECES ? i : 0].name; }
-void en_piece(int i, int16_t *par, uint16_t *pool)
+EN_COLD void en_piece(int i, int16_t *par, uint16_t *pool)
 {
     int p;
     i = (unsigned)i < EN_NPIECES ? i : 0;
@@ -323,7 +334,7 @@ uint32_t en_groove(int g) { return GROOVE[(unsigned)g < 5u ? g : 0]; }
 int en_groove_pat(int knob) { return GROOVE_PAT[(unsigned)knob < NGROOVE ? knob : 0]; }
 int en_drift_bars(int v) { return DRIFT_BARS[(unsigned)v < 7u ? v : 6]; }
 int en_lfo_bars(int v) { return (unsigned)v < EN_LFO_DRIFT ? 1 << v : 0; }   /* (1, 2, 4 .. 32; Drift 0) */
-float en_filter_hz(int v)                       /* (1.4.0, format 28) a strip's Filter: its cutoff (0: off) */
+EN_COLD float en_filter_hz(int v)                       /* (1.4.0, format 28) a strip's Filter: its cutoff (0: off) */
 {
     return v > 0 ? 20.0f * fm_exp2f((float)(v - 1) * (6.966f / 49.0f))      /* (the high-pass: 20 Hz .. 2.5 kHz) */
          : v < 0 ? 18000.0f * fm_exp2f((float)(-v - 1) * (-6.492f / 49.0f))  /* (the low-pass: 18 kHz .. 200 Hz) */
@@ -349,7 +360,7 @@ static char *itoa_s(int v, char *b)
 }
 
 static int etime_cap_ds(int v);                  /* (the echo's time, capped to its tape: in tenths of a second; 0 fits) */
-void en_param_text(int i, int v, char *b)
+EN_COLD void en_param_text(int i, int v, char *b)
 {
     static const char *const ONOFF[2] = {"Off", "On"};
     const char *s = 0;
@@ -489,7 +500,7 @@ void en_param_text(int i, int v, char *b)
 }
 
 /* ------------------------------------------------------- the pure parts --- */
-uint32_t en_euclid(int k, int n, int rot)
+EN_COLD uint32_t en_euclid(int k, int n, int rot)
 {
     /* Bjorklund's algorithm (as Toussaint's "The Euclidean Algorithm Generates Traditional Musical
      * Rhythms"): k groups "x" and n - k groups ".", the remainders folded onto the heads until at most
@@ -533,7 +544,7 @@ uint32_t en_euclid(int k, int n, int rot)
     return m;
 }
 
-int en_scale(uint32_t pool, int *steps)
+EN_COLD int en_scale(uint32_t pool, int *steps)
 {
     int i, m = 0;
     pool |= 1u;
@@ -560,13 +571,13 @@ static int stack(uint32_t pool, int root, int deg, int *pcs, int max)
     return n;
 }
 
-int en_chord_tones(uint32_t pool, int root, int deg, int *pcs)
+EN_COLD int en_chord_tones(uint32_t pool, int root, int deg, int *pcs)
 {
     int st[12];
     return stack(pool, root, deg, pcs, en_scale(pool, st) >= 6 ? 4 : 3);
 }
 
-void en_voicing(uint32_t pool, int deg, int shape, int *iv)
+EN_COLD void en_voicing(uint32_t pool, int deg, int shape, int *iv)
 {
     int t[5], n = stack(pool, 0, deg, t, 5), i, j, r = t[0], d[5], sc[12];
     for (i = 0; i < 5; i++)                      /* intervals above the chord's root; a short pool repeats */
@@ -629,7 +640,7 @@ void en_voicing(uint32_t pool, int deg, int shape, int *iv)
     }
 }
 
-const char *en_chord_name(const int *pcs, int n, char *buf)
+EN_COLD const char *en_chord_name(const int *pcs, int n, char *buf)
 {
     uint32_t iv = 0;
     int i, k = 0, third, fifth;
@@ -1224,7 +1235,7 @@ static void scale_set(void)
     nsteps = en_scale(pool, steps);
 }
 
-static int bell_note(int l, int off)            /* a loop slot's note, from the chord's degree */
+EN_COLD static int bell_note(int l, int off)            /* a loop slot's note, from the chord's degree */
 {
     int d = deg + off, oct = d / nsteps, s = steps[d % nsteps], base, root = par[P_ROOT], n;
     base = LOOP_BASE[l] - ((LOOP_BASE[l] - root) % 12 + 12) % 12;   /* the root at or below the register */
@@ -1239,7 +1250,7 @@ static int bell_note(int l, int off)            /* a loop slot's note, from the 
 /* the chord to the four voices: the voicing on the degree, its root moved the least from the last one,
  * in C3..B3 (as a chord memory: the shape kept, transposed whole; 1.3.0 up from F#2..F3, out of the low-mids) */
 static int chord_slot = -1;                     /* the slot whose chord sounds (-1: one of the scale) */
-static void voice_chord(void)
+EN_COLD static void voice_chord(void)
 {
     int iv[4], i, pc, n;
     if (chord_slot >= 0 && par[P_CQ0 + chord_slot]) {   /* a slot's chord, as written */
@@ -1292,7 +1303,7 @@ volatile int8_t en_prog_slot[EN_NPROG][3];
 volatile uint32_t en_prog_gen;
 static int slot_gap(int i) { return !par[P_CQ0 + i] && !par[P_CR0 + i]; }
 static int slot_walk(int i) { return !par[P_CQ0 + i] && par[P_CR0 + i]; }
-static int prog_len(void)                       /* Loop: to the last slot that isn't a gap (0: none) */
+EN_COLD static int prog_len(void)                       /* Loop: to the last slot that isn't a gap (0: none) */
 {
     int i, n = 0;
     for (i = 0; i < EN_NPROG; i++)
@@ -1310,7 +1321,7 @@ static void prog_publish(void)                  /* the slots, for the UI to take
     }
     en_prog_gen++;
 }
-void en_chord_iv(int q, int x, int *iv)
+EN_COLD void en_chord_iv(int q, int x, int *iv)
 {
     static const int8_t THIRD[EN_NCQ] = {3, 4, 3, 2, 5, 3, 4}, FIFTH[EN_NCQ] = {7, 7, 7, 7, 7, 6, 8};
     int t = THIRD[(unsigned)q < EN_NCQ ? q : 0], f = FIFTH[(unsigned)q < EN_NCQ ? q : 0],
@@ -1338,7 +1349,7 @@ void en_chord_iv(int q, int x, int *iv)
         while (iv[i] <= iv[i - 1])
             iv[i] += 12;
 }
-void en_walk_chord(uint32_t pool, int root, int deg, int *r, int *q, int *x)
+EN_COLD void en_walk_chord(uint32_t pool, int root, int deg, int *r, int *q, int *x)
 {
     int pcs[4], n = en_chord_tones(pool, root, deg, pcs), t, f, s;
     t = (pcs[1] - pcs[0] + 12) % 12;
@@ -1349,7 +1360,7 @@ void en_walk_chord(uint32_t pool, int root, int deg, int *r, int *q, int *x)
        : (f == 8 ? EN_CQ_AUG : EN_CQ_MAJOR);
     *x = s == 10 || (s == 9 && *q == EN_CQ_DIM) ? EN_CX_7 : s == 11 ? EN_CX_MAJ7 : s == 9 ? EN_CX_6 : EN_CX_TRIAD;
 }
-const char *en_chord_label(int root, int q, int x, char *b)
+EN_COLD const char *en_chord_label(int root, int q, int x, char *b)
 {
     static const char *const QS[EN_NCQ] = {"", "", "m", "sus2", "sus4", "dim", "aug"};
     static const char *const XS[EN_NCX] = {"", "6", "7", "M7", "9", "11", "add9"};
@@ -1403,7 +1414,7 @@ const char *const EN_WALK_NAME[EN_NWALK] = {"Home", "Wander", "Free"};
 #define PLAY_LOOP (par[P_PMODE] & EN_PLOOP)
 static int walk_shape;                          /* the walk's voicing, now and then the other (Evolve) */
 static int walk_prev;                           /* the degree before the walk's last */
-static int walk_from(int d)
+EN_COLD static int walk_from(int d)
 {
     static const float W7[3][7] = {{0.0f, 0.4f, 1.0f, 3.0f, 1.5f, 1.5f, 2.0f},
                                    {0.0f, 1.2f, 1.2f, 2.0f, 1.6f, 1.8f, 1.4f},
@@ -1446,7 +1457,7 @@ static void slot_walk_set(int k, int d)         /* slot k: the walk's degree d *
     par[P_CX0 + k] = (int16_t)walk_shape;
     walk_last = d;
 }
-static void walk_fill(void)                     /* Endless with every slot a gap (a fresh piece): eight from home */
+EN_COLD static void walk_fill(void)                     /* Endless with every slot a gap (a fresh piece): eight from home */
 {
     int k, d = 0;
     for (k = 0; k < EN_NPROG; k++)
@@ -1474,7 +1485,7 @@ static void slot_play(int k)                    /* slot k sounds: its chord as w
     chord_bars = 0;
 }
 
-static void chord_change(void)
+EN_COLD static void chord_change(void)
 {
     int k;
     if (PLAY_LOOP) {                            /* Loop: the slots in turn, a gap holding the chord before it */
@@ -1527,7 +1538,7 @@ static int loop_target(void)                    /* 0..5 notes: Density, thinned 
 }
 static uint8_t loop_rest[EN_NLOOP];             /* this pass: silent (Evolve) */
 
-static void loop_add(int l)
+EN_COLD static void loop_add(int l)
 {
     int len = EN_LOOP_LEN[l], i, s;
     for (i = 0; i < 8; i++) {
@@ -1556,7 +1567,7 @@ static void loop_publish(int l)
         en_loop_note[l][i] = i < EN_LOOP_LEN[l] ? loop_note[l][i] : -1;
 }
 
-static void loop_regrow(int l)
+EN_COLD static void loop_regrow(int l)
 {
     int i, n = loop_target();
     for (i = 0; i < EN_LOOP_MAX; i++)
@@ -1568,7 +1579,7 @@ static void loop_regrow(int l)
 
 /* a piece's own loops (en_pings): packed by the UI, unpacked here */
 static uint8_t pings_pend[EN_PINGS_N], pings_have;
-void en_pings_get(uint8_t *b)
+EN_COLD void en_pings_get(uint8_t *b)
 {
     int l, i, k = 0;
     for (l = 0; l < EN_NLOOP; l++)
@@ -1584,7 +1595,7 @@ void en_pings(const uint8_t *b)
         pings_pend[i] = b[i];
     post(C_PINGS, b ? 1 : 0, 0);
 }
-static void pings_take(void)
+EN_COLD static void pings_take(void)
 {
     int l, i, k = 0;
     for (l = 0; l < EN_NLOOP; l++) {
@@ -1599,7 +1610,7 @@ static void pings_take(void)
     }
 }
 
-static void loop_pass(int l)                    /* the end of a pass: grow, prune, evolve */
+EN_COLD static void loop_pass(int l)                    /* the end of a pass: grow, prune, evolve */
 {
     int c = loop_count(l), t = loop_target(), s;
     if (ev_of(VY_PINGS) < 0.005f) {             /* Evolve 0 (or Vary): the loops as they are (Density changed: to it) */
@@ -1649,7 +1660,7 @@ static const struct {
     {1.0f, 0.6f, 1.0f, 0.8f, 1.0f, 1.29f},              /* Drop: the pitch falling from an octave up */
 };
 
-static void bell_voice(int l, int n, float vel, int32_t wait)
+EN_COLD static void bell_voice(int l, int n, float vel, int32_t wait)
 {
     int i, best = 0, ri, pv;
     float lo = 9.0f, t60, p;
@@ -1703,7 +1714,7 @@ static void bell_voice(int l, int n, float vel, int32_t wait)
     midi(0x91, (uint32_t)n, (uint32_t)(vel * 110.0f));
 }
 
-static void bell_ring(int l, int slot)
+EN_COLD static void bell_ring(int l, int slot)
 {
     int n = bell_note(l, loop_note[l][slot]);
     float vel = (float)loop_vel[l][slot] * 0.01f;
@@ -1719,14 +1730,14 @@ static uint32_t stab_home;                      /* the pattern, before this bar'
 static float vary_t = 1.0f, vary_g = 1.0f;
 volatile uint32_t en_stab_turns;
 
-static void stabs_home(void)                    /* Stabs: one a bar .. six, off the beat */
+EN_COLD static void stabs_home(void)                    /* Stabs: one a bar .. six, off the beat */
 {
     stab_kb = stab_k = 1 + (pe(P_STABS) * 5 + 50) / 100;
     stab_rot = 2;
     stab_home = en_euclid(stab_k, 16, stab_rot);
 }
 
-static void stabs_evolve(void)                  /* the pattern turns a step, or gains or loses a stab */
+EN_COLD static void stabs_evolve(void)                  /* the pattern turns a step, or gains or loses a stab */
 {
     en_stab_turns++;
     if (frand() < 0.6f) {
@@ -1739,7 +1750,7 @@ static void stabs_evolve(void)                  /* the pattern turns a step, or 
     stab_home = en_euclid(stab_k, 16, stab_rot);
 }
 
-static void stabs_bar(void)                     /* this bar's stabs: the pattern, with gaps */
+EN_COLD static void stabs_bar(void)                     /* this bar's stabs: the pattern, with gaps */
 {
     uint32_t p = stab_home, out = 0;
     int i, first = 1;
@@ -1766,7 +1777,7 @@ static void stabs_bar(void)                     /* this bar's stabs: the pattern
 }
 
 static float cc_col(void);
-static void stab_fire(float vel, int throw_it)
+EN_COLD static void stab_fire(float vel, int throw_it)
 {
     int i;
     if (st_midi_left > 0)
@@ -1801,7 +1812,7 @@ static void stab_fire(float vel, int throw_it)
 }
 
 /* ---------------------------------------------------------------- drums --- */
-static void hats_publish(void)
+EN_COLD static void hats_publish(void)
 {
     uint32_t c = 0, o = 0;
     int i, k = pe(P_HITS), ko = k < 15 ? 0 : k < 40 ? 2 : 4;
@@ -1823,7 +1834,7 @@ static void hats_publish(void)
     en_drum_pat[4] = drum_pat[4];
 }
 
-static void hats_home(void)                     /* Hits: the shaker's count, its steps home */
+EN_COLD static void hats_home(void)                     /* Hits: the shaker's count, its steps home */
 {
     int i;
     for (i = 0; i < 12; i++)
@@ -1832,7 +1843,7 @@ static void hats_home(void)                     /* Hits: the shaker's count, its
     hats_publish();
 }
 
-static void hats_evolve(void)                   /* a shaker step trades places, or one more or less */
+EN_COLD static void hats_evolve(void)                   /* a shaker step trades places, or one more or less */
 {
     en_vary_turns[VY_DRUMS]++;
     if (frand() < 0.6f) {
@@ -1856,7 +1867,7 @@ int en_kick_note(int root)
 }
 #define kick_note en_kick_note
 
-static void drum_fire(int d, float vel)
+EN_COLD static void drum_fire(int d, float vel)
 {
     drum_t *v = &drum[d];
     v->on = 1;
@@ -1935,7 +1946,7 @@ static void drums_wait_step(int32_t k)          /* k samples went by: hits whose
 }
 
 /* ----------------------------------------------------------------- bass --- */
-static void bass_hit(int first, int up, int st)
+EN_COLD static void bass_hit(int first, int up, int st)
 {
     int pc = chord_pcs[0], n;
     (void)first;
@@ -2040,7 +2051,7 @@ static void song_back(void)                      /* (the song's offsets off, the
         fd_tgt[i] = 1.0f;
     song_co = 0.0f, song_wet = 1.0f, song_hits = 1.0f, song_thr = 0, song_nthr = 0.0f;
 }
-static void song_start(void)                     /* PLAY from the top: Endless as ever, or a song from its intro */
+EN_COLD static void song_start(void)                     /* PLAY from the top: Endless as ever, or a song from its intro */
 {
     int i;
     song_end_now = song_fixed = song_ask = 0;
@@ -2080,7 +2091,7 @@ static int song_kick(void)
     }
     return -1;
 }
-static void song_bar(void)                       /* a bar's start: the song's places (before the phrase is set) */
+EN_COLD static void song_bar(void)                       /* a bar's start: the song's places (before the phrase is set) */
 {
     int i;
     if (song_ph == EN_SG_INTRO && bar >= song_b0)
@@ -2096,7 +2107,7 @@ static void song_bar(void)                       /* a bar's start: the song's pl
     }
     song_publish();
 }
-static void song_tick(void)                      /* each sixteenth: the faders' targets and the song's offsets */
+EN_COLD static void song_tick(void)                      /* each sixteenth: the faders' targets and the song's offsets */
 {
     const float t = (float)sixteenth * (1.0f / 16.0f);
     uint32_t q = 0u;
@@ -2128,7 +2139,7 @@ static void song_tick(void)                      /* each sixteenth: the faders' 
             q |= 1u << i;
     fd_quiet = q;
 }
-static void song_outro(void)                     /* HOME held + PLAY: the outro from the next phrase; again: the main */
+EN_COLD static void song_outro(void)                     /* HOME held + PLAY: the outro from the next phrase; again: the main */
 {
     const uint32_t nb = (bar + 7u) & ~7u;        /* (the next phrase's first bar: the next to start, if it's one) */
     if (!en_playing || song_ph == EN_SG_END)
@@ -2227,7 +2238,7 @@ static int mx_pick(const float *w)               /* a part, by weight */
             break;
     return i;
 }
-static void mixer_tick(void)                     /* each sixteenth: new places, the moves' stages */
+EN_COLD static void mixer_tick(void)                     /* each sixteenth: new places, the moves' stages */
 {
     const int main = song_ph == EN_SG_OFF || song_ph == EN_SG_MAIN, rest = lock || en_frozen;
     const float m = mx_m * (main ? 1.0f : 0.5f);
@@ -2329,7 +2340,7 @@ static void mixer_step(uint32_t n)               /* each block: the rides glided
     mx_co = mx_c[MX_CO];
     mx_fb = mx_c[MX_FB] + (ev_kind == 2 ? ev_a * (0.04f + 0.04f * mx_m) : 0.0f);
 }
-static void mixer_reset(void)                    /* (a new engine: every ride home, no move) */
+EN_COLD static void mixer_reset(void)                    /* (a new engine: every ride home, no move) */
 {
     int i;
     mx_act = 0, mx_m = 0.0f, ev_st = 0, ev_kind = 0, ev_a = ev_da = 0.0f, en_mx_ev = 0;
@@ -2341,7 +2352,7 @@ static void mixer_reset(void)                    /* (a new engine: every ride ho
     }
     mx_co = mx_fb = 0.0f;
 }
-static void mixer_set(int v)                     /* Mixer turned (P_MIXER) */
+EN_COLD static void mixer_set(int v)                     /* Mixer turned (P_MIXER) */
 {
     int i;
     mx_m = (float)v * 0.01f;
@@ -2361,7 +2372,7 @@ static void mixer_set(int v)                     /* Mixer turned (P_MIXER) */
 }
 
 /* ------------------------------------------------------- the arrangement --- */
-static void section_set(int s)
+EN_COLD static void section_set(int s)
 {
     float bl = 16.0f * step_len;
     const int was = sec;
@@ -2405,7 +2416,7 @@ static uint8_t ph_age, ph_reset;                /* phrases since the kick's shap
 static uint8_t kick_now;                        /* (the kick's Density turned: its shape drawn again at the next bar) */
 static uint8_t nz_now;                          /* (the noise's Density turned: its groove drawn again at the next bar) */
 static uint8_t kick_hand;                       /* (and from then on, the piece's opening on four left be: the knob's) */
-static int section_pick(void)
+EN_COLD static int section_pick(void)
 {
     float r = frand(), m;
     if (motion < 0.4f)
@@ -2454,7 +2465,7 @@ static uint32_t ph_thin(uint32_t pat, int keep, uint32_t always, uint32_t salt)
     }
     return out;
 }
-static void phrase_plan(int first)                /* (1: the first; 2: a new one, decided a bar before; 0: kept) */
+EN_COLD static void phrase_plan(int first)                /* (1: the first; 2: a new one, decided a bar before; 0: kept) */
 {
     int i;
     if (!first && ph.drawn)
@@ -2470,7 +2481,7 @@ static void phrase_plan(int first)                /* (1: the first; 2: a new one
 }
 static int pcount(uint32_t m) { return __builtin_popcount(m); }
 /* this bar's patterns, from the plan: A, or (bars 4 and 8) B */
-static void ph_bar(int pb)
+EN_COLD static void ph_bar(int pb)
 {
     const int b = pb == 3 || pb == 7;
     const float lo = loose(), e = (float)mac[EN_MAC_ENERGY] * (1.0f / 50.0f), d0 = (float)par[P_BNOTES] * 0.01f;
@@ -2523,7 +2534,7 @@ static void ph_bar(int pb)
     }
 }
 
-static void bar_start(void)
+EN_COLD static void bar_start(void)
 {
     int pb = (int)(bar & 7u), db = en_drift_bars(par[P_DRIFT]);
     song_bar();                                  /* (1.4.0: the song's places: intro, main, outro, the end) */
@@ -2618,7 +2629,7 @@ static void bar_start(void)
  * 1.3.0), each shape's weight falling with its distance (less steeply as Evolve rises), none at half; a Thin phrase
  * a step sparser. A piece starts on four (its first two phrases), then wanders down to Density over the next six;
  * and after a Break the kick comes back whole (the user: start on four on the floor, then let it evolve) */
-static int kick_draw(int next)
+EN_COLD static int kick_draw(int next)
 {
     const int v = pe(P_KDENS);
     const uint32_t phr = (bar + 1u >= song_b0 ? bar + 1u - song_b0 : 0u) >> 3;   /* (the next phrase's number: 0 at
@@ -2655,7 +2666,7 @@ static int kick_draw(int next)
 static uint32_t dpat(int d) { return par[P_DMODE] ? (uint32_t)(uint16_t)par[P_DPAT0 + d] : drum_pat[d]; }
 
 /* the screen's lanes, the bar as it plays: what is muted or at level 0, gone at once */
-static void lanes(void)
+EN_COLD static void lanes(void)
 {
     const uint32_t mu = mutes | fd_quiet;   /* (1.4.0: a part the song has out, as muted) */
     const int kick = lay_kick && !(mu & EN_M_KICK) && !(perf & EN_PF_KICKDROP) && par[P_DRUMS] > 0,
@@ -2703,7 +2714,7 @@ static int dhit(int d, int st, float *vel)
 static void lfo_tick(void);
 static void play_stop(void);
 /* the grid: one call a sixteenth (MIDI clock: 6 ticks) */
-static void tick(void)
+EN_COLD static void tick(void)
 {
     int st = (int)(sixteenth & 15u), l, d;
     float r = frand();
@@ -2895,7 +2906,7 @@ static inline void reverb(float in, float *ol, float *or_)
                    tap(&dl[L_D2R], DS(121)));
 }
 
-static void plate_init(void)
+EN_COLD static void plate_init(void)
 {
     float *p = pl_buf;
     int k, i;
@@ -3222,7 +3233,7 @@ static inline void cloud(float in, float *ol, float *or_)
     }
 }
 
-int en_voice_fm(int layer)
+EN_COLD int en_voice_fm(int layer)
 {
     if (layer == 0)
         return cv_patch(cvoice) != 0;
@@ -3230,7 +3241,7 @@ int en_voice_fm(int layer)
         return BV_PATCH[(unsigned)par[P_BVOICE] < EN_NBV ? par[P_BVOICE] : 0] != 0;
     return layer == 1;
 }
-int en_fm_alg(int layer)
+EN_COLD int en_fm_alg(int layer)
 {
     if (layer == 0)
         return cv_patch(cvoice) ? fm_alg_of(P_CALG, cv_patch(cvoice)) : 0;
@@ -3352,7 +3363,7 @@ static void lfo_reset(void)
     lfo_ch = lfo_n = 0.0f;
 }
 /* a sixteenth on (tick): the drifts a step, a new place when one's due; the trace, as heard */
-static void lfo_tick(void)
+EN_COLD static void lfo_tick(void)
 {
     int k;
     for (k = 0; k < 2; k++) {
@@ -3422,7 +3433,7 @@ static uint32_t ext_age;
 
 static void tempo_set(void) { step_len = EN_SR * 60.0f / ((float)par[P_TEMPO] * 4.0f); }
 
-static void apply(int p, int v)
+EN_COLD static void apply(int p, int v)
 {
     const en_param_t *pi = &PARAMS[p];
     if (v < pi->lo)
@@ -3627,12 +3638,12 @@ static void apply(int p, int v)
     }
 }
 
-static int deg_dim(int d)                       /* the scale's chord on degree d has a diminished fifth */
+EN_COLD static int deg_dim(int d)                       /* the scale's chord on degree d has a diminished fifth */
 {
     int t[3], n = stack(pool, 0, d, t, 3);
     return n >= 3 && (t[2] - t[0] + 12) % 12 == 6;
 }
-static void pool_set(uint32_t p)
+EN_COLD static void pool_set(uint32_t p)
 {
     int k, prev = 0, moved = 0;
     pool = (p | 1u) & 0xFFFu;
@@ -3658,7 +3669,7 @@ static void pool_set(uint32_t p)
     voice_chord();
 }
 
-static void regrow(void)                        /* a new piece: fresh loops, home chord, patterns home */
+EN_COLD static void regrow(void)                        /* a new piece: fresh loops, home chord, patterns home */
 {
     int l, k;
     for (l = 0; l < EN_NLOOP; l++) {
@@ -3701,7 +3712,7 @@ static void notes_off(void)
     en_midi_out(0xB9, 123, 0);
 }
 
-static void quiet(void)
+EN_COLD static void quiet(void)
 {
     int i;
     for (i = 0; i < NBELL; i++)
@@ -3714,7 +3725,7 @@ static void quiet(void)
     notes_off();
 }
 
-void en_init(void)
+EN_COLD void en_init(void)
 {
     int i;
     for (i = 0; i <= SN; i++)
@@ -3781,7 +3792,7 @@ static void clock_pulse(void)
         pulse = 0;
 }
 
-static void play_start(int from_top)
+EN_COLD static void play_start(int from_top)
 {
     int i;
     if (from_top) {
@@ -3809,7 +3820,7 @@ static void play_start(int from_top)
         midi(from_top ? 0xFA : 0xFB, 0, 0);
 }
 
-static void play_stop(void)
+EN_COLD static void play_stop(void)
 {
     int d;
     for (d = 0; d < EN_NDRUM; d++)
@@ -3855,7 +3866,7 @@ static void macro(int i, int v)
 #define DRAIN_BUDGET 28
 #define DRAIN_REGROW 10
 #define DRAIN_BURST 64
-static void drain(void)
+EN_COLD static void drain(void)
 {
     static uint8_t spread;
     int budget;
@@ -4013,7 +4024,7 @@ static int rb_ph;
 static uint32_t rb_rng = 0x2545F491u;
 static float rb_acc, rb_e, rb_eb, rb_n1, rb_n2, rb_n3, rb_h, rb_h2, rb_pk, rb_sc, rb_p, rb_c;
 static float rb_lpa, rb_hpa, rb_scr, rb_pkr;     /* (the band's, the sidechain's, the kick's peak's: rumble_init) */
-static void rumble_init(void)
+EN_COLD static void rumble_init(void)
 {
     rb_lpa = 1.0f - fm_expf(-2.0f * FM_PI * RB_LP / RB_SR);
     rb_hpa = 1.0f - fm_expf(-2.0f * FM_PI * RB_HP / RB_SR);
@@ -4681,12 +4692,12 @@ static void nz_dens(void)
     nctl.hits = (uint8_t)((v * 16 + 50) / 100);
     nctl.grain = fm_clampf(((float)v * 0.16f - 9.0f) * (1.0f / 7.0f) - 0.5f * NCHAR[nz_char()].dens, -1.0f, 1.0f);
 }
-int en_nz_air18(int old, int character)          /* an Air before 18 (-50..50, the character's lean on it) as 0..100 */
+EN_COLD int en_nz_air18(int old, int character)          /* an Air before 18 (-50..50, the character's lean on it) as 0..100 */
 {
     const float nr = fm_clampf((float)old * 0.02f + NCHAR[(unsigned)character < EN_NNCHAR ? character : 0].air, -1.0f, 1.0f);
     return (int)(100.0f * fm_sqrtf(fm_exp2f(1.2f * nr) * (1.0f / 2.3f)) + 0.5f);
 }
-int en_nz_dens18(int old, int character)         /* a value before 18 (-50..50) as 18's (0..100) */
+EN_COLD int en_nz_dens18(int old, int character)         /* a value before 18 (-50..50) as 18's (0..100) */
 {
     const float d = fm_clampf((float)old * 0.02f + 0.5f * NCHAR[(unsigned)character < EN_NNCHAR ? character : 0].dens,
                               -1.0f, 1.0f);
@@ -4695,7 +4706,7 @@ int en_nz_dens18(int old, int character)         /* a value before 18 (-50..50) 
 }
 /* the phrase's groove: Density's hits (2..16 in two bars), Euclidean, turned, a couple nudged a step off; now and then
  * the last one kept (more often as Evolve falls): a motif that comes back */
-static void noise_pattern(void)
+EN_COLD static void noise_pattern(void)
 {
     int k = nctl.hits, i, m;
     uint32_t p;
@@ -4726,7 +4737,7 @@ static float nz_note(int pc) { return mtof((float)(28 + (pc + 8) % 12)); }   /* 
 /* a sixteenth (tick): the hit struck for it told; the next step's, if the groove has one, struck ahead of its tick by
  * the combs' latency (the shortest one's period, and a little of the swell), the combs retuned as it strikes (never
  * mid-ring); a dry click on the grid now and then (the character's loose ones at random: render_crackle) */
-static void noise_step(int s)
+EN_COLD static void noise_step(int s)
 {
     en_nz_step = (uint8_t)(s & 31);              /* (the Noise page: the step playing) */
     const unsigned c = nz_char();

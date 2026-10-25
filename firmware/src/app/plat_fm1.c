@@ -110,7 +110,7 @@ uint32_t plat_clock_mhz(void)                  /* (once: the cycle counter again
     return mhz;
 }
 void plat_clock_regs(uint32_t r[3]) { fm1_clock_regs(r); }
-uint32_t en_prof_ticks(void) { return fm1_ticks(); }   /* (amb.c's stages: TIMER4, 24 MHz) */
+__attribute__((section(".fast_text"))) uint32_t en_prof_ticks(void) { return fm1_ticks(); }   /* (amb.c's stages: TIMER4, 24 MHz; in RAM) */
 static volatile uint32_t prof_peak[PLAT_NPROF], prof_mean[PLAT_NPROF];   /* (render_block's: TIMER4 ticks) */
 void plat_prof(uint32_t peak[PLAT_NPROF], uint32_t mean[PLAT_NPROF])
 {

@@ -4,7 +4,7 @@
 /* AMB-1 on the FM-1 (from X0X's): boot (WDT first, boot-loop guard, guards), LCD, input (TIMER5
  * 10 kHz), audio (ALNK0), USB; then the main loop: UI at ~60 frames/s, input polled in between. */
 extern uint32_t _data_start[], _data_end[], _data_load[], _bss_start[], _bss_end[];
-extern uint32_t _pool_start[], _pool_end[], _rt_start[], _rt_end[], _rt_load[];
+extern uint32_t _pool_start[], _pool_end[], _rt_start[], _rt_end[], _rt_load[], _ft_start[], _ft_end[], _ft_load[];
 
 /* --------------------------------------------------------------- audio --- */
 /* Felucca's 256-frame halves (5.8 ms): AMB-1's render is light, and a strum wants the short latency */
@@ -26,7 +26,7 @@ struct en_dbg {
 static uint8_t safe_mode;                           /* two failed boots: no audio, USB on (safe_main) */
 
 _Static_assert(PLAT_NPROF == EN_PROF_N, "plat.h's stages are amb.h's");
-static void render_block(int32_t *o)                /* ALNK0: one half, measured */
+__attribute__((section(".fast_text"))) static void render_block(int32_t *o)   /* ALNK0: one half, measured (in RAM: FAST) */
 {
     uint32_t t0 = fm1_ticks(), us, budget = HALF_FRAMES * 1000000u / FS;
     en_dbg.in_audio = 1;
@@ -76,7 +76,7 @@ static void render_block(int32_t *o)                /* ALNK0: one half, measured
     en_dbg.in_audio = 0;
 }
 
-void fm1_alnk0_irq(void)                            /* via isr_alnk0 (hal/fm1_isr.S) */
+__attribute__((section(".fast_text"))) void fm1_alnk0_irq(void)   /* via isr_alnk0 (hal/fm1_isr.S; in RAM: FAST) */
 {
     uint8_t p = fm1_audio_pending();
     fm1_audio_ack_aux(p);
@@ -109,7 +109,7 @@ static void audio_silence(void)                     /* IRQs off (flash erase): t
 
 /* ------------------------------------------------------------ timer --- */
 static uint8_t usb_due;
-void fm1_timer5_irq(void)
+__attribute__((section(".fast_text"))) void fm1_timer5_irq(void)   /* (in RAM: 10 kHz, between the audio blocks) */
 {
     static uint32_t sub;
     fm1_timer5_ack();
@@ -430,6 +430,8 @@ void fm1_cstart(void)
     for (s = _data_load, d = _data_start; d < _data_end; s++, d++)
         *d = *s;
     for (s = _rt_load, d = _rt_start; d < _rt_end; s++, d++)
+        *d = *s;
+    for (s = _ft_load, d = _ft_start; d < _ft_end; s++, d++)   /* (the hot code into RAM: FAST, app.ld) */
         *d = *s;
     fm1_mailbox_clear();
     fm1_guard_enable(FM1_GUARD_STACK | FM1_GUARD_WRITE | FM1_GUARD_BUS | FM1_GUARD_PC);
