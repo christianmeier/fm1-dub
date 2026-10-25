@@ -908,6 +908,17 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
     64 bars on Concrete and Haze (32 on Night Drive).
   - **Pending, for discussion:** the bigger proposal (Vary, Drift, Motion on the Form page; the layer Varys as trims;
     the kick's short drop-outs).
+- **The header, where we are** (the user, 2026-10-25: the top-left block "too small and reads badly, but at the same
+  time it clutters"; option A; prototype on branch dub-1.4-header, to judge on the FM-1): the phrase in the header,
+  beside the piece's tag (the section's word, or INTRO / OUTRO, and the eight bars as larger cells, the B bars
+  taller, the bar playing flashing white on each beat, the 8th blinking before a change; resting dim, a play
+  triangle); the tempo and the beat light out of it (the tempo on the Key page and the big ring; EXT while an
+  external clock leads); the battery only when low (under 20%) or charging, always on Setup with its charge; HOLD,
+  LOCK, SOLO, the dot unsaved and the red "!" at its right end; in a song, a hairline along its bottom (the whole
+  song, the intro and outro tinted, filled as it goes). The page's name and its n/m moved to the rule above the
+  knobs (at its left; the voice, kit, character or walk at its right; always: a knob's help line is the big ring's);
+  the main area's corners free for the pictures; the line to the next chord on the Walk page only. Before/after
+  shots and a video in build/header/.
 - **Bigger visualisations** (the user, 2026-10-24; a plan, after the song structure's own display is decided): with
   the strips gone and the header freed, the middle's pictures can grow. The ripples further up and to the sides,
   the deepest layer (whatever is on top covers them: the section and bar cells, the page's name, the big ring, the
