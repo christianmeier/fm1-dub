@@ -229,6 +229,7 @@ tap HOME
 wait 300
 tap EDIT
 wait 300
+shot screen-chords.png
 tap EDIT
 wait 2500
 shot screen-walk.png

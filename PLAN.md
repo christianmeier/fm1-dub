@@ -930,6 +930,13 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   (EDIT again): the circle of fifths (the key, the chord's shape, the walk's trail, the way to the next chord), the
   eight slots as a numbered path inside it, the chord, the walk and the slots' list at the left; KNOB 1 Walk (Home,
   Wander, Free; ALGORITHM still too), KNOB 2 Change (the Chord page's, the same), two free (Root and Mode, later?).
+  **Then, the user's** (2026-10-25: "too crowded", "every chord change the whole figure changes"): the trail, the
+  slots' path and numbers gone, and the circle simplified to **the root's journey**: the notes named round it, the
+  root a single dot (white with the kick), an arrow from the root before to the new one fading over four bars, the
+  way to the next chord round the outside; no chord shape. The Chords page (1/2) lost its mode line on top (the walk's
+  character on ALGORITHM's ring, the Walk page and the reader) and gained a **keyboard** under the slots (C3-G5): the
+  chord of the slot the cursor is on, its four notes as the stabs voice them, the root dotted, yours white, the walk's
+  teal, a gap the chord it holds, dimmer (slot_notes; the host's expect kbnoteN, kbheld).
 - **Still missing (the user, 2026-10-24: "don't forget"):**
   - ~~**The virtual dub mixer**~~ (built, dub-1.4-mixer, below).
   - ~~**The LFO's Destination**~~: the chord's built (Cutoff, Reso, Colour; dub-1.4-chord); the noise's built
