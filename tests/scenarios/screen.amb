@@ -1,5 +1,5 @@
-# the Form page's middle: ALGORITHM goes ripples, scope, spectrum (1.4.0: then the prototypes, the echo trail, the
-# fifths, the tape), ripples; it is said, and kept by SAVE
+# the Form page's middle: ALGORITHM goes ripples, scope, spectrum (1.4.0: then the tape; the echo trail and the
+# fifths gone, a save on one back on the ripples), ripples; it is said, and kept by SAVE
 wait 4000
 listen
 shot ripples.png
@@ -29,16 +29,6 @@ wait 1500
 expect screen 2
 turn ALGO 1
 wait 1500
-expect screen 3
-said SCREEN ECHO TRAIL
-shot echo-trail.png
-turn ALGO 1
-wait 1500
-expect screen 4
-said SCREEN FIFTHS
-shot fifths.png
-turn ALGO 1
-wait 1500
 expect screen 5
 said SCREEN TAPE
 shot tape.png
@@ -47,6 +37,27 @@ wait 200
 expect screen 0
 turn ALGO -1
 wait 200
+expect screen 5
+turn ALGO -1
+wait 200
+expect screen 2
+turn ALGO 1
+wait 200
+turn ALGO 1
+wait 200
+expect screen 0
+# (1.4.0) a view gone (a build's echo trail, 3, or fifths, 4) comes back on the ripples; the tape kept (5)
+storescreen 3
+reboot
+wait 1500
+expect screen 0
+storescreen 4
+reboot
+wait 1500
+expect screen 0
+storescreen 5
+reboot
+wait 1500
 expect screen 5
 turn ALGO 1
 wait 200

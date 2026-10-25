@@ -2,14 +2,40 @@
 # move up a slot (a gap stays a gap) and the walk writes slot 8. KNOB 1 the slot, the keys its root (a walk's chord
 # keeps its kind and type), KNOB 2 its kind (Empty: a gap), KNOB 3 its type, KNOB 4 Play: Endless or Loop (the slots
 # in turn, nothing new); ALGORITHM the walk's character (Home, Wander, Free), its chords walked again at once (yours
-# and the gaps kept). EDIT again: back; EDIT held: the next chord; kept by the piece
+# and the gaps kept). EDIT again: the Walk page (1.4.0), again back; EDIT held: the next chord; kept by the piece
 listen
 wait 3000
 tap EDIT
 wait 400
 expect view 15
+# (1.4.0, the user's) EDIT again: the Walk page (the circle of fifths: Walk, Change), and again back
 tap EDIT
-wait 200
+wait 300
+expect view 29
+said Walk page, walk Wander: Walk Wander, Change 64 bars
+spin K1 1
+wait 300
+said Walk Free
+expect par88 2
+spin K1 -1
+wait 300
+expect par88 1
+spin K2 -1
+wait 300
+said Change 32 bars
+expect par6 4
+spin K2 1
+wait 300
+expect par6 5
+turn ALGO 1
+wait 300
+said WALK
+expect par88 2
+turn ALGO -1
+wait 300
+expect par88 1
+tap EDIT
+wait 300
 expect view 15
 # slot 1: the walk's home chord, Fm7 in F Dorian, as it would be written
 said Chords page, walk Wander: Slot 1, Chord Minor, Type 7, Play Endless

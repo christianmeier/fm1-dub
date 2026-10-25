@@ -345,7 +345,7 @@ static void take(const slot_t *s)                /* a piece's settings into play
         if (!global_par(p))
             proj.par[p] = s->par[p];
     proj.pool = s->pool;
-    proj.screen = (uint8_t)(s->screen % UI_NSCREEN);   /* (each piece its own view) */
+    proj.screen = ui_screen_ok(s->screen);       /* (each piece its own view; one gone, the ripples) */
 }
 
 static void keep(void)                           /* the piece playing, into its slot (with its ping loops) */
@@ -959,6 +959,9 @@ int project_load(void)
             proj.slot[i].par[P_KLOW] = proj.slot[i].par[P_DLOW];
     }
     if (n >= 8 && proj.magic == PROJ_MAGIC && proj.format == PROJ_FORMAT) {   /* (the ranges as they are now) */
+        proj.screen = ui_screen_ok(proj.screen);   /* (1.4.0: the echo trail and the fifths gone: the ripples) */
+        for (i = 0; i < NPIECES; i++)
+            proj.slot[i].screen = ui_screen_ok(proj.slot[i].screen);
         pars_clamp(proj.par);
         for (i = 0; i < NPIECES; i++)
             pars_clamp(proj.slot[i].par);

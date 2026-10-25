@@ -16,6 +16,7 @@
  *   wav FILE | wavstop           start / stop recording the output
  *   peakreset                    restart the output peak (expect peak_db_min / peak_db_max)
  *   shot FILE.png                save the screen
+ *   storescreen N                the project saved with the piece's view N, as a 1.4.0 build with six views would
  *   leds                         print the lit buttons and keys
  *   expect WHAT VALUE            check state: exit 1 on mismatch; VALUE "<N" / ">N" is a bound
  *   reboot                       re-run boot from the simulated flash (persistence test)
@@ -830,6 +831,12 @@ int main(int argc, char **argv)
                 return 2;
             }
             plat_store_save(OBJ_PROJ, fb, (uint32_t)got);
+        } else if (!strcmp(cmd, "storescreen")) {   /* storescreen N: saved as it is, the piece's view N (0..5: a
+                                                  * 1.4.0 build's echo trail 3, fifths 4, tape 5) */
+            keep();
+            proj.screen = (uint8_t)atoi(a);
+            proj.slot[proj.piece].screen = proj.screen;
+            plat_store_save(OBJ_PROJ, &proj, sizeof proj);
         } else if (!strcmp(cmd, "store26")) {    /* the project as 1.4.0's song structure saved it (26) */
             static project26_t o;
             int i;

@@ -28,11 +28,12 @@
  * pages, the layer's button pressed again) */
 enum { V_DUB, V_CHORD, V_TEXTURE, V_BASS, V_DRUMS, V_SPACE, V_SETUP, NPAGES, V_MIX = NPAGES, V_CSND, V_PSND, V_BSND,
        V_DSND, V_CFM, V_PFM, V_BFM, V_CHORDS, V_PAT, V_PERF, V_KEY, V_NSND, V_ESND, V_NSND2, V_CLFO, V_NLFO, V_HATS, V_NVOX,
-       V_STRIP, V_SONG, V_SMODE, NVIEWS };
+       V_STRIP, V_SONG, V_SMODE, V_WALK, NVIEWS };
 /* (V_PERF: PERFORM's knobs, the Arrangement page; V_STRIP a part's white key held (V_MIX, white 6 held, gone).
  * V_SONG (1.4.0, the user's: song structure): HOME again, the piece's song (its Intro, Main, Outro, Kind), HOME's
  * second; V_SMODE: GLO again, Song mode (Endless, Song, Set), the Setup page's second (the player's, as Tune).
- * V_KEY: HOME again, the key and the tempo, the Form page's second. V_CLFO, V_NLFO (1.4.0): the chord's LFO, ENV a fourth time (after its FM page), and
+ * V_WALK (1.4.0, the user's): EDIT again, the Chords page's second: the circle of fifths, the walk's character and
+ * Change. V_KEY: HOME again, the key and the tempo, the Form page's second. V_CLFO, V_NLFO (1.4.0): the chord's LFO, ENV a fourth time (after its FM page), and
  * the noise's, SAVE a third time; for now, till the big redesign) */
 /* (1.4.0, the user's: the names; the identifiers kept: V_DUB the Form page, HOME's; V_SPACE the Dub page, FX's, the echo
  * and the plate; V_PERF the Arrangement page, SEL's, PERFORM's that was. The layers' pages: each its part, then its
@@ -41,11 +42,15 @@ static const char *const VIEW_NAME[NVIEWS] = {"Form", "Chord", "Pings", "Bass", 
                                               "Chord voice", "Pings voice", "Bass voice", "Kick",
                                               "Chord FM", "Pings FM", "Bass FM", "Chords", "Pattern", "Arrangement", "Key", "Noise",
                                               "Echo", "Noise space", "Chord LFO", "Noise LFO", "Hats", "Noise voice",
-                                              "Strip", "Song", "Song mode"};
+                                              "Strip", "Song", "Song mode", "Walk"};
 #define B_NONE 0xFFu
 static const uint8_t VIEW_BTN[NVIEWS] = {B_HOME, B_ENV, B_ARP, B_LFO, B_SEQ, B_FX, B_GLO, B_NONE, B_NONE, B_NONE, B_NONE,
                                          B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_SAVE, B_NONE, B_NONE,
-                                         B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE};
+                                         B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE};
+/* HOME's screen views (the stored numbers; 3 and 4 gone, 1.4.0): ui_screen_ok */
+enum { SCR_RIPPLES = 0, SCR_SCOPE = 1, SCR_SPEC = 2, SCR_TAPE = 5 };
+#define SCR_N 4
+static const uint8_t SCR_ORDER[SCR_N] = {SCR_RIPPLES, SCR_SCOPE, SCR_SPEC, SCR_TAPE};
 static int sound_of(int v) { return v == V_CHORD ? V_CSND : v == V_TEXTURE ? V_PSND : v == V_BASS ? V_BSND : v == V_DRUMS ? V_DSND : -1; }
 static int fm_of(int v) { return v == V_CHORD ? V_CFM : v == V_TEXTURE ? V_PFM : v == V_BASS ? V_BFM : -1; }
 static int parent_of(int v)
@@ -144,6 +149,8 @@ enum { K_LEDS = 200, K_CPU, K_NONE, K_SLOT, K_CQ, K_CX,    /* (the Chords page: 
        K_KSHAPE,                                             /* (1.4.0, the Drums page: the kick's shape: Four, Ghost, Half,
                                                               * One, P_KDENS's) */
        K_PLAY,                                               /* (the Chords page: Endless or Loop, P_PMODE's bit 2) */
+       K_WALK,                                               /* (1.4.0, the Walk page: the walk's character, P_PMODE's
+                                                              * bits 0-1: Home, Wander, Free) */
        K_SAVE };                                             /* (Setup: a turn saves; it shows whether it's saved) */
 static const char *const LANE_NAME[EN_NDRUM] = {"Kick", "Shaker", "Open", "Rim", "Clap"};
 _Static_assert(P_NPARAMS <= K_LEDS, "the knobs' own codes must come after the parameters");
@@ -194,6 +201,8 @@ static const uint16_t VIEW_KNOB[NVIEWS][4] = {
     {P_SINTRO, P_SMAIN, P_SOUTRO, P_SKIND},      /* (1.4.0, the user's) the Song page: the song's lengths in its order,
                                                   * in bars (a phrase a click), and which parts come first */
     {P_SMODE, K_NONE, K_NONE, K_NONE},           /* (the Song mode page: GLO again; the player's, global) */
+    {K_WALK, P_DRIFT, K_NONE, K_NONE},           /* (1.4.0, the user's) the Walk page: EDIT again; the walk's character
+                                                  * (also on ALGORITHM, as ever) and Change, the Chord page's too */
 };
 static const uint16_t STRIP_PAR[NSTRIP][4] = {
     {P_CHORD, P_CECHO, P_CPLATE, P_CLOW}, {P_PINGS, P_PECHO, P_PPLATE, P_PLOW}, {P_BASS, P_BECHO, P_BPLATE, P_BLOW},
@@ -206,12 +215,12 @@ static int vknob(int v, int i)                   /* a page's knob i: VIEW_KNOB's
 }
 static void page_pos(int v, int *n, int *m)     /* (1.4.0, the user's) a page's place among its button's: n of m (m 1: alone) */
 {
-    static const uint8_t SEQ[8][4] = {{V_DUB, V_SONG, V_KEY}, {V_CHORD, V_CSND, V_CFM, V_CLFO}, {V_TEXTURE, V_PSND, V_PFM},
+    static const uint8_t SEQ[9][4] = {{V_DUB, V_SONG, V_KEY}, {V_CHORD, V_CSND, V_CFM, V_CLFO}, {V_TEXTURE, V_PSND, V_PFM},
                                       {V_BASS, V_BSND, V_BFM}, {V_DRUMS, V_DSND, V_HATS, V_PAT}, {V_SPACE, V_ESND},
-                                      {V_NSND, V_NVOX, V_NLFO}, {V_SETUP, V_SMODE}};
-    static const uint8_t LEN[8] = {3, 4, 3, 3, 4, 2, 3, 2};   /* (1.4.0: HOME's Song page, GLO's Song mode) */
+                                      {V_NSND, V_NVOX, V_NLFO}, {V_SETUP, V_SMODE}, {V_CHORDS, V_WALK}};
+    static const uint8_t LEN[9] = {3, 4, 3, 3, 4, 2, 3, 2, 2};   /* (1.4.0: HOME's Song page, GLO's Song mode, EDIT's Walk) */
     int s, i;
-    for (s = 0; s < 8; s++)
+    for (s = 0; s < 9; s++)
         for (i = 0; i < LEN[s]; i++)
             if (SEQ[s][i] == v) {
                 *n = i + 1, *m = LEN[s];
@@ -255,6 +264,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Level", "Echo", "Plate", "Low cut"},
     {"Intro", "Main", "Outro", "Kind"},
     {"Mode", "", "", ""},
+    {"Walk", "Change", "", ""},
 };
 /* what each knob does, a line: on the rule above the knobs while it's being turned (in capitals; each fits the
  * rule's 228 px: the host's expect helpfit) */
@@ -309,6 +319,7 @@ static const char *const KNOB_HELP[NVIEWS][4] = {
     {"The parts coming in, a phrase a click", "The piece itself, before the outro", "The parts leaving, then silence",
      "Ambient first, or the kick and the bass"},
     {"Endless, a song, or a set of the pieces", "", "", ""},
+    {"Home, Wander or Free: how far it roams", "How long a chord lasts", "", ""},
 };
 
 /* the screen's colours: a dark room, as a dub techno sleeve (grey on black, a cold blue). The chord and
@@ -579,6 +590,8 @@ static int knob_get(int k)
     }
     if (k == K_PLAY)
         return proj.par[P_PMODE] & EN_PLOOP ? 1 : 0;
+    if (k == K_WALK)
+        return (proj.par[P_PMODE] & 3) % EN_NWALK;
     if (k == K_SAVE)
         return ui.dirty ? 1 : 0;
     return 0;
@@ -593,7 +606,7 @@ static void knob_range(int k, int *lo, int *hi)
         *hi = 50;
     } else {
         *lo = 0;
-        *hi = k == K_PLAY ? 1 : k == K_KSHAPE ? 3 : k == K_MODE ? EN_NMODES - 1 : k == K_LEDS ? 2 : k == K_CPU ? 100 : k == K_SLOT ? EN_NPROG - 1 : k == K_CQ ? EN_NCQ - 1 : k == K_CX ? EN_NCX - 1
+        *hi = k == K_PLAY ? 1 : k == K_WALK ? EN_NWALK - 1 : k == K_KSHAPE ? 3 : k == K_MODE ? EN_NMODES - 1 : k == K_LEDS ? 2 : k == K_CPU ? 100 : k == K_SLOT ? EN_NPROG - 1 : k == K_CQ ? EN_NCQ - 1 : k == K_CX ? EN_NCX - 1
             : k == K_LANE ? EN_NDRUM - 1 : k == K_LCH ? 100 : 0;
     }
 }
@@ -603,7 +616,7 @@ static const char *knob_name(int k)
         return en_param_info(k)->name;
     return k == K_LEDS ? "Lights" : k == K_CPU ? "CPU" : k == K_SLOT ? "Slot" : k == K_CQ ? "Chord" : k == K_CX ? "Type"
          : k == K_LANE ? "Lane" : k == K_LCH ? "Chance" : k == K_FILTER ? "Filter" : k == K_DUB ? "Wet"
-         : k == K_ENERGY ? "Energy" : k == K_SPACE ? "Duck" : k == K_MODE ? "Mode" : k == K_KSHAPE ? "Kick" : k == K_PLAY ? "Play" : k == K_SAVE ? "Save" : "";
+         : k == K_ENERGY ? "Energy" : k == K_SPACE ? "Duck" : k == K_MODE ? "Mode" : k == K_KSHAPE ? "Kick" : k == K_PLAY ? "Play" : k == K_WALK ? "Walk" : k == K_SAVE ? "Save" : "";
 }
 static void knob_text(int k, char *b)
 {
@@ -656,6 +669,10 @@ static void knob_text(int k, char *b)
     } else if (k == K_KSHAPE) {
         static const char *const KN[4] = {"Four", "Ghost", "Half", "One"};
         const char *n = KN[(unsigned)v < 4u ? v : 3];
+        while ((*b++ = *n++))
+            ;
+    } else if (k == K_WALK) {
+        const char *n = EN_WALK_NAME[(unsigned)v < EN_NWALK ? v : 0];
         while ((*b++ = *n++))
             ;
     } else if (k == K_PLAY) {
@@ -728,6 +745,10 @@ static void knob_set(int k, int v)
         return;
     } else if (k == K_PLAY) {                    /* (the walk's character kept) */
         knob_set(P_PMODE, (proj.par[P_PMODE] & 3) | (v ? EN_PLOOP : 0));
+        return;
+    } else if (k == K_WALK) {                    /* (Loop kept; its chords walked again at once, as ALGORITHM does) */
+        knob_set(P_PMODE, (proj.par[P_PMODE] & EN_PLOOP) | v);
+        en_prog_rewalk();
         return;
     }
     mark_dirty();
@@ -1151,8 +1172,10 @@ static void edit_released(uint32_t held)
         en_next();
         say("NEXT CHORD", en_playing ? "ON THE BAR" : 0);
         card_show("NEXT CHORD", en_playing ? "on the bar" : "", K_PULSE, 0);
-    } else if (ui.view == V_CHORDS) {            /* tapped: the Chords page (one page: again stays) */
-        ;
+    } else if (ui.view == V_CHORDS) {            /* tapped again: the Walk page (1.4.0, the user's), then back */
+        set_view(V_WALK);
+    } else if (ui.view == V_WALK) {
+        set_view(V_CHORDS);
     } else {
         if (ui.perf) {                           /* (a page's button leaves PERFORM: the keys the scale again) */
             perf_set(0);
@@ -1793,7 +1816,8 @@ static void input(void)
             knob_set(P_NCHAR, c);
             say_name("NOISE", EN_NCHAR_NAME[c]);
             big_show(P_NCHAR, "Noise", K_NOISE);  /* (1.4.0, the user's: ALGORITHM big in the centre too) */
-        } else if (ui.view == V_CHORDS) {        /* the walk's character: its chords walked again, at once */
+        } else if (ui.view == V_CHORDS || ui.view == V_WALK) {   /* the walk's character: its chords walked again, at
+                                                  * once (1.4.0: the Walk page's KNOB 1 too) */
             int w = (((proj.par[P_PMODE] & 3) + (int)(e % EN_NWALK)) % EN_NWALK + EN_NWALK) % EN_NWALK;
             knob_set(P_PMODE, (proj.par[P_PMODE] & EN_PLOOP) | w);
             en_prog_rewalk();
@@ -1821,15 +1845,17 @@ static void input(void)
             big_show(vp, vp == P_KIT ? "Kit" : "Voice", l >= 0 ? LC[l] : K_ACC);   /* (1.4.0: big in the centre) */
         } else {                                 /* the middle of the screen: the ripples, a scope, a spectrum (the mode,
                                                   * a piece's choice, is on the Key page) */
-            static const char *const SCREEN_NAME[UI_NSCREEN] = {"RIPPLES", "SCOPE", "SPECTRUM", "ECHO TRAIL", "FIFTHS",
-                                                                 "TAPE"};
-            proj.screen = (uint8_t)(((int)proj.screen + (int)(e % UI_NSCREEN) + UI_NSCREEN) % UI_NSCREEN);
+            static const char *const SCREEN_NAME[SCR_N] = {"RIPPLES", "SCOPE", "SPECTRUM", "TAPE"};
+            static const char *const SN[SCR_N] = {"Ripples", "Scope", "Spectrum", "Tape"};
+            int at = 0, j;
+            for (j = 0; j < SCR_N; j++)          /* (its place among the four; 1.4.0: the stored numbers kept) */
+                if (SCR_ORDER[j] == ui_screen_ok(proj.screen))
+                    at = j;
+            at = ((at + (int)(e % SCR_N)) % SCR_N + SCR_N) % SCR_N;
+            proj.screen = SCR_ORDER[at];
             mark_dirty();
-            say_name("SCREEN", SCREEN_NAME[proj.screen]);
-            {   /* (1.4.0: big in the centre too) */
-                static const char *const SN[UI_NSCREEN] = {"Ripples", "Scope", "Spectrum", "Echo trail", "Fifths", "Tape"};
-                big_show_text("Screen", SN[proj.screen], (float)proj.screen / (float)(UI_NSCREEN - 1), K_ACC);
-            }
+            say_name("SCREEN", SCREEN_NAME[at]);
+            big_show_text("Screen", SN[at], (float)at / (float)(SCR_N - 1), K_ACC);   /* (1.4.0: big in the centre too) */
         }
         ui.turn_t = plat_ms();
     }
@@ -3804,99 +3830,87 @@ static uint32_t where_sig(uint32_t h)            /* (what they show, for a redra
                        ui.solo << 20 | (uint32_t)ui.lock << 28 | (uint32_t)en_frozen << 29 | (uint32_t)ui.view << 30);
 }
 
-/* (1.4.0, the user's: "other animations, more or less informative") three more views for HOME's screen, on ALGORITHM
- * after the ripples, the scope and the spectrum (kept, the user's: all three) */
-enum { SCR_RIPPLES, SCR_SCOPE, SCR_SPEC, SCR_ECHO, SCR_FIFTHS, SCR_TAPE };
-static int scr_small_chord(int s) { return s != SCR_RIPPLES && s != SCR_FIFTHS; }   /* (the chord small, at the top) */
+/* HOME's screen views, on ALGORITHM: the ripples, the scope, the spectrum and (1.4.0) the tape. (1.4.0's echo trail
+ * and fifths gone, the user's: the fifths now the Walk page's picture; their numbers, 3 and 4, kept out of use, so a
+ * save on one comes back on the ripples: ui_screen_ok) */
+static int scr_small_chord(int s) { return s != SCR_RIPPLES; }   /* (the chord small, at the top) */
 
-/* the Echo trail: the echo as tape running right to left from the head at the right edge, each note a bar as tall as
- * it struck, its repeats the bars after it at the echo's time, as tall as each was measured coming out (the ripples'
- * own measure: a filtered, ducked or dropped echo shows), their tops joined (the feedback's curve); a throw in the
- * accent; the dotted columns the echo's taps back from the head */
-static void draw_echo_trail(uint32_t now)
-{
-    static const uint16_t LC[4] = {K_PAD, K_BELL, K_BASS, K_PULSE};
-    const float ms = en_echo_ms > 20.0f ? en_echo_ms : 400.0f, span = fm_clampf(5.0f * ms, 1600.0f, 4200.0f),
-                pp = 222.0f / span;
-    const int32_t yc = 59, xh = 230;
-    float m;
-    int32_t x, y;
-    int i, k;
-    for (m = ms; m < span; m += ms) {             /* the taps */
-        x = xh - (int32_t)(m * pp + 0.5f);
-        for (y = yc - 27; y <= yc + 27; y += 3)
-            cv_rect(x, y, 1, 1, K_LINE);
-    }
-    for (x = 8; x < xh; x += 4)                   /* the tape's middle */
-        cv_rect(x, yc, 1, 1, K_LINE);
-    cv_rect(xh, yc - 29, 2, 59, mix(K_BG, en_frozen ? K_FROST : K_TEXT, 7));   /* the head */
-    for (i = 0; i < RIP_N; i++) {
-        int32_t px = -1, ph = 0;
-        (void)px, (void)ph;
-        if (!rip[i].on)
-            continue;
-        for (k = 0; k < rip[i].nk; k++) {
-            const float age = (float)(int32_t)(now - (rip[i].t0 + (uint32_t)((float)k * ms))), a = rip[i].a[k];
-            int32_t h, w;
-            uint16_t c;
-            if (age < 0.0f)
-                break;
-            x = xh - 2 - (int32_t)(age * pp + 0.5f);
-            if (x < 8 || a < 0.03f) {
-                px = -1;
-                continue;
-            }
-            h = 1 + (int32_t)(a * 26.0f + 0.5f);
-            w = k ? 2 : 4;
-            c = mix(K_BG, en_frozen ? K_FROST : rip[i].thr ? K_ACC : LC[rip[i].lay & 3],
-                    q16(fm_minf((k ? 0.2f : 0.45f) + 1.2f * a, 1.0f)));   /* (a repeat dimmer than its note) */
-            cv_rect(x - w / 2, yc - h, w, 2 * h + 1, c);
-            if (k)                               /* (its tops: a cap each, the feedback's curve in points) */
-                cv_rect(x - 2, yc - h - 1, 6, 1, mix(K_BG, c, 12)), cv_rect(x - 2, yc + h + 1, 6, 1, mix(K_BG, c, 12));
-            px = x, ph = h;
-        }
-    }
-}
-
-/* the Fifths: the twelve notes round the circle of fifths (C at the top), the key's own a dot, the rest a point; the
- * chord's notes lit and joined (its shape), its root the brightest, white with the kick; the walk's last roots a trail
- * fading behind it; round the outside, the way to the next chord (Change) */
+/* (1.4.0, the user's) the Walk page's picture: the circle of fifths (C at the top, a fifth a step clockwise), the
+ * notes named round it, the key's bright, the rest faint; the chord's notes lit and joined (its shape), its root the
+ * biggest, white with the kick; the walk's last roots a trail fading behind it; inside, the eight slots as a numbered
+ * path (each at its chord's root, joined in their order; the one playing lit in Loop; a gap left out: the chord before
+ * it holds); round the outside, the way to the next chord (Change). At the left, out of the circle's way: the chord's
+ * name, the walk's character (or Loop and where it is), and the slots in order, the one playing lit */
 #define FQ_N 6
-#define FQ_R 36
+#define WK_X 166
+#define WK_Y 82
+#define WK_R 42
 static uint8_t fq_root[FQ_N], fq_n;
 static void fq_xy(int pc, int32_t r, int32_t *x, int32_t *y)
 {
     const float a = (float)((pc * 7) % 12) * (6.2831853f / 12.0f) - 1.5707963f;
-    *x = CX + (int32_t)((float)r * fm_cosf(a) + (fm_cosf(a) < 0.0f ? -0.5f : 0.5f));
-    *y = CY + (int32_t)((float)r * fm_sinf(a) + (fm_sinf(a) < 0.0f ? -0.5f : 0.5f));
+    *x = WK_X + (int32_t)((float)r * fm_cosf(a) + (fm_cosf(a) < 0.0f ? -0.5f : 0.5f));
+    *y = WK_Y + (int32_t)((float)r * fm_sinf(a) + (fm_sinf(a) < 0.0f ? -0.5f : 0.5f));
 }
-static void draw_fifths(void)
+static void draw_walk(void)
 {
     int steps[12], ns = en_scale(proj.pool, steps), i, j, n = 0, inkey[12] = {0}, pcs[EN_NPAD], have[12] = {0};
-    int32_t x, y, x0, y0;
+    int sr[EN_NPROG], ring[12] = {0}, loop = (proj.par[P_PMODE] & EN_PLOOP) != 0, cnt = prog_count();
+    int32_t x, y, x0, y0, sx[EN_NPROG], sy[EN_NPROG];
     const float kg = en_playing ? en_drum_glow[0] : 0.0f;
+    const uint16_t chc = en_frozen ? K_FROST : K_PAD;
+    char nm[16];
     if (!fq_n || fq_root[(fq_n - 1) % FQ_N] != en_chord_root)   /* (a new root: onto the trail) */
         fq_root[fq_n % FQ_N] = en_chord_root, fq_n++;
     for (i = 0; i < ns; i++)
         inkey[(proj.par[P_ROOT] + steps[i]) % 12] = 1;
+    circle(WK_X, WK_Y, WK_R, mix(K_BG, K_LINE, 9));   /* the circle */
     if (!en_frozen && en_drift_bars(proj.par[P_DRIFT]))   /* the way to the next chord, clockwise from the top */
-        for (j = 0; j < (int)(en_drift * 72.0f + 0.5f); j++) {
-            const float a = (float)j * (6.2831853f / 72.0f) - 1.5707963f;
-            cv_rect(CX + (int32_t)(44.0f * fm_cosf(a)), CY + (int32_t)(44.0f * fm_sinf(a)), 2, 2, mix(K_BG, K_PAD, 8));
+        for (j = 0; j < (int)(en_drift * 96.0f + 0.5f); j++) {
+            const float a = (float)j * (6.2831853f / 96.0f) - 1.5707963f;
+            cv_rect(WK_X + (int32_t)((float)(WK_R + 5) * fm_cosf(a)), WK_Y + (int32_t)((float)(WK_R + 5) * fm_sinf(a)), 2, 2,
+                    mix(K_BG, K_PAD, 8));
         }
-    for (i = 1; i < FQ_N && i < (int)fq_n; i++) {   /* the trail: the roots before, older dimmer */
-        const int a = (int)(fq_n - 1u - (unsigned)i), b = a + 1;
-        fq_xy(fq_root[a % FQ_N], FQ_R, &x0, &y0);
-        fq_xy(fq_root[b % FQ_N], FQ_R, &x, &y);
-        line(x0, y0, x, y, mix(K_BG, K_ACC, 10 - 2 * i > 1 ? 10 - 2 * i : 1));
-    }
-    circle(CX, CY, FQ_R, mix(K_BG, K_LINE, 9));   /* the circle */
-    for (i = 0; i < 12; i++) {                    /* the notes: the key's a dot, the rest a point */
-        fq_xy(i, FQ_R, &x, &y);
+    for (i = 0; i < 12; i++) {                    /* the notes: named round it, the key's bright; a dot on the circle */
+        fq_xy(i, WK_R + 15, &x, &y);
+        text_c(x, y - 7, &FONT_XS, EN_NOTE_NAME[i], inkey[i] ? K_DIM : mix(K_BG, K_LINE, 10));
+        fq_xy(i, WK_R, &x, &y);
         if (inkey[i])
             cv_disc(x, y, 2, K_DIM);
         else
             cv_disc(x, y, 1, K_LINE);
+    }
+    for (i = 0; i < EN_NPROG; i++) {              /* the slots: each at its chord's root, inside (a second on a root: further in) */
+        int rr = -1, q, xx;
+        if (!slot_is_gap(i) && (!loop || i < cnt)) {
+            rr = proj.par[P_CR0 + i] % 12;
+            if (slot_is_walk(i))
+                walk_written(i, &rr, &q, &xx);
+            rr %= 12;
+            fq_xy(rr, WK_R - 12 - 10 * (ring[rr] < 2 ? ring[rr] : 2), &sx[i], &sy[i]);
+            ring[rr]++;
+        }
+        sr[i] = rr;
+    }
+    {   /* the path: the slots joined in their order (in Loop, round back to the first) */
+        int first = -1, prev = -1;
+        for (i = 0; i < EN_NPROG; i++) {
+            if (sr[i] < 0)
+                continue;
+            if (prev >= 0)
+                line(sx[prev], sy[prev], sx[i], sy[i], mix(K_BG, K_DIM, 5));
+            else
+                first = i;
+            prev = i;
+        }
+        if (loop && first >= 0 && prev != first)
+            line(sx[prev], sy[prev], sx[first], sy[first], mix(K_BG, K_DIM, 3));
+    }
+    for (i = 1; i < FQ_N && i < (int)fq_n; i++) {   /* the trail: the roots before, older dimmer */
+        const int a = (int)(fq_n - 1u - (unsigned)i), b = a + 1;
+        fq_xy(fq_root[a % FQ_N], WK_R, &x0, &y0);
+        fq_xy(fq_root[b % FQ_N], WK_R, &x, &y);
+        line(x0, y0, x, y, mix(K_BG, K_ACC, 10 - 2 * i > 1 ? 10 - 2 * i : 1));
     }
     for (i = 0; i < EN_NPAD; i++) {               /* the chord: its notes in fifths order, joined round */
         const int pc = en_chord[i] % 12;
@@ -3908,18 +3922,55 @@ static void draw_fifths(void)
             const int t = pcs[j];
             pcs[j] = pcs[j - 1], pcs[j - 1] = t;
         }
-    for (i = 0; i < n; i++) {
-        fq_xy(pcs[i], FQ_R, &x0, &y0);
-        fq_xy(pcs[(i + 1) % n], FQ_R, &x, &y);
-        if (n > 1)
-            line(x0, y0, x, y, mix(K_BG, en_frozen ? K_FROST : K_PAD, 8));
+    for (i = 0; i < n && n > 1; i++) {
+        fq_xy(pcs[i], WK_R, &x0, &y0);
+        fq_xy(pcs[(i + 1) % n], WK_R, &x, &y);
+        line(x0, y0, x, y, mix(K_BG, chc, 9));
     }
     for (i = 0; i < n; i++) {
-        fq_xy(pcs[i], FQ_R, &x, &y);
-        cv_disc(x, y, 4, en_frozen ? K_FROST : K_PAD);
+        fq_xy(pcs[i], WK_R, &x, &y);
+        cv_disc(x, y, 4, chc);
     }
-    fq_xy(en_chord_root, FQ_R, &x, &y);           /* its root */
+    fq_xy(en_chord_root, WK_R, &x, &y);           /* its root */
     cv_disc(x, y, 6, en_frozen ? K_FROST : mix(K_ACC, K_TEXT, q16(kg * 1.4f)));
+    for (i = 0; i < EN_NPROG; i++) {              /* the slots' numbers, over the path */
+        const int on = loop && en_playing && i == en_prog_pos;
+        char d[2];
+        if (sr[i] < 0)
+            continue;
+        d[0] = (char)('1' + i), d[1] = 0;
+        cv_disc(sx[i], sy[i], 5, on ? K_PAD : i == ui.slot ? K_PANEL : mix(K_BG, K_PANEL, 10));
+        text_c(sx[i], sy[i] - 7, &FONT_XS, d, on ? K_BG : slot_is_walk(i) ? K_PAD : K_TEXT);
+    }
+    chord_now(nm);                                /* at the left: the chord, how it moves, the slots in order */
+    if (text_w(&FONT_C, nm) <= 92)
+        cv_text(8, 30, &FONT_C, nm, en_frozen ? K_FROST : mix(K_TEXT, K_ACC, 16 - q16(kg * 1.4f)));
+    else
+        cv_text(8, 34, &FONT_B, nm, en_frozen ? K_FROST : K_TEXT);
+    if (loop && cnt) {
+        char t[12] = "LOOP ";
+        t[5] = (char)('1' + (en_prog_pos >= 0 ? en_prog_pos : 0)), t[6] = '/', t[7] = (char)('0' + cnt), t[8] = 0;
+        cv_text(8, 58, &FONT_XS, t, K_DIM);
+    } else {
+        char t[12];
+        caps(t, EN_WALK_NAME[(proj.par[P_PMODE] & 3) % EN_NWALK], sizeof t);
+        cv_text(8, 58, &FONT_XS, t, K_DIM);
+    }
+    for (i = 0; i < EN_NPROG; i++) {              /* the slots, two columns of four: their chords, the one playing lit */
+        const int32_t x = 8 + (i >> 2) * 46, y = 76 + (i & 3) * 15;   /* (clear of the notes' names) */
+        const int on = loop && en_playing && i == en_prog_pos;
+        char d[2], cn[16];
+        d[0] = (char)('1' + i), d[1] = 0;
+        if (on)
+            cv_round(x - 2, y + 1, 44, 14, 3, K_PAD);
+        cv_text(x, y, &FONT_XS, d, on ? K_BG : K_LINE);
+        if (sr[i] >= 0) {
+            const char *l = slot_label(i, cn);
+            cv_text(x + 9, y, &FONT_XS, l, on ? K_BG : slot_is_walk(i) ? K_PAD : K_DIM);
+        } else {
+            cv_text(x + 9, y, &FONT_XS, "-", K_LINE);
+        }
+    }
 }
 
 /* the Tape: two reels, the tape running from the left one to the right past three heads (erase, record, play: the
@@ -4076,6 +4127,24 @@ static void draw_main(void)
         }
         return;
     }
+    if (ui.view == V_WALK) {                     /* (1.4.0) the Walk page: the circle of fifths, the slots' path */
+        h = hash(hash(0x57414C4Bu, ui.slot | (uint32_t)proj.par[P_PMODE] << 4), (uint32_t)en_prog_pos + 1u);
+        for (i = 0; i < EN_NPROG; i++)
+            h = hash(h, (uint32_t)proj.par[P_CR0 + i] | (uint32_t)proj.par[P_CQ0 + i] << 4 | (uint32_t)proj.par[P_CX0 + i] << 8);
+        h = hash(where_sig(h), (uint32_t)en_chord_root | (uint32_t)(en_drift * 96.0f) << 4 | (uint32_t)en_frozen << 12 |
+                 (uint32_t)proj.par[P_ROOT] << 13 | (uint32_t)proj.par[P_MODE] << 17 | (uint32_t)proj.par[P_DRIFT] << 22);
+        for (i = 0; i < EN_NPAD; i++)
+            h = hash(h, en_chord[i]);
+        if (h != ui.sig[1] || big_on(now) || (en_playing && en_drum_glow[0] > 0.01f)) {   /* (the root white with the kick) */
+            ui.sig[1] = h;
+            cv_begin(240, MAIN_H, K_BG);
+            draw_walk();
+            draw_where(now);
+            draw_big(now);
+            cv_blit(0, MAIN_Y);
+        }
+        return;
+    }
     if (ui.view == V_PERF || ui.view == V_STRIP) {   /* (1.4.0) the Arrangement page: the meters */
         h = hash(where_sig(hash(desk_sig(), ui.view)), (uint32_t)card_on(now) | (uint32_t)big_on(now) << 1 |
                  (en_phrase_bar == 7 && en_change_next ? (now / 200u & 1u) << 2 : 0u) | (uint32_t)en_drift_bars(proj.par[P_DRIFT]) << 3);
@@ -4131,19 +4200,11 @@ static void draw_main(void)
     } else if (lfo_page(ui.view)) {              /* (1.4.0) an LFO page: its path */
         draw_lfo(ui.view == V_NLFO);
         moving = 0;
-    } else if (proj.screen == SCR_SCOPE) {       /* (HOME again: a scope, a spectrum, the ripples; 1.4.0: three more) */
+    } else if (proj.screen == SCR_SCOPE) {       /* (HOME again: a scope, a spectrum, the ripples; 1.4.0: the tape) */
         draw_scope();
         moving = 1;
     } else if (proj.screen == SCR_SPEC) {
         draw_spec();
-        moving = 1;
-    } else if (proj.screen == SCR_ECHO) {
-        cv_clip(0, PIC_Y1);
-        draw_echo_trail(now);
-        cv_clip(0, MAIN_H);
-        moving = 1;
-    } else if (proj.screen == SCR_FIFTHS) {
-        draw_fifths();
         moving = 1;
     } else if (proj.screen == SCR_TAPE) {
         cv_clip(0, PIC_Y1);
@@ -4187,7 +4248,7 @@ static void draw_main(void)
     }
     if (ch_age < 900u)
         moving = 1;
-    if (named && scr_small_chord(proj.screen)) {   /* the chord: over the scope, the spectrum, the trail, the tape: small */
+    if (named && scr_small_chord(proj.screen)) {   /* the chord: over the scope, the spectrum, the tape: small */
         text_c(CX, 1, &FONT_S, nm, ch_c);
     } else if (named) {                          /* the chord, in the middle */
         if ((ch_age < 200u || (ch_age >= 400u && ch_age < 600u)) && text_w(&FONT_L, nm) <= 96) {   /* (big, small, big,
@@ -4242,7 +4303,7 @@ static void draw_knobs(void)
     uint32_t h = hash(2166136261u, ui.view | (uint32_t)ui.touched << 8), i;
     if (view_voice(ui.view) >= 0)
         h = hash(h, (uint32_t)proj.par[view_voice(ui.view)]);
-    if (ui.view == V_CHORDS)
+    if (ui.view == V_CHORDS || ui.view == V_WALK)
         h = hash(h, (uint32_t)proj.par[P_PMODE]);
     if (noise_page(ui.view))
         h = hash(h, (uint32_t)proj.par[P_NCHAR]);
@@ -4546,7 +4607,7 @@ static void sp_page(int all)
         sp_cat(", ");
         sp_cat(EN_SMODE_NAME[proj.par[P_SMODE] % EN_NSMODE]);
     }
-    if (ui.view == V_CHORDS) {
+    if (ui.view == V_CHORDS || ui.view == V_WALK) {
         sp_cat(", walk ");
         sp_cat(EN_WALK_NAME[(proj.par[P_PMODE] & 3) % EN_NWALK]);
     }

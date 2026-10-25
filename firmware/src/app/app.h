@@ -54,7 +54,7 @@ typedef struct {
     uint16_t pool;
     uint8_t pings[EN_PINGS_N];           /* its ping loops as they were left (en_pings_get) */
     uint8_t pings_ok;                    /* 0: none kept (a recipe, or a project from 1.0.0): grown afresh */
-    uint8_t screen;                      /* its screen view, 0..UI_NSCREEN-1: ripples, scope, spectrum, echo trail, fifths, tape (before 1.2.0: 0) */
+    uint8_t screen;                      /* its screen view: 0 ripples, 1 scope, 2 spectrum, 5 tape (3, 4: 1.4.0's echo trail and fifths, gone: ripples; before 1.2.0: 0) */
 } slot_t;
 
 typedef struct {
@@ -63,7 +63,7 @@ typedef struct {
     uint16_t pool;                       /* its scale, relative to the root (bit 0 = the root) */
     uint8_t leds;                        /* lights: 0 off, 1 keys and the buttons' glow, 2 keys only */
     uint8_t piece;                       /* which piece */
-    uint8_t screen;                      /* the Dub page's middle: 0 ripples, 1 scope, 2 spectrum, 3 echo trail, 4 fifths, 5 tape */
+    uint8_t screen;                      /* the Dub page's middle: 0 ripples, 1 scope, 2 spectrum, 5 tape (ui_screen_ok) */
     uint8_t rsv0;
     slot_t slot[NPIECES];                /* every piece as it was left (Tune and MIDI out are global) */
     uint8_t rsv[16];                     /* room to grow */
@@ -84,6 +84,9 @@ void ui_frame(void);
 void ui_input_only(void);
 int ui_dirty(void);
 void ui_say(const char *a, const char *b);
-#define UI_NSCREEN 6                     /* (1.4.0) the screen's views on ALGORITHM (the last three prototypes) */
+#define UI_NSCREEN 6                     /* (1.4.0) the screen views' stored range: 0 ripples, 1 scope, 2 spectrum, 5 tape (3, 4,
+                                          * the echo trail and the fifths, gone: the user's; the values kept, so a save
+                                          * needs no format step) */
+static inline uint8_t ui_screen_ok(uint32_t v) { return v < 3u || v == 5u ? (uint8_t)v : 0u; }   /* (gone: ripples) */
 #define UI_SPLASH_N 26                   /* the launch screen's frames (~1.4 s at 55 ms) */
 void ui_splash(int f);                   /* frame f of the launch screen (the last: as it stays) */
