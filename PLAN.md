@@ -897,8 +897,8 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   from the head, the measured repeats as bars), the **Fifths** (the circle of fifths: the key, the chord's shape, the
   walk's trail, the way to the next chord), the **Tape** (two reels at the tempo, winding through a song; record and
   play heads lit). Previews in build/vis/ (MP4, GIF, still). Cost: the ripples ~7.7k pixels a frame at their
-  busiest (2.2k before), the rest under ~6.5k, against the 34.6k every frame clears and sends. **Open:** which
-  prototypes stay (and their names); more ideas (a dub desk of light
+  busiest (2.2k before), the rest under ~6.5k, against the 34.6k every frame clears and sends. **Kept, all three** (the user, 2026-10-25: "I like the three new visualisations, really"); more ideas
+  for later (a dub desk of light
   columns, the Mixer's rides, the song as a horizon).
 - **Still missing (the user, 2026-10-24: "don't forget"):**
   - ~~**The virtual dub mixer**~~ (built, dub-1.4-mixer, below).

@@ -1755,7 +1755,7 @@ static void input(void)
             proj.screen = (uint8_t)(((int)proj.screen + (int)(e % UI_NSCREEN) + UI_NSCREEN) % UI_NSCREEN);
             mark_dirty();
             say_name("SCREEN", SCREEN_NAME[proj.screen]);
-            {   /* (1.4.0: big in the centre too; the last three prototypes, to judge) */
+            {   /* (1.4.0: big in the centre too) */
                 static const char *const SN[UI_NSCREEN] = {"Ripples", "Scope", "Spectrum", "Echo trail", "Fifths", "Tape"};
                 big_show_text("Screen", SN[proj.screen], (float)proj.screen / (float)(UI_NSCREEN - 1), K_ACC);
             }
@@ -3726,7 +3726,7 @@ static uint32_t where_sig(uint32_t h)            /* (what they show, for a redra
 }
 
 /* (1.4.0, the user's: "other animations, more or less informative") three more views for HOME's screen, on ALGORITHM
- * after the ripples, the scope and the spectrum; prototypes, to be judged on the FM-1 */
+ * after the ripples, the scope and the spectrum (kept, the user's: all three) */
 enum { SCR_RIPPLES, SCR_SCOPE, SCR_SPEC, SCR_ECHO, SCR_FIFTHS, SCR_TAPE };
 static int scr_small_chord(int s) { return s != SCR_RIPPLES && s != SCR_FIFTHS; }   /* (the chord small, at the top) */
 
