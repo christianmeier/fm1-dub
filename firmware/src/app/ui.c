@@ -3776,7 +3776,7 @@ static void big_title(const char *name, uint16_t col)
 {
     char t[24];
     caps(t, name, sizeof t);
-    text_c(CX, -2, &FONT_C, t, col);
+    text_c(CX, 0, &FONT_C, t, col);   /* (1.4.0, the user's: 2 px of air under the panel's top) */
 }
 /* (1.4.0, the user's: the big ring more conspicuous) a panel behind a big ring, its name and its help: a rounded
  * rectangle, what's behind it darkened to a quarter (f: the ring's fade, 16 shown), a thin edge in its colour; as wide
@@ -4451,11 +4451,13 @@ static int ride_on_knob(int k, float *at)        /* a strip's knob the mixer is 
         }
     return 0;
 }
-/* (1.4.0, the user's: the knobs without their numbers) the strip's geometry: a ring's centre, radius and thickness
- * (bigger than before: 14 and 4.2, were 12 and 3.4), the numbers' peek as a page opens and its fade */
-#define KNB_CY 40
-#define KNB_R 14
-#define KNB_TH 4.2f
+/* (1.4.0, the user's: the knobs without their numbers; then the room they freed used) the strip's geometry: a ring's
+ * centre, radius and thickness (16 and 5, filling the strip where the numbers were; 14 and 4.2 before, 12 and 3.4 at
+ * first), the names' line, the numbers' peek as a page opens and its fade */
+#define KNB_CY 46
+#define KNB_R 16
+#define KNB_TH 5.0f
+#define KNB_NAME_Y 13
 #define KNB_FADE 300u
 static int text_is_number(const char *t)         /* a value that's a number alone ("55", "+20", "-5", "100%"): the ring
                                                   * says it; a word or a unit kept ("Wander", "64 bars", "LP 800 Hz") */
@@ -4466,9 +4468,44 @@ static int text_is_number(const char *t)         /* a value that's a number alon
             return 0;
     return n > 0;
 }
+static int text_has_digit(const char *t)
+{
+    for (; *t; t++)
+        if (*t >= '0' && *t <= '9')
+            return 1;
+    return 0;
+}
+/* (1.4.0, the user's) the three kinds of knob, each drawn for what it is: a ring alone (a number: its peek inside it),
+ * a ring with its unit inside (the strip's Filter's "LP 2.6k", the song's "32 bars", the Feedback's seconds), or a
+ * selector (a word: the word large where the ring would be, a dot an option under it). A selector: a few positions
+ * (under ten: the old switches, the Slot, the LFO's rate, Change), or named values (a voice, the Root, the Mode);
+ * judged by the knob's ends, not its value now (the Filter's "Off" at 0 stays a unit) */
+enum { KK_RING, KK_UNIT, KK_SEL };
+static void knob_text(int k, char *b);
+static int knob_kind(int k, int lo, int hi)
+{
+    char a[16], z[16];
+    if (k == K_CPU)
+        return KK_RING;
+    if (hi - lo < 10)
+        return KK_SEL;
+    if (k < P_NPARAMS) {
+        en_param_text(k, lo, a);
+        en_param_text(k, hi, z);
+        if (!text_has_digit(a) && !text_has_digit(z))
+            return KK_SEL;
+        return text_is_number(a) && text_is_number(z) ? KK_RING : KK_UNIT;
+    }
+    knob_text(k, a);
+    return !text_has_digit(a) ? KK_SEL : text_is_number(a) ? KK_RING : KK_UNIT;
+}
 static void knob_label(int32_t cx, const char *t, uint16_t c)   /* a knob's name: a size up where it fits its cell */
 {
-    text_c(cx, 11, text_w(&FONT_S, t) <= 56 ? &FONT_S : &FONT_XS, t, c);
+    text_c(cx, KNB_NAME_Y, text_w(&FONT_S, t) <= 56 ? &FONT_S : &FONT_XS, t, c);
+}
+static const felucca_font_t *knob_font(const char *t, int32_t w)   /* the biggest face that fits w */
+{
+    return text_w(&FONT_B, t) <= w ? &FONT_B : text_w(&FONT_S, t) <= w ? &FONT_S : &FONT_XS;
 }
 static void draw_knobs(void)
 {
@@ -4555,7 +4592,7 @@ static void draw_knobs(void)
     cv_oy = 4;                                   /* (the knobs under it 4 px lower: the strip 72 px, the rule's room) */
     for (i = 0; i < 4; i++) {
         const int off = fm_knob_off(ui.view, (int)i);   /* (a voice not FM: all grey; Ratio on two ops) */
-        int k = vknob(ui.view, i), lo, hi, v, hot = now_touch && ui.touched == (int)i && !off, ring = 0;
+        int k = vknob(ui.view, i), lo, hi, v, hot = now_touch && ui.touched == (int)i && !off, kind;
         int32_t x = (int32_t)i * 60, cx = x + 30;
         char t[16];
         static const uint16_t STC[NSTRIP] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_TEXT, K_NOISE};   /* (a strip: its part's) */
@@ -4563,7 +4600,7 @@ static void draw_knobs(void)
         if (k == K_NONE && KNOB_LABEL[ui.view][i][0]) {   /* (1.4.0: a knob to come: its name greyed, its ring empty) */
             caps(t, KNOB_LABEL[ui.view][i], sizeof t);
             if (i)
-                cv_rect(x, 14, 1, 50, K_LINE);
+                cv_rect(x, 16, 1, 50, K_LINE);
             knob_label(cx, t, K_LINE);
             arc_th(cx, KNB_CY, KNB_R, KNB_TH, 0.0f, mix(K_BG, K_LINE, 10), K_LINE, K_BG, 0);
             continue;
@@ -4571,25 +4608,46 @@ static void draw_knobs(void)
         if (k == K_NONE)
             continue;
         if (i)
-            cv_rect(x, 14, 1, 50, K_LINE);
+            cv_rect(x, 16, 1, 50, K_LINE);
         if (hot)
             cv_round(x + 3, 10, 54, 58, 6, K_PANEL);
         knob_range(k, &lo, &hi);
         v = off ? 0 : knob_get(k);
         caps(t, KNOB_LABEL[ui.view][i], sizeof t);
-        knob_label(cx, t, off ? K_DIM : K_TEXT);   /* (1.4.0, the user's: the names brighter, a size up) */
-        if (k == K_SAVE) {                       /* (Save: a dot, lit while there's something to save) */
-            cv_disc(cx, KNB_CY, 5, v ? K_ACC : K_LINE);
-        } else if (k != K_CPU && hi - lo < 10) { /* a switch: its positions as pips (up to ten) */
-            int n = hi - lo + 1, j, pw = n > 6 ? 3 : n > 4 ? 6 : 9, gap = n > 6 ? 2 : 3, w0 = n * (pw + gap) - gap;
-            for (j = 0; j < n; j++)
-                cv_round(cx - w0 / 2 + j * (pw + gap), KNB_CY - 4, pw, 8, 2, j == v - lo ? fill : K_LINE);
-        } else if (k != K_CPU) {
+        knob_label(cx, t, off ? K_DIM : K_TEXT);   /* (1.4.0, the user's: the names brighter, a size up, 2 px lower) */
+        if (off && k < P_NPARAMS)
+            en_param_text(k, 0, t);
+        else
+            knob_text(k, t);
+        kind = k == K_SAVE ? KK_SEL : knob_kind(k, lo, hi);
+        if (k == K_SAVE) {                       /* (Save: its word, a dot under it lit while there's something to save) */
+            text_c(cx, KNB_CY - 12, &FONT_B, t, off ? K_DIM : hot ? K_ACC : K_TEXT);
+            cv_disc(cx, KNB_CY + 12, 3, v ? K_ACC : K_LINE);
+        } else if (kind == KK_SEL) {             /* a selector: the word large, where a ring would be; its options as dots
+                                                  * under it (a thin bar with its place, past twelve) */
+            const int n = hi - lo + 1, at = v - lo;
+            const felucca_font_t *f = knob_font(t, 56);
+            text_c(cx, KNB_CY - (f == &FONT_XS ? 10 : 12), f, t, off ? K_DIM : hot ? K_ACC : K_TEXT);
+            if (n <= 12) {
+                const int32_t gap = n > 8 ? 4 : 6, w0 = (n - 1) * gap;
+                int j;
+                for (j = 0; j < n; j++) {
+                    const int32_t dx = cx - w0 / 2 + j * gap;
+                    if (j == at)
+                        cv_round(dx - 2, KNB_CY + 9, 5, 5, 2, fill);
+                    else
+                        cv_rect(dx, KNB_CY + 11, 1, 1, K_DIM);
+                }
+            } else {
+                const int32_t w0 = 40, px = cx - w0 / 2 + (n > 1 ? at * (w0 - 4) / (n - 1) : 0);
+                cv_rect(cx - w0 / 2, KNB_CY + 11, w0, 1, K_LINE);
+                cv_round(px, KNB_CY + 9, 5, 5, 2, fill);
+            }
+        } else {
             float nw, rr;
             float ra;
             const int lfo_on = lfo_on_knob(k, &nw, &rr) && !off, ride = !lfo_on && ride_on_knob(k, &ra) && hi > lo;   /* (an
                                                   * LFO on it: its dot the one; the dub mixer riding it, as alike) */
-            ring = 1;
             if (lo < 0)                          /* (a centred knob: its 0 marked over the ring's top) */
                 cv_rect(cx, KNB_CY - KNB_R - 3, 1, 2, K_DIM);
             arc_th(cx, KNB_CY, KNB_R, KNB_TH, hi > lo ? (float)(v - lo) / (float)(hi - lo) : 0.0f, K_LINE, fill, bg,
@@ -4611,16 +4669,28 @@ static void draw_knobs(void)
                 arc_mark_th(cx, KNB_CY, KNB_R, KNB_TH, 0.4f, K_TEXT);
                 arc_mark_th(cx, KNB_CY, KNB_R, KNB_TH, 0.7f, K_TEXT);
             }
-        }
-        if (off && k < P_NPARAMS)
-            en_param_text(k, 0, t);
-        else
-            knob_text(k, t);
-        {   /* (1.4.0, the user's) a ring's number only a moment as the page opens (or always, Setup's Values); a word
-             * or a unit always (a switch's, the walk's, the bars, the Hz): the ring says how much, the word what */
-            const int f = ring && text_is_number(t) ? peek : 16;
-            if (f > 0)
-                text_c(cx, 53, &FONT_B, t, mix(K_BG, off ? K_DIM : hot ? K_ACC : K_TEXT, f));
+            {   /* (1.4.0, the user's) inside the ring: a unit's value always, small ("LP 2.6k", "32 bars"); a number only
+                 * a moment as the page opens (or always, Setup's Values), as big as fits */
+                const int32_t in = 2 * (KNB_R - (int32_t)KNB_TH) - 2;
+                const int f = kind == KK_UNIT ? 16 : peek;
+                if (f > 0) {
+                    const felucca_font_t *fn = kind == KK_UNIT ? &FONT_XS : knob_font(t, in);
+                    if (kind == KK_UNIT && text_w(&FONT_XS, t) > in + 6) {   /* (too wide: the unit's word dropped, the
+                                                  * figure kept: "LP 2.6k" as "2.6k", "32 bars" as "32") */
+                        char *sp = t;
+                        while (*sp && *sp != ' ')
+                            sp++;
+                        if (*sp == ' ' && sp == t + 2 && t[0] >= 'A' && t[0] <= 'Z') {   /* ("LP 2.6k": the figure) */
+                            char *d = t, *q = sp + 1;
+                            while ((*d++ = *q++))
+                                ;
+                        } else if (*sp == ' ') {     /* ("32 bars": the figure alone) */
+                            *sp = 0;
+                        }
+                    }
+                    text_c(cx, KNB_CY - (fn == &FONT_XS ? 8 : 9), fn, t, mix(K_BG, off ? K_DIM : hot ? K_ACC : K_TEXT, f));
+                }
+            }
         }
     }
     cv_blit(0, KNB_Y);
