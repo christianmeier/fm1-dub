@@ -105,7 +105,7 @@ The drawing at the top shows them all; here they are in more detail.
 | PLAY | Play / rest. DUB-1 starts playing by itself when it's switched on. At rest, the echo's feedback eases under 90% so its tails die away, the reverb rings out and the noise fades. Playing again starts from the first bar of a phrase. Lit while playing. In Song or Set mode (GLO again: [Songs](#songs-an-intro-the-main-an-outro)) PLAY starts a song from its intro, and the song stops PLAY by itself at its end. **HOME held + PLAY:** the **outro**, from the next phrase, in any mode (Endless too: a way to land a piece by hand); again, in it or while it waits: back to the main. |
 | REC | A tap: **dub hold**: the echo stops listening and repeats what it holds, sample for sample, for ever; the reverb stops listening too and rings on; the chord doesn't move. The stabs, pings and drums go on, dry, above it. Tap again to let go. Lit while held. Held: the **effects grid** (below). |
 | EDIT | A tap: the **Chords page** (below): the eight chords coming, to see and change (again, it stays). Held (half a second): the next chord, at the start of the next bar (at once while resting; in dub hold, once you let go); a card says NEXT CHORD until the chord changes. Held on (1.5 s): **new chords**, the walk's all walked again (yours, the gaps and the one playing kept); a red card, NEW CHORDS. |
-| SEL | A tap: the **Arrangement page** (PERFORM's until 1.4.0): the screen shows each part's level on a desk's meters, the knobs are Width, Mixer (the dub mixer), Wet and Duck, and the keys stop being the scale: they mute and solo the parts (white 1–6 held: a part's channel strip), make the dub moves and throw the hats (see below). Again, it stays; a page's button or SELECT leaves it. Lit while on. **Held** (half a second), on any page: **Lock** on or off (below). |
+| SEL | A tap: the **Arrangement page** (PERFORM's until 1.4.0): the screen shows each part's level on a desk's meters, the knobs are Width, Mixer (the dub mixer), Wet and Duck, and the keys stop being the scale: they mute and solo the parts (white 1–6 held: a part's channel strip; a black key held: that part thrown into the echo), make the dub moves and play five of the grid's effects (see below). Again, it stays; a page's button or SELECT leaves it. Lit while on. **Held** (half a second), on any page: **Lock** on or off (below). |
 | HOME | The **Form** page (Dub until 1.4.0): how the piece unfolds (Energy, Evolve, Motion). Again: the **Song** page (its intro, main and outro, 1.4.0); again: the Key page (tempo, root, mode, swing), and again back to Form; HOME blinks on the Song and Key pages. Held on for 1.5 s (nothing turned meanwhile): **a shake of everything**, the chord, the pings, the bass, the drums and the noise at once ("SHAKE ALL"), the page kept; again and again, to explore until something sounds right. Held with SELECT turned: the tempo. |
 | ENV · ARP · LFO · SEQ | The layers' pages: Chord, Pings, Bass, Drums, each its part (see [The pages](#8-the-pages)). Again: the layer's voice page (**Chord voice**, **Pings voice**, **Bass voice**; the drums' **Kick**), then its FM page or, for the drums, the **Hats** page and then the Pattern page, then back. The chord has one more: after its FM page (for every chord voice: its Colour is there), the **Chord LFO** page, then back. Held (half a second): a **nudge** to the layer's sound; held on (1.5 s): a **shake** (below). |
 | FX · GLO | The **Dub** page, the echo and the plate (Space until 1.4.0; FX again: the **Echo page**, the echo's blur and tone, the plate's size and its cloud, FX blinking; again, back); the Setup page, for what holds for every piece (GLO again: **Song mode**, Endless, Song or Set; again, back). The lit button shows the page. FX held: a nudge to the space; held on: a shake (a new echo time). **GLO held** (half a second, then let go): **saves** all eight pieces (a card, SAVED); held on (1.5 s): the piece back to its recipe (a red card, RESET). |
@@ -197,7 +197,7 @@ the noise (NOI), and under them the master (MST). Each row is a meter of LED seg
   every row; or *the layers'*, each row in its layer's colour (the master white), its top two
   segments amber and red.
 - **A muted part's row is dark** (its notch kept, grey); with a **solo** on, the rows soloed out are
-  dimmed, the one you hear bright. (The noise has no solo key: a solo quiets it with the rest.)
+  dimmed, the one you hear bright.
 - **DUCK**, under the master, a row as the others: the duck, as a compressor's gain reduction, eating segments from the
   right with each kick (2 dB a segment): on the bass while it plays (the deepest, the pump you
   hear), else on the rest of the music. Duck at 0, it stays dark.
@@ -206,7 +206,7 @@ the noise (NOI), and under them the master (MST). Each row is a meter of LED seg
 
 On the Arrangement page, each key says what it did on a card in the middle for a moment (under a second, so the
 meters under it show the effect): a mute ("PINGS muted", in the part's colour), a solo, a move as you press it
-("THROW: every stab into the echo"). A page's button **leaves the Arrangement page**: the keys are the scale again
+("CHORD THROW: every stab into the echo"). A page's button **leaves the Arrangement page**: the keys are the scale again
 (the mutes and solos stay), and SEL brings it back.
 
 **Hold white 1–6** for a part's **channel strip**, as on a mixing desk: KNOB 1–4 that part's
@@ -234,19 +234,25 @@ Level is its strip's now, the noise's too.)
 
 ![The Noise strip: white 6 held, NOISE PLATE 60 in the big ring, LEVEL 8, ECHO 50, PLATE 60, LOW CUT 0](img/screen-strip-noise.png "The Noise strip")
 
-A thrown stab still goes into the echo whatever the chord's Echo, and the Arrangement page's Wet
+A thrown stab (and any part thrown with its black key) still goes into the echo whatever its Echo, and the Arrangement page's Wet
 moves everything on top. The strips are the piece's, saved with it.
-A page's button goes to its page (HOME: the Form page). The keys, from the lowest up,
-are the parts, an empty white key, then the moves. Each key that does something is lit:
+A page's button goes to its page (HOME: the Form page). The keys, from the lowest up, are the parts (each black key
+the part of the white key on its left), an empty white key, the global moves, then five of the effects grid's effects.
+Each key that does something is lit:
 
-| | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| **Black keys:** solo, the hats' throw | Chord | Pings | Bass | Kick | Hats | Hats throw (held) | | | | | | |
-| **White keys:** parts, moves | Chord | Pings | Bass | Kick | Hats | Noise | — | Throw | Open | Shut | Drop | Echo |
+| Keys | Notes | A tap | Held |
+|---|---|---|---|
+| **White 1–6** | F3 G3 A3 B3 C4 D4 | mutes the chord, pings, bass, kick, hats, noise (and back) | that part's channel strip on the knobs (above) |
+| **Black 1–5** | F♯3 G♯3 A♯3 C♯4 D♯4 | solos the chord, pings, bass, hats, noise (and back) | **throws** that part into the echo while held |
+| **White 7** | E4 | the gap: dark, does nothing | |
+| **White 8–11** | F4 G4 A4 B4 | | the global moves: **Open**, **Shut**, **Drop**, **Echo** |
+| **White 12–16** | C5 D5 E5 F5 G5 | | five effects: **Time x2**, **Freeze**, **Tape stop**, **Stutter**, **Siren** |
+| Black 6–11 | F♯4 and up | nothing (dark) | |
 
-The first five black keys (F♯ G♯ A♯, C♯ D♯) are the solos; the sixth (F♯, the next octave's) sits
-just above Throw, the hats' throw beside the stabs'. White 7 (E) is dark and does nothing: the gap
-between the parts and the moves, so you can find them without looking.
+Each black key belongs to the white key on its left: F♯3 the chord (F3), G♯3 the pings, A♯3 the bass, C♯4 the hats
+(C4), D♯4 the noise (D4). The kick (B3) has no black key, so it has no solo and no throw: in the classics the kick is
+never thrown, and soloing it leaves a metronome. White 7 (E) is dark and does nothing: the gap between the parts and
+the moves, so you can find them without looking.
 
 - **White 1–6, the chord, pings, bass, kick, hats and noise:** a tap mutes the part, another brings it
   back (the mute as you let go: held, the key is the part's channel strip, above); lit while it plays.
@@ -254,15 +260,17 @@ between the parts and the moves, so you can find them without looking.
   are the same mutes as OCT− + OCT+ on a layer's page (there, the drums' mute is the kick's and the
   hats' together): a mute made either way shows on the other. The mutes stay when you leave the Arrangement page.
   The music goes on underneath: a muted part comes back where it would have been.
-- **Black 1–5, solos:** a press solos the layer: the others go quiet, the noise too (their echoes and
-  reverb ring out). Solo more than one and they play together; press
-  again to let one go. A soloed key blinks; the white keys show what you hear. SOLO shows top right,
-  beside the page's name. Solos stay when you leave the Arrangement page, as the mutes do.
-- **Black 6, the hats thrown, held** (lit; dark while held): the hats, the rim and the clap go into the
-  echo, whatever their strip's Echo, and the echo feeds back a little more; let go and their repeats
-  ring on. The kick is never thrown with them.
-- **White 8–12, moves, held** (lit; dark while held):
-  - **Throw:** every stab is thrown into the echo.
+- **Black 1–5, a tap: solos.** A tap solos the part: the others go quiet (their echoes and reverb ring out). Solo
+  more than one and they play together; tap again to let one go. A soloed key blinks; the white keys show what you
+  hear. SOLO shows top right, beside the page's name. Solos stay when you leave the Arrangement page, as the mutes do.
+- **Black 1–5, held: throws** (past a third of a second; the key goes dark while it throws, and the release
+  solos nothing). The part goes into the echo while you hold it, whatever its strip's Echo, and the echo feeds back
+  a little more; let go and its repeats ring on. The **chord**'s throws every stab, as a dub engineer slams a send
+  on a stab ("CHORD THROW: every stab into the echo"). The **pings**', the **hats**' (with the rim and the clap)
+  and the **noise**'s push their echo sends right up. The **bass**'s too, but the echo takes nothing under about
+  350 Hz: a round bass (Sub) throws only its upper harmonics, quietly; a bass with bite (Growl, Pulse) throws more.
+  The kick is never thrown.
+- **White 8–11, the global moves, held** (lit; dark while held):
   - **Open:** the music thins and brightens over the kick: a resonant high-pass on everything but
     the kick sweeps up to about 400 Hz, and the chords' filter opens three octaves and sings, the
     echo's band-pass and the pings brighter with it.
@@ -273,6 +281,9 @@ between the parts and the moves, so you can find them without looking.
     press again; Drop is the move you hold for a bar or two and release on the downbeat.
   - **Echo:** the echo pushed: everything into it, feeding back more.
   - Each sweeps in over about half a second; letting go eases back (to where the Filter knob is).
+- **White 12–16, five effects, held** (lit; dark while held): **Time x2**, **Freeze**, **Tape stop**,
+  **Stutter** and **Siren**, the same as the effects grid's (REC held, below), one key each
+  and nearer to hand. They play together with the grid's.
 - The other keys do nothing on the Arrangement page; MIDI notes in still change the scale.
 
 **Lock** (SEL held for half a second, on any page; held again, off). The groove stays as it is:
@@ -987,7 +998,7 @@ then back to Chord.
   off the beat. Evolve may add or take one now and then, leave one out, or rest a whole bar (as far as Vary lets it).
 - **Throws:** how often a stab is thrown into the echo: at 0, never (but the last stab of a fill);
   at 50, about one stab in eight; at 100, about one in three. More in a Break; none at Evolve 0. A
-  thrown stab's dry is 6 dB down. The Arrangement page's Throw and the grid's throw every stab, whatever it is.
+  thrown stab's dry is 6 dB down. The chord's throw (the Arrangement page's F♯3 held) and the grid's Throw throw every stab, whatever it is.
 - **Change:** how long a chord lasts before it moves on: 2, 4, 8, 16, 32 or 64 bars, or Hold (it
   moves only when you press EDIT); a switch, its seven positions as dots. The chord moves at the
   start of a bar. (The Form page's Drift until 1.4.0's Chord pages: the same value, kept.)

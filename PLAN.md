@@ -792,6 +792,17 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
     before its cut, for the rumble's ear). Open: a noise solo (no free black key over white 6: C#4 and D#4 are the
     kick's and the hats' solos); the lanes' KCK and HAT meters still from the hits (the Arrangement page's from the
     sound).
+  - **The moves rethought** (the user, 2026-10-25: "implement the moves rethink"; branch dub-1.4-moves): black 1-5
+    each the part of the white key on its left (F#3 the chord, G#3 the pings, A#3 the bass, C#4 the hats, D#4 the
+    noise; the kick, B3, none: no kick solo or throw), a tap its solo (the noise's new), held past 300 ms **its throw**
+    into the echo while held (the chord every stab, EN_PF_THROW; the pings, the bass, the noise their echo sends pushed
+    as the hats' were, EN_PF_PTHROW, _BTHROW, _NTHROW; the feedback +0.08; the tails left to ring: the hats +10.9 dB of
+    tail, the pings +10.0, the noise +5.2, the bass +1.9, the echo taking nothing under ~350 Hz); white 8-11 the global
+    moves (Open, Shut, Drop, Echo; THROW off the whites); white 12-16 five of the grid's effects held (Time x2, Freeze,
+    Tape stop, Stutter, Siren; with the grid's); F#4 up nothing. The moves now in the command's 16-bit field (the
+    noise's throw bit is past 8: the 8-bit field would have dropped it). The dub mixer's ride on a held strip's knobs
+    bolder (the user: "brighter and thicker"): its band near white, over 3 px outside the ring and inside it, the dot
+    bigger on a dark rim. No keys pressed: every piece bit for bit as before.
   - After the LFO work is merged (both touch ui.c).
 
 - **Song structure, the user's answers** (2026-10-24; the records' intros and outros in REPORT9: 3-37% of the bars,
