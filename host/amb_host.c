@@ -27,6 +27,7 @@
  *   store8                       save the project as DUB-1 1.0.0 did (format 8): reboot then reads it
  *   store10                      save it as 1.2.0 did (format 10, without the noise's five)
  *   storefile PATH               a saved project from a file (tests/host/proj-*.bin)
+ *   store27                      save it as 1.4.0's dub mixer did (format 27, the strips' Low cut, 0..100)
  *   store26                      save it as 1.4.0's song structure did (format 26, without the dub mixer)
  *   store25                      save it as 1.4.0's noise LFO Destination did (format 25, without song structure)
  *   store24                      save it as 1.4.0's six strips did (format 24, without the noise LFO's Destination)
@@ -623,6 +624,17 @@ static int expect(const char *what, const char *val)
 }
 
 #ifndef EN_WEB
+/* (1.4.0, format 28) the strips' Filter folded back to the Low cut an older format saved (0..100; a low-pass: none) */
+static void lc_fold(int16_t *par, int n)
+{
+    static const uint8_t LC[6] = {P_CLOW, P_PLOW, P_BLOW, P_DLOW, P_NLOW, P_KLOW};
+    int k;
+    for (k = 0; k < 6; k++)
+        if (LC[k] < n) {
+            const int v = par[LC[k]], o = v <= 0 ? 0 : 1 + (int)((float)(v - 1) * (99.0f * 6.966f / (49.0f * 4.907f)) + 0.5f);
+            par[LC[k]] = (int16_t)(o > 100 ? 100 : o);
+        }
+}
 int main(int argc, char **argv)
 {
     FILE *sc;
@@ -847,6 +859,16 @@ int main(int argc, char **argv)
             proj.screen = (uint8_t)atoi(a);
             proj.slot[proj.piece].screen = proj.screen;
             plat_store_save(OBJ_PROJ, &proj, sizeof proj);
+        } else if (!strcmp(cmd, "store27")) {    /* the project as 1.4.0's dub mixer saved it (27: the strips' Low cut) */
+            static project_t o;
+            int i;
+            keep();
+            o = proj;
+            o.format = 27u;
+            lc_fold(o.par, P_NPARAMS);
+            for (i = 0; i < NPIECES; i++)
+                lc_fold(o.slot[i].par, P_NPARAMS);
+            plat_store_save(OBJ_PROJ, &o, sizeof o);
         } else if (!strcmp(cmd, "store26")) {    /* the project as 1.4.0's song structure saved it (26) */
             static project26_t o;
             int i;
@@ -854,9 +876,11 @@ int main(int argc, char **argv)
             memset(&o, 0, sizeof o);
             o.magic = PROJ_MAGIC, o.format = 26u;
             memcpy(o.par, proj.par, sizeof o.par);
+            lc_fold(o.par, NPAR26);
             o.pool = proj.pool, o.leds = proj.leds, o.piece = proj.piece, o.screen = proj.screen;
             for (i = 0; i < NPIECES; i++) {
                 memcpy(o.slot[i].par, proj.slot[i].par, sizeof o.slot[i].par);
+                lc_fold(o.slot[i].par, NPAR26);
                 o.slot[i].pool = proj.slot[i].pool;
                 memcpy(o.slot[i].pings, proj.slot[i].pings, sizeof o.slot[i].pings);
                 o.slot[i].pings_ok = proj.slot[i].pings_ok;
@@ -870,9 +894,11 @@ int main(int argc, char **argv)
             memset(&o, 0, sizeof o);
             o.magic = PROJ_MAGIC, o.format = 25u;
             memcpy(o.par, proj.par, sizeof o.par);
+            lc_fold(o.par, NPAR25);
             o.pool = proj.pool, o.leds = proj.leds, o.piece = proj.piece, o.screen = proj.screen;
             for (i = 0; i < NPIECES; i++) {
                 memcpy(o.slot[i].par, proj.slot[i].par, sizeof o.slot[i].par);
+                lc_fold(o.slot[i].par, NPAR25);
                 o.slot[i].pool = proj.slot[i].pool;
                 memcpy(o.slot[i].pings, proj.slot[i].pings, sizeof o.slot[i].pings);
                 o.slot[i].pings_ok = proj.slot[i].pings_ok;
@@ -886,9 +912,11 @@ int main(int argc, char **argv)
             memset(&o, 0, sizeof o);
             o.magic = PROJ_MAGIC, o.format = 24u;
             memcpy(o.par, proj.par, sizeof o.par);
+            lc_fold(o.par, NPAR24);
             o.pool = proj.pool, o.leds = proj.leds, o.piece = proj.piece, o.screen = proj.screen;
             for (i = 0; i < NPIECES; i++) {
                 memcpy(o.slot[i].par, proj.slot[i].par, sizeof o.slot[i].par);
+                lc_fold(o.slot[i].par, NPAR24);
                 o.slot[i].pool = proj.slot[i].pool;
                 memcpy(o.slot[i].pings, proj.slot[i].pings, sizeof o.slot[i].pings);
                 o.slot[i].pings_ok = proj.slot[i].pings_ok;
@@ -902,9 +930,11 @@ int main(int argc, char **argv)
             memset(&o, 0, sizeof o);
             o.magic = PROJ_MAGIC, o.format = 23u;
             memcpy(o.par, proj.par, sizeof o.par);
+            lc_fold(o.par, NPAR23);
             o.pool = proj.pool, o.leds = proj.leds, o.piece = proj.piece, o.screen = proj.screen;
             for (i = 0; i < NPIECES; i++) {
                 memcpy(o.slot[i].par, proj.slot[i].par, sizeof o.slot[i].par);
+                lc_fold(o.slot[i].par, NPAR23);
                 o.slot[i].pool = proj.slot[i].pool;
                 memcpy(o.slot[i].pings, proj.slot[i].pings, sizeof o.slot[i].pings);
                 o.slot[i].pings_ok = proj.slot[i].pings_ok;

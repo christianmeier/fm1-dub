@@ -34,7 +34,8 @@
 
 /* modes: pools relative to the root (bit i: root + i semitones) */
 enum { MODE_IONIAN, MODE_DORIAN, MODE_PHRYGIAN, MODE_LYDIAN, MODE_MIXOLYDIAN, MODE_AEOLIAN, MODE_PENT_MAJ,
-       MODE_PENT_MIN, EN_NMODES };
+       MODE_PENT_MIN, MODE_HIRAJOSHI, MODE_IN, MODE_IWATO, MODE_YO, MODE_INSEN, EN_NMODES };   /* (1.4.0, format 28,
+       Robert's: five Japanese scales, five notes as the pentatonics) */
 extern const char *const EN_MODE_NAME[EN_NMODES];
 extern const uint16_t EN_MODE_POOL[EN_NMODES];
 extern const char *const EN_NOTE_NAME[12];
@@ -341,6 +342,7 @@ extern volatile float en_lfo_at[EN_NCLDEST];     /* (1.4.0, for tests) what the 
                                                   * now: the Cutoff in octaves, Reso and Colour -1..1 of their knob */
 extern volatile uint32_t en_lfo_picks[2];        /* the drifts' new places so far (for tests) */
 int en_lfo_bars(int v);                          /* a rate's bars (0: Drift) */
+float en_filter_hz(int v);                       /* a strip's Filter (-50..+50): its cutoff, Hz (0: off) */
 int en_nlfo18(int old);                          /* (format 19) a Noise LFO before 19 as 19's (its depth kept) */
 extern volatile float en_nz_t60;                 /* how long a hit rings, to -60 dB, seconds */
 extern volatile float en_stab_t60;              /* (1.4.0, the chord's page) a stab's length to -60 dB, seconds */

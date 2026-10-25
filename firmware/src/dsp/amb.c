@@ -13,11 +13,14 @@
 const char *const EN_NOTE_NAME[12] = {"C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"};
 /* (Ionian and Aeolian shown as Major and Minor) */
 const char *const EN_MODE_NAME[EN_NMODES] = {"Major", "Dorian", "Phrygian", "Lydian", "Mixolyd.", "Minor",
-                                             "Pent maj", "Pent min"};
+                                             "Pent maj", "Pent min", "Hirajosh", "In", "Iwato", "Yo", "Insen"};
 #define B(a, b, c, d, e, f, g) (1u << (a) | 1u << (b) | 1u << (c) | 1u << (d) | 1u << (e) | 1u << (f) | 1u << (g))
 const uint16_t EN_MODE_POOL[EN_NMODES] = {
     B(0, 2, 4, 5, 7, 9, 11), B(0, 2, 3, 5, 7, 9, 10), B(0, 1, 3, 5, 7, 8, 10), B(0, 2, 4, 6, 7, 9, 11),
-    B(0, 2, 4, 5, 7, 9, 10), B(0, 2, 3, 5, 7, 8, 10), B(0, 2, 4, 7, 9, 9, 9),  B(0, 3, 5, 7, 10, 10, 10)};
+    B(0, 2, 4, 5, 7, 9, 10), B(0, 2, 3, 5, 7, 8, 10), B(0, 2, 4, 7, 9, 9, 9),  B(0, 3, 5, 7, 10, 10, 10),
+    B(0, 2, 3, 7, 8, 8, 8), B(0, 1, 5, 7, 8, 8, 8), B(0, 1, 5, 6, 10, 10, 10), B(0, 2, 5, 7, 9, 9, 9),
+    B(0, 1, 5, 7, 10, 10, 10)};   /* (Hirajoshi 1 2 b3 5 b6, In 1 b2 4 5 b6, Iwato 1 b2 4 b5 b7, Yo 1 2 4 5 6, Insen
+                                   * 1 b2 4 5 b7) */
 #undef B
 const uint8_t EN_LOOP_LEN[EN_NLOOP] = {13, 17, 23, 29};
 const uint8_t EN_DRUM_N[EN_NDRUM] = {16, 16, 16, 16, 16};
@@ -28,7 +31,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     {"Density", 0, 100, 30},  {"Evolve", 0, 100, 40},   {"Drift", 0, 6, 4},       {"Hits", 0, 100, 50},
     {"Echo", 0, 100, 55},     {"Echo time", 0, 5, 1},   {"Reverb", 0, 100, 35},   {"Feedback", 0, 100, 60},
     {"Cutoff", 0, 100, 45},   {"Decay", 0, 100, 35},    {"Ping tone", 0, 100, 40}, {"Motion", 0, 100, 50},
-    {"Tune", -50, 50, 0},     {"MIDI out", 0, 1, 1},    {"Tempo", 90, 140, 122},  {"Root", 0, 11, 5},
+    {"Tune", -50, 50, 0},     {"MIDI out", 0, 1, 1},    {"Tempo", 40, 140, 122},  {"Root", 0, 11, 5},
     {"Mode", 0, EN_NMODES - 1, MODE_DORIAN}, {"Ping oct", -2, 2, 0}, {"Chord voice", 0, EN_NCV - 1, 0},
     {"Bass oct", -1, 1, 0},   {"Groove", 0, 4, 1},      {"Fifth", 0, 100, 20},
     {"Swing", 0, 100, 10},    {"Hats", 0, 100, 50},
@@ -71,9 +74,9 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     {"Cutoff ofs", -50, 50, 0},
     {"Chord echo", 0, 100, 50}, {"Chord plate", 0, 100, 50}, {"Pings echo", 0, 100, 50}, {"Pings plate", 0, 100, 50},
     {"Bass echo", 0, 100, 0},   {"Bass plate", 0, 100, 50},  {"Hats echo", 0, 100, 50},  {"Hats plate", 0, 100, 50},
-    {"Chord low cut", 0, 100, 0}, {"Pings low cut", 0, 100, 0}, {"Bass low cut", 0, 100, 0}, {"Hats low cut", 0, 100, 0},
-    {"Noise low cut", 0, 100, 0},
-    {"Kick level", 0, 100, 50}, {"Kick echo", 0, 100, 0}, {"Kick plate", 0, 100, 0}, {"Kick low cut", 0, 100, 0},
+    {"Chord filter", -50, 50, 0}, {"Pings filter", -50, 50, 0}, {"Bass filter", -50, 50, 0}, {"Hats filter", -50, 50, 0},
+    {"Noise filter", -50, 50, 0},
+    {"Kick level", 0, 100, 50}, {"Kick echo", 0, 100, 0}, {"Kick plate", 0, 100, 0}, {"Kick filter", -50, 50, 0},
     {"Noise LFO to", 0, EN_NNLDEST - 1, 0},
     {"Song mode", 0, EN_NSMODE - 1, 0}, {"Intro", 0, 16, 4}, {"Main", 4, 64, 20}, {"Outro", 0, 16, 4},
     {"Intro kind", 0, EN_NSKIND - 1, 0},
@@ -320,6 +323,12 @@ uint32_t en_groove(int g) { return GROOVE[(unsigned)g < 5u ? g : 0]; }
 int en_groove_pat(int knob) { return GROOVE_PAT[(unsigned)knob < NGROOVE ? knob : 0]; }
 int en_drift_bars(int v) { return DRIFT_BARS[(unsigned)v < 7u ? v : 6]; }
 int en_lfo_bars(int v) { return (unsigned)v < EN_LFO_DRIFT ? 1 << v : 0; }   /* (1, 2, 4 .. 32; Drift 0) */
+float en_filter_hz(int v)                       /* (1.4.0, format 28) a strip's Filter: its cutoff (0: off) */
+{
+    return v > 0 ? 20.0f * fm_exp2f((float)(v - 1) * (6.966f / 49.0f))      /* (the high-pass: 20 Hz .. 2.5 kHz) */
+         : v < 0 ? 18000.0f * fm_exp2f((float)(-v - 1) * (-6.492f / 49.0f))  /* (the low-pass: 18 kHz .. 200 Hz) */
+         : 0.0f;
+}
 
 static char *itoa_s(int v, char *b)
 {
@@ -339,10 +348,46 @@ static char *itoa_s(int v, char *b)
     return b;
 }
 
+static int etime_cap_ds(int v);                  /* (the echo's time, capped to its tape: in tenths of a second; 0 fits) */
 void en_param_text(int i, int v, char *b)
 {
     static const char *const ONOFF[2] = {"Off", "On"};
     const char *s = 0;
+    if (i == P_ETIME && etime_cap_ds(v)) {      /* (1.4.0, slow tempos: past the tape, its real time: "5.6 s") */
+        const int ds = etime_cap_ds(v);
+        b = itoa_s(ds / 10, b);
+        *b++ = '.';
+        *b++ = (char)('0' + ds % 10);
+        *b++ = ' ';
+        *b++ = 's';
+        *b = 0;
+        return;
+    }
+    if ((i >= P_CLOW && i <= P_NLOW) || i == P_KLOW) {   /* (1.4.0, format 28) a strip's Filter: Off, LP 800, HP 2.5k */
+        const float f = en_filter_hz(v);
+        int hz = (int)(f + 0.5f);
+        if (!v) {
+            b[0] = 'O', b[1] = 'f', b[2] = 'f', b[3] = 0;
+            return;
+        }
+        *b++ = v < 0 ? 'L' : 'H';
+        *b++ = 'P';
+        *b++ = ' ';
+        if (hz >= 10000) {
+            b = itoa_s((hz + 500) / 1000, b);
+            *b++ = 'k';
+        } else if (hz >= 1000) {
+            const int h = (hz + 50) / 100;
+            b = itoa_s(h / 10, b);
+            *b++ = '.';
+            *b++ = (char)('0' + h % 10);
+            *b++ = 'k';
+        } else {
+            b = itoa_s(hz >= 100 ? (hz + 5) / 10 * 10 : hz, b);
+        }
+        *b = 0;
+        return;
+    }
     if (i == P_ETIME)
         s = ETIME_NAME[(unsigned)v < 6u ? v : 0];
     else if (i == P_MIDI)
@@ -523,7 +568,7 @@ int en_chord_tones(uint32_t pool, int root, int deg, int *pcs)
 
 void en_voicing(uint32_t pool, int deg, int shape, int *iv)
 {
-    int t[5], n = stack(pool, 0, deg, t, 5), i, j, r = t[0], d[5];
+    int t[5], n = stack(pool, 0, deg, t, 5), i, j, r = t[0], d[5], sc[12];
     for (i = 0; i < 5; i++)                      /* intervals above the chord's root; a short pool repeats */
         d[i] = (t[i < n ? i : i % n] - r + 12) % 12;
     if (shape) {                                 /* root, 7th, 10th, 14th: a 9th without its fifth */
@@ -547,6 +592,41 @@ void en_voicing(uint32_t pool, int deg, int shape, int *iv)
     for (i = 1; i < 4; i++)
         while (iv[i] <= iv[i - 1])
             iv[i] += 12;
+    if (en_scale(pool, sc) <= 5) {                /* (1.4.0, Robert's Japanese scales: their half-steps never side by
+                                                  * side, a cluster; spread to a minor ninth, as a koto's: of the
+                                                  * voicings within 26 semitones, no two neighbours a semitone apart,
+                                                  * the nearest to this one; the pentatonics have no half-step, so
+                                                  * they're as before) */
+        int best[4], bd = 1 << 30, o1, o2, o3, k;
+        for (i = 1; i < 4 && iv[i] - iv[i - 1] != 1; i++)
+            ;
+        if (i < 4) {
+            for (o1 = 0; o1 < 3; o1++)
+                for (o2 = 0; o2 < 3; o2++)
+                    for (o3 = 0; o3 < 3; o3++) {
+                        int c[4], dist = 0, ok = 1;
+                        c[0] = 0, c[1] = iv[1] % 12 + 12 * o1, c[2] = iv[2] % 12 + 12 * o2, c[3] = iv[3] % 12 + 12 * o3;
+                        for (k = 1; k < 4; k++)   /* (sorted) */
+                            for (j = k; j > 0 && c[j] < c[j - 1]; j--) {
+                                const int x = c[j];
+                                c[j] = c[j - 1], c[j - 1] = x;
+                            }
+                        for (k = 1; k < 4; k++)
+                            ok &= c[k] > c[k - 1] && c[k] - c[k - 1] != 1;
+                        ok &= c[3] <= 26;
+                        for (k = 0; k < 4; k++)
+                            dist += c[k] > iv[k] ? c[k] - iv[k] : iv[k] - c[k];
+                        if (ok && dist < bd) {
+                            bd = dist;
+                            for (k = 0; k < 4; k++)
+                                best[k] = c[k];
+                        }
+                    }
+            if (bd < (1 << 30))
+                for (k = 0; k < 4; k++)
+                    iv[k] = best[k];
+        }
+    }
 }
 
 const char *en_chord_name(const int *pcs, int n, char *buf)
@@ -688,9 +768,32 @@ static noise_ctl_t nctl;
 static float throw_mul = 1.0f, ping_dry = 0.5f, hats_lvl = 1.0f;   /* Throws, Ghost, Hats level (apply) */
 static float chord_dry = 0.5f, chord_snd = 1.5f;   /* the chord's Ghost: its dry, its sends (apply) */
 /* (1.4.0, the Arrangement page's channel strips) each part's sends, the chord's, the pings', the bass's and the drums'
- * Echo and Plate: what each sent before, times this (1 at 50); each part's Low cut, a one-pole's coefficient (0 off:
- * the chord, the pings, the bass, the drums, the noise; lcut4 the noise's rings', at their quarter rate) */
+ * Echo and Plate: what each sent before, times this (1 at 50); each part's Filter, a one-pole's coefficient (0 off:
+ * the chord, the pings, the bass, the drums, the noise; lcut4 the noise's rings', at their quarter rate), and its
+ * side (1.4.0, format 28, Robert's: the Low cut a centred filter): lpf 0 a high-pass (the Low cut as it was, bit for
+ * bit), 1 a low-pass (lcut_step). The noise's low-pass in its own filters (nz_lpa, nz_lpa4: as its LFO's), its
+ * lcut[4] then 0 */
 static float sx[4][2] = {{1.0f, 1.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}, {1.0f, 1.0f}}, lcut[6], lcut4;
+static float nz_lpa = 1.0f, nz_lpa4 = 1.0f;
+static uint8_t lpf[6];
+/* a strip's Filter, a sample: its one-pole (s1); lp 0 the high-pass x - s1, 6 dB (the Low cut as it was, bit for bit);
+ * 1 the low-pass, a second one-pole after it (s2), 12 dB (a darkening heard as a filter's, not a tone control's); 2
+ * the low-pass while the engine sheds (SHED: the FM-1's CPU, the user's worry), the first one-pole alone, 6 dB, the
+ * second following it so the 12 dB comes back without a step */
+#define LPF_MODE(k) (lpf[k] ? (SHED ? 2 : 1) : 0)
+static inline float lcut_step(float x, float a, int lp, float *s1, float *s2)
+{
+    *s1 += a * (x - *s1);
+    if (lp == 1) {
+        *s2 += a * (*s1 - *s2);
+        return *s2;
+    }
+    if (lp == 2) {
+        *s2 = *s1;
+        return *s1;
+    }
+    return x - *s1;
+}
 /* (1.4.0, format 24, the user's: the kick and the hats apart) sx[3] and lcut[3] the Hats strip's (the shaker, the open hat,
  * the rim, the clap); lcut[5] the Kick strip's Low cut, kick_lvl its level (x1 at 50), kick_snd its Echo and Plate
  * (absolute: the kick sent nothing before); hat_thr the hats' throw, eased (PERFORM's, EN_PF_HATTHROW) */
@@ -952,7 +1055,7 @@ typedef struct {
 } stab_t;
 static stab_t stab[EN_NPAD];
 static float chord_vol, cut_base = 800.0f, st_dec = 0.9995f, st_fdec = 0.99f, st_t60 = 0.3f;
-static float st_env, st_amp, st_fenv, st_throw, throw_dec, st_cofs, st_lc[2];
+static float st_env, st_amp, st_fenv, st_throw, throw_dec, st_cofs, st_lc[2], st_lc2[2];
 #ifndef EN_RUMBLE
 #define EN_RUMBLE 1                              /* (the kick's rumble: off in 1.3.0; 1.4.0, the second try: on) */
 #endif
@@ -1006,12 +1109,12 @@ enum { BV_SUB, BV_PUNCH, BV_RUBBER, BV_PLUCK, BV_GROWL };
 static const float BV_GAIN[EN_NBV] = {1.0f, 1.1f, 1.0f, 1.0f, 1.16f};
 static const fmpatch_t *const BV_PATCH[EN_NBV] = {0, &FM_PUNCH, &FM_RUBBER, &FM_PLUCK, &FM_GROWL};
 static fmvoice_t bfm;
-static float bass_bite, bite_dec, bass_lc;
+static float bass_bite, bite_dec, bass_lc, bass_lc2;
 
 /* ----------------------------------------------------------------- pings --- */
 #define NBELL 6
 typedef struct {
-    float amp, adec, att, gl, gr, drop, lc;     /* (lc: the strip's Low cut's state) */
+    float amp, adec, att, gl, gr, drop, lc, lc2;   /* (lc, lc2: the strip's Filter's state) */
     fmvoice_t fm;
     fmpatch_t pt;                               /* its own patch: the ping's voice, as its Tone and the loop have it */
     int32_t wait;
@@ -1027,7 +1130,7 @@ static const float RATIO[5] = {1.0f, 2.0f, 3.0f, 3.5f, 4.77f};
 
 /* ----------------------------------------------------------------- drums --- */
 typedef struct {
-    float ph, inc, inc_end, amp, adec, x1, x2, att, mph[4], pend, clk, lp[2], lc;   /* (lp: a hat's low-pass; lc: the
+    float ph, inc, inc_end, amp, adec, x1, x2, att, mph[4], pend, clk, lp[2], lc, lc2;   /* (lp: a hat's low-pass; lc: the
                                                   * strip's Low cut's state) */
     int32_t wait;                               /* swing: samples until a hit that waits (pend: its velocity) */
     uint8_t on, note;
@@ -1577,7 +1680,7 @@ static void bell_voice(int l, int n, float vel, int32_t wait)
         fm_ctl(&v->fm, pt, fm_alg_of(P_PALG, pt), 1.0f);
     }
     v->att = 0.0f;
-    v->lc = 0.0f;
+    v->lc = v->lc2 = 0.0f;
     p = (LOOP_PAN[l] + 1.0f) * (FM_PI / 4.0f);
     v->gl = fm_cosf(p);
     v->gr = fm_sinf(p);
@@ -2844,6 +2947,11 @@ static inline int16_t s16(float x)
     return (int16_t)(x > 32767.0f ? 32767.0f : x < -32767.0f ? -32767.0f : x);
 }
 
+static int etime_cap_ds(int v)
+{
+    const float t = par[P_TEMPO] > 0 ? ETIME_BEATS[(unsigned)v < 6u ? v : 0] * 60.0f / (float)par[P_TEMPO] : 0.0f;
+    return t * TAPE_SR > (float)(TAPE_N - 8) ? (int)((float)(TAPE_N - 8) / TAPE_SR * 10.0f) : 0;
+}
 static void echo_time(void)
 {
     int i = par[P_ETIME];
@@ -3355,15 +3463,27 @@ static void apply(int p, int v)
         sx[(p - P_CECHO) >> 1][(p - P_CECHO) & 1] = (float)v * 0.02f;   /* (1.4.0, the strips: the part's own sends times
                                                   * v / 50, as the noise's Echo and Plate were already: 50 exactly 1) */
         break;
-    case P_CLOW: case P_PLOW: case P_BLOW: case P_DLOW: case P_NLOW: case P_KLOW:   /* (1.4.0, the strips) Low cut: a
-                                                  * one-pole's coefficient (0: off, the filter not run), ~20 Hz at 1 ..
-                                                  * ~600 Hz at 100, an octave each ~20; the noise's rings at their
-                                                  * quarter rate; the kick's lcut[5] */
+    case P_CLOW: case P_PLOW: case P_BLOW: case P_DLOW: case P_NLOW: case P_KLOW:   /* (1.4.0, the strips) the Filter
+                                                  * (format 28, Robert's; the Low cut before): centred, 0 off (the
+                                                  * filter not run); right a high-pass, ~20 Hz at +1 .. ~2.5 kHz at +50
+                                                  * (the old Low cut's 600 Hz near +36); left a low-pass, ~18 kHz at -1
+                                                  * .. ~200 Hz at -50; a one-pole (6 dB), its coefficient here; the
+                                                  * noise's rings at their quarter rate; the kick's lcut[5] */
         {
-            const float fc = 20.0f * fm_exp2f((float)(v - 1) * (4.907f / 99.0f));
-            lcut[p == P_KLOW ? 5 : p - P_CLOW] = v > 0 ? 1.0f - fm_expf(-2.0f * FM_PI * fc * (1.0f / EN_SR)) : 0.0f;
-            if (p == P_NLOW)
-                lcut4 = v > 0 ? 1.0f - fm_expf(-2.0f * FM_PI * fc * (1.0f / TAPE_SR)) : 0.0f;
+            const int k = p == P_KLOW ? 5 : p - P_CLOW;
+            const float fc = v > 0 ? en_filter_hz(v) : v < 0 ? en_filter_hz(v) : 0.0f,
+                        a = v ? 1.0f - fm_expf(-2.0f * FM_PI * fc * (1.0f / EN_SR)) : 0.0f,
+                        a4 = v ? fm_minf(1.0f - fm_expf(-2.0f * FM_PI * fc * (1.0f / TAPE_SR)), 1.0f) : 0.0f;
+            lpf[k] = (uint8_t)(v < 0);
+            if (p == P_NLOW) {                   /* (the noise: a high-pass on its rings and clicks as before; a
+                                                  * low-pass in its own filters, the hiss's too, as its LFO's) */
+                lcut[4] = v > 0 ? a : 0.0f;
+                lcut4 = v > 0 ? a4 : 0.0f;
+                nz_lpa = v < 0 ? a : 1.0f;
+                nz_lpa4 = v < 0 ? a4 : 1.0f;
+            } else {
+                lcut[k] = a;
+            }
         }
         break;
     case P_CRACKLE:                              /* (1.3.0: straight, not squared: a bed at 15 too; 35 as before,
@@ -4014,8 +4134,9 @@ static void render_stabs(uint32_t n)
     const int alg = pt ? fm_alg_of(P_CALG, pt) : 0;
     const float cfb = pt ? fm_fb(P_CFB, pt) : 0.0f;
     float s0 = st_s[0], s1 = st_s[1], s2 = st_s[2], s3 = st_s[3], env = st_env, amp = st_amp, thr = st_throw;
-    float hl = st_h[0], hr = st_h[1], ll = st_lc[0], lr = st_lc[1];
-    const float lc = lcut[0], ce = 0.8f * sx[0][0] * mx_e[0], cp = 0.35f * sx[0][1] * mx_p[0];   /* (the strip: its Low cut, its sends) */
+    float hl = st_h[0], hr = st_h[1], ll = st_lc[0], lr = st_lc[1], l2l = st_lc2[0], l2r = st_lc2[1];
+    const int flp = LPF_MODE(0);
+    const float lc = lcut[0], ce = 0.8f * sx[0][0] * mx_e[0], cp = 0.35f * sx[0][1] * mx_p[0];   /* (the strip: its Filter, its sends) */
     if (st_midi_left > 0 && (st_midi_left -= (int32_t)n) <= 0)
         for (i = 0; i < EN_NPAD; i++)
             midi(0x80, stab[i].midi_note, 0);
@@ -4120,11 +4241,10 @@ static void render_stabs(uint32_t n)
         hr += 0.0225f * (yr - hr);
         yl -= hl;
         yr -= hr;
-        if (lc > 0.0f) {                         /* (the strip's Low cut, after the stabs' own) */
-            ll += lc * (yl - ll);
-            lr += lc * (yr - lr);
-            yl -= ll;
-            yr -= lr;
+        if (lc > 0.0f) {                         /* (the strip's Filter, after the stabs' own: a high-pass or a
+                                                  * low-pass) */
+            yl = lcut_step(yl, lc, flp, &ll, &l2l);
+            yr = lcut_step(yr, lc, flp, &lr, &l2r);
         }
         if (fx_gate > 0.001f) {                  /* the grid's Gate: the chord in sixteenths */
             float gt = (float)(gate_ctr + j) < 0.5f * step_len ? 1.0f : 0.0f, gg;
@@ -4148,6 +4268,8 @@ static void render_stabs(uint32_t n)
     st_h[1] = fm_flush(hr);
     st_lc[0] = lc > 0.0f ? fm_flush(ll) : 0.0f;
     st_lc[1] = lc > 0.0f ? fm_flush(lr) : 0.0f;
+    st_lc2[0] = lc > 0.0f && flp ? fm_flush(l2l) : 0.0f;
+    st_lc2[1] = lc > 0.0f && flp ? fm_flush(l2r) : 0.0f;
     st_env = env;
     st_amp = amp;
     st_throw = thr;
@@ -4168,8 +4290,9 @@ static void render_bass(uint32_t n)
                 drv = 1.2f * fm_exp2f(1.2f * xb), bi = fm_maxf(1.0f + xb, 0.0f);   /* Bite: the drive, the FM bite */
     const int balg = BV_PATCH[bv] ? fm_alg_of(P_BALG, BV_PATCH[bv]) : 0;
     const float bfb = BV_PATCH[bv] ? fm_fb(P_BFB, BV_PATCH[bv]) : 0.0f;
-    float ph = bass.ph, env = bass.env, inc, bite = bass_bite, bl = bass_lc;
+    float ph = bass.ph, env = bass.env, inc, bite = bass_bite, bl = bass_lc, bl2 = bass_lc2;
     int32_t gate = bass.gate;
+    const int flp = LPF_MODE(2);
     const float lc = lcut[2], be = 0.35f * sx[2][0] * mx_e[2] + 1.5f * bas_thr, bp = 0.04f * sx[2][1] * mx_p[2];   /* (the strip: Low cut, sends; its
                                                   * echo none before: 0) */
     if (env < 1e-5f && gate <= 0) {
@@ -4210,14 +4333,14 @@ static void render_bass(uint32_t n)
         x = sat(x * drv) * env * g * (1.2f / drv + 0.0f) * (0.6f + 0.4f * fm_minf(drv / 1.2f, 1.6f));
         bassb[j] += x;
     }
-    if (lc > 0.0f) {                             /* (the strip's Low cut, before its sends: bassb is the bass's alone) */
+    if (lc > 0.0f) {                             /* (the strip's Filter, before its sends: bassb is the bass's alone) */
         for (j = 0; j < n; j++) {
-            bl += lc * (bassb[j] - bl);
-            bassb[j] -= bl;
+            bassb[j] = lcut_step(bassb[j], lc, flp, &bl, &bl2);
         }
         bass_lc = fm_flush(bl);
+        bass_lc2 = flp ? fm_flush(bl2) : 0.0f;
     } else {
-        bass_lc = 0.0f;
+        bass_lc = bass_lc2 = 0.0f;
     }
     for (j = 0; j < n; j++)
         rsend[j] += bassb[j] * bp;
@@ -4235,10 +4358,11 @@ static void render_bells(uint32_t n)
 {
     int i;
     const float g = bell_vol * 1.4f * fd_g[1] * mx_g[1], arate = 0.004f + 0.02f * fm_minf(btone * 2.0f, 1.0f),
-                lc = lcut[1], pp = 0.4f * sx[1][1] * mx_p[1], pe1 = 1.1f * sx[1][0] * mx_e[1] + 2.0f * png_thr;   /* (the strip: Low cut, sends) */
+                lc = lcut[1], pp = 0.4f * sx[1][1] * mx_p[1], pe1 = 1.1f * sx[1][0] * mx_e[1] + 2.0f * png_thr;   /* (the strip: its Filter, sends) */
+    const int flp = LPF_MODE(1);
     for (i = 0; i < NBELL; i++) {
         bell_t *v = &bell[i];
-        float amp = v->amp, att = v->att, l1 = v->lc;
+        float amp = v->amp, att = v->att, l1 = v->lc, l2 = v->lc2;
         const int alg = fm_alg_of(P_PALG, &v->pt);
         const float fb = fm_fb(P_PFB, &v->pt);
         uint32_t j = 0;
@@ -4258,8 +4382,7 @@ static void render_bells(uint32_t n)
                 fm_ctl(&v->fm, &v->pt, alg, 1.0f);   /* (1.4.0: no LFO on the pings) */
             x = fm_sample(&v->fm, alg, fb, 1.0f + v->drop) * amp * att * g;
             if (lc > 0.0f) {
-                l1 += lc * (x - l1);
-                x -= l1;
+                x = lcut_step(x, lc, flp, &l1, &l2);
             }
             mixl[j] += x * v->gl * ping_dry;   /* (Ghost: the dry against the sends, which stay; 50: -6 dB) */
             mixr[j] += x * v->gr * ping_dry;
@@ -4272,6 +4395,7 @@ static void render_bells(uint32_t n)
         v->amp = amp;
         v->att = att;
         v->lc = lc > 0.0f ? fm_flush(l1) : 0.0f;
+        v->lc2 = lc > 0.0f ? fm_flush(l2) : 0.0f;
         if (amp < (SHED ? 0.006f : 0.0008f)) {   /* (shedding: a tail ends at -44 dB, not -62) */
             v->on = 0;
             midi(0x81, v->note, 0);
@@ -4286,11 +4410,13 @@ static void render_hat(drum_t *v, uint32_t n, float g, float pl, float pr, float
 {
     uint32_t j;
     int k;
-    float x1, x2, amp, att, lp, lp2, l1, hf = fm_minf(hat_f * KIT[kit].hat_f, 1.2f);
-    const float lc = lcut[3], rs = 0.15f * sx[3][1] * mx_p[4];   /* (the drums' strip: Low cut, the plate's send; es the echo's) */
+    float x1, x2, amp, att, lp, lp2, l1, l2, hf = fm_minf(hat_f * KIT[kit].hat_f, 1.2f);
+    const int flp = LPF_MODE(3);
+    const float lc = lcut[3], rs = 0.15f * sx[3][1] * mx_p[4];   /* (the drums' strip: its
+                                                  * Filter, the plate's send; es the echo's) */
     if (!v->on)
         return;
-    x1 = v->x1, x2 = v->x2, amp = v->amp, att = v->att, lp = v->lp[0], lp2 = v->lp[1], l1 = v->lc;
+    x1 = v->x1, x2 = v->x2, amp = v->amp, att = v->att, lp = v->lp[0], lp2 = v->lp[1], l1 = v->lc, l2 = v->lc2;
     for (j = 0; j < n; j++) {
         float in = 0.0f, hp, x;
         for (k = 0; k < 4; k++) {
@@ -4308,8 +4434,7 @@ static void render_hat(drum_t *v, uint32_t n, float g, float pl, float pr, float
         lp2 += 0.65f * (lp - lp2);
         x = lp2 * amp * att * g;
         if (lc > 0.0f) {
-            l1 += lc * (x - l1);
-            x -= l1;
+            x = lcut_step(x, lc, flp, &l1, &l2);
         }
         mixl[j] += x * pl;
         mixr[j] += x * pr;
@@ -4323,6 +4448,7 @@ static void render_hat(drum_t *v, uint32_t n, float g, float pl, float pr, float
     v->lp[0] = fm_flush(lp);
     v->lp[1] = fm_flush(lp2);
     v->lc = lc > 0.0f ? fm_flush(l1) : 0.0f;
+    v->lc2 = lc > 0.0f ? fm_flush(l2) : 0.0f;
     v->amp = amp;
     v->att = att;
     v->on = amp > 0.0005f;
@@ -4336,11 +4462,12 @@ static void render_drums(uint32_t n)
     const float g = pulse_vol * KIT[kit].gain, fall = KIT[kit].fall, drive = KIT[kit].drive,
                 lc = lcut[3], de = sx[3][0] * mx_e[4], dp = sx[3][1] * mx_p[4], ht = hat_thr, gh = g * fd_g[4] * mx_g[4];   /* (gh: the hats' part,
                                                   * its fader) */
+    const int flp = LPF_MODE(3), klp = LPF_MODE(5);   /* (the Filters' low-pass side: the Hats strip's, the Kick's) */
     drum_t *v = &drum[0];
     kick_cut = 0;
     if (v->on) {                                 /* the kick: its own bus, ducked by nothing; the Kick strip's level,
                                                   * Low cut and sends (none unless turned up) */
-        float ph = v->ph, inc = v->inc, amp = v->amp, att = v->att, clk = v->clk, cl = v->x1, l1 = v->lc;
+        float ph = v->ph, inc = v->inc, amp = v->amp, att = v->att, clk = v->clk, cl = v->x1, l1 = v->lc, l2 = v->lc2;
         const float gk = g * kick_lvl * fd_g[3] * mx_g[3], kc = lcut[5], ke = kick_snd[0] * mx_e[3], kp = kick_snd[1] * mx_p[3];
         kick_cut = kc > 0.0f;
         for (j = 0; j < n; j++) {
@@ -4349,10 +4476,10 @@ static void render_drums(uint32_t n)
             cl += 0.5f * ((float)(int32_t)noise * (1.0f / 2147483648.0f) - cl);   /* the click: noise, softened */
             x = (sine(ph) * att + 0.5f * cl * clk) * amp;
             x = sat(x * drive) * gk * (0.89f / drive);   /* (-2 dB from 1.2.0: -5 in 1.3.0, the drums as spice; +3 back, the user: hear the drums) */
-            if (kc > 0.0f) {                     /* (the strip's Low cut: the kick thinned; its rumble its own) */
+            if (kc > 0.0f) {                     /* (the strip's Filter: the kick thinned or darkened; its rumble
+                                                  * its own, from before it) */
                 kickr[j] = x;
-                l1 += kc * (x - l1);
-                x -= l1;
+                x = lcut_step(x, kc, klp, &l1, &l2);
             }
             kickb[j] += x;
             if (ke > 0.0f || kp > 0.0f) {        /* (its sends: none before 1.4.0's Kick strip) */
@@ -4374,6 +4501,7 @@ static void render_drums(uint32_t n)
         v->clk = clk;
         v->x1 = fm_flush(cl);
         v->lc = kc > 0.0f ? fm_flush(l1) : 0.0f;
+        v->lc2 = kc > 0.0f ? fm_flush(l2) : 0.0f;
         v->on = amp > 0.0005f;
     }
     {   /* (Energy: the hats -6 dB down to +6 dB up) */
@@ -4383,7 +4511,7 @@ static void render_drums(uint32_t n)
     }
     v = &drum[3];                                /* the rim: two tones (~520 Hz, ~1.7 kHz) and a click of noise */
     if (v->on) {
-        float amp = v->amp, att = v->att, clk = v->clk, l1 = v->lc;
+        float amp = v->amp, att = v->att, clk = v->clk, l1 = v->lc, l2 = v->lc2;
         const float re = 1.2f * de + 1.8f * ht, rp = 0.5f * dp;
         for (j = 0; j < n; j++) {
             float x;
@@ -4397,8 +4525,7 @@ static void render_drums(uint32_t n)
             x = (sine(v->ph) * 0.55f + sine(v->mph[0]) * 0.45f + (float)(int32_t)noise * (1.0f / 2147483648.0f) * clk) *
                 amp * att * gh * 0.3f;
             if (lc > 0.0f) {
-                l1 += lc * (x - l1);
-                x -= l1;
+                x = lcut_step(x, lc, flp, &l1, &l2);
             }
             mixl[j] += x * 0.85f;
             mixr[j] += x;
@@ -4412,11 +4539,12 @@ static void render_drums(uint32_t n)
         v->att = att;
         v->clk = clk;
         v->lc = lc > 0.0f ? fm_flush(l1) : 0.0f;
+        v->lc2 = lc > 0.0f ? fm_flush(l2) : 0.0f;
         v->on = amp > 0.0005f;
     }
     v = &drum[4];                                /* the clap: noise through a band-pass (~1.1 kHz), its envelope */
     if (v->on) {                                 /* three bursts 9 ms apart, then the tail */
-        float amp = v->amp, t = v->ph, x1 = v->x1, x2 = v->x2, l1 = v->lc;
+        float amp = v->amp, t = v->ph, x1 = v->x1, x2 = v->x2, l1 = v->lc, l2 = v->lc2;
         const float ke = 0.5f * de + 1.2f * ht, kp = 1.4f * dp;
         for (j = 0; j < n; j++) {
             float w, hp, bp, e, x, tb = t < 1200.0f ? (t - 400.0f * (float)(int)(t * (1.0f / 400.0f))) : 1e9f;
@@ -4433,8 +4561,7 @@ static void render_drums(uint32_t n)
                 e = amp * 0.9f;
             x = bp * e * gh * 1.1f;
             if (lc > 0.0f) {
-                l1 += lc * (x - l1);
-                x -= l1;
+                x = lcut_step(x, lc, flp, &l1, &l2);
             }
             mixl[j] += x;
             mixr[j] += x * 0.8f;
@@ -4449,6 +4576,7 @@ static void render_drums(uint32_t n)
         v->x1 = fm_flush(x1);
         v->x2 = fm_flush(x2);
         v->lc = lc > 0.0f ? fm_flush(l1) : 0.0f;
+        v->lc2 = lc > 0.0f ? fm_flush(l2) : 0.0f;
         v->on = amp > 0.0005f;
     }
 }
@@ -4685,6 +4813,13 @@ static void render_crackle(uint32_t n)
         const float fc = 20000.0f * fm_exp2f(-1.9f * fm_minf((float)(par[P_NLFO] + par[P_NLWALK]) * 0.01f - lfo_n, 2.0f));
         nzla = 1.0f - fm_expf(-2.0f * FM_PI * (1.0f / EN_SR) * fc);
         nzl4 = 1.0f - fm_expf(-2.0f * FM_PI * (1.0f / TAPE_SR) * fc);
+        lpc = fm_minf(lpc, nzla);
+    }
+    if (nz_lpa < 1.0f) {                         /* (1.4.0, format 28) the Noise strip's Filter, its low-pass side: in
+                                                  * the same filters as the LFO's (the hiss's, the clicks', the rings'),
+                                                  * no higher than either */
+        nzla = fm_minf(nzla, nz_lpa);
+        nzl4 = fm_minf(nzl4, nz_lpa4);
         lpc = fm_minf(lpc, nzla);
     }
     vg = 0.5f * g * NCHAR[c].clicks * fm_exp2f(0.7f * ng);   /* (the dry clicks, quiet) */

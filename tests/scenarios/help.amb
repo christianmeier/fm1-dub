@@ -50,7 +50,7 @@ tap HOME
 tap HOME
 expect view 18
 spin K1 -100
-expect par18 90
+expect par18 40
 tap FX
 turn K2 1 80
 wait 100
@@ -59,5 +59,5 @@ shot space_turning.png
 press HOME
 turn SELECT 3 100
 release HOME
-expect par18 93
+expect par18 43
 expect view 5
