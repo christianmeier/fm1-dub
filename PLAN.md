@@ -971,6 +971,7 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   second page KNOB 2 **Values** (Peek, Always), proj.values in the project's reserved byte (no format step). The big
   rings (a knob's, the level's) on a panel: a rounded rectangle under the ring, its name and its help, what's behind
   darkened to a quarter (cv_shade, only while it shows), a thin edge in its colour.
+- **The knob strip redistributed** (the user, 2026-10-25: "no point in removing the numbers if the space they free is not used"; built, dub-1.4-strip2): the names 2 px lower (air under the rule's page name); the rings bigger (r 16, 5 px thick, were 14 and 4.2), centred lower in the numbers' old room; three kinds drawn as they are (knob_kind): a ring (its number inside it during the peek, or always with Values: Always), a ring with its unit inside ("LP 2.6k", the song's bars, the Feedback's seconds; the figure alone where too wide), a selector (under ten positions, or named values judged by the knob's ends) as its word large with a dot an option (a bar past twelve). The big ring's title 2 px lower in its panel.
 - **A dub siren engine with more options** (the user, 2026-10-25: "to the list"). Today's Siren (the grid's effect 14,
   white key G5 on the Arrangement page) is one fixed voice: a square-ish tone swept ±1.3 octaves round 480 Hz by a
   0.8 Hz triangle, faded in over 20 ms and out over 150 ms, into the mix. A proper dub siren (the NJD / "dub siren"
