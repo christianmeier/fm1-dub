@@ -3195,11 +3195,6 @@ static void draw_song_lane(void)
                 k = w / fm_maxf(be, 1.0f);
     int r;
 #define SGX(b) (LN_X0 + (int32_t)((b) * k + 0.5f))
-    if (live) {                                  /* (where the song is: a grey column behind it, as the piano
-                                                  * roll's playhead; the user's) */
-        const float at = fm_minf((float)en_bars * (1.0f / 16.0f), be);
-        cv_round(SGX(at) - 3, LN_Y0 - 9, 7, LN_ROWS * LN_ROW + 9, 2, en_song_ph == EN_SG_END ? mix(K_BG, K_PANEL, 8) : K_PANEL);
-    }
     cv_rect(SGX(0.0f), LN_Y0 - 7, SGX(b0) - SGX(0.0f), 3, mix(K_BG, K_ACC, on ? 10 : 5));
     cv_rect(SGX(b0), LN_Y0 - 7, SGX(bo) - SGX(b0), 3, mix(K_BG, K_LINE, on ? 14 : 8));
     cv_rect(SGX(bo), LN_Y0 - 7, SGX(be) - SGX(bo), 3, mix(K_BG, K_ACC, on ? 10 : 5));
@@ -3212,6 +3207,11 @@ static void draw_song_lane(void)
         cv_rect(x1, y + 1, x2 - x1, LN_H - 2, mix(K_BG, c, on ? 7 : 4));   /* (fading in) */
         cv_rect(x2, y, x3 - x2, LN_H, mix(K_BG, c, on ? 13 : 6));
         cv_rect(x3, y + 1, x4 - x3, LN_H - 2, mix(K_BG, c, on ? 7 : 4));   /* (leaving) */
+    }
+    if (live) {                                  /* (where the song is: a white line down through it, on top; the user's,
+                                                  * over a grey column: easier to see) */
+        const float at = fm_minf((float)en_bars * (1.0f / 16.0f), be);
+        cv_rect(SGX(at), LN_Y0 - 9, 1, LN_ROWS * LN_ROW + 9, en_song_ph == EN_SG_END ? K_DIM : K_TEXT);
     }
 #undef SGX
 }
