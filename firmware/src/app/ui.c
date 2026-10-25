@@ -1941,14 +1941,23 @@ static void input(void)
 }
 
 /* ------------------------------------------------------------- screen --- */
-/* three bands: the header (28 px), the main screen (144), the knobs (68) */
+/* three bands: the header (28 px), the main screen (140), the knobs (72). (1.4.0, the user's: the knobs' rule 2 px
+ * more room above and below; the main screen 4 px shorter, its pictures drawn as they were, all 4 px higher: main_begin
+ * draws at MAIN_SHIFT over the canvas's top, so its drawing coordinates still run 0 .. MAIN_DH, the top 4 rows off it) */
 #define HDR_H 28
 #define MAIN_Y 28
-#define MAIN_H 144
-#define KNB_Y 172
-#define KNB_H 68
+#define MAIN_H 140
+#define MAIN_SHIFT 4
+#define MAIN_DH (MAIN_H + MAIN_SHIFT)
+#define KNB_Y 168
+#define KNB_H 72
 
 static uint32_t hash(uint32_t h, uint32_t v) { return (h ^ v) * 16777619u; }
+static void main_begin(uint16_t bg)               /* the main screen's canvas: drawn 0 .. MAIN_DH, shown from MAIN_SHIFT */
+{
+    cv_begin(240, MAIN_H, bg);
+    cv_oy = -MAIN_SHIFT;
+}
 
 /* a rectangle with rounded corners (radius r, up to 6) */
 static void cv_round(int32_t x, int32_t y, int32_t w, int32_t h, int32_t r, uint16_t c)
@@ -2193,8 +2202,8 @@ static void draw_battery(int32_t bx)
  * the B bars (4 and 8) taller, the bar playing lit and flashing white on each beat, the 8th blinking on its bar when
  * the next phrase brings a change; resting, the cells dim and a play triangle after them. On the right, only what
  * matters now: the battery when low or charging (Setup: always, with its charge), a dot while unsaved, EXT while an
- * external clock leads, the red "!" while the master clips; Setup's audio load. In a song, a hairline along the
- * bottom: the whole song, the intro and the outro tinted, filled as far as it has gone. (The tempo lives on the Key
+ * external clock leads, the red "!" while the master clips; Setup's audio load. In a song, a line along the
+ * bottom: the whole song, its parts in their hues, filled as far as it has gone. (The tempo lives on the Key
  * page, and the big ring shows it as HOME held + SELECT turns it.) Messages take its place for a moment. */
 static int clip_on(uint32_t now);
 static int hdr_song(void) { return en_song_ph != EN_SG_OFF && en_song_be > 0u; }
@@ -2239,18 +2248,24 @@ static void hdr_phrase(int32_t x0, int32_t x1, uint32_t now)   /* the word and t
                 cv_rect(px + j, 9 + j, 1, 11 - 2 * j, K_DIM);
     }
 }
-static void hdr_song_line(void)                  /* a song: a hairline along the bottom, its parts, how far it has gone */
+static void hdr_song_line(void)                  /* a song: a line along the bottom, its parts, how far it has gone */
 {
+    /* (1.4.0, the user's: the parts in their own hues: the intro teal, the main a light neutral, the outro coral; each
+     * dim ahead and bright where already played, a dark pixel between parts, the place where it is white; 2 px high:
+     * one read badly) */
     const float k = 224.0f / (float)en_song_be, at = fm_minf((float)en_bars * (1.0f / 16.0f), (float)en_song_be);
     const int32_t xi = 8 + (int32_t)((float)en_song_b0 * k + 0.5f), xo = 8 + (int32_t)((float)en_song_bo * k + 0.5f),
-                  xd = 8 + (int32_t)(at * k + 0.5f), y = HDR_H - 1;
+                  xd = 8 + (int32_t)(at * k + 0.5f), y = HDR_H - 2;
+    static const uint16_t HUE[3] = {K_ACC, K_TEXT, K_PULSE};
     int32_t x;
     for (x = 8; x < 232; x++) {
-        const int edge = x < xi || x >= xo, done = x < xd;
-        cv_rect(x, y, 1, 1, edge ? mix(K_BG, K_ACC, done ? 12 : 5) : done ? K_DIM : mix(K_BG, K_LINE, 10));
+        const int part = x < xi ? 0 : x < xo ? 1 : 2, done = x < xd;
+        if ((x == xi && xi > 8) || (x == xo && xo < 232))
+            continue;                            /* (a gap where one part ends and the next begins) */
+        cv_rect(x, y, 1, 2, mix(K_BG, HUE[part], done ? (part == 1 ? 11 : 14) : (part == 1 ? 4 : 6)));
     }
     if (en_song_ph != EN_SG_END)
-        cv_rect(xd - 1 < 8 ? 8 : xd - 1, y - 1, 3, 2, K_TEXT);   /* (where it is) */
+        cv_rect(xd - 1 < 8 ? 8 : xd - 1, y - 1, 3, 3, K_TEXT);   /* (where it is) */
 }
 static void draw_header(void)
 {
@@ -2907,7 +2922,7 @@ static void draw_alg(int layer)
     if (alg == 8) {
         tt[5] = '2', tt[6] = '-', tt[7] = 'O', tt[8] = 'P', tt[9] = 0;
     }
-    text_c(120, -1, &FONT_XS, tt, K_DIM);
+    text_c(120, MAIN_SHIFT - 1, &FONT_XS, tt, K_DIM);   /* (where it was on the screen: the canvas's top, 1.4.0) */
 }
 
 /* (1.4.0, the user's: "the levels are of course the most important part") the Arrangement page: a desk's meters, a
@@ -3367,7 +3382,7 @@ static void draw_lfo(int k)
         t[j] = 0;
     }
     caps(tt, t, sizeof tt);
-    text_c(120, -1, &FONT_XS, tt, K_DIM);
+    text_c(120, MAIN_SHIFT - 1, &FONT_XS, tt, K_DIM);   /* (where it was on the screen: the canvas's top, 1.4.0) */
     cv_rect(x0, yc, w, 1, mix(K_BG, K_LINE, 10));
     for (x = 0; x < w; x += 4)                   /* (its reach, at the depth) */
         if (reach > 0) {
@@ -3579,7 +3594,7 @@ static void draw_pattern(void)
     static const uint16_t C[EN_NDRUM] = {K_PULSE, K_TEXT, K_DIM, K_RIM, K_CLAP};
     static const char *const SH[EN_NDRUM] = {"KICK", "SHKR", "OPEN", "RIM", "CLAP"};
     int l, i, pos = en_drum_pos[0];
-    text_c(120, -1, &FONT_XS, proj.par[P_DMODE] ? "PLAY: THE PATTERN" : "PLAY: AUTO (A KEY TAKES IT OVER)",
+    text_c(120, MAIN_SHIFT - 1, &FONT_XS, proj.par[P_DMODE] ? "PLAY: THE PATTERN" : "PLAY: AUTO (A KEY TAKES IT OVER)",
            proj.par[P_DMODE] ? K_ACC : K_DIM);
     if (en_playing)
         cv_round(37 + pos * 12, 15, 11, 86, 2, K_PANEL);   /* (five lanes, 17 px apart) */
@@ -3727,7 +3742,7 @@ static int help_lines(const char *h, char *a, char *b, int n)
         b[i - best - 1] = h[i];
     return 2;
 }
-static void draw_oct(uint32_t now)
+static void draw_oct_at(uint32_t now)
 {
     static const uint16_t C[NOCT] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_NOISE, K_PULSE, K_TEXT};
     const int32_t r = BIG_R, cy = BIG_CY;   /* (1.4.0: as large as the big ring, and as high) */
@@ -3766,7 +3781,7 @@ static void draw_oct(uint32_t now)
 /* (1.4.0) the big ring: a knob turning (or SELECT's filter) over the middle, its value large inside (the filter: the
  * amount, Shut or Open under it), its name under the ring; a 0..100 knob an arc from the start, a centred one from
  * the top, a switch its place; Motion's regions marked; it fades out OCT_SHOW after the last click */
-static void draw_big(uint32_t now)
+static void draw_big_at(uint32_t now)
 {
     const int32_t r = BIG_R, cy = BIG_CY;        /* (1.4.0: its name over it now; a little lower for it) */
     int k = ui.big_k, v, f, lo, hi;
@@ -3843,6 +3858,22 @@ static void draw_big(uint32_t now)
 
 /* a nudge's card: a rounded panel in the middle, outlined amber (a nudge) or red (a shake), the layer and its move
  * and what changed; it fades out CARD_SHOW after */
+/* (1.4.0) the big rings over the main screen stay where they were on the screen, the 4 px it lost taken from below:
+ * drawn without main_begin's shift (their names at the canvas's top) */
+static void draw_oct(uint32_t now)
+{
+    const int32_t oy = cv_oy;
+    cv_oy = 0;
+    draw_oct_at(now);
+    cv_oy = oy;
+}
+static void draw_big(uint32_t now)
+{
+    const int32_t oy = cv_oy;
+    cv_oy = 0;
+    draw_big_at(now);
+    cv_oy = oy;
+}
 static void draw_card(uint32_t now)
 {
     const int32_t w = 196, h = 50, x = CX - w / 2, y = 34;
@@ -4122,7 +4153,7 @@ static void draw_main(void)
         h = hash(h, (uint32_t)oct_ring_on(now) | (uint32_t)big_on(now) << 8);
         if (h != ui.sig[1] || oct_ring_on(now) || big_on(now)) {
             ui.sig[1] = h;
-            cv_begin(240, MAIN_H, K_BG);
+            main_begin(K_BG);
             draw_pattern();
             draw_oct(now);
             draw_big(now);
@@ -4136,7 +4167,7 @@ static void draw_main(void)
             h = hash(h, (uint32_t)proj.par[P_CR0 + i] | (uint32_t)proj.par[P_CQ0 + i] << 4 | (uint32_t)proj.par[P_CX0 + i] << 8);
         if (h != ui.sig[1] || big_on(now)) {
             ui.sig[1] = h;
-            cv_begin(240, MAIN_H, K_BG);
+            main_begin(K_BG);
             draw_slots();
             draw_big(now);
             cv_blit(0, MAIN_Y);
@@ -4154,7 +4185,7 @@ static void draw_main(void)
         if (h != ui.sig[1] || big_on(now) || (en_playing && en_drum_glow[0] > 0.01f) || walk_fading(now)) {   /* (the root
                                                   * white with the kick; the arrow fading) */
             ui.sig[1] = h;
-            cv_begin(240, MAIN_H, K_BG);
+            main_begin(K_BG);
             draw_walk();
             draw_where(now);
             draw_big(now);
@@ -4167,7 +4198,7 @@ static void draw_main(void)
                  (en_phrase_bar == 7 && en_change_next ? (now / 200u & 1u) << 2 : 0u) | (uint32_t)en_drift_bars(proj.par[P_DRIFT]) << 3);
         if (h != ui.sig[1] || big_on(now) || card_on(now)) {
             ui.sig[1] = h;
-            cv_begin(240, MAIN_H, K_BG);
+            main_begin(K_BG);
             draw_desk();
             draw_where(now);
             draw_big(now);
@@ -4210,7 +4241,7 @@ static void draw_main(void)
     if (h == ui.sig[1] && !moving && !oct_ring_on(now) && !card_on(now))
         return;
     ui.sig[1] = h;
-    cv_begin(240, MAIN_H, K_BG);
+    main_begin(K_BG);
     if (ui.view >= V_CFM && ui.view <= V_BFM) {  /* an FM page: the algorithm */
         draw_alg(layer_of(ui.view));
         moving = 0;
@@ -4226,7 +4257,7 @@ static void draw_main(void)
     } else if (proj.screen == SCR_TAPE) {
         cv_clip(0, PIC_Y1);
         draw_tape(now);
-        cv_clip(0, MAIN_H);
+        cv_clip(0, MAIN_DH);
         moving = 1;
     } else {
         specks_take(now);
@@ -4237,7 +4268,7 @@ static void draw_main(void)
         moving |= (uint8_t)draw_ripples(now);
         if (rip_src < 0 || rip_src == 1)         /* (the ping loops: on the whole, and the Pings page) */
             draw_orbits();
-        cv_clip(0, MAIN_H);
+        cv_clip(0, MAIN_DH);
     }
     const int named = (parent_of(ui.view) < 0 || scr_layer(ui.view) >= 0) && !lfo_page(ui.view);   /* (a sound page:
                                                   * as its layer's; the LFO pages: the trace there) */
@@ -4266,7 +4297,7 @@ static void draw_main(void)
     if (ch_age < 900u)
         moving = 1;
     if (named && scr_small_chord(proj.screen)) {   /* the chord: over the scope, the spectrum, the tape: small */
-        text_c(CX, 1, &FONT_S, nm, ch_c);
+        text_c(CX, MAIN_SHIFT + 1, &FONT_S, nm, ch_c);   /* (where it was: the canvas's top) */
     } else if (named) {                          /* the chord, in the middle */
         if ((ch_age < 200u || (ch_age >= 400u && ch_age < 600u)) && text_w(&FONT_L, nm) <= 96) {   /* (big, small, big,
                                                                                          * small: a ping-pong) */
@@ -4371,26 +4402,27 @@ static void draw_knobs(void)
             caps(t, vn, sizeof t);
         }
         {
-            xl = cv_text(6, -1, &FONT_XS, pn, K_ACC);
+            xl = cv_text(6, 1, &FONT_XS, pn, K_ACC);   /* (1.4.0, the user's: 2 px more above and below) */
             page_pos(ui.view, &n, &m);
             if (m > 1) {
                 char d[6];
                 d[0] = (char)('0' + n), d[1] = '/', d[2] = (char)('0' + m), d[3] = 0;
-                xl = cv_text(xl + 5, -1, &FONT_XS, d, K_DIM);
+                xl = cv_text(xl + 5, 1, &FONT_XS, d, K_DIM);
             }
             xl += 5;
             if (t[0]) {                           /* (the voice at the right, if it fits: else left out) */
                 const int32_t tw = text_w(&FONT_XS, t);
                 if (234 - tw - 10 >= xl) {
                     xr = 234 - tw;
-                    cv_text(xr, -1, &FONT_XS, t, K_DIM);
+                    cv_text(xr, 1, &FONT_XS, t, K_DIM);
                     xr -= 5;
                 }
             }
             if (xr > xl)
-                cv_rect(xl, 5, xr - xl, 1, K_LINE);
+                cv_rect(xl, 7, xr - xl, 1, K_LINE);
         }
     }
+    cv_oy = 4;                                   /* (the knobs under it 4 px lower: the strip 72 px, the rule's room) */
     for (i = 0; i < 4; i++) {
         const int off = fm_knob_off(ui.view, (int)i);   /* (a voice not FM: all grey; Ratio on two ops) */
         int k = vknob(ui.view, i), lo, hi, v, hot = now_touch && ui.touched == (int)i && !off;

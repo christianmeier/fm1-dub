@@ -437,8 +437,9 @@ GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
     with its charge.
   - **The tempo** isn't there any more: it lives on the Key page, and the big ring shows it while HOME
     held and SELECT turn it.
-  - **In a song,** a hairline along the header's bottom edge is the whole song: the intro and the outro
-    tinted at its ends, filled as far as the song has gone, a bright tip where it is.
+  - **In a song,** a line along the header's bottom edge is the whole song, each part in its own hue: the
+    intro teal, the main a light grey, the outro coral; each dim ahead and bright where already played, a
+    white tip where the song is.
   - Messages ("ADDED F#", "NEXT CHORD ON THE BAR", "DUB HOLD ON", "KICK OFF") take the header for a
     moment; a knob turning or a level changing doesn't: its big ring names it.
 - **Above the knobs, the rule:** at its left the page's name in teal and, in grey, its place among its
@@ -704,7 +705,7 @@ marks the B bars (dots 4 and 8, brighter) and blinks dot 8 when the next phrase 
 
 ### Songs: an intro, the main, an outro
 
-![A song's intro on the Form page: INTRO in the header, and along its bottom edge the song's hairline, its tip near the start](img/screen-song-intro.png "A song's intro")
+![A song's intro on the Form page: INTRO in the header, and along its bottom edge the song's line, the intro teal, its tip near the start](img/screen-song-intro.png "A song's intro")
 
 DUB-1 plays for ever, starting full, as it always has: that's **Endless**, the Song mode it starts in.
 Set **Song** (GLO again, the Song mode page) and a piece becomes a song: PLAY starts its **intro**, the
@@ -1337,7 +1338,7 @@ same for every piece, and saved. GLO again goes back to Setup.
 - **Mode:** **Endless** (as ever: it starts full and plays on), **Song** (PLAY: an intro, the main,
   an outro, then silence, PLAY off), **Set** (the same, then the next piece from its intro, to the
   last). Turned to Song or Set while playing, the song starts at once from its main (the section word
-  as ever, the song's hairline along the header, the outro after Main's bars); PLAY again starts it from
+  as ever, the song's line along the header, the outro after Main's bars); PLAY again starts it from
   its intro. Turned to Endless, at once (the song let go, playing on).
 
 ---
