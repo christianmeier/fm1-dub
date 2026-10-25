@@ -14,12 +14,8 @@ shot screen-scope.png
 turn ALGO 1
 wait 2000
 shot screen-spectrum.png
-turn ALGO 1
-wait 2000
-shot screen-echo-trail.png
-turn ALGO 1
-wait 2000
-shot screen-fifths.png
+# (1.4.0: the echo trail and the fifths gone; their time kept, so the shots after them are as they were)
+wait 4000
 turn ALGO 1
 wait 2000
 shot screen-tape.png
@@ -228,3 +224,11 @@ wait 300
 spin K1 -1
 wait 300
 tap HOME
+# (1.4.0) the Walk page: EDIT, EDIT again
+tap HOME
+wait 300
+tap EDIT
+wait 300
+tap EDIT
+wait 2500
+shot screen-walk.png

@@ -104,13 +104,13 @@ The drawing at the top shows them all; here they are in more detail.
 | Keys | The scale. Each key adds its note to the scale or takes it out; the keys light up for the notes in it. Every octave of a note is the same key. The root stays ("THE ROOT STAYS"), and the scale keeps at least three notes ("3 NOTES AT LEAST"). |
 | PLAY | Play / rest. DUB-1 starts playing by itself when it's switched on. At rest, the echo's feedback eases under 90% so its tails die away, the reverb rings out and the noise fades. Playing again starts from the first bar of a phrase. Lit while playing. In Song or Set mode (GLO again: [Songs](#songs-an-intro-the-main-an-outro)) PLAY starts a song from its intro, and the song stops PLAY by itself at its end. **HOME held + PLAY:** the **outro**, from the next phrase, in any mode (Endless too: a way to land a piece by hand); again, in it or while it waits: back to the main. |
 | REC | A tap: **dub hold**: the echo stops listening and repeats what it holds, sample for sample, for ever; the reverb stops listening too and rings on; the chord doesn't move. The stabs, pings and drums go on, dry, above it. Tap again to let go. Lit while held. Held: the **effects grid** (below). |
-| EDIT | A tap: the **Chords page** (below): the eight chords coming, to see and change (again, it stays). Held (half a second): the next chord, at the start of the next bar (at once while resting; in dub hold, once you let go); a card says NEXT CHORD until the chord changes. Held on (1.5 s): **new chords**, the walk's all walked again (yours, the gaps and the one playing kept); a red card, NEW CHORDS. |
+| EDIT | A tap: the **Chords page** (below): the eight chords coming, to see and change (again: the **Walk page**, the circle of fifths; again, back). Held (half a second): the next chord, at the start of the next bar (at once while resting; in dub hold, once you let go); a card says NEXT CHORD until the chord changes. Held on (1.5 s): **new chords**, the walk's all walked again (yours, the gaps and the one playing kept); a red card, NEW CHORDS. |
 | SEL | A tap: the **Arrangement page** (PERFORM's until 1.4.0): the screen shows each part's level on a desk's meters, the knobs are Width, Mixer (the dub mixer), Wet and Duck, and the keys stop being the scale: they mute and solo the parts (white 1–6 held: a part's channel strip; a black key held: that part thrown into the echo), make the dub moves and play five of the grid's effects (see below). Again, it stays; a page's button or SELECT leaves it. Lit while on. **Held** (half a second), on any page: **Lock** on or off (below). |
 | HOME | The **Form** page (Dub until 1.4.0): how the piece unfolds (Energy, Evolve, Motion). Again: the **Song** page (its intro, main and outro, 1.4.0); again: the Key page (tempo, root, mode, swing), and again back to Form; HOME blinks on the Song and Key pages. Held on for 1.5 s (nothing turned meanwhile): **a shake of everything**, the chord, the pings, the bass, the drums and the noise at once ("SHAKE ALL"), the page kept; again and again, to explore until something sounds right. Held with SELECT turned: the tempo. |
 | ENV · ARP · LFO · SEQ | The layers' pages: Chord, Pings, Bass, Drums, each its part (see [The pages](#8-the-pages)). Again: the layer's voice page (**Chord voice**, **Pings voice**, **Bass voice**; the drums' **Kick**), then its FM page or, for the drums, the **Hats** page and then the Pattern page, then back. The chord has one more: after its FM page (for every chord voice: its Colour is there), the **Chord LFO** page, then back. Held (half a second): a **nudge** to the layer's sound; held on (1.5 s): a **shake** (below). |
 | FX · GLO | The **Dub** page, the echo and the plate (Space until 1.4.0; FX again: the **Echo page**, the echo's blur and tone, the plate's size and its cloud, FX blinking; again, back); the Setup page, for what holds for every piece (GLO again: **Song mode**, Endless, Song or Set; again, back). The lit button shows the page. FX held: a nudge to the space; held on: a shake (a new echo time). **GLO held** (half a second, then let go): **saves** all eight pieces (a card, SAVED); held on (1.5 s): the piece back to its recipe (a red card, RESET). |
 | SELECT | **The DJ filter**, on every page (its only place since 1.4.0's Chord pages; the Arrangement page's Open and Shut keys push on top of it): left shuts it (a low-pass, under water), right opens it (a high-pass, thin and bright), Off in the middle, where it stops on its way through (three clicks to leave it). While it turns, a big ring in the middle shows it (FILTER over it, the amount inside, Shut or Open under it); the page stays. Hold HOME and turn it for the tempo, from any page. The pages are on their buttons; the page's name, top right, says where you are. |
-| ALGORITHM | On a layer's page (Chord, Pings, Bass, Drums): that layer's **voice** (see [The voices](#the-voices)). On the Noise pages: its character. On the LFO pages: where the LFO goes, its **Destination** (the Chord LFO's: Cutoff, Reso, Colour; the Noise LFO's: Filter, Tone, Air). On the Chords page: the walk's character (Home, Wander, Free). Anywhere else: the middle of the screen: ripples, a scope, a spectrum, the echo trail, the fifths or the tape (see [The screen](#4-the-screen)). The mode, a piece's choice, is on the Key page (HOME again). |
+| ALGORITHM | On a layer's page (Chord, Pings, Bass, Drums): that layer's **voice** (see [The voices](#the-voices)). On the Noise pages: its character. On the LFO pages: where the LFO goes, its **Destination** (the Chord LFO's: Cutoff, Reso, Colour; the Noise LFO's: Filter, Tone, Air). On the Chords page: the walk's character (Home, Wander, Free). Anywhere else: the middle of the screen: ripples, a scope, a spectrum or the tape (see [The screen](#4-the-screen)). The mode, a piece's choice, is on the Key page (HOME again). |
 | PRESETS | The piece (see [The pieces](#7-the-pieces)). |
 | KNOB 1–4 | The four values on the screen. A few clicks are always single steps; a quick turn speeds up, so half a turn sweeps the range. While a knob turns, its value shows large in the middle of the screen, in a big ring with its name and what it does under it (on the Chords and Pattern pages, which show the change themselves, the line above the knobs says what it does). A **centred** knob (0 in the middle: the voice pages' −50…+50 ones, the chord's Cutoff, the Noise voice's Tone, the Filter, Energy (the Form and the Arrangement pages') and the Arrangement page's Wet) has a **notch** at 0: turning through, it stops there, and to leave it takes three clicks the same way (the first two are held back). A switch shows its positions as dots, up to ten (Change, Mode, Algo). A grey knob does nothing there. |
 | OCT− / OCT+ | On a layer's page (Chord, Pings, Bass, Drums or Noise, and their voice, FM, Hats and Pattern pages, and the Noise pages): that layer's **level**, 5 down or up a press (a big ring in the middle, in the layer's colour, BASS over it, the level inside, until a second after the last press); held, it keeps going. **Both together**, let go within a second: the layer **muted** ("BASS MUTED"), its level kept; again, back ("BASS ON"). The drums mute the kick and the hats together. These are the Arrangement page's mutes (white 1–6): a mute made here shows there, and the other way round. Held together for five seconds: the update mode (see [Troubleshooting](#11-troubleshooting)); a long press never mutes. On the other pages they do nothing. (The pings' octave is on the Pings voice page, KNOB 1.) |
@@ -328,8 +328,34 @@ Endless to Loop keeps the eight you see, to catch a progression you like as it g
 Endless, the one playing moves up to slot 1 and the walk goes on.
 
 Editing the slot that's playing is heard at once. The slot playing is lit; in Loop the other pages
-show "2/4" under the chord's name. EDIT again stays; any page's button leaves the page.
+show "2/4" under the chord's name. EDIT again: the Walk page (below), and again back here; any page's button
+leaves the page.
 **EDIT held** (half a second), anywhere, moves to the next chord. The slots are kept with the piece.
+
+#### The Walk page
+
+**EDIT again** from the Chords page (Chords 1/2, Walk 2/2): where the chords are, and where the walk goes, on the
+**circle of fifths** (C at the top, a fifth a step clockwise, so neighbours are close chords and the far side is far
+away).
+
+| | |
+|---|---|
+| KNOB 1 · Walk | the walk's character: **Home**, **Wander** or **Free** (the same as ALGORITHM, here or on the Chords page) |
+| KNOB 2 · Change | how long a chord lasts, 2 to 64 bars or Hold: the Chord page's Change, the same setting |
+| ALGORITHM | the walk's character, as on the Chords page |
+
+What it shows:
+- **The twelve notes** named round the circle, the key's bright and the others faint.
+- **The chord playing**: its notes lit and joined, so you see its shape; its root the biggest dot, white with each
+  kick. The last few roots leave a fading trail behind it: where the walk has been.
+- **The eight slots** as a numbered path inside the circle: each at its chord's root (a walk's chord in teal, yours
+  in white), joined in their order; in Loop the path closes and the slot playing is lit. A gap is left out (the chord
+  before it holds). Write a slot on the Chords page, or let the walk choose a new one, and it moves to where it lands.
+- **Round the outside**, dots filling up on the way to the next chord (Change).
+- **At the left**: the chord's name, the walk's character (or LOOP and where it is, "2/8"), and the eight slots'
+  chords in two columns, the one playing lit.
+
+![The Walk page on Basic: the circle of fifths, Fm7's notes joined, the eight slots as a numbered path inside, the chord's name and the slots' list at the left; WALK Wander, CHANGE 64 bars](img/screen-walk.png "The Walk page")
 
 **The effects grid** (REC held). After a moment the whole screen shows sixteen effects, four rows of four (the knobs do nothing while it's up);
 the white keys from the lowest play them, each as long as its key is held (even after you let go of
@@ -429,10 +455,11 @@ GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
   (on its side), as bright as it is loud, gone in a moment; a strong hit a brighter one. More
   Level or Density (the Noise page), more specks. The specks show on the whole piece's ripples
   and on the Noise pages (there alone), not on a layer's page.
-- **ALGORITHM** (on any page but a layer's, the Noise page or the Chords page) changes what the middle shows: the ripples, a **scope**, a
-  **spectrum**, and then three more, new in 1.4.0: the **echo trail**, the **fifths**
-  and the **tape**; then the ripples again (turned back, the other way round). Each piece keeps its own view, saved with it: Haze on the spectrum, say, and Pressure on the scope. With the
-  scope, the spectrum, the echo trail or the tape showing, the chord's name moves to the top.
+- **ALGORITHM** (on any page but a layer's, the Noise page or the Chords pages) changes what the middle shows: the ripples, a **scope**, a
+  **spectrum**, and then the **tape** (new in 1.4.0); then the ripples again (turned back, the other way round). Each piece keeps its own view, saved with it: Haze on the spectrum, say, and Pressure on the scope. With the
+  scope, the spectrum or the tape showing, the chord's name moves to the top. (1.4.0's test builds also had an
+  echo trail and the fifths here: the echo trail is gone, the fifths is now the [Walk page](#the-walk-page); a piece
+  saved on either comes back on the ripples.)
 - On a layer's own page (Chord, Pings, Bass, Drums) and its voice pages, the middle shows **that layer alone**: the ripples its notes, in
   its colour (the stabs on the Chord page, the pings with their loops' dots on the Pings page, a ring a bass note, a
   ring a drum hit), and the scope or the spectrum its sound, dry. Below it, that layer's own lane, large (below), with the
@@ -445,16 +472,6 @@ GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
     (11 kHz, right). Each band is a column of segments: teal, then brass, amber and red at the
     top. The columns jump up with the sound and fall back slowly. A white cap stays at each
     column's peak for a moment before it drops. The columns span nearly the screen's width.
-  - The **echo trail** draws the echo as tape running from the head at the right
-    edge to the left: each note a bar as tall as it struck, its repeats the bars after it, an echo time
-    apart (the dotted columns), each as tall as the echo really is when it comes back (the ripples'
-    own measure). A long Feedback leaves a long train, a short one a single bar; a throw is in the
-    accent colour.
-  - The **fifths** draws the twelve notes round the circle of fifths, C at the top:
-    the key's notes a dot, the others a point. The chord's notes are lit and joined, so you see its
-    shape; its root is the biggest, white with each kick. The last few roots leave a trail behind it
-    (where the walk has been), and the dots round the outside fill up on the way to the next chord
-    (Change).
   - The **tape** draws two reels, the tape running from the left one to the right past
     three heads: the record head lit with the output, the play head with the echo coming back. The
     reels turn with the tempo, the smaller one faster. Through a song the tape winds from the left reel
@@ -527,7 +544,7 @@ GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
 ![The scope: the output as a thick teal line over a dotted centre line, the two traces before it fading behind; Fm7 at the top](img/screen-scope.png "ALGORITHM: the scope")
 ![The spectrum: eighteen columns of teal and brass segments, a white cap over each; Fm7 at the top](img/screen-spectrum.png "ALGORITHM: the spectrum")
 
-![The echo trail: the stabs as bars from the head at the right edge, their repeats an echo time apart, smaller as the echo dies; Fm7 at the top](img/screen-echo-trail.png "ALGORITHM: the echo trail") ![The fifths: the circle of fifths, the key's notes as dots, the chord's notes lit and joined, its root the biggest, Fm7 in the middle](img/screen-fifths.png "ALGORITHM: the fifths") ![The tape: two reels, the tape from the left one past three heads to the right one; Fm7 at the top](img/screen-tape.png "ALGORITHM: the tape")
+![The tape: two reels, the tape from the left one past three heads to the right one; Fm7 at the top](img/screen-tape.png "ALGORITHM: the tape")
 ![Dub hold: red rings, the chord's name red, and "hold" in red above FORM, top right](img/screen-hold.png "Dub hold")
 ![The Arrangement page with a mute and a solo: PNG dark (muted), the bass soloed (SOLO top right), the other rows dimmed but the noise, which a solo leaves playing](img/screen-arrangement-solo.png "The Arrangement page: a mute, a solo")
 
@@ -932,7 +949,7 @@ the voice and the piece. The bass's Bite and the pings' Ratio are on their FM pa
 ![The Form page: ENERGY 0, EVOLVE 55, MOTION 30 (its ring marked at 40 and 70), the fourth knob free](img/screen-main.png "The Form page")
 
 How the piece unfolds (the Dub page until 1.4.0). **ALGORITHM** (here and on any page but a layer's, the Noise page or the Chords page): the middle of the screen as ripples, scope,
-spectrum, echo trail, fifths or tape (see [The screen](#4-the-screen)). **HOME** again: the Song page (below), then the Key page.
+spectrum or tape (see [The screen](#4-the-screen)). **HOME** again: the Song page (below), then the Key page.
 
 - **Energy:** busier or sparser, now: 0 in the middle, the notch there. Down, sparser and drier:
   fewer and quieter pings, fewer and quieter hats, fewer and shorter stabs, a thinner bass line, a
@@ -1511,8 +1528,8 @@ The defaults are Basic's; each piece has its own.
 | Strip | Echo, Plate | 0–100 (0 none – 50 as the piece sends – 100 twice; the kick's 0 none – 100 a full send) | 50 (the bass's Echo 0, the kick's 0) |
 | Strip | Low cut | 0–100 (off – about 20 Hz at 1 – about 600 Hz) | 0 |
 | SEL held | Lock | Off, On; not saved | Off |
-| ALGORITHM | Screen (all pages but a layer's, the Noise and LFO pages and the Chords page) | Ripples, Scope, Spectrum, Echo trail, Fifths, Tape | Ripples |
-| ALGORITHM | The walk (Chords page) | Home, Wander, Free | Wander |
+| ALGORITHM | Screen (all pages but a layer's, the Noise and LFO pages and the Chords pages) | Ripples, Scope, Spectrum, Tape | Ripples |
+| ALGORITHM | The walk (Chords and Walk pages; the Walk page's KNOB 1 too) | Home, Wander, Free | Wander |
 | ALGORITHM | Chord voice (Chord page) | 7 voices | Saws |
 | ALGORITHM | Ping voice (Pings page) | 5 voices | Blip |
 | ALGORITHM | Bass voice (Bass page) | 5 voices | Sub |

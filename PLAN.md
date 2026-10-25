@@ -924,6 +924,12 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   busiest (2.2k before), the rest under ~6.5k, against the 34.6k every frame clears and sends. **Kept, all three** (the user, 2026-10-25: "I like the three new visualisations, really"); more ideas
   for later (a dub desk of light
   columns, the Mixer's rides, the song as a horizon).
+- **The screens and the Walk page** (the user, 2026-10-25; build/design/VARIETY-PLAN.md items 3 and 5): built. HOME's
+  views on ALGORITHM Ripples, Scope, Spectrum, Tape (the echo trail removed; a save on it or on the fifths back on the
+  ripples: ui_screen_ok, the stored numbers kept, no format step). The fifths moved to a second Chords page, **Walk**
+  (EDIT again): the circle of fifths (the key, the chord's shape, the walk's trail, the way to the next chord), the
+  eight slots as a numbered path inside it, the chord, the walk and the slots' list at the left; KNOB 1 Walk (Home,
+  Wander, Free; ALGORITHM still too), KNOB 2 Change (the Chord page's, the same), two free (Root and Mode, later?).
 - **Still missing (the user, 2026-10-24: "don't forget"):**
   - ~~**The virtual dub mixer**~~ (built, dub-1.4-mixer, below).
   - ~~**The LFO's Destination**~~: the chord's built (Cutoff, Reso, Colour; dub-1.4-chord); the noise's built
