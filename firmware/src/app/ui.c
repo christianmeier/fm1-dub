@@ -262,8 +262,8 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Density", "Vary", "", ""},
     {"Blur", "Tone", "Size", "Cloud"},
     {"Width", "Plate", "Echo", ""},
-    {"Trim", "Rate", "Shape", "Target"},
-    {"Trim", "Rate", "Shape", "Target"},
+    {"Drift", "Rate", "Shape", "Target"},
+    {"Drift", "Rate", "Shape", "Target"},
     {"Level", "Tone", "Length", ""},
     {"Air", "Tone", "Decay", "Width"},
     {"Level", "Echo", "Plate", "Filter"},   /* (1.4.0, format 28, Robert's: the Low cut a centred filter) */
@@ -312,9 +312,9 @@ static const char *const KNOB_HELP[NVIEWS][4] = {
     {"Clean repeats, to a dissolving wash", "The repeats darker, or brighter", "How long the plate rings",
      "The reverb through the grain cloud"},
     {"The noise mono, to wide", "How much of it rings in the plate", "How much of it goes into the echo", ""},
-    {"More or less than Drift; left: still", "How long the wave: 1 to 32 bars", "The wave; Drift: a wander alone",
+    {"More or less than Drift; left: still", "How long the wave: 1 to 32 bars", "The wave; Wander: the wander alone",
      "What it moves: Cutoff, Reso, Colour"},
-    {"More or less than Drift; left: still", "How long the wave: 1 to 32 bars", "The wave; Drift: a wander alone",
+    {"More or less than Drift; left: still", "How long the wave: 1 to 32 bars", "The wave; Wander: the wander alone",
      "What it moves: Filter, Tone, Air"},
     {"The hats' level against the kick", "The hats, dark to bright", "How long the hats ring", ""},
     {"The hiss under it, softer or more", "The rings darker, or brighter", "How long each hit rings on the chord",
@@ -3433,20 +3433,20 @@ static void draw_lfo(int k)
               reach = (int)(re * (float)rr + 0.5f);   /* (the wave's and the wander's together) */
     int32_t x, y0 = yc, yy;
     char t[32], tt[32];
-    if (d > 0) {                                 /* (what moves it: "4 BARS", "4 BARS + DRIFT", "DRIFT") */
+    if (d > 0) {                                 /* (what moves it: "4 BARS", "4 BARS + WANDER", "WANDER") */
         int j = 0;
         en_param_text(k ? P_NLRATE : P_CLRATE, proj.par[k ? P_NLRATE : P_CLRATE], t);
         while (t[j])
             j++;
         if (dw > 0)
-            t[j++] = ' ', t[j++] = '+', t[j++] = ' ', t[j++] = 'D', t[j++] = 'r', t[j++] = 'i', t[j++] = 'f', t[j++] = 't';
+            t[j++] = ' ', t[j++] = '+', t[j++] = ' ', t[j++] = 'W', t[j++] = 'a', t[j++] = 'n', t[j++] = 'd', t[j++] = 'e', t[j++] = 'r';
         t[j] = 0;
     } else {
         t[0] = 0;
         if (dw > 0)
-            t[0] = 'D', t[1] = 'r', t[2] = 'i', t[3] = 'f', t[4] = 't', t[5] = 0;
+            t[0] = 'W', t[1] = 'a', t[2] = 'n', t[3] = 'd', t[4] = 'e', t[5] = 'r', t[6] = 0;
     }
-    if (t[0]) {                                  /* (1.4.0: where it goes, "4 BARS + DRIFT ON RESO", "... ON AIR") */
+    if (t[0]) {                                  /* (1.4.0: where it goes, "4 BARS + WANDER ON RESO", "... ON AIR") */
         const char *w = k ? EN_NLDEST_NAME[proj.par[P_NLDEST] % EN_NNLDEST] : EN_CLDEST_NAME[proj.par[P_CLDEST] % EN_NCLDEST];
         int j = 0;
         while (t[j])

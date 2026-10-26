@@ -555,7 +555,7 @@ GLO held on, RESET (red); SEL held, LOCK.
   line in the middle is the knob's own value (the chord's: its Target's knob, Cutoff, Reso or
   Colour; the noise's filter half open), with the bars ticked on it; the dotted lines above and below
   are the reach of the wave and the wander together, at one scale (the most it can reach: Drift and
-  the Trim grow and shrink it). What moves it is written over it ("4 BARS",
+  the LFO page's Drift grow and shrink it). What moves it is written over it ("4 BARS",
   "4 BARS + DRIFT", "DRIFT"), and, the chord's, where it goes ("4 BARS + DRIFT ON CUTOFF").
 
 ![The Dub page with FEEDBACK lit as it turns, set to 6.7 s, the big ring in the middle saying HOW LONG THE REPEATS GO ON; ECHO 55, ECHO TIME 1/8., REVERB 35](img/screen-turning.png "Turning Feedback on the Dub page")
@@ -873,34 +873,35 @@ Each stays when the voice changes, and is kept by the piece.
 
 ### The LFO pages
 
-![The Chord LFO page: TO CUTOFF, TRIM, RATE 4 bars, SHAPE Sine, TARGET Cutoff, 4 BARS + DRIFT ON CUTOFF over the filter's sine riding its wander over the last 16 bars in the middle](img/screen-chord-lfo.png "The Chord LFO page")
+![The Chord LFO page: TO CUTOFF, DRIFT, RATE 4 bars, SHAPE Sine, TARGET Cutoff, 4 BARS + WANDER ON CUTOFF over the filter's sine riding its wander over the last 16 bars in the middle](img/screen-chord-lfo.png "The Chord LFO page")
 
 Two layers move by themselves, slowly: the chord's filter (or, by its Target, its resonance or
 its Colour) and a filter on the whole noise, its hits and its hiss (or, by its Target, its Tone
 or its Air). Each moves two ways at once, a
 **wave** locked to the bars and a **wander**, slow and random, half each (or the wander alone: the Shape
-Drift); how far, the Form page's **Drift** (1.4.0, the variety plan: each its own Depth and Drift
-before), each page's Trim more or less of it. Each has an
+Wander); how far, the Form page's **Drift** (1.4.0, the variety plan: each its own Depth and Drift
+before), each page's own **Drift** more or less of it (the same name as Form's, as the layers' Vary: it is
+Form's Drift for this LFO). Each has an
 **LFO page**: ENV a fourth time (Chord, Chord voice, Chord FM, **Chord LFO**, then back to Chord), and SAVE
 a third time (Noise, Noise voice, **Noise LFO**, then back to Noise). The button blinks while you're
 there. KNOB 4, or ALGORITHM, picks where its LFO goes, its **Target** (below); the noise's
 character is on its other pages. The middle shows the LFO's path,
 the last 16 bars of it (see [The screen](#4-the-screen)), at one scale, the most it can reach: it grows
-and shrinks with Drift and the Trim, flat when still; the lane under it is the layer's, as on its
+and shrinks in height with Form's Drift and the page's, flat when still; the lane under it is the layer's, as on its
 page.
 
-- **Trim:** more or less than Drift for this LFO, centred: 0 (the middle, the notch) as Drift says,
-  +50 twice as far, the far left **Still** (it doesn't move, whatever Drift says). The chord's filter
+- **Drift:** more or less than Form's Drift for this LFO, centred: 0 (the middle, the notch) as Form's says,
+  +50 twice as far, the far left **Still** (it doesn't move, whatever Form's Drift says). The chord's filter
   goes about an octave either way at Drift 50 (the wave's half and the wander's half together), 1.7 at
-  100, 2.2 at most (Drift 100, Trim +50); on Reso or Colour as far along their knob (below). The
+  100, 2.2 at most (Form's Drift 100, this one +50); on Reso or Colour as far along their knob (below). The
   noise's filter: open at the top of its reach, closing towards the bottom, up to three and a half
-  octaves (from 20 kHz down to about 1.4 kHz) at Drift 100 and Trim +50 (on Tone or Air: below).
+  octaves (from 20 kHz down to about 1.4 kHz) at Form's Drift 100 and this one +50 (on Tone or Air: below).
 - **Rate:** how long the wave, a switch, one position a click: **1 bar** (one redonda (whole note)),
   **2, 4, 8, 16 or 32 bars**, locked to the bars.
 - **Shape:** the wave's shape: **Sine**, **Triangle**, **Ramp up** (a slow rise, then back at once),
-  **Ramp down**, each with the wander under it, half and half; or **Drift**, the wander alone, no wave.
+  **Ramp down**, each with the wander under it, half and half; or **Wander**, the wander alone, no wave.
   The sine's and the triangle's top comes a quarter of the way into the cycle.
-- **The wander** (every Shape's half, Drift's whole). Like a hand riding the filter: every 8 to 32 bars it picks a new place somewhere
+- **The wander** (every Shape's half, Wander's whole). Like a hand riding the filter: every 8 to 32 bars it picks a new place somewhere
   within its reach (a real move, not a twitch), and glides there, smoothly, easing in and out, over
   most of the time until the next; then it rests there a little. Its moves don't wait for a barline,
   it never repeats a path, and the chord's and the noise's wander each on their own. It runs under
@@ -918,7 +919,7 @@ page.
 - **The noise's Target** (KNOB 4, or ALGORITHM, on the Noise LFO page): **Filter** (the low-pass on
   the whole noise, as ever), **Tone** (the Noise voice's Tone: its rings and its hiss darker and
   brighter) or **Air** (the hiss's level, rising and falling under the hits). On Tone and Air they go a
-  quarter of the knob's sweep at Drift 100 (with Trim +50: half of it either way), never past the
+  quarter of the knob's sweep at Drift 100 (with this page's Drift +50: half of it either way), never past the
   knob's own ends; the filter then stays open. The big ring names it
   (DESTINATION), the rule says TO FILTER, TO TONE or TO AIR, and on the Noise voice page the Tone or
   Air knob shows it moving, as the chord's do (the Filter has no knob: the LFO page's path shows it).
@@ -929,9 +930,9 @@ page.
 ![The Chord LFO page, ALGORITHM turned: the big ring, DESTINATION over it, Reso in it, What the LFO moves under it; TO RESO on the rule](img/screen-chord-lfo-dest.png "The Chord LFO page: the Destination")
 
 Every piece moves (its Drift 27 to 80). Chamber's and Haze's chords, the slow, ambient ones, wander
-alone (the Shape Drift); Fog's and Haze's noise too. The others add a wave: Basic, Pressure and
+alone (the Shape Wander); Fog's and Haze's noise too. The others add a wave: Basic, Pressure and
 Concrete's chords on 4 bars, Steppers' on 2, Night Drive's on 8 (each piece's in
-[Parameters](#12-parameters)). The defaults: a sine, 4 bars, Trim 0.
+[Parameters](#12-parameters)). The defaults: a sine, 4 bars, Drift 0.
 
 The bass and the pings have no LFO (DUB-1 1.4.0: the records never move a dub bass that way, and the
 pings' was barely heard). The bass moves with the arrangement and the hand: Energy, Motion, a
@@ -1006,7 +1007,7 @@ spectrum or tape (see [The screen](#4-the-screen)). **HOME** again: the Song pag
   arrangement can still breathe, and a busy one can be dry.
 - **Drift** (1.4.0, the variety plan): how much the sound moves, from still to restless, one amount for
   all of it: the chord's and the noise's LFOs (their wave and their random wander; see
-  [The LFO pages](#the-lfo-pages): each page's Trim more or less of it), how far the filter's long
+  [The LFO pages](#the-lfo-pages): each LFO page's Drift more or less of it), how far the filter's long
   sweeps go (about 1.6 octaves either way at 50, a little more above, a new place every 4 to 14 bars, off the
   phrase's line), how much the stabs' filter, the echo's heads, its band-pass and its feedback wander
   (Motion's until now), and the dub mixer's slow rides of the parts' levels and sends (the Arrangement
@@ -1443,7 +1444,7 @@ Endless, as it played before. From 1.4.0's song structure (format 26), each piec
 recipe. From 1.4.0's dub mixer (format 27), each strip's Low cut (0–100, a high-pass) becomes its
 Filter's high-pass at the same cutoff, as near as a step goes (a Low cut of 100, about 600 Hz, is +36);
 the tempo and the scales keep their values (the new range only reaches further). From the variety plan's step 1 (format 29) and before, each piece's LFOs' Depth and Drift and its
-Mixer become the Form page's Drift and the LFOs' Trims (and the Shape Drift where its wave was off), as near
+Mixer become the Form page's Drift and the LFO pages' Drifts (and the Shape Wander where its wave was off), as near
 as they sounded, and the throws are set at the chord's Vary as it was. To get a changed piece's
 whole new recipe, hold GLO for 1.5 s on it.
 Projects saved by AMB-1 aren't read by DUB-1: the first start after installing it begins with the
@@ -1533,7 +1534,7 @@ The defaults are Basic's; each piece has its own.
 | Noise voice | Decay | 0–100 (about 70 ms – over a second) | 50 |
 | Noise voice | Width | 0–100 (50: as the pieces have it) | 50 |
 | Noise pages | Character (ALGORITHM) | Vinyl, Tape, Dust, Room, Machine | Vinyl |
-| Noise LFO | Trim | Still, −49 – 0 – +50 (on Drift: none – as Drift – twice) | +5 |
+| Noise LFO | Drift | Still, −49 – 0 – +50 (on Drift: none – as Drift – twice) | +5 |
 | Noise LFO | Rate | 1, 2, 4, 8, 16, 32 bars | 4 bars |
 | Noise LFO | Shape | Sine, Triangle, Ramp up, Ramp down (each with the wander), Drift (the wander alone) | Sine |
 | Noise LFO | Target | Filter (on the whole noise, closing up to 3.5 octaves), Tone, Air | Filter |
@@ -1593,7 +1594,7 @@ The defaults are Basic's; each piece has its own.
 | Chord, Pings, Bass FM | Feedback (from the voice's own) | 0–100 | 0 |
 | Chord FM | Colour (every chord voice) | −50 – +50 | 0 |
 | Bass FM | Bite (every bass voice) | −50 – +50 | 0 |
-| Chord LFO | Trim | Still, −49 – 0 – +50 (on Drift: none – as Drift, about ±1 octave at 50 – twice) | −2 |
+| Chord LFO | Drift | Still, −49 – 0 – +50 (on Drift: none – as Drift, about ±1 octave at 50 – twice) | −2 |
 | Chord LFO | Rate | 1, 2, 4, 8, 16, 32 bars | 4 bars |
 | Chord LFO | Shape | Sine, Triangle, Ramp up, Ramp down (each with the wander), Drift (the wander alone) | Sine |
 | Chord LFO | Target | Cutoff, Reso, Colour | Cutoff |
@@ -1614,9 +1615,9 @@ each stab opens the filter. Each piece also has its own voices.
 | Pressure | Tonewheel | Wood | Growl | Deep | 35 | 65 |
 | Haze | Pad | Glass | Sub | Dusty | 25 | 35 |
 
-Drift and the LFOs, each piece's (the waves sines, each with its wander; "wander" the Shape Drift):
+Drift and the LFOs, each piece's (the waves sines, each with its wander; "wander" the Shape Wander):
 
-| Piece | Drift | Chord LFO (Trim, wave) | Noise LFO (Trim, wave) |
+| Piece | Drift | Chord LFO (Drift, wave) | Noise LFO (Drift, wave) |
 |---|---|---|---|
 | Basic | 41 | −2, 4 bars | +5, 4 bars |
 | Chamber | 27 | −25, wander | +50, 8 bars |
@@ -1627,8 +1628,8 @@ Drift and the LFOs, each piece's (the waves sines, each with its wander; "wander
 | Pressure | 43 | +3, 4 bars | −3, 4 bars |
 | Haze | 41 | −25, wander | −13, wander |
 
-(1.4.0, the variety plan's step 2: each piece's Drift and Trims as near as its LFOs' Depth and Drift and its
-Mixer sounded: Drift from how far its filter breathed, the Trims the reach each LFO had.)
+(1.4.0, the variety plan's step 2: each piece's Drift and its LFOs' Drifts as near as its LFOs' Depth and Drift and its
+Mixer sounded: Drift from how far its filter breathed, the LFOs' Drifts the reach each LFO had.)
 
 ---
 

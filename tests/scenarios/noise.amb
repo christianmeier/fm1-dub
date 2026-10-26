@@ -51,7 +51,7 @@ expect peak_db_max -0.5
 tap SAVE
 wait 400
 expect view 23
-said Noise LFO page, destination Filter: Trim 5, Rate 4 bars, Shape Sine, Target Filter
+said Noise LFO page, destination Filter: Drift 5, Rate 4 bars, Shape Sine, Target Filter
 spin K2 9
 wait 300
 expect par128 5

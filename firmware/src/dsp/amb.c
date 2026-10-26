@@ -316,7 +316,7 @@ EN_COLD void en_piece(int i, int16_t *par, uint16_t *pool)
 }
 
 const char *const EN_CV_NAME[EN_NCV] = {"Saws", "Keys", "Organ", "Pad", "Bell", "Tonewheel", "Noise"};
-const char *const EN_LFO_SHAPE[EN_NLSHAPE] = {"Sine", "Triangle", "Ramp up", "Ramp down", "Drift"};
+const char *const EN_LFO_SHAPE[EN_NLSHAPE] = {"Sine", "Triangle", "Ramp up", "Ramp down", "Wander"};
 const char *const EN_CLDEST_NAME[EN_NCLDEST] = {"Cutoff", "Reso", "Colour"};
 const char *const EN_NLDEST_NAME[EN_NNLDEST] = {"Filter", "Tone", "Air"};
 const char *const EN_SMODE_NAME[EN_NSMODE] = {"Endless", "Song", "Set"};
@@ -445,7 +445,7 @@ EN_COLD void en_param_text(int i, int v, char *b)
     else if (i == P_DRIFT && !en_drift_bars(v))
         s = "Hold";
     else if ((i == P_CLRATE || i == P_NLRATE) && !en_lfo_bars(v))
-        s = "Drift";                             /* (1.4.0: the LFOs' rates, the last a wander) */
+        s = "Wander";                            /* (1.4.0: the LFOs' rates, the last a wander) */
     else if ((i == P_CLRATE || i == P_NLRATE) && en_lfo_bars(v) == 1)
         s = "1 bar";
     else if (i == P_CLSHAPE || i == P_NLSHAPE)

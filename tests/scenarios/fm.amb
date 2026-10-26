@@ -30,7 +30,7 @@ expect peak_db_max -0.5
 tap ENV
 wait 400
 expect view 22
-said Chord LFO page, destination Cutoff: Trim -2, Rate 4 bars, Shape Sine, Target Cutoff
+said Chord LFO page, destination Cutoff: Drift -2, Rate 4 bars, Shape Sine, Target Cutoff
 # (format 30: Basic's Depth 30 and Drift 45 as Drift 41 and the Trim -2)
 # ALGORITHM: the Destination, round (Cutoff, Reso, Colour), the voice left be
 turn ALGO 1
@@ -61,7 +61,7 @@ expect par127 2
 spin K1 10
 wait 300
 expect par166 0
-said Trim 0
+said Drift 0
 spin K3 1
 wait 300
 expect par129 1
@@ -76,7 +76,7 @@ expect par134 0
 spin K1 -80
 wait 300
 expect par166 -50
-said Trim Still
+said Drift Still
 expect par55 30
 expect par127 2
 tap ENV
