@@ -91,6 +91,38 @@ static void run(float secs)
     }
 }
 
+/* (1.4.0, the user's) the dub sirens: one traced from its key's press, a block at a time (its gate, its pitch in
+ * semitones over the root as voiced, in Hz); hold < 0: a tap, else held (the hold a third of a second on) and let go
+ * at hold seconds. Returns the blocks traced */
+#define SIR_TN 6000
+static uint8_t sir_on[SIR_TN];
+static float sir_st[SIR_TN], sir_hz[SIR_TN];
+static int sir_trace(int s, float hold, float secs)
+{
+    const float bt = 256.0f / 44100.0f;
+    int b, n = (int)(secs / bt), h = 0, r = 0;
+    if (n > SIR_TN)
+        n = SIR_TN;
+    en_siren(s, EN_SIR_TAP);
+    for (b = 0; b < n; b++) {
+        const float t = (float)b * bt;
+        if (hold >= 0.0f && !h && t >= 0.334f)
+            en_siren(s, EN_SIR_HOLD), h = 1;
+        if (hold >= 0.0f && !r && t >= hold)
+            en_siren(s, EN_SIR_OFF), r = 1;
+        en_render(buf, 256, 2048);
+        sir_on[b] = en_sir_on, sir_st[b] = en_sir_st, sir_hz[b] = en_sir_hz;
+    }
+    return n;
+}
+static float sir_gate(int n)                     /* the seconds its gate stayed open */
+{
+    int b, k = 0;
+    for (b = 0; b < n; b++)
+        k += sir_on[b] != 0;
+    return (float)k * 256.0f / 44100.0f;
+}
+
 /* (1.4.0) the LFOs: a sixteenth at a time, as the LFO pages' trace has it (en_lfo_tr), n of them from now: the
  * chord's (k 0) and the noise's (1); and when the chord's drift took a new place (picks, the sixteenth's index) */
 #define LFO_REC 4800
@@ -2514,6 +2546,137 @@ int main(void)
         CHECK(en_queue_left() == 0, "a knob's change at once (%u left)", en_queue_left());
         run(4.0f);
         CHECK(!bad, "a piece spread: NaN");
+    }
+
+    /* (last: the other tests' random draws as they were) */
+    /* (1.4.0, the user's) the dub sirens, in two keys (F Dorian; D Iwato, its fifth a b5) at two tempos: their turning
+     * points on the root, the fifth, the octave (the root's pitch class the key's); Wail's and Whoop's cycles the bar's,
+     * Hi-lo's and Laser's the same at either tempo; a tap's played to its end, a held one looping till let go */
+    {
+        static const int ROOT[2] = {5, 2}, MODE[2] = {MODE_DORIAN, 10}, TEMPO[2] = {122, 80};
+        const float bt = 256.0f / 44100.0f;
+        float free_gate[2][2];
+        int kk, tt, b;
+        CHECK(!strcmp(EN_MODE_NAME[10], "Iwato"), "mode 10 is %s", EN_MODE_NAME[10]);
+        for (kk = 0; kk < 2; kk++)
+            for (tt = 0; tt < 2; tt++) {
+                const float f5 = kk ? 6.0f : 7.0f, bar = 240.0f / (float)TEMPO[tt];
+                float g, mx = -99.0f, mn = 99.0f, pk[16];
+                int npk = 0, last = 0, sk;
+                fresh();
+                en_set(P_ROOT, ROOT[kk]);
+                en_set(P_MODE, MODE[kk]);
+                en_pool(EN_MODE_POOL[MODE[kk]]);
+                en_set(P_TEMPO, TEMPO[tt]);
+                en_play(1);
+                run(1.0f);
+                /* Wail, tapped: one rise and fall over a bar, lingering on the fifth, the octave at its top */
+                n = sir_trace(EN_SIR_WAIL, -1.0f, bar + 1.0f);
+                g = sir_gate(n);
+                CHECK(fabsf(g - bar) < 0.02f, "Wail tapped: %.3f s, a bar is %.3f", (double)g, (double)bar);
+                CHECK(fabsf(sir_st[(int)(bar * 0.25f / bt)] - f5) < 0.1f && fabsf(sir_st[(int)(bar * 0.75f / bt)] - f5) < 0.1f,
+                      "Wail: the fifth at a quarter of its cycle (%.3f, %.3f; %.0f)", (double)sir_st[(int)(bar * 0.25f / bt)],
+                      (double)sir_st[(int)(bar * 0.75f / bt)], (double)f5);
+                b = (int)(bar * 0.5f / bt);
+                CHECK(fabsf(sir_st[b] - 12.0f) < 0.1f, "Wail: the octave at its top (%.3f)", (double)sir_st[b]);
+                {
+                    const float m = 69.0f + 12.0f * log2f(sir_hz[b] / 440.0f) - 12.0f - (float)ROOT[kk];
+                    CHECK(fabsf(m - 12.0f * floorf(m / 12.0f + 0.5f)) < 0.05f, "Wail: its octave the key's root (%.3f)",
+                          (double)m);
+                }
+                for (b = 0; b < n && sir_on[b]; b++)
+                    last = b;
+                CHECK(fabsf(sir_st[last]) < 0.15f, "Wail: it ends on the root (%.3f)", (double)sir_st[last]);
+                CHECK(!sir_on[n - 1], "Wail: a tap's let go by itself");
+                /* Whoop, tapped: four whoops, a negra (quarter) each, root to octave */
+                n = sir_trace(EN_SIR_WHOOP, -1.0f, bar + 0.5f);
+                g = sir_gate(n);
+                CHECK(fabsf(g - bar) < 0.02f, "Whoop tapped: %.3f s, a bar is %.3f", (double)g, (double)bar);
+                for (b = 1; b + 1 < n; b++)
+                    if (sir_on[b] && sir_st[b] > 11.8f && sir_st[b] >= sir_st[b - 1] && sir_st[b] > sir_st[b + 1] && npk < 16)
+                        pk[npk++] = (float)b * bt;
+                CHECK(npk == 4, "Whoop tapped: %d whoops to the octave", npk);
+                for (b = 1; b < npk; b++)
+                    CHECK(fabsf(pk[b] - pk[b - 1] - bar * 0.25f) < 0.02f, "Whoop: %.3f s apart (a negra %.3f)",
+                          (double)(pk[b] - pk[b - 1]), (double)(bar * 0.25f));
+                /* Wail held: the octave every 4 bars */
+                n = sir_trace(EN_SIR_WAIL, 9.0f * bar, 9.0f * bar + 1.0f);
+                npk = 0;
+                for (b = 1; b + 1 < n; b++)
+                    if (sir_on[b] && sir_st[b] > 11.9f && sir_st[b] >= sir_st[b - 1] && sir_st[b] > sir_st[b + 1] && npk < 16)
+                        pk[npk++] = (float)b * bt;
+                CHECK(npk == 2 && fabsf(pk[1] - pk[0] - 4.0f * bar) < 0.05f, "Wail held: %d tops, %.3f s apart (4 bars "
+                      "%.3f)", npk, npk > 1 ? (double)(pk[1] - pk[0]) : 0.0, (double)(4.0f * bar));
+                CHECK(sir_on[(int)(8.9f * bar / bt)] && !sir_on[n - 1], "Wail held: on till let go, then gone");
+                /* Whoop held: a whoop a bar, from the root, the root, the fifth, the octave: to two octaves */
+                n = sir_trace(EN_SIR_WHOOP, 8.5f * bar, 8.5f * bar + 0.5f);
+                mx = -99.0f;
+                for (b = 0; b < n; b++)
+                    if (sir_on[b])
+                        mx = fmaxf(mx, sir_st[b]);
+                CHECK(fabsf(mx - 24.0f) < 0.1f, "Whoop held: up to two octaves (%.3f)", (double)mx);
+                npk = 0;
+                for (b = 1; b + 1 < n; b++)
+                    if (sir_on[b] && sir_st[b] > 11.8f && sir_st[b] >= sir_st[b - 1] && sir_st[b] > sir_st[b + 1] && npk < 16)
+                        pk[npk++] = sir_st[b];
+                for (b = 0, sk = 0; b < npk; b++)
+                    sk += fabsf(pk[b] - 12.0f - f5) < 0.1f;
+                CHECK(npk >= 8 && sk >= 2, "Whoop held: %d tops, %d of them on the fifth over the octave", npk, sk);
+                /* Hi-lo, tapped: 2 s, root and fifth swapped 4 a second; held: the pair up to the fifth and the octave */
+                n = sir_trace(EN_SIR_HILO, -1.0f, 2.5f);
+                free_gate[0][tt] = sir_gate(n);
+                for (b = 0; b < 8; b++) {
+                    const float s = sir_st[(int)((0.25f * (float)b + 0.125f) / bt)];
+                    CHECK(fabsf(s - (b & 1 ? f5 : 0.0f)) < 0.02f, "Hi-lo: swap %d on %.3f", b, (double)s);
+                }
+                n = sir_trace(EN_SIR_HILO, 20.0f, 21.0f);
+                mx = -99.0f, mn = 99.0f;
+                for (b = 0; b < n; b++)
+                    if (sir_on[b])
+                        mx = fmaxf(mx, sir_st[b]), mn = fminf(mn, sir_st[b]);
+                CHECK(fabsf(mx - 12.0f) < 0.05f && fabsf(mn) < 0.05f, "Hi-lo held: %.3f .. %.3f", (double)mn, (double)mx);
+                CHECK(!sir_on[n - 1], "Hi-lo held: gone once let go");
+                /* Laser, tapped: 1.5 s from two octaves up to the root; held: 8 s falls, again */
+                n = sir_trace(EN_SIR_LASER, -1.0f, 2.0f);
+                free_gate[1][tt] = sir_gate(n);
+                for (b = 0; b < n && sir_on[b]; b++)
+                    last = b;
+                CHECK(fabsf(sir_st[0] - 24.0f) < 0.7f && fabsf(sir_st[last]) < 0.1f, "Laser: %.3f down to %.3f",
+                      (double)sir_st[0], (double)sir_st[last]);
+                n = sir_trace(EN_SIR_LASER, 20.0f, 21.0f);
+                npk = 0;
+                for (b = 1; b < n; b++)
+                    if (sir_st[b] - sir_st[b - 1] > 12.0f && npk < 16)
+                        pk[npk++] = (float)b * bt;
+                CHECK(npk == 2 && fabsf(pk[1] - pk[0] - 8.5f) < 0.03f, "Laser held: %d restarts, %.3f s apart", npk,
+                      npk > 1 ? (double)(pk[1] - pk[0]) : 0.0);
+                CHECK(!bad && peak < 0.99f, "the sirens: peak %f", (double)peak);
+                (void)mn;
+            }
+        for (b = 0; b < 2; b++)
+            CHECK(fabsf(free_gate[b][0] - free_gate[b][1]) < 0.01f && fabsf(free_gate[b][0] - (b ? 1.5f : 2.0f)) < 0.02f,
+                  "%s: %.3f s at 122, %.3f at 80 (free of the tempo)", b ? "Laser" : "Hi-lo", (double)free_gate[b][0],
+                  (double)free_gate[b][1]);
+        /* one voice: a new one takes over; a held one let go by another's key does nothing */
+        fresh();
+        en_play(1);
+        en_siren(EN_SIR_HILO, EN_SIR_TAP);
+        en_siren(EN_SIR_HILO, EN_SIR_HOLD);
+        run(1.0f);
+        en_siren(EN_SIR_LASER, EN_SIR_TAP);
+        run(0.1f);
+        CHECK(en_sir_on == EN_SIR_LASER + 1, "Laser over Hi-lo: %u sounding", en_sir_on);
+        en_siren(EN_SIR_HILO, EN_SIR_OFF);
+        run(0.5f);
+        CHECK(en_sir_on == EN_SIR_LASER + 1, "Hi-lo's key let go: the Laser still (%u)", en_sir_on);
+        run(1.5f);
+        CHECK(en_sir_on == 0, "the Laser's tap done (%u)", en_sir_on);
+        en_siren(EN_SIR_WAIL, EN_SIR_TAP);
+        en_siren(EN_SIR_WAIL, EN_SIR_HOLD);
+        run(1.0f);
+        en_panic();
+        run(0.05f);
+        CHECK(en_sir_on == 0, "a panic: the siren gone (%u)", en_sir_on);
     }
 
     printf(fails ? "amb: %d FAILED\n" : "amb: ok\n", fails);
