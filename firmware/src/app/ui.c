@@ -2849,7 +2849,8 @@ static void fft512(float *re, float *im)         /* in place, radix 2 */
 static void draw_spec(void)
 {
     static const uint16_t EDGE[SP_NB + 1] = {1, 2, 3, 4, 5, 6, 7, 9, 12, 16, 22, 30, 40, 55, 75, 102, 138, 188, 256};
-    static float re[EN_SPEC_N], im[EN_SPEC_N], lv[SP_NB], cap[SP_NB];
+    float *const re = app_scratch.fft[0], *const im = app_scratch.fft[1];   /* (a frame's: the scratch's, app.h) */
+    static float lv[SP_NB], cap[SP_NB];
     static uint8_t hold[SP_NB];
     uint32_t w = en_spec_w;
     int i, b, g;

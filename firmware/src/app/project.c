@@ -5,6 +5,7 @@
  * The pieces (their recipes are the engine's, en_piece): each keeps its own settings as you leave it;
  * Tune, MIDI out and Song mode are global. */
 project_t proj;
+app_scratch_t app_scratch;
 
 const char *piece_name(int i) { return en_piece_name(i); }
 
@@ -891,144 +892,144 @@ static void shape30(int16_t *par)                /* (format 30, step 2's test bu
 
 int project_load(void)
 {
-    static project_t buf;
+    project_t *const pbuf = &app_scratch.load;   /* (the boot's buffer, lent by the scratch: app.h) */
     int n, old = 0, i;
     uint8_t fresh[NPIECES];                      /* (a piece never changed: today's recipe) */
     memset(fresh, 0, sizeof fresh);
-    memset(&buf, 0, sizeof buf);
-    n = plat_store_load(OBJ_PROJ, &buf, sizeof buf);
-    if (n >= 8 && buf.magic == PROJ_MAGIC && buf.format == 8u && n >= (int)sizeof(project8_t)) {
+    memset(pbuf, 0, sizeof *pbuf);
+    n = plat_store_load(OBJ_PROJ, pbuf, sizeof *pbuf);
+    if (n >= 8 && pbuf->magic == PROJ_MAGIC && pbuf->format == 8u && n >= (int)sizeof(project8_t)) {
         for (i = 0; i < NPIECES; i++) {
-            const project8_t *o = (const project8_t *)(const void *)&buf;
+            const project8_t *o = (const project8_t *)(const void *)pbuf;
             fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR10, o->slot[i].pool, i);
         }
-        from8((const project8_t *)(const void *)&buf);
+        from8((const project8_t *)(const void *)pbuf);
         old = 9;
-    } else if (n >= 8 && buf.magic == PROJ_MAGIC && (buf.format == 9u || buf.format == 10u) &&
+    } else if (n >= 8 && pbuf->magic == PROJ_MAGIC && (pbuf->format == 9u || pbuf->format == 10u) &&
                n >= (int)sizeof(project10_t)) {
-        old = (int)buf.format;
+        old = (int)pbuf->format;
         for (i = 0; i < NPIECES; i++) {
-            const project10_t *o = (const project10_t *)(const void *)&buf;
+            const project10_t *o = (const project10_t *)(const void *)pbuf;
             fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR10, o->slot[i].pool, i);
         }
-        from10((const project10_t *)(const void *)&buf);
-    } else if (n >= 8 && buf.magic == PROJ_MAGIC && (buf.format == 11u || buf.format == 12u) &&
+        from10((const project10_t *)(const void *)pbuf);
+    } else if (n >= 8 && pbuf->magic == PROJ_MAGIC && (pbuf->format == 11u || pbuf->format == 12u) &&
                n >= (int)sizeof(project12_t)) {
-        old = (int)buf.format;
+        old = (int)pbuf->format;
         for (i = 0; i < NPIECES; i++) {
-            const project12_t *o = (const project12_t *)(const void *)&buf;
+            const project12_t *o = (const project12_t *)(const void *)pbuf;
             fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR12, o->slot[i].pool, i);
         }
-        from12((const project12_t *)(const void *)&buf);
-    } else if (n >= 8 && buf.magic == PROJ_MAGIC && buf.format == 16u && n >= (int)sizeof(project16_t)) {
+        from12((const project12_t *)(const void *)pbuf);
+    } else if (n >= 8 && pbuf->magic == PROJ_MAGIC && pbuf->format == 16u && n >= (int)sizeof(project16_t)) {
         old = 16;
         for (i = 0; i < NPIECES; i++) {
-            const project16_t *o = (const project16_t *)(const void *)&buf;
+            const project16_t *o = (const project16_t *)(const void *)pbuf;
             fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR16, o->slot[i].pool, i);
         }
-        from16((const project16_t *)(const void *)&buf);
-    } else if (n >= 8 && buf.magic == PROJ_MAGIC && buf.format == 15u && n >= (int)sizeof(project15_t)) {
+        from16((const project16_t *)(const void *)pbuf);
+    } else if (n >= 8 && pbuf->magic == PROJ_MAGIC && pbuf->format == 15u && n >= (int)sizeof(project15_t)) {
         old = 15;
         for (i = 0; i < NPIECES; i++) {
-            const project15_t *o = (const project15_t *)(const void *)&buf;
+            const project15_t *o = (const project15_t *)(const void *)pbuf;
             fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR15, o->slot[i].pool, i);
         }
-        from15((const project15_t *)(const void *)&buf);
-    } else if (n >= 8 && buf.magic == PROJ_MAGIC && buf.format == 14u && n >= (int)sizeof(project14_t)) {
+        from15((const project15_t *)(const void *)pbuf);
+    } else if (n >= 8 && pbuf->magic == PROJ_MAGIC && pbuf->format == 14u && n >= (int)sizeof(project14_t)) {
         old = 14;
         for (i = 0; i < NPIECES; i++) {
-            const project14_t *o = (const project14_t *)(const void *)&buf;
+            const project14_t *o = (const project14_t *)(const void *)pbuf;
             fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR14, o->slot[i].pool, i);
         }
-        from14((const project14_t *)(const void *)&buf);
-    } else if (n >= 8 && buf.magic == PROJ_MAGIC && buf.format == 13u && n >= (int)sizeof(project13_t)) {
+        from14((const project14_t *)(const void *)pbuf);
+    } else if (n >= 8 && pbuf->magic == PROJ_MAGIC && pbuf->format == 13u && n >= (int)sizeof(project13_t)) {
         old = 13;
         for (i = 0; i < NPIECES; i++) {
-            const project13_t *o = (const project13_t *)(const void *)&buf;
+            const project13_t *o = (const project13_t *)(const void *)pbuf;
             fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR13, o->slot[i].pool, i);
         }
-        from13((const project13_t *)(const void *)&buf);
-    } else if (n >= 8 && buf.magic == PROJ_MAGIC && (buf.format == 17u || buf.format == 18u) &&
+        from13((const project13_t *)(const void *)pbuf);
+    } else if (n >= 8 && pbuf->magic == PROJ_MAGIC && (pbuf->format == 17u || pbuf->format == 18u) &&
                n >= (int)sizeof(project18_t)) {
-        old = (int)buf.format;                   /* (17: as 18 laid out; the noise's Density and Air converted below) */
+        old = (int)pbuf->format;                   /* (17: as 18 laid out; the noise's Density and Air converted below) */
         for (i = 0; i < NPIECES; i++) {
-            const project18_t *o = (const project18_t *)(const void *)&buf;
+            const project18_t *o = (const project18_t *)(const void *)pbuf;
             fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR18, o->slot[i].pool, i);
         }
-        from18((const project18_t *)(const void *)&buf);
-    } else if (n >= 8 && buf.magic == PROJ_MAGIC && buf.format == 19u && n >= (int)sizeof(project19_t)) {
+        from18((const project18_t *)(const void *)pbuf);
+    } else if (n >= 8 && pbuf->magic == PROJ_MAGIC && pbuf->format == 19u && n >= (int)sizeof(project19_t)) {
         old = 19;
         for (i = 0; i < NPIECES; i++) {
-            const project19_t *o = (const project19_t *)(const void *)&buf;
+            const project19_t *o = (const project19_t *)(const void *)pbuf;
             fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR19, o->slot[i].pool, i);
         }
-        from19((const project19_t *)(const void *)&buf);
-    } else if (n >= 8 && buf.magic == PROJ_MAGIC && buf.format == 20u && n >= (int)sizeof(project20_t)) {
+        from19((const project19_t *)(const void *)pbuf);
+    } else if (n >= 8 && pbuf->magic == PROJ_MAGIC && pbuf->format == 20u && n >= (int)sizeof(project20_t)) {
         old = 20;
         for (i = 0; i < NPIECES; i++) {
-            const project20_t *o = (const project20_t *)(const void *)&buf;
+            const project20_t *o = (const project20_t *)(const void *)pbuf;
             fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR20, o->slot[i].pool, i);
         }
-        from20((const project20_t *)(const void *)&buf);
-    } else if (n >= 8 && buf.magic == PROJ_MAGIC && buf.format == 21u && n >= (int)sizeof(project21_t)) {
+        from20((const project20_t *)(const void *)pbuf);
+    } else if (n >= 8 && pbuf->magic == PROJ_MAGIC && pbuf->format == 21u && n >= (int)sizeof(project21_t)) {
         old = 21;
         for (i = 0; i < NPIECES; i++) {
-            const project21_t *o = (const project21_t *)(const void *)&buf;
+            const project21_t *o = (const project21_t *)(const void *)pbuf;
             fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR21, o->slot[i].pool, i);
         }
-        from21((const project21_t *)(const void *)&buf);
-    } else if (n >= 8 && buf.magic == PROJ_MAGIC && buf.format == 22u && n >= (int)sizeof(project22_t)) {
+        from21((const project21_t *)(const void *)pbuf);
+    } else if (n >= 8 && pbuf->magic == PROJ_MAGIC && pbuf->format == 22u && n >= (int)sizeof(project22_t)) {
         old = 22;
         for (i = 0; i < NPIECES; i++) {
-            const project22_t *o = (const project22_t *)(const void *)&buf;
+            const project22_t *o = (const project22_t *)(const void *)pbuf;
             fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR22, o->slot[i].pool, i);
         }
-        from22((const project22_t *)(const void *)&buf);
-    } else if (n >= 8 && buf.magic == PROJ_MAGIC && buf.format == 23u && n >= (int)sizeof(project23_t)) {
+        from22((const project22_t *)(const void *)pbuf);
+    } else if (n >= 8 && pbuf->magic == PROJ_MAGIC && pbuf->format == 23u && n >= (int)sizeof(project23_t)) {
         old = 23;
         for (i = 0; i < NPIECES; i++) {
-            const project23_t *o = (const project23_t *)(const void *)&buf;
+            const project23_t *o = (const project23_t *)(const void *)pbuf;
             fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR23, o->slot[i].pool, i);
         }
-        from23((const project23_t *)(const void *)&buf);
-    } else if (n >= 8 && buf.magic == PROJ_MAGIC && buf.format == 24u && n >= (int)sizeof(project24_t)) {
+        from23((const project23_t *)(const void *)pbuf);
+    } else if (n >= 8 && pbuf->magic == PROJ_MAGIC && pbuf->format == 24u && n >= (int)sizeof(project24_t)) {
         old = 24;
         for (i = 0; i < NPIECES; i++) {
-            const project24_t *o = (const project24_t *)(const void *)&buf;
+            const project24_t *o = (const project24_t *)(const void *)pbuf;
             fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR24, o->slot[i].pool, i);
         }
-        from24((const project24_t *)(const void *)&buf);
-    } else if (n >= 8 && buf.magic == PROJ_MAGIC && buf.format == 25u && n >= (int)sizeof(project25_t)) {
+        from24((const project24_t *)(const void *)pbuf);
+    } else if (n >= 8 && pbuf->magic == PROJ_MAGIC && pbuf->format == 25u && n >= (int)sizeof(project25_t)) {
         old = 25;
         for (i = 0; i < NPIECES; i++) {
-            const project25_t *o = (const project25_t *)(const void *)&buf;
+            const project25_t *o = (const project25_t *)(const void *)pbuf;
             fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR25, o->slot[i].pool, i);
         }
-        from25((const project25_t *)(const void *)&buf);
-    } else if (n >= 8 && buf.magic == PROJ_MAGIC && buf.format == 26u && n >= (int)sizeof(project26_t)) {
+        from25((const project25_t *)(const void *)pbuf);
+    } else if (n >= 8 && pbuf->magic == PROJ_MAGIC && pbuf->format == 26u && n >= (int)sizeof(project26_t)) {
         old = 26;
         for (i = 0; i < NPIECES; i++) {
-            const project26_t *o = (const project26_t *)(const void *)&buf;
+            const project26_t *o = (const project26_t *)(const void *)pbuf;
             fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR26, o->slot[i].pool, i);
         }
-        from26((const project26_t *)(const void *)&buf);
-    } else if (n >= 8 && buf.magic == PROJ_MAGIC && (buf.format == 27u || buf.format == 28u) &&
+        from26((const project26_t *)(const void *)pbuf);
+    } else if (n >= 8 && pbuf->magic == PROJ_MAGIC && (pbuf->format == 27u || pbuf->format == 28u) &&
                n >= (int)sizeof(project28_t)) {
-        old = (int)buf.format;                   /* (27, 28: as 28 laid out; 27's strips' Low cut, now their Filter) */
+        old = (int)pbuf->format;                   /* (27, 28: as 28 laid out; 27's strips' Low cut, now their Filter) */
         for (i = 0; i < NPIECES; i++) {
-            const project28_t *o = (const project28_t *)(const void *)&buf;
+            const project28_t *o = (const project28_t *)(const void *)pbuf;
             fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR28, o->slot[i].pool, i);
         }
-        from28((const project28_t *)(const void *)&buf);
-    } else if (n >= 8 && buf.magic == PROJ_MAGIC && buf.format == 29u && n >= (int)sizeof(project29_t)) {
+        from28((const project28_t *)(const void *)pbuf);
+    } else if (n >= 8 && pbuf->magic == PROJ_MAGIC && pbuf->format == 29u && n >= (int)sizeof(project29_t)) {
         old = 29;
         for (i = 0; i < NPIECES; i++) {
-            const project29_t *o = (const project29_t *)(const void *)&buf;
+            const project29_t *o = (const project29_t *)(const void *)pbuf;
             fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR29, o->slot[i].pool, i);
         }
-        from29((const project29_t *)(const void *)&buf);
+        from29((const project29_t *)(const void *)pbuf);
     } else {
-        proj = buf;
+        proj = *pbuf;
         if (n >= 8 && proj.magic == PROJ_MAGIC && proj.format == PROJ_FORMAT && proj.rsv[0] != PROJ_WAVE_MARK) {
             /* (a step 2 test build's, zzo's or zzp's: the LFOs' Shape in the Wave's slots; the Shape Wander, the
              * wander alone, Wave 0, the waves half each, 50; a piece never changed, known by that build's recipe,
