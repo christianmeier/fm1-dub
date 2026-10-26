@@ -14,7 +14,7 @@
  *
  * Over it all, the ARRANGEMENT: eight-bar phrases, each Full, a Break (the kick and the bass out, the filter
  * building), a Groove (fewer stabs) or Thin (no bass, no shaker); MOTION sets how often it leaves Full. Before
- * the kick comes back, a fill. EVOLVE turns the patterns and throws a stab into the echo now and then.
+ * the kick comes back, a fill. VARY turns the patterns and throws a stab into the echo now and then.
  * Then a tape echo (to ~5.6 s, two heads, a band-pass in its feedback that the arrangement sweeps, a
  * saturating feedback that may pass 100%), a short Echoplex, a granular CLOUD (after JIANT's) blooming into
  * Dattorro's plate, and a bed of vinyl crackle.
@@ -45,7 +45,8 @@ extern const uint8_t EN_DRUM_N[EN_NDRUM];
 /* parameters: value ranges in en_param_info() */
 enum {
     P_CHORD, P_PINGS, P_BASS, P_DRUMS,                /* layer levels */
-    P_DENSITY, P_EVOLVE, P_DRIFT, P_HITS,             /* motion: the pings' notes, change, the chord's bars, the shaker */
+    P_DENSITY, P_VARY, P_DRIFT, P_HITS,               /* motion: the pings' notes, how much the loop varies (1.4.0, format
+                                                       * 29: Vary, Evolve's place), the chord's bars, the shaker */
     P_ECHO, P_ETIME, P_REVERB, P_FEEDBACK,            /* space */
     P_CUTOFF, P_DECAY, P_PTONE, P_MOTION,             /* the stab's filter and length, the pings' tone, the arrangement */
     P_TUNE, P_MIDI, P_TEMPO, P_ROOT, P_MODE, P_POCT,  /* setup, panel encoders, the pings' octave */
@@ -105,21 +106,24 @@ enum {
      * slow random wander, a new place every 8-32 bars, glided to); their depth the Chord LFO and Noise LFO knobs.
      * (The pings' and the bass's LFO gone: P_PFDEC and P_BFDEC kept in the format, the engine leaves them be) */
     P_CLRATE, P_NLRATE,
-    P_CLSHAPE, P_NLSHAPE,                             /* (1.4.0, format 20, the user's) their wave: Sine, Triangle, Ramp
-                                                       * up, Ramp down */
+    P_CLWAVE, P_NLWAVE,                               /* (1.4.0, format 20, the user's: their wave's shape; format 30,
+                                                       * the LFO pages' layout B, the user's: the slots of the Shape,
+                                                       * now Wave, the wave's share against the wander, 0..100: 0 the
+                                                       * wander alone, 50 half each, 100 the wave alone; the wave a sine) */
     P_CLWALK, P_NLWALK,                               /* (1.4.0, format 20, the user's: REPORT10's drift its own knob,
                                                        * always on, the LFO's wave over it) how far the slow random walk
                                                        * wanders: the chord's filter, the noise's */
     /* (1.4.0, format 21, the user's: the Chord's pages) the chord's Vary, 0..100: how often its stabs' pattern turns,
      * Evolve over it (50: as Evolve alone turned it; 0: still, the stabs all played; 100: three times as often); and
-     * where its LFO and drift go (EN_CLDEST_NAME: Cutoff, Reso, Colour; ALGORITHM on the Chord LFO page) */
+     * where its LFO and drift go (EN_CLDEST_NAME: Cutoff, Reso, Colour; ALGORITHM on the Chord LFO page). (Format 29:
+     * Vary a trim on Form's Vary, -50..+50, -50 Hold: P_LOOSE's note) */
     P_CVARY, P_CLDEST,
     /* (1.4.0, format 22, the user's: the layers' pages) each layer's Vary, as the chord's: how often its part changes,
      * Evolve over it (50: as Evolve alone changed it; 0: still; 100: about three times as often): the pings' loops
      * (their notes moving, a pass sat out), the bass's plan (its phrase's figure, the octave note), the drums' (the
      * kick's shape, the shaker's steps, the clap), the noise's groove (the recipe's Change under it). And the chord's
      * Cutoff as a knob around the piece's own (-50..+50: 0 its recipe's, P_CUTOFF, now the base, on no knob; a step
-     * 0.055 octave, as P_CUTOFF's) */
+     * 0.055 octave, as P_CUTOFF's). (Format 29: the Varys trims on Form's Vary, as the chord's) */
     P_PVARY, P_BVARY, P_DVARY, P_NVARY, P_CCUT,
     /* (1.4.0, format 23, the user's: the Arrangement page's channel strips, a part's white key held) each part's Echo
      * send and Plate send, 0..100: the part's own sends times a fader's share (50: as the piece sent before, 0: none,
@@ -147,6 +151,23 @@ enum {
      * desk by itself, 0..100: 0 off (the music as it was, bit for bit); the parts' faders and sends, the chord's
      * filter and the echo's feedback moved slowly, off the phrase lines, around the knobs' values (never on them) */
     P_MIXER,
+    /* (1.4.0, format 29, the variety plan's step 1) how loose the playing is, 0..100: the stabs' own cutoffs, the hats'
+     * and the bass's late notes, the throws; each piece's own (its recipe's), on no knob (Evolve's before: 2.5 times it,
+     * to 100). (And P_VARY is Form's Vary, Evolve's place; P_CVARY, P_PVARY .. P_NVARY each layer's trim on it, -50..+50:
+     * the layer's amount Vary plus its trim, 0..100; 0 follows Vary; -50 Hold, that layer never turns) */
+    P_LOOSE,
+    /* (1.4.0, format 30, the variety plan's step 2) Drift, Form's KNOB 4, 0..100: how much the sound moves, one amount
+     * for all of it: the chord's and the noise's LFOs (each its wave and its random wander, in a fixed share), the
+     * filter's slow arc and the echo's slow moves (from Motion), the dub mixer's slow rides (from the Mixer). 0 still;
+     * 50 the classics' median (about an octave, two sweeps a minute, the levels a few dB); 100 Coldest Season.
+     * (P_DRIFT, the name's first owner, is the Chord page's Change.) Then each LFO's Trim on it, -50..+50: x1 at 0,
+     * still at -50, x2 at +50 (their old Depth and Drift, P_CFDEC, P_CLWALK, P_NLFO, P_NLWALK, kept in the format,
+     * unread: format 30's step turned them into these) */
+    P_MOVE, P_CLTRIM, P_NLTRIM,
+    /* (format 30, the user's: Vary 0 no variation at all) the stabs' throws scale with the chord's amount (Form's Vary
+     * plus its trim: none at 0 or Hold): as often as the looseness and Throws had them where the chord's amount is
+     * this, 1..100 (each piece's own, its recipe's amount; on no knob) */
+    P_TVARY,
     P_NPARAMS
 };
 typedef struct {
@@ -177,9 +198,10 @@ void en_pings(const uint8_t *b);
 enum { EN_M_CHORD = 1, EN_M_PINGS = 2, EN_M_BASS = 4, EN_M_KICK = 8, EN_M_HATS = 16, EN_M_NOISE = 32 };   /* (the noise:
                                                 * OCT- + OCT+ on its page; its level kept) */
 enum { EN_PF_THROW = 1, EN_PF_OPEN = 2, EN_PF_CLOSE = 4, EN_PF_KICKDROP = 8, EN_PF_ECHO = 16, EN_PF_HATTHROW = 32,
-       EN_PF_PTHROW = 64, EN_PF_BTHROW = 128, EN_PF_NTHROW = 256 };   /* (1.4.0, the moves rethink: a throw a part, on
+       EN_PF_PTHROW = 64, EN_PF_BTHROW = 128, EN_PF_KTHROW = 256 };   /* (1.4.0, the moves rethink: a throw a part, on
                                                   * its black key held: the chord's EN_PF_THROW, every stab thrown; the
-                                                  * pings', the bass's, the hats', the noise's, their echo sends pushed) */
+                                                  * pings', the bass's, the hats', their echo sends pushed; the user's,
+                                                  * zzq: the kick's for the noise's, its echo send pushed) */
 /* (KICKDROP: Drop, the kick and the bass. HATTHROW, 1.4.0, the user's: the hats, the rim and the clap thrown into the
  * echo while held, the kick never; their tails left to ring) */
 void en_mute(uint32_t mask);
@@ -316,10 +338,15 @@ int en_nz_dens18(int old, int character);         /* (format 18) the noise's Den
  * each -127..127 of its depth's reach (its knob: 127 at 100, a sine or a drift alike); en_lfo_w the sixteenths
  * written so far (the next goes at en_lfo_w % EN_LFO_N) */
 #define EN_LFO_N 256
-#define EN_NLSHAPE 4                             /* (the LFOs' waves: EN_LFO_SHAPE) */
-extern const char *const EN_LFO_SHAPE[EN_NLSHAPE];
-#define EN_LFO_DRIFT 6 /* (before 20, a rate: Drift; now its own knob, P_CLWALK) */                           /* (the rate's last: Drift) */
+#define EN_LFO_DRIFT 6                           /* (before 20, a rate: Drift; then its own knob, P_CLWALK; format 30,
+                                                  * a Shape) */
 extern volatile int8_t en_lfo_tr[2][EN_LFO_N];
+extern volatile int8_t en_lfo_wv[2][EN_LFO_N], en_lfo_wd[2][EN_LFO_N];   /* (the LFO pages' picture) the wave's
+                                                  * part and the wander's, apart, as en_lfo_tr (its sum, as heard) */
+float en_lfo_wave_part(int k, uint32_t s);       /* the wave's part of LFO k (0 the chord's) at step s, its reach's units */
+float en_lfo_reach_of(int k);                    /* LFO k's reach either way now (the chord's octaves, the noise's 0..2) */
+float en_chord_cut(void);                        /* the chord's cutoff from its knobs, Hz (before its envelope) */
+extern volatile uint8_t en_lfo_solo;             /* (for tests) 1: an LFO's wave alone, no wander (format 30) */
 extern volatile uint32_t en_lfo_w;
 extern volatile float en_lfo_now, en_lfo_reach;   /* (1.4.0, the user's) the chord's LFO and drift now, and how far
                                                    * they reach either way, in octaves of its Cutoff (a 5.5th of the
@@ -345,6 +372,9 @@ extern volatile uint32_t en_lfo_picks[2];        /* the drifts' new places so fa
 int en_lfo_bars(int v);                          /* a rate's bars (0: Drift) */
 float en_filter_hz(int v);                       /* a strip's Filter (-50..+50): its cutoff, Hz (0: off) */
 int en_nlfo18(int old);                          /* (format 19) a Noise LFO before 19 as 19's (its depth kept) */
+void en_move29(int16_t *par);                    /* (format 30) a piece before 30 as 30's: its LFOs' Depth and Drift and
+                                                  * its Mixer as Drift and the LFOs' Trims (and a Shape Drift where the
+                                                  * wave was off), as near as they sounded */
 extern volatile float en_nz_t60;                 /* how long a hit rings, to -60 dB, seconds */
 extern volatile float en_stab_t60;              /* (1.4.0, the chord's page) a stab's length to -60 dB, seconds */
 extern volatile uint16_t en_stab_thr;            /* this bar's stabs thrown so far (bit a step) */

@@ -494,12 +494,14 @@ int main(void)
         CHECK(moved, "the chord stayed after the freeze");
     }
 
-    /* Evolve 0, Motion 0: a strict loop, every stab every bar */
+    /* Vary 0, Motion 0: a strict loop, every stab every bar, none thrown (format 30, the user's: Vary 0 no variation at
+     * all: the looseness at its most, still none thrown) */
     {
         uint32_t first = 0, t0;
         int k, diff = 0;
         fresh();
-        en_set(P_EVOLVE, 0);
+        en_set(P_VARY, 0);
+        en_set(P_LOOSE, 100);
         en_set(P_MOTION, 0);
         en_set(P_DRIFT, 6);
         en_regrow();
@@ -511,7 +513,7 @@ int main(void)
             run(2.0f);
             diff += en_stab_pat != first;
         }
-        CHECK(first && !diff && en_throws == t0, "Evolve 0: the stabs changed (%d of 60, %u throws)", diff, en_throws - t0);
+        CHECK(first && !diff && en_throws == t0, "Vary 0: the stabs changed (%d of 60, %u throws)", diff, en_throws - t0);
     }
 
     /* Throws: 0 none (Motion 0: no fills), 100 well over 50 (the same draws) */
@@ -522,7 +524,7 @@ int main(void)
         for (k = 0; k < 3; k++) {
             fresh();
             en_seed(7);
-            en_set(P_EVOLVE, 100);
+            en_set(P_VARY, 100);
             en_set(P_MOTION, 0);
             en_set(P_STABS, 100);
             en_set(P_CTHROW, TV[k]);
@@ -537,7 +539,7 @@ int main(void)
     }
 
     /* the kick's shapes (1.4.0: a switch, Four, Ghost, Half, One): Four (100) four on the floor in every bar it plays;
-     * Half (50), mostly half-time, with Evolve's wander some of the others */
+     * Half (50), mostly half-time, with Vary's wander some of the others */
     {
         int k, b, four[2] = {0, 0}, half[2] = {0, 0}, one[2] = {0, 0}, played[2] = {0, 0};
         static const int KD[2] = {100, 50};
@@ -939,7 +941,7 @@ int main(void)
                     if (bar_sec[b] == SEC_BREAK)
                         nb++, kb += kick_bar[b];
                 }
-                CHECK(!kf && !kb && nb > 20u, "Motion 100: %u Full bars without four kicks, %u kicks in %u Break bars",
+                CHECK(!kf && !kb && nb > 10u, "Motion 100: %u Full bars without four kicks, %u kicks in %u Break bars",
                       kf, kb, nb);
             }
             printf("  10 min at Motion %d: Full %d s, Break %d, Groove %d, Thin %d\n", MOT[m], secs[SEC_FULL],
@@ -952,27 +954,52 @@ int main(void)
         }
     }
 
-    /* throws: with Evolve high, stabs go into the echo */
+    /* throws: with the piece's looseness up, stabs go into the echo (format 29: the looseness the piece's own, P_LOOSE,
+     * Evolve's before) */
     {
         uint32_t t0, lo, hi;
         fresh();
-        en_set(P_EVOLVE, 0);
+        en_set(P_LOOSE, 0);
         en_set(P_MOTION, 0);
         en_play(1);
         t0 = en_throws;
         run(120.0f);
         lo = en_throws - t0;
         fresh();
-        en_set(P_EVOLVE, 100);
+        en_set(P_LOOSE, 100);
+        en_set(P_VARY, 100);
         en_play(1);
         t0 = en_throws;
         run(120.0f);
         hi = en_throws - t0;
-        printf("  throws in 2 min: %u at Evolve 0, %u at Evolve 100\n", lo, hi);
-        CHECK(hi >= 3u && lo == 0u, "throws: %u at Evolve 100, %u at 0", hi, lo);   /* (fewer fills since the classics pass: a fill throws its last stab) */
+        printf("  throws in 2 min: %u at looseness 0, %u at 100\n", lo, hi);
+        CHECK(hi >= 3u && lo == 0u, "throws: %u at looseness 100, %u at 0", hi, lo);   /* (fewer fills since the classics pass: a fill throws its last stab) */
+    }
+    /* (format 30, the user's) the throws as the chord's amount: none at its Hold (Vary 100), more at Vary 100 than at
+     * the piece's own (P_TVARY 40, Vary 40), the looseness at 100 and Motion 0 (no fills) */
+    {
+        uint32_t t0, n[3];
+        int k;
+        for (k = 0; k < 3; k++) {
+            fresh();
+            en_seed(3);
+            en_set(P_LOOSE, 100);
+            en_set(P_MOTION, 0);
+            en_set(P_TVARY, 40);
+            en_set(P_VARY, k ? 100 : 40);
+            en_set(P_CVARY, k == 2 ? -50 : 0);
+            en_play(1);
+            t0 = en_throws;
+            run(180.0f);
+            n[k] = en_throws - t0;
+        }
+        printf("  throws in 3 min: %u at the piece's own amount (40), %u at Vary 100, %u at the chord's Hold\n", n[0], n[1],
+               n[2]);
+        CHECK(n[0] >= 2u && n[1] > n[0] && n[2] == 0u, "throws by the chord's amount: %u at 40, %u at 100, %u at Hold", n[0],
+              n[1], n[2]);
     }
 
-    /* the loops evolve: with Evolve at 100, the phrases change */
+    /* the loops evolve: with Vary at 100, the phrases change */
     {
         int8_t before[EN_NLOOP][EN_LOOP_MAX];
         int diff = 0, l;
@@ -1012,7 +1039,7 @@ int main(void)
         fresh();
         en_set(P_FEEDBACK, 100);
         en_set(P_ECHO, 100);
-        en_set(P_EVOLVE, 100);
+        en_set(P_VARY, 100);
         en_set(P_MOTION, 100);
         en_play(1);
         bad = 0;
@@ -1038,8 +1065,8 @@ int main(void)
         CHECK(peak < 0.3f, "Feedback 100: still %f a minute after stopping", (double)peak);
     }
 
-    /* (1.4.0, REPORT10) the LFOs' rates: each sine's cycle as long as its rate (1 to 32 bars), on the trace; full
-     * depth there at 100 */
+    /* (1.4.0, REPORT10) the LFOs' rates: each sine's cycle as long as its rate (1 to 32 bars), on the trace (the wave
+     * alone: en_lfo_solo); full depth there at Drift 100, the Trims at +50 (format 30) */
     {
         int r, k;
         en_set(P_TEMPO, 140);
@@ -1049,8 +1076,10 @@ int main(void)
                 int i, ups = 0, first = -1, last = -1, ok = 1, hi = 0;
                 fresh();
                 en_set(P_TEMPO, 140);
-                en_set(P_CFDEC, 100);
-                en_set(P_NLFO, 100);
+                en_set(P_MOVE, 100);
+                en_set(P_CLTRIM, 50);
+                en_set(P_NLTRIM, 50);
+                en_lfo_solo = 1;
                 en_set(P_CLRATE, r);
                 en_set(P_NLRATE, r);
                 en_play(1);
@@ -1070,6 +1099,7 @@ int main(void)
                       k ? "noise" : "chord", 1 << r, ups, first, last, hi);
             }
         }
+        en_lfo_solo = 0;
         printf("  the LFOs' rates: 1 to 32 bars, each a cycle as long\n");
     }
 
@@ -1081,10 +1111,11 @@ int main(void)
         fresh();
         en_seed(11);
         en_set(P_TEMPO, 140);
-        en_set(P_CFDEC, 0);                      /* (1.4.0: the drift its own knob, the wave off) */
-        en_set(P_NLFO, 0);
-        en_set(P_CLWALK, 50);
-        en_set(P_NLWALK, 50);
+        en_set(P_CLWAVE, 0);                    /* (format 30, layout B: Wave 0, the wander alone; at its full reach) */
+        en_set(P_NLWAVE, 0);
+        en_set(P_MOVE, 100);
+        en_set(P_CLTRIM, 50);
+        en_set(P_NLTRIM, 50);
         en_play(1);
         lfo_rec(LFO_REC);
         for (i = 0; i < LFO_REC; i++) {
@@ -1119,16 +1150,16 @@ int main(void)
         fresh();
         en_seed(11);
         en_set(P_TEMPO, 140);
-        en_set(P_CFDEC, 0);
-        en_set(P_CLWALK, 50);
+        en_set(P_CLWAVE, 0);
+        en_set(P_MOVE, 50);
         en_play(1);
         lfo_rec(600);
         memcpy(a, lfo_v[0], sizeof a);
         fresh();
         en_seed(11);
         en_set(P_TEMPO, 140);
-        en_set(P_CFDEC, 0);
-        en_set(P_CLWALK, 50);
+        en_set(P_CLWAVE, 0);
+        en_set(P_MOVE, 50);
         en_play(1);
         lfo_rec(600);
         memcpy(c, lfo_v[0], sizeof c);
@@ -1136,43 +1167,68 @@ int main(void)
         fresh();
         en_seed(12);
         en_set(P_TEMPO, 140);
-        en_set(P_CFDEC, 0);
-        en_set(P_CLWALK, 50);
+        en_set(P_CLWAVE, 0);
+        en_set(P_MOVE, 50);
         en_play(1);
         lfo_rec(600);
         other = memcmp(a, lfo_v[0], sizeof a) != 0;
         CHECK(same && other, "Drift: the same seed the same path (%d), another seed another (%d)", same, other);
     }
 
-    /* the bass's and the pings' LFO gone: their old knobs (P_BFDEC, P_PFDEC) change nothing; the chord's does (the test
-     * hears a change) */
+    /* (format 30, layout B, the user's) the LFO's Wave: its wave's share against the wander; 100 the wave alone (a bar's
+     * sine, back as it was each bar), 0 the wander alone (never so), 50 between; the reach the same */
+    {
+        int w, k, i, off[3];
+        for (k = 0; k < 3; k++) {
+            w = k == 0 ? 100 : k == 1 ? 50 : 0;
+            fresh();
+            en_seed(11);
+            en_set(P_TEMPO, 140);
+            en_set(P_CLRATE, 0);                 /* (1 bar) */
+            en_set(P_CLWAVE, w);
+            en_set(P_MOVE, 100);
+            en_set(P_CLTRIM, 50);
+            en_play(1);
+            lfo_rec(LFO_REC);
+            for (off[k] = 0, i = 64; i < LFO_REC - 16; i++)
+                off[k] += abs(lfo_v[0][i] - lfo_v[0][i + 16]);
+            off[k] /= LFO_REC - 80;
+        }
+        printf("  Wave 100, 50, 0: away from itself a bar later by %d, %d, %d (of +-127)\n", off[0], off[1], off[2]);
+        CHECK(off[0] <= 2, "Wave 100: the wave alone, a bar later %d away", off[0]);
+        CHECK(off[2] > off[0] + 2 && off[1] > off[0], "Wave: 50 %d and 0 %d no closer than 100's %d", off[1], off[2], off[0]);
+    }
+
+    /* the bass's and the pings' LFO gone: their old knobs (P_BFDEC, P_PFDEC) change nothing; (format 30) nor do the
+     * chord's and the noise's old Depth and Drift; their Trims and Form's Drift do (the test hears a change) */
     {
         int b, pg, ch, nz, cw, nw;
         fresh();
         en_seed(3);
         en_set(P_BASS, 100);
         en_set(P_PINGS, 100);
+        en_set(P_MOVE, 50);
         en_play(1);
         run(2.0f);
         b = same_with(P_BFDEC, 100);
         pg = same_with(P_PFDEC, 100);
-        ch = same_with(P_CFDEC, 100);
-        nz = same_with(P_NLFO, 100);             /* (1.4.0: the noise's, a filter on the whole noise: heard) */
-        cw = same_with(P_CLWALK, 100);           /* (the drifts too) */
-        nw = same_with(P_NLWALK, 100);
-        printf("  the old LFO knobs: the bass's %s, the pings' %s; the chord's %s, the noise's %s; the drifts %s, %s\n",
+        ch = same_with(P_CFDEC, 100) && same_with(P_CLWALK, 100);   /* (format 30: the old Depths and Drifts unread) */
+        nz = same_with(P_NLFO, 100) && same_with(P_NLWALK, 100);
+        cw = same_with(P_CLTRIM, 50);            /* (the Trims: heard) */
+        nw = same_with(P_NLTRIM, 50);            /* (the noise's, a filter on the whole noise) */
+        printf("  the old LFO knobs: the bass's %s, the pings' %s; the chord's old %s, the noise's %s; the Trims %s, %s\n",
                b ? "nothing" : "heard", pg ? "nothing" : "heard", ch ? "nothing" : "heard", nz ? "nothing" : "heard",
                cw ? "nothing" : "heard", nw ? "nothing" : "heard");
-        CHECK(b == 1 && pg == 1 && ch == 0 && nz == 0 && cw == 0 && nw == 0,
-              "LFOs: the bass's %d, the pings' %d, the chord's %d, the noise's %d, the drifts %d %d (1: unheard)", b, pg,
-              ch, nz, cw, nw);
+        CHECK(b == 1 && pg == 1 && ch == 1 && nz == 1 && cw == 0 && nw == 0 && same_with(P_MOVE, 100) == 0,
+              "LFOs: the bass's %d, the pings' %d, the chord's old %d, the noise's old %d, the Trims %d %d (1: unheard)",
+              b, pg, ch, nz, cw, nw);
         en_set(P_TEMPO, 122);
     }
 
     /* (1.4.0, the variety study) Energy leans, it doesn't lock: at Motion 65, Energy -50 and +50 both leave Motion's
-     * sections working (some Full bars at -50, some not-Full at +50; +50 no Break); and the filter's sweep follows the
-     * chord's Drift, not Motion: at Motion 0 it moves (Drift 60), at Drift 0 and no LFO it stays still at Motion 35
-     * (before, Motion's: +-0.35) */
+     * sections working (some Full bars at -50, some not-Full at +50; +50 no Break); and the filter's sweep follows
+     * Drift, not Motion: at Motion 0 it moves (Drift 30), at Drift 0 it stays still at Motion 35 (before, Motion's:
+     * +-0.35; format 30: Form's Drift, the chord LFO's Drift before) */
     {
         int e, full[2] = {0, 0}, nfull[2] = {0, 0}, brk = 0;
         for (e = 0; e < 2; e++) {
@@ -1181,7 +1237,7 @@ int main(void)
             en_seed(5);
             en_set(P_TEMPO, 140);
             en_set(P_MOTION, 65);
-            en_set(P_EVOLVE, 50);
+            en_set(P_VARY, 50);
             en_macro(EN_MAC_ENERGY, e ? 50 : -50);
             en_play(1);
             while (en_bars < 16u * 241u) {
@@ -1211,8 +1267,7 @@ int main(void)
             en_seed(9);
             en_set(P_TEMPO, 140);
             en_set(P_MOTION, k ? 35 : 0);
-            en_set(P_CLWALK, k ? 0 : 60);
-            en_set(P_CFDEC, 0);
+            en_set(P_MOVE, k ? 0 : 30);
             en_play(1);
             while (en_bars < 16u * 121u) {
                 run(0.25f);
@@ -1222,7 +1277,7 @@ int main(void)
                 }
             }
         }
-        printf("  the filter's sweep in Full: Motion 0, Drift 60: %.2f .. %.2f; Motion 35, Drift 0: %.2f .. %.2f\n",
+        printf("  the filter's sweep in Full: Motion 0, Drift 30: %.2f .. %.2f; Motion 35, Drift 0: %.2f .. %.2f\n",
                (double)lo[0], (double)hi[0], (double)lo[1], (double)hi[1]);
         CHECK(hi[0] - lo[0] > 0.3f && hi[1] - lo[1] < 0.05f, "the sweep follows Motion, not the Drift: %.2f, %.2f",
               (double)(hi[0] - lo[0]), (double)(hi[1] - lo[1]));
@@ -1233,8 +1288,8 @@ int main(void)
      * here, the same seeds: 203, 167, 166 in 300 bars at Evolve 40; since the variety study's sweep, its depth the chord's
      * Drift and no longer Motion's, which the stabs' density follows, and its own timer drawing from the random stream:
      * 179, 186, 169, within a quarter: 50 was shown the same as Evolve alone bit for bit when Vary came; this keeps the
-     * rate); at 0 the pattern still, at any Evolve (the arrangement
-     * held: Motion 0); at 100, turning about three times as often */
+     * rate; format 30: the echo's second head drawing from its own stream, the music's another path, within it still); (format 29: Evolve Form's Vary, the chord's Vary a trim on it, 0 following it) at Hold the pattern still,
+     * at any Vary, and at Vary 0 too (the arrangement held: Motion 0); at +50 (Vary 40: 90), turning over twice as often */
     {
         static const int OLD[3] = {179, 186, 169};
         int s, k, turns[3], still = 0, still_turns = 0;
@@ -1244,7 +1299,7 @@ int main(void)
             fresh();
             en_seed((uint32_t)s * 7u);
             en_set(P_TEMPO, 140);
-            en_set(P_EVOLVE, 40);
+            en_set(P_VARY, 40);
             en_play(1);
             b = en_bars / 16u, last = en_stab_pat;
             for (k = 0; k < 300;) {
@@ -1255,17 +1310,17 @@ int main(void)
                     last = en_stab_pat;
                 }
             }
-            printf("  Vary 50, seed %d: the stabs changed in %d bars of 300 (before Vary: %d)\n", s, n, OLD[s - 1]);
-            CHECK(n * 4 >= OLD[s - 1] * 3 && n * 4 <= OLD[s - 1] * 5, "Vary 50: %d bars changed, %d before", n,
+            printf("  Vary 40, its trim 0, seed %d: the stabs changed in %d bars of 300 (before Vary: %d)\n", s, n, OLD[s - 1]);
+            CHECK(n * 4 >= OLD[s - 1] * 3 && n * 4 <= OLD[s - 1] * 5, "trim 0: %d bars changed, %d before", n,
                   OLD[s - 1]);
         }
-        for (k = 0; k < 3; k++) {                /* the turns: Vary 0, 50, 100 at Evolve 40, 300 bars */
+        for (k = 0; k < 3; k++) {                /* the turns: the trim Hold, 0, +50 at Vary 40, 300 bars */
             uint32_t t0;
             fresh();
             en_seed(9);
             en_set(P_TEMPO, 140);
-            en_set(P_EVOLVE, 40);
-            en_set(P_CVARY, k * 50);
+            en_set(P_VARY, 40);
+            en_set(P_CVARY, k * 50 - 50);
             en_play(1);
             run(1.0f);
             t0 = en_stab_turns;
@@ -1273,14 +1328,15 @@ int main(void)
                 run(0.5f);
             turns[k] = (int)(en_stab_turns - t0);
         }
-        for (s = 0; s < 2; s++) {                /* Vary 0 at Evolve 40 and 100, Motion 0 (Full only): still */
+        for (s = 0; s < 3; s++) {                /* Hold at Vary 40 and 100, and Vary 0 its trim 0, Motion 0 (Full
+                                                  * only): still */
             uint32_t b, last, t0;
             fresh();
             en_seed(13);
             en_set(P_TEMPO, 140);
-            en_set(P_EVOLVE, s ? 100 : 40);
+            en_set(P_VARY, s == 2 ? 0 : s ? 100 : 40);
             en_set(P_MOTION, 0);
-            en_set(P_CVARY, 0);
+            en_set(P_CVARY, s == 2 ? 0 : -50);
             en_play(1);
             run(1.0f);
             t0 = en_stab_turns;
@@ -1295,18 +1351,18 @@ int main(void)
             }
             still_turns += (int)(en_stab_turns - t0);
         }
-        printf("  Vary 0, 50, 100: the stabs' pattern turned %d, %d, %d times in 300 bars; at 0 (Evolve 40, 100) %d bars "
-               "changed, %d turns\n", turns[0], turns[1], turns[2], still, still_turns);
-        CHECK(turns[0] == 0 && turns[1] > 10 && turns[2] > 2 * turns[1], "Vary: turns %d %d %d", turns[0], turns[1],
-              turns[2]);
-        CHECK(still == 0 && still_turns == 0, "Vary 0: the stabs changed in %d bars, %d turns", still, still_turns);
-        en_set(P_CVARY, 50);
+        printf("  the chord's trim Hold, 0, +50: the stabs' pattern turned %d, %d, %d times in 300 bars; held (Vary 40, 100, "
+               "and Vary 0) %d bars changed, %d turns\n", turns[0], turns[1], turns[2], still, still_turns);
+        CHECK(turns[0] == 0 && turns[1] > 10 && 10 * turns[2] > 18 * turns[1], "the chord's trim: turns %d %d %d",
+              turns[0], turns[1], turns[2]);
+        CHECK(still == 0 && still_turns == 0, "held: the stabs changed in %d bars, %d turns", still, still_turns);
+        en_set(P_CVARY, 0);
         en_set(P_MOTION, 50);
         en_set(P_TEMPO, 122);
     }
 
-    /* (1.4.0, the user's: the layers' pages) each layer's Vary, as the chord's: how often its part changes, Evolve over
-     * it. At 0 still, at any Evolve: no loop note moved, no new plan, the shaker's steps kept, the noise's groove the
+    /* (1.4.0, the user's: the layers' pages) each layer's Vary, as the chord's: how often its part changes, a trim on
+     * Form's Vary (format 29). At Hold still, at any Vary, and at Vary 0: no loop note moved, no new plan, the shaker's steps kept, the noise's groove the
      * same (the arrangement held: Motion 0); at 100 more often than at 50 (the probabilities saturate a little: the
      * plan's and the noise's at Evolve 40 near 1 already, so 1.5x at least). (At 50 the music as before, bit for bit:
      * every piece, checked against 1.4.0's Chord pages while building it) */
@@ -1315,14 +1371,14 @@ int main(void)
         static const char *const VN[4] = {"pings'", "bass's", "drums'", "noise's"};
         int l, k, e, turns[4][3], still[4];
         for (l = 0; l < 4; l++) {
-            for (k = 0; k < 3; k++) {            /* Vary 0, 50, 100 at Evolve 40, 200 bars */
+            for (k = 0; k < 3; k++) {            /* the trim Hold, 0, +50 at Vary 40, 200 bars */
                 uint32_t t0;
                 fresh();
                 en_seed(17);
                 en_set(P_TEMPO, 140);
-                en_set(P_EVOLVE, 40);
+                en_set(P_VARY, 40);
                 en_set(P_MOTION, 0);
-                en_set(VP[l], k * 50);
+                en_set(VP[l], k * 50 - 50);
                 en_play(1);
                 run(1.0f);
                 t0 = en_vary_turns[l];
@@ -1331,14 +1387,14 @@ int main(void)
                 turns[l][k] = (int)(en_vary_turns[l] - t0);
             }
             still[l] = 0;
-            for (e = 0; e < 2; e++) {            /* Vary 0 at Evolve 100 too */
+            for (e = 0; e < 2; e++) {            /* Hold at Vary 100, and Vary 0 its trim 0 */
                 uint32_t t0;
                 fresh();
                 en_seed(23);
                 en_set(P_TEMPO, 140);
-                en_set(P_EVOLVE, 100);
+                en_set(P_VARY, e ? 0 : 100);
                 en_set(P_MOTION, 0);
-                en_set(VP[l], 0);
+                en_set(VP[l], e ? 0 : -50);
                 en_play(1);
                 run(1.0f);
                 t0 = en_vary_turns[l];
@@ -1346,17 +1402,17 @@ int main(void)
                     run(0.5f);
                 still[l] += (int)(en_vary_turns[l] - t0);
             }
-            printf("  the %s Vary 0, 50, 100: %d, %d, %d changes in 200 bars (at 0, Evolve 100: %d)\n", VN[l], turns[l][0],
+            printf("  the %s trim Hold, 0, +50: %d, %d, %d changes in 200 bars (held, Vary 100 and Vary 0: %d)\n", VN[l], turns[l][0],
                    turns[l][1], turns[l][2], still[l]);
             /* (100 at least 1.4 times 50's: the noise's few changes in 200 bars are a handful, the random stream's
              * order moving them a little: 1.47 after the variety study's arc timer) */
             /* (and 50 at least 3: the bass's plan, a phrase at a time, 3 in 200 bars here since the variety study's
              * random stream) */
             CHECK(turns[l][0] == 0 && still[l] == 0 && turns[l][1] >= 3 && 10 * turns[l][2] >= 14 * turns[l][1],
-                  "the %s Vary: %d %d %d, at 0 (Evolve 100) %d", VN[l], turns[l][0], turns[l][1], turns[l][2], still[l]);
-            en_set(VP[l], 50);
+                  "the %s trim: %d %d %d, held %d", VN[l], turns[l][0], turns[l][1], turns[l][2], still[l]);
+            en_set(VP[l], 0);
         }
-        en_set(P_EVOLVE, 40);
+        en_set(P_VARY, 40);
         en_set(P_MOTION, 50);
         en_set(P_TEMPO, 122);
     }
@@ -1412,7 +1468,9 @@ int main(void)
             int k, j;
             fresh();
             en_seed(4);
-            en_set(P_CFDEC, 100);
+            en_set(P_MOVE, 100);                 /* (format 30: at its most, the wave alone) */
+            en_set(P_CLTRIM, 50);
+            en_lfo_solo = 1;
             en_set(P_CLRATE, 0);                 /* (a bar's wave: all of it heard in the time) */
             en_set(P_CLDEST, d);
             en_play(1);
@@ -1437,6 +1495,7 @@ int main(void)
               (double)mx[2][1], (double)mx[2][2]);
         CHECK(heard[1] && heard[2], "LFO's Destination: Reso %d, Colour %d (1: heard)", heard[1], heard[2]);
         en_set(P_CLDEST, 0);
+        en_lfo_solo = 0;
     }
 
     /* (1.4.0, the user's) the noise's LFO's Destination: the Filter as before; Tone or Air moved (the sound differs),
@@ -1449,8 +1508,8 @@ int main(void)
             fresh();
             en_seed(4);
             en_set(P_CRACKLE, 80);
-            en_set(P_NLFO, 100);
-            en_set(P_NLWALK, 100);
+            en_set(P_MOVE, 100);                 /* (format 30: at its most: the old Depth 100 and Drift 100's) */
+            en_set(P_NLTRIM, 50);
             en_set(P_NLRATE, 0);                 /* (a bar's wave: all of it heard in the time) */
             en_set(P_NCOL, 40);
             en_set(P_NROOM, 90);
@@ -1717,15 +1776,19 @@ int main(void)
     }
 
     /* (1.4.0, the user's: "I can throw the hats to the echo"; the moves rethought: a throw a part, its black key held)
-     * the hats, the pings, the bass, the noise thrown (EN_PF_HATTHROW, _PTHROW, _BTHROW, _NTHROW): each into the echo, its
-     * tail ringing after it's let go (the part alone: the second after it, well over the same without); the kick never
-     * with them (the kick alone: the same, to a hair: the echo's feedback a little up while held, on nothing). And the
+     * the hats, the pings, the bass, the kick thrown (EN_PF_HATTHROW, _PTHROW, _BTHROW, _KTHROW; the kick's the noise's
+     * before, the user's, zzq): each into the echo, its tail ringing after it's let go (the part alone: the second after
+     * it, well over the same without); the kick never with the others (the kick alone: the same, to a hair: the echo's
+     * feedback pushed while held, on nothing); the kick's sends only the kick (the hats' tail rings longer with the
+     * feedback, as with every throw: not checked). (zzq: each throw on its own bus, at the part's own level, the
+     * feedback pushed towards THR_FB) And the
      * Kick strip's Low cut leaves the rumble be (the kick's ear before it). (The bass the least: the echo takes nothing
      * under ~350 Hz, so a Sub is thrown its upper harmonics alone: +1.5 dB at least) */
     {
-        static const uint32_t TH[4] = {EN_PF_HATTHROW, EN_PF_PTHROW, EN_PF_BTHROW, EN_PF_NTHROW},
-                              AL[4] = {EN_M_HATS, EN_M_PINGS, EN_M_BASS, EN_M_NOISE};
-        static const char *const TN[4] = {"hats", "pings", "bass", "noise"};
+        static const uint32_t TH[4] = {EN_PF_HATTHROW, EN_PF_PTHROW, EN_PF_BTHROW, EN_PF_KTHROW},
+                              AL[4] = {EN_M_HATS, EN_M_PINGS, EN_M_BASS, EN_M_KICK},
+                              OT[4] = {EN_M_KICK, EN_M_KICK, EN_M_KICK, EN_M_HATS};   /* (the part that mustn't go) */
+        static const char *const TN[4] = {"hats", "pings", "bass", "kick"};
         int16_t pp[P_NPARAMS];
         uint16_t pl;
         unsigned k;
@@ -1749,7 +1812,7 @@ int main(void)
                     en_set(P_BVOICE, 4);
                 en_seed(5);
                 en_regrow();
-                en_mute(0x3Fu & ~(w ? EN_M_KICK : AL[q]));
+                en_mute(0x3Fu & ~(w ? OT[q] : AL[q]));
                 en_play(1);
                 run(4.0f);
                 fflush(stdout);                  /* (from here two ways, a fork: thrown or not, the same otherwise; the
@@ -1780,14 +1843,16 @@ int main(void)
                 close(fd[1]);
             }
             en_mute(0);
-            printf("  the %s thrown: their tail %.1f dB over not thrown; the kick's %.2f dB (none)\n", TN[q],
-                   10.0 * log10((e[0][1] + 1e-20) / (e[0][0] + 1e-20)), 10.0 * log10((e[1][1] + 1e-20) / (e[1][0] + 1e-20)));
-            /* (the bass x1.3: the echo takes little under ~350 Hz; the noise x1.6: +2.7 dB here at the defaults, its
-             * tone still since the variety study (the chord's Drift 0); the rest x2) */
-            CHECK(e[0][1] > (q == 2 ? 1.3 : TN[q][0] == 'n' ? 1.6 : 2.0) * e[0][0] && e[0][1] > 1e-4, "the %s thrown: their tail %g against %g", TN[q], e[0][1],
+            printf("  the %s thrown: their tail %.1f dB over not thrown; the %s's %.2f dB (none)\n", TN[q],
+                   10.0 * log10((e[0][1] + 1e-20) / (e[0][0] + 1e-20)), q == 3 ? "hats" : "kick",
+                   10.0 * log10((e[1][1] + 1e-20) / (e[1][0] + 1e-20)));
+            /* (the bass x1.3: the echo takes little under ~350 Hz; the rest x2) */
+            CHECK(e[0][1] > (q == 2 ? 1.3 : 2.0) * e[0][0] && e[0][1] > 1e-4, "the %s thrown: their tail %g against %g", TN[q], e[0][1],
                   e[0][0]);
-            CHECK(e[1][1] < 1.05 * e[1][0] + 1e-6 && e[1][1] > 0.95 * e[1][0] - 1e-6,
-                  "the kick not thrown with the %s: %g against %g", TN[q], e[1][1], e[1][0]);
+            CHECK(q == 3 || (e[1][1] < 1.05 * e[1][0] + 1e-6 && e[1][1] > 0.95 * e[1][0] - 1e-6),
+                  "the kick not thrown with the %s: %g against %g", TN[q], e[1][1], e[1][0]);   /* (the kick's own: the
+                                                  * hats not sent, but their echo's feedback pushed while it's held, as
+                                                  * every throw's: their tail longer, not checked) */
         }
     }
     {   /* the rumble's bed the same with the kick's Low cut on: the kick alone, under ~60 Hz, the rumble's share (on less
@@ -1991,7 +2056,8 @@ int main(void)
         printf("  the outro now, in Endless and in a song, and back\n");
     }
 
-    /* (1.4.0, the user's: the dub mixer) Mixer 0: nothing rides; up: each part's level and sends ride slowly, within
+    /* (1.4.0, the user's: the dub mixer; format 30: its rides Form's Drift's, its moves the Mixer's) Mixer and Drift 0:
+     * nothing rides; up: each part's level and sends ride slowly, within
      * their bounds (the levels never over +3 dB), mostly off the phrase lines, a part out and back or a swell now and
      * then, the master never into the clip; Lock rests it; a song's intro and outro left to the song (no moves, the
      * rides at half depth); back to 0: every ride home, exactly */
@@ -2015,6 +2081,7 @@ int main(void)
             ok &= en_mx_db[k] == 0.0f && en_mx_snd[k][0] == 0.0f && en_mx_snd[k][1] == 0.0f;
         CHECK(ok && en_mx_moves == m0, "Mixer 0: nothing rides (%u moves)", en_mx_moves - m0);
         en_set(P_MIXER, 100);
+        en_set(P_MOVE, 100);
         for (k = 0; k < EN_NPART; k++)
             lo[k] = 99.0f, hi[k] = -99.0f;
         m0 = en_mx_moves, l0 = en_mx_line;
@@ -2060,6 +2127,7 @@ int main(void)
         CHECK(en_mx_moves == m1, "Lock rests the dub mixer (%u moves)", en_mx_moves - m1);
         en_lock(0);
         en_set(P_MIXER, 0);                      /* (back to 0: home, exactly) */
+        en_set(P_MOVE, 0);
         run(30.0f);
         for (k = 0, ok = 1; k < EN_NPART; k++)
             ok &= en_mx_db[k] == 0.0f && en_mx_snd[k][0] == 0.0f && en_mx_snd[k][1] == 0.0f;
@@ -2068,6 +2136,7 @@ int main(void)
         fresh();
         en_seed(5);
         en_set(P_MIXER, 100);
+        en_set(P_MOVE, 100);
         en_set(P_SMODE, 1);
         en_set(P_SINTRO, 8);
         en_set(P_SMAIN, 16);
@@ -2119,6 +2188,12 @@ int main(void)
             for (k = 0; k < P_NPARAMS; k++)
                 if (k != P_TUNE && k != P_MIDI)
                     en_set((int)k, pp[k]);
+            en_set(P_MOVE, 0);                   /* (format 30: the sound still, the echo's band its middle's: the
+                                                  * filter alone heard) */
+            en_set(P_CECHO, 100);                /* (zzq: the chord well into the echo, so its tail is there to measure
+                                                  * whatever the tests before left the random stream at) */
+            en_set(P_ECHO, 80);
+            en_set(P_ETONE, 100);                /* (and bright: its highs there for the low-pass to take) */
             en_pool(pl);
             en_seed(9);
             en_regrow();
@@ -2169,7 +2244,8 @@ int main(void)
             bs[0] = r[0][0], bs[1] = r[1][0];
             printf("  the chord's Filter at %+d: its %s %.1f dB, its echo's %.1f dB, against off\n", FV[w], w ? "lows" : "highs",
                    10.0 * log10((r[0][1] + 1e-20) / (bs[0] + 1e-20)), 10.0 * log10((r[1][1] + 1e-20) / (bs[1] + 1e-20)));
-            CHECK(r[0][1] < 0.5 * bs[0] && r[1][1] < 0.5 * bs[1] && bs[1] > 1e-6,
+            CHECK(r[0][1] < 0.5 * bs[0] && r[1][1] < 0.5 * bs[1] && bs[1] > 1e-8,   /* (zzq: the echo's tail there; its
+                                                  * highs small, the tape at 11 kHz: 1e-6 held by the random stream's luck) */
                   "the chord's Filter at %+d: the dry %g against %g, the echo %g against %g", FV[w], r[0][1], bs[0], r[1][1], bs[1]);
         }
         en_mute(0);

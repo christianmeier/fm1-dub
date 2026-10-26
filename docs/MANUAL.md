@@ -105,17 +105,17 @@ The drawing at the top shows them all; here they are in more detail.
 | PLAY | Play / rest. DUB-1 starts playing by itself when it's switched on. At rest, the echo's feedback eases under 90% so its tails die away, the reverb rings out and the noise fades. Playing again starts from the first bar of a phrase. Lit while playing. In Song or Set mode (GLO again: [Songs](#songs-an-intro-the-main-an-outro)) PLAY starts a song from its intro, and the song stops PLAY by itself at its end. **HOME held + PLAY:** the **outro**, from the next phrase, in any mode (Endless too: a way to land a piece by hand); again, in it or while it waits: back to the main. |
 | REC | A tap: **dub hold**: the echo stops listening and repeats what it holds, sample for sample, for ever; the reverb stops listening too and rings on; the chord doesn't move. The stabs, pings and drums go on, dry, above it. Tap again to let go. Lit while held. Held: the **effects grid** (below). |
 | EDIT | A tap: the **Chords page** (below): the eight chords coming, to see and change (again: the **Walk page**, the circle of fifths; again, back). Held (half a second): the next chord, at the start of the next bar (at once while resting; in dub hold, once you let go); a card says NEXT CHORD until the chord changes. Held on (1.5 s): **new chords**, the walk's all walked again (yours, the gaps and the one playing kept); a red card, NEW CHORDS. |
-| SEL | A tap: the **Arrangement page** (PERFORM's until 1.4.0): the screen shows each part's level on a desk's meters, the knobs are Width, Mixer (the dub mixer), Wet and Duck, and the keys stop being the scale: they mute and solo the parts (white 1–6 held: a part's channel strip; a black key held: that part thrown into the echo), make the dub moves and play five of the grid's effects (see below). Again, it stays; a page's button or SELECT leaves it. Lit while on. **Held** (half a second), on any page: **Lock** on or off (below). |
-| HOME | The **Form** page (Dub until 1.4.0): how the piece unfolds (Energy, Evolve, Motion). Again: the **Song** page (its intro, main and outro, 1.4.0); again: the Key page (tempo, root, mode, swing), and again back to Form; HOME blinks on the Song and Key pages. Held on for 1.5 s (nothing turned meanwhile): **a shake of everything**, the chord, the pings, the bass, the drums and the noise at once ("SHAKE ALL"), the page kept; again and again, to explore until something sounds right. Held with SELECT turned: the tempo. |
+| SEL | A tap: the **Arrangement page** (PERFORM's until 1.4.0): the screen shows each part's level on a desk's meters, the knobs are Width, Wet and Duck (KNOB 2 free: the dub mixer's rides are the Form page's Drift), and the keys stop being the scale: they mute and solo the parts (white 1–6 held: a part's channel strip; a black key held: that part thrown into the echo), make the dub moves and play five of the grid's effects (see below). Again, it stays; a page's button or SELECT leaves it. Lit while on. **Held** (half a second), on any page: **Lock** on or off (below). |
+| HOME | The **Form** page (Dub until 1.4.0): how the piece unfolds (Energy, Vary, Motion). Again: the **Song** page (its intro, main and outro, 1.4.0); again: the Key page (tempo, root, mode, swing), and again back to Form; HOME blinks on the Song and Key pages. Held on for 1.5 s (nothing turned meanwhile): **a shake of everything**, the chord, the pings, the bass, the drums and the noise at once ("SHAKE ALL"), the page kept; again and again, to explore until something sounds right. Held with SELECT turned: the tempo. |
 | ENV · ARP · LFO · SEQ | The layers' pages: Chord, Pings, Bass, Drums, each its part (see [The pages](#8-the-pages)). Again: the layer's voice page (**Chord voice**, **Pings voice**, **Bass voice**; the drums' **Kick**), then its FM page or, for the drums, the **Hats** page and then the Pattern page, then back. The chord has one more: after its FM page (for every chord voice: its Colour is there), the **Chord LFO** page, then back. Held (half a second): a **nudge** to the layer's sound; held on (1.5 s): a **shake** (below). |
 | FX · GLO | The **Dub** page, the echo and the plate (Space until 1.4.0; FX again: the **Echo page**, the echo's blur and tone, the plate's size and its cloud, FX blinking; again, back); the Setup page, for what holds for every piece (GLO again: **Song mode**, Endless, Song or Set; again, back). The lit button shows the page. FX held: a nudge to the space; held on: a shake (a new echo time). **GLO held** (half a second, then let go): **saves** all eight pieces (a card, SAVED); held on (1.5 s): the piece back to its recipe (a red card, RESET). |
 | SELECT | **The DJ filter**, on every page (its only place since 1.4.0's Chord pages; the Arrangement page's Open and Shut keys push on top of it): left shuts it (a low-pass, under water), right opens it (a high-pass, thin and bright), Off in the middle, where it stops on its way through (three clicks to leave it). While it turns, a big ring in the middle shows it (FILTER over it, the amount inside, Shut or Open under it); the page stays. Hold HOME and turn it for the tempo, from any page. The pages are on their buttons; the page's name, on the rule above the knobs, says where you are. |
-| ALGORITHM | On a layer's page (Chord, Pings, Bass, Drums): that layer's **voice** (see [The voices](#the-voices)). On the Noise pages: its character. On the LFO pages: where the LFO goes, its **Destination** (the Chord LFO's: Cutoff, Reso, Colour; the Noise LFO's: Filter, Tone, Air). On the Chords page: the walk's character (Home, Wander, Free). Anywhere else: the middle of the screen: ripples, a scope, a spectrum or the tape (see [The screen](#4-the-screen)). The mode, a piece's choice, is on the Key page (HOME again). |
+| ALGORITHM | On a layer's page (Chord, Pings, Bass, Drums): that layer's **voice** (see [The voices](#the-voices)). On the Noise pages: its character. On the LFO pages: where the LFO goes, its **Target**, as their KNOB 4 (the Chord LFO's: Cutoff, Reso, Colour; the Noise LFO's: Filter, Tone, Air). On the Chords page: the walk's character (Home, Wander, Free). Anywhere else: the middle of the screen: ripples, a scope, a spectrum or the tape (see [The screen](#4-the-screen)). The mode, a piece's choice, is on the Key page (HOME again). |
 | PRESETS | The piece (see [The pieces](#7-the-pieces)). |
 | KNOB 1–4 | The four values on the screen. A few clicks are always single steps; a quick turn speeds up, so half a turn sweeps the range. While a knob turns, its value shows large in the middle of the screen, in a big ring with its name and what it does under it, on a panel that darkens what's behind it (on the Chords and Pattern pages, which show the change themselves, there's no big ring). Under the page, each knob is its name and one of three pictures, drawn for what it is: **a ring** for an amount (its **number** inside it only for a moment when the page opens, 1.5 s, then it fades; and in the big ring while it turns); **a ring with its unit inside** for an amount that has one (the strip's Filter "LP 2.6k", the song's bars, the Feedback's seconds; shortened to the figure where it's long); or, for a **choice** (a few positions, or named values: a voice, Wander, Four, 64 bars, Sine, the Root, the Mode), **the word itself, large**, with a dot for each option under it, the chosen one lit (a thin bar with its place past twelve). To see the numbers always, Setup's second page, **Values: Always** (they show inside the rings). A **centred** knob (0 in the middle: the voice pages' −50…+50 ones, the chord's Cutoff, the Noise voice's Tone, the Filter, Energy (the Form and the Arrangement pages') and the Arrangement page's Wet) has a **notch** at 0: turning through, it stops there, and to leave it takes three clicks the same way (the first two are held back). A grey knob does nothing there. |
 | OCT− / OCT+ | On a layer's page (Chord, Pings, Bass, Drums or Noise, and their voice, FM, Hats and Pattern pages, and the Noise pages): that layer's **level**, 5 down or up a press (a big ring in the middle, in the layer's colour, BASS over it, the level inside, until a second after the last press); held, it keeps going. **Both together**, let go within a second: the layer **muted** ("BASS MUTED"), its level kept; again, back ("BASS ON"). The drums mute the kick and the hats together. These are the Arrangement page's mutes (white 1–6): a mute made here shows there, and the other way round. Held together for five seconds: the update mode (see [Troubleshooting](#11-troubleshooting)); a long press never mutes. On the other pages they do nothing. (The pings' octave is on the Pings voice page, KNOB 1.) |
 | MASTER | Volume. |
-| SAVE | The **Noise page** (below: its part); again, the **Noise voice** (its Air, Tone, Decay and Width; SAVE blinks); again, **Noise LFO** (its wave and drift, on its filter, its Tone or its Air); again, back to the Noise page. (Its sends are its channel strip's, on the Arrangement page.) Held: a nudge to the noise; held on (1.5 s): a shake (another noise character). Saving is on GLO. |
+| SAVE | The **Noise page** (below: its part); again, the **Noise voice** (its Air, Tone, Decay and Width; SAVE blinks); again, **Noise LFO** (its wave and wander, as much as Drift says, on its filter, its Tone or its Air); again, back to the Noise page. (Its sends are its channel strip's, on the Arrangement page.) Held: a nudge to the noise; held on (1.5 s): a shake (another noise character). Saving is on GLO. |
 
 **One rule for the buttons:** a button with one page stays on it when you press it again (EDIT,
 SEL); a button with several steps through them (HOME: Form, Song, Key; GLO: Setup, Song mode; FX: Dub, Echo; SAVE: Noise,
@@ -130,7 +130,7 @@ notch there, so it's easy to find:
 | Knob | Down | Up |
 |---|---|---|
 | KNOB 1 · **Width** | the whole mix narrower, to mono at 0 (the lows are always mono) | wider: the echo's right side a few milliseconds behind its left, a slow crossed chorus on the stabs and the pings; at 100 as wide as the widest records (Fog and Night Drive have 85) |
-| KNOB 2 · **Mixer** | 0: off, the desk as you set it | up to 100: the desk rides itself, more and further: the parts' levels and sends, the chord's filter, the echo's feedback (below) |
+| KNOB 2 | free (the dub mixer's, until 1.4.0's variety plan: its rides are the Form page's Drift now, below) | |
 | KNOB 3 · **Wet** | the whole music drier: the chord and the pings up front, less into the echo, the noise dry | the whole music drowned: the chord and the pings almost all echo, more into the echo, the noise into the echo and the plate |
 | KNOB 4 · **Duck** | 0: the music still, the kick on top of it | up to 100: each beat pushes the rest down, to −12 dB, the music pumping |
 
@@ -144,16 +144,18 @@ music, dry and close or lost in the echo. It's an offset on top of everything el
 strips' sends included (below), which stay where they are. Wet is for playing: it isn't saved, and it
 stays where it is when you change piece, back in the middle when the FM-1 starts.
 
-**Mixer**, the virtual dub mixer, is how much the desk rides itself, as a dub engineer's hand on the
-faders and the sends. It's the piece's own, saved with it: Steppers 20, Pressure 40, Basic and Night Drive 45,
-Chamber 55, Haze 60, Fog and Concrete 90 (the source's held loops little, the US records' played desk
-most). At 0 it's off: the desk stays where you set it.
+**The virtual dub mixer** is the desk riding itself, as a dub engineer's hand on the faders and the
+sends. How far its slow rides go is the Form page's **Drift** (1.4.0, the variety plan; its own knob
+here before, Mixer): the same amount that moves the LFOs and the filter's sweeps. Its moves (below)
+are the piece's own, on no knob: Steppers' fewest, Fog's and Concrete's most (the source's held loops
+little, the US records' played desk most); Motion will take them (the variety plan's next step). At
+Drift 0 the desk stays where you set it.
 
 - **The rides:** each part's level, its echo send and its plate send, the chord's filter and the
   echo's feedback move slowly, each to a new place every 10 to 60 seconds, gliding there over most of
   the wait. They start anywhere in the bar, not on the phrases' lines: about one in eight lands on one,
   as chance would have it (the records' changes about a quarter, DUB-1's own arrangement nearly half).
-  How far they go is Mixer's: at 100 a level from −1.5 to −7 dB down and +1 to +3 dB up, never more;
+  How far they go is Drift's: at 100 a level from −1.5 to −7 dB down and +1 to +3 dB up, never more;
   a send −8 to +6 dB; the filter half an octave either way. The kick moves least (its level only,
   ±1.5 dB): it never leaves the classics.
 - **The moves:** now and then (about once a minute at 100, every two at 50), one thing more: a part
@@ -164,12 +166,12 @@ most). At 0 it's off: the desk stays where you set it.
   Turn a Level and the ride goes on around the new one.
 - **When it rests:** not in a Break or a Thin (Motion's own moves), not in a song's intro or outro
   (the song's; its rides are half as deep there, no moves); **Lock** and dub hold rest it (nothing
-  new; what's under way ends). Turned to 0, every ride glides home over four bars.
+  new; what's under way ends). Drift turned to 0, every ride glides home over four bars.
 - **On the screen:** the meters' white notches move with the rides, where each part's level is now; a
   held strip's Level, Echo and Plate knobs show the ride as the LFO's moving knob does: a band from
   your setting to where the ride has it, a white dot there.
 
-![The Arrangement page with Mixer at 100 after a minute: the white notches off their settings, where the rides have the levels now; MIXER 100](img/screen-mixer.png "The dub mixer riding")
+![The Arrangement page with Drift at 100 after a minute: the white notches off their settings, where the rides have the levels now](img/screen-mixer.png "The dub mixer riding")
 ![The Chord strip held while the dub mixer rides: LEVEL, ECHO and PLATE each with a light band from the knob's value to a white dot, where the ride has it](img/screen-strip-ride.png "A strip's knobs showing the ride")
 
 **Duck** is the piece's own (it was the Drums page's KNOB 4 until 1.3.0), saved with it: how far
@@ -178,7 +180,7 @@ kick ducks it fully; a beat without one a little less, and less again while the 
 kick out (a Break), so the music keeps breathing (the ghost duck). The noise is ducked deeper than
 the music.
 
-![The Arrangement page: seven rows of green LED segments, CHD, PNG, BAS, KCK, HAT, NOI and MST, each with a white fader marker, the kick's and the master's reaching yellow; under the master, DUCK, its orange segments from the right; WIDTH 40, MIXER 25, WET 0, DUCK 80](img/screen-perform.png "The Arrangement page")
+![The Arrangement page: seven rows of green LED segments, CHD, PNG, BAS, KCK, HAT, NOI and MST, each with a white fader marker, the kick's and the master's reaching yellow; under the master, DUCK, its orange segments from the right; WIDTH 40, WET 0, DUCK 80](img/screen-perform.png "The Arrangement page")
 
 **The meters.** A row a part, top to bottom, as the white keys 1–6: the chord (CHD), the pings (PNG),
 the bass (BAS), the kick (KCK), the hats (HAT: the shaker and the open hat, with the rim and the clap),
@@ -236,25 +238,25 @@ Level is its strip's now, the noise's too.)
 
 ![The Noise strip: white 6 held, NOISE PLATE 60 in the big ring, LEVEL 8, ECHO 50, PLATE 60, FILTER Off](img/screen-strip-noise.png "The Noise strip")
 
-A thrown stab (and any part thrown with its black key) still goes into the echo whatever its Echo, and the Arrangement page's Wet
+A thrown stab (and any part thrown with its black key) still goes into the echo whatever its strip's Echo, and the Arrangement page's Wet
 moves everything on top. The strips are the piece's, saved with it.
-A page's button goes to its page (HOME: the Form page). The keys, from the lowest up, are the parts (each black key
-the part of the white key on its left), an empty white key, the global moves, then five of the effects grid's effects.
+A page's button goes to its page (HOME: the Form page). The keys, from the lowest up, are the parts (a black key a
+part's solo and throw), an empty white key, the global moves, then five of the effects grid's effects.
 Each key that does something is lit:
 
 | Keys | Notes | A tap | Held |
 |---|---|---|---|
 | **White 1–6** | F3 G3 A3 B3 C4 D4 | mutes the chord, pings, bass, kick, hats, noise (and back) | that part's channel strip on the knobs (above) |
-| **Black 1–5** | F♯3 G♯3 A♯3 C♯4 D♯4 | solos the chord, pings, bass, hats, noise (and back) | **throws** that part into the echo while held |
+| **Black 1–5** | F♯3 G♯3 A♯3 C♯4 D♯4 | solos the chord, pings, bass, hats, kick (and back) | **throws** that part into the echo while held |
 | **White 7** | E4 | the gap: dark, does nothing | |
 | **White 8–11** | F4 G4 A4 B4 | | the global moves: **Open**, **Shut**, **Drop**, **Echo** |
 | **White 12–16** | C5 D5 E5 F5 G5 | | five effects: **Time x2**, **Freeze**, **Tape stop**, **Stutter**, **Siren** |
 | Black 6–11 | F♯4 and up | nothing (dark) | |
 
-Each black key belongs to the white key on its left: F♯3 the chord (F3), G♯3 the pings, A♯3 the bass, C♯4 the hats
-(C4), D♯4 the noise (D4). The kick (B3) has no black key, so it has no solo and no throw: in the classics the kick is
-never thrown, and soloing it leaves a metronome. White 7 (E) is dark and does nothing: the gap between the parts and
-the moves, so you can find them without looking.
+The first four black keys belong to the white key on their left: F♯3 the chord (F3), G♯3 the pings, A♯3 the bass,
+C♯4 the hats (C4). The kick's white key (B3) has no black key after it, so the last one, D♯4, is the kick's (1.4.0:
+it was the noise's; the noise has no solo or throw now, white 6 still mutes it). White 7 (E) is dark and does
+nothing: the gap between the parts and the moves, so you can find them without looking.
 
 - **White 1–6, the chord, pings, bass, kick, hats and noise:** a tap mutes the part, another brings it
   back (the mute as you let go: held, the key is the part's channel strip, above); lit while it plays.
@@ -266,12 +268,15 @@ the moves, so you can find them without looking.
   more than one and they play together; tap again to let one go. A soloed key blinks; the white keys show what you
   hear. SOLO shows in the header, at its right end. Solos stay when you leave the Arrangement page, as the mutes do.
 - **Black 1–5, held: throws** (past a third of a second; the key goes dark while it throws, and the release
-  solos nothing). The part goes into the echo while you hold it, whatever its strip's Echo, and the echo feeds back
-  a little more; let go and its repeats ring on. The **chord**'s throws every stab, as a dub engineer slams a send
-  on a stab ("CHORD THROW: every stab into the echo"). The **pings**', the **hats**' (with the rim and the clap)
-  and the **noise**'s push their echo sends right up. The **bass**'s too, but the echo takes nothing under about
-  350 Hz: a round bass (Sub) throws only its upper harmonics, quietly; a bass with bite (Growl, Pulse) throws more.
-  The kick is never thrown.
+  solos nothing). As a dub engineer slams a part's aux: the part goes into the echo at its own level while you hold
+  it, whatever its strip's Echo and the piece's Echo (even at 0), and the echo's feedback climbs towards its top, so
+  the repeats stack up over each other (the loop's soft clip keeps them in); the strikes stop ducking the repeats.
+  It comes in over about 15 ms; let go and it leaves over about 60 ms, the feedback back where it was and the
+  repeats ringing on. The **chord**'s also throws every stab ("CHORD THROW: every stab into the echo"), with the
+  second head. The **pings**, the **hats** (with the rim and the clap) and the **kick** go in as they are. The
+  **bass** goes in driven, as an overdriven aux: the echo takes nothing under about 350 Hz, so a round bass (Sub)
+  would throw almost nothing; driven, its harmonics are heard. (1.4.0: the throws were nearly inaudible before:
+  they went through the piece's Echo and the strip's send, the bass and the hats 10 to 25 dB under the part.)
 - **White 8–11, the global moves, held** (lit; dark while held):
   - **Open:** the music thins and brightens over the kick: a resonant high-pass on everything but
     the kick sweeps up to about 400 Hz, and the chords' filter opens three octaves and sings, the
@@ -291,8 +296,8 @@ the moves, so you can find them without looking.
 **Lock** (SEL held for half a second, on any page; held again, off). The groove stays as it is:
 each new phrase keeps the kick's shape, the noise's groove, the drums' and the bass's phrase plan
 (its B bars still B: see [The arrangement](#6-the-arrangement)) and the shaker's pattern, and
-Evolve's own nudges and moves of the bass's groove rest. The sections still come and go, the
-chords still move, and the stabs and the pings play on as Evolve has them. LOCK shows in red
+the bass's borrowed groove rests. The sections still come and go, the
+chords still move, and the stabs and the pings play on as Vary has them. LOCK shows in red
 in the header, at its right end, the phrase's eight cells all alike, and a card says it ("the groove kept",
 "the groove free"). A tap on SEL is still the Arrangement page. Lock isn't saved: the FM-1 starts with it off.
 
@@ -404,13 +409,13 @@ save it (GLO held) or keep it with Lock (SEL held).
 | SAVE | the noise: Tone, Density, Decay, Air (the page shown: Noise voice, or the Noise page for Density); its shake: another noise character |
 | FX | the Dub page's: the echo's send and feedback (smaller steps), the reverb, the plate's size, the cloud; its shake: a new echo time |
 
-Saving (GLO held) keeps what you like; GLO held on (1.5 s) puts the piece back to its recipe. Evolve nudges by itself too (the Form
-page, below), but never shakes.
+Saving (GLO held) keeps what you like; GLO held on (1.5 s) puts the piece back to its recipe. Nothing nudges by itself
+(1.4.0: Evolve's own nudges went with it; the sound moves with Drift, on the Form page).
 
 **The cards.** Every long press says what it did on a card in the middle of the screen, for about a
 second: a nudge (amber) or a shake (red), the layer and what changed; EDIT held, NEXT
 CHORD (gone the moment the chord changes); EDIT held on, NEW CHORDS (red); GLO held, SAVED (teal);
-GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
+GLO held on, RESET (red); SEL held, LOCK.
 
 ![A nudge: an amber card in the middle, CHORD NUDGE, Resonance −7; behind it the Chord voice page, RESO lit at −7](img/screen-nudge.png "A nudge")
 ![Lock: a card in the middle, LOCK, the groove kept; LOCK in red at the header's right end](img/screen-lock.png "Lock")
@@ -419,7 +424,7 @@ GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
 
 ## 4. The screen
 
-![The main screen on the Form page: Basic, and beside it in the header FULL and the phrase's eight bar cells, bars 4 and 8 taller; FORM 1/3 on the rule above the knobs; the ripples with the chord's name in the middle, the seven lanes below, each with its level meter at the left; ENERGY 0, EVOLVE 55, MOTION 30 (its ring marked at 40 and 70), the fourth knob free](img/screen-main.png "The Form page (HOME)")
+![The main screen on the Form page: Basic, and beside it in the header FULL and the phrase's eight bar cells, bars 4 and 8 taller; FORM 1/3 on the rule above the knobs; the ripples with the chord's name in the middle, the seven lanes below, each with its level meter at the left; ENERGY 0, VARY 45, MOTION 30 (its ring marked at 40 and 70), DRIFT 41](img/screen-main.png "The Form page (HOME)")
 ![A Groove phrase: GROOVE lit in the header, fewer stabs in the top lane; MOTION 80](img/screen-groove.png "A Groove")
 
 - **The header, where we are** (1.4.0): the piece in a tag, always (its key is on the Key page,
@@ -487,12 +492,12 @@ GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
     (11 kHz, right). Each band is a column of segments: teal, then brass, amber and red at the
     top. The columns jump up with the sound and fall back slowly. A white cap stays at each
     column's peak for a moment before it drops. The columns span nearly the screen's width.
-  - The **tape** draws two reels, the tape running from the left one to the right past
+  - The **tape** draws two reels at the screen's edges, the tape running from the left one to the right past
     three heads: the record head lit with the output, the play head with the echo coming back. The
     reels turn with the tempo, the smaller one faster. Through a song the tape winds from the left reel
     to the right one, so the reels show where the song is; in Endless it winds back and forth over 128
-    bars. Its counter shows what no other screen does: at the left, where the song is (INTRO, MAIN,
-    OUTRO, or ENDLESS) and the bars left of that part; at the right, the time since PLAY (minutes and
+    bars. Its counter, between the reels, shows what no other screen does: on its left, where the song is (INTRO, MAIN,
+    OUTRO, or ENDLESS) and the bars left of that part; on its right, the time since PLAY (minutes and
     seconds) and, in a song, its whole length at this tempo ("OF 7:20").
 - The levels in full and the duck are on the Arrangement page (SEL), on its meters; the other pages
   show a short meter at each lane's left (since 1.4.0; the duck meter is the Arrangement page's).
@@ -547,13 +552,18 @@ GLO held on, RESET (red); SEL held, LOCK. Evolve's own nudges show no card.
 - **The Noise pages' lane:** its groove, two bars of sixteenths, a row each (1 above 2), each hit a block
   as strong as it is (a ghost lower), its ring a tail fading as long as it rings (Decay); 1 and 2 at the
   left, the bar playing lit. A new groove (Density, a phrase's start) shows when it's drawn; the dry
-  clicks come at random and aren't shown. (The noise's LFO and drift show on the Noise LFO page.)
-- **The LFO pages' middle:** the LFO's path as you heard it, the last 16 bars, scrolling from right to
-  left: the present at the right with a dot (white while playing), the older part fainter. The faint
-  line in the middle is the knob's own value (the chord's: its Destination's knob, Cutoff, Reso or
-  Colour; the noise's filter half open), with the bars ticked on it; the dotted lines above and below
-  are the reach of the wave and the drift together. What moves it is written over it ("4 BARS",
-  "4 BARS + DRIFT", "DRIFT"), and, the chord's, where it goes ("4 BARS + DRIFT ON CUTOFF").
+  clicks come at random and aren't shown. (The noise's LFO shows on the Noise LFO page.)
+- **The LFO pages' picture,** across the screen (1.4.0, the user's): the present in the middle, a dot on
+  what's heard (white while playing) with a dotted line down through it. At the left, what it did: what
+  you heard bold in the layer's colour, older fainter, the wave's part alone a thin white line and the
+  wander's part a thin pink one; at the right, where the wave is going, thin and dim (the wander can't be known
+  ahead). 4, 8 or 16 bars each side, as the Rate needs; under it the bars ticked, taller where the wave's
+  cycle starts (on the wander alone, where a phrase starts). The faint line in the middle is the knob's own
+  value (the chord's: its Target's knob, Cutoff, Reso or Colour; the noise's filter half open); the
+  dotted lines above and below are the reach of the wave and the wander together, at one scale (the most
+  it can reach: Drift and the LFO page's Drift grow and shrink it), with that reach at the left edge in its
+  Target's units ("890 Hz", "290 Hz"; Reso's "+15", "−15"). No title over it: the knobs say the Rate, the
+  Wave and the Target. See [The LFO pages](#the-lfo-pages).
 
 ![The Dub page with FEEDBACK lit as it turns, set to 6.7 s, the big ring in the middle saying HOW LONG THE REPEATS GO ON; ECHO 55, ECHO TIME 1/8., REVERB 35](img/screen-turning.png "Turning Feedback on the Dub page")
 ![The scope: the output as a thick teal line over a dotted centre line, the two traces before it fading behind; Fm7 at the top](img/screen-scope.png "ALGORITHM: the scope")
@@ -588,7 +598,7 @@ DUB-1 plays four layers from one scale and one chord, on a grid of sixteenths.
   shaker on the sixteenths, an open hat off the beat, and a **rim** (two short tones and a click,
   mostly sent into the echo, so it echoes away: the dub snare), on two and four once Hits is 70 or
   more; and a **clap** (three quick bursts of noise and a tail, into the plate), rarely: on two or
-  four now and then, about one chance in twenty (a little more with Evolve), in Full and Groove phrases.
+  four now and then, about one chance in twenty (a little more with the drums' Vary), in Full and Groove phrases.
   The kick plays a **shape** a phrase at a time: none, the downbeat alone, one and three, four with
   two and four ghosted (10 dB down), or four on the floor. **Density** (the Drums page) is where the
   shapes centre; at 100 it's four on the floor, always. The kick ducks everything else (**Duck**,
@@ -632,18 +642,26 @@ about half a second.
 for a moment: the repeats come back louder, and the stab's dry is 6 dB down, so it's the echo you
 hear. **Throws** (the Chord page) sets how often: at 50, about one stab in eight; at 100, about one
 in three; at 0, none but the last stab of a fill, which is always thrown. There are more in a
-Break. Evolve lets them in: at 0 there are none, and from 40 up Throws has them all.
+Break. How many get through is the piece's own looseness (its recipe's, on no knob): the tighter
+pieces throw fewer. And they follow the chord's Vary (the Form page's plus the Chord page's trim,
+1.4.0): at the piece's own as its recipe has them, more as it rises, fewer as it falls, none at 0 or
+Hold (Vary 0 is no variation at all).
 
-**Evolve** also keeps the patterns moving and the playing loose: every two bars the stab pattern
-may turn a step or gain or lose a stab; stabs drop out of a bar, and now and then a whole bar has
-none, the echo carrying it (about one bar in five at Evolve 40, never in a Break); each stab has
-its own cutoff, a little darker or brighter; at a phrase's start the shaker's steps may trade
-places or gain or lose one, and the drums' and the bass's plan is drawn again more often (in Auto,
-more of the hats rest, and they lean later; the bass gets an octave note more often); a ping
-changes note or moves at the end of a pass, a ping loop sits a pass out, and when the chord moves
-it may change voicing. It also widens how far the kick's shape wanders from Density. As Evolve
-goes to 0 all of this tightens: at 0, every stab plays every bar, the same cutoff, no throws, and
-the phrase plan stays as it is.
+**Vary** (the Form page) keeps the patterns moving: every two bars the stab pattern may turn a step
+or gain or lose a stab; stabs drop out of a bar, and now and then a whole bar has none, the echo
+carrying it (about one bar in five at Vary 40, never in a Break); at a phrase's start the shaker's
+steps may trade places or gain or lose one, and the drums' and the bass's plan is drawn again more
+often (the bass gets an octave note more often); a ping changes note or moves at the end of a pass,
+a ping loop sits a pass out, and when the chord moves it may change voicing. It also widens how far
+the kick's shape wanders from Density. As Vary goes to 0 all of this stops: at 0 every stab plays
+every bar, the kick keeps its shape and the phrase plan stays as it is. Each layer's own Vary
+(its part page) is a trim on it: more or less of it for that layer, or Hold.
+
+**The piece's looseness** (1.4.0: each piece's own, its recipe's; Evolve set it before) is how the
+playing sits: each stab its own cutoff, a little darker or brighter; in Auto more of the hats rest
+and lean later; the bass's late notes; and the throws above. Basic, Fog, Concrete and Night Drive
+are the loosest; Steppers, Pressure, Chamber and Haze tighter, in that order. (The throws also follow
+Vary: above.)
 
 ---
 
@@ -662,8 +680,8 @@ In the last bar of each phrase, the next one is chosen. **Motion** has three reg
 ring at 40 and 70):
 
 - **Under 40: the loop holds.** Full only, phrase after phrase, the kick never leaving; the music
-  moves by its filter, its echo and its texture, as the classic records do (how much: the chord
-  LFO's Drift and Depth, not Motion).
+  moves by its filter, its echo and its texture, as the classic records do (how much: the Form page's
+  Drift, not Motion).
 - **40 to 70: variations.** Now and then a Groove or a Thin for a phrase or two, more often as
   Motion rises; the kick half-time at most, never gone.
 - **70 and over: Breaks too.** A Break now and then (the kick and the bass out for a phrase).
@@ -686,10 +704,10 @@ tone and takes a little off the reverb when it's open.
 
 **The kick, a few phrases at a time:** the kick takes a shape (none, the downbeat, one and three,
 four with two and four ghosted, four on the floor) and keeps it for two to six phrases (fewer as
-Evolve rises), drawn round the Drums page's Kick: the nearer a shape is to it, the likelier. On
+Vary rises; at 0 it keeps it), drawn round the Drums page's Kick: the nearer a shape is to it, the likelier. On
 Four it's four on the floor in every Full or Groove phrase, ghosted or half in a Thin. Turning Kick
 takes effect from the next bar. Under Motion 70 it never goes silent in Full. A piece starts on four on the floor
-for its first three phrases, and after a Break the kick comes back whole. Evolve lets the shape
+for its first three phrases, and after a Break the kick comes back whole. Vary lets the shape
 wander further; Energy (the Form page) moves it. With the Pattern page on Pattern, your kick lane plays instead. The
 shape is chosen in the phrase's last bar (dot 8 blinks if it changes), and Lock keeps it.
 
@@ -699,10 +717,10 @@ bar, the same every time; B, on bars 4 and 8, is a variant, drawn once a phrase,
 every other of its notes) or **busy** (a ghost kick just before the next bar, the hats all in with
 a pickup, the bass's whole groove and a pickup into the next bar). At Density 100 the kick stays
 four on the floor in a B bar too. Which of the hats' and the bass's notes rest (Hits, Density and
-Evolve's looseness), the hats' feel (each step's accent and how late it comes) and, now and then,
+the piece's looseness), the hats' feel (each step's accent and how late it comes) and, now and then,
 one bass note an octave up are drawn once a phrase too, the same every bar. At a phrase's start
-the plan is kept (a motif that comes back) or drawn again: more often as Evolve rises (at 55,
-about half the time; at 100, four times in five), never at Evolve 0. Lock keeps it. The screen
+the plan is kept (a motif that comes back) or drawn again: more often as Vary rises (at 55,
+about half the time; at 100, four times in five), never at Vary 0. Lock keeps it. The screen
 marks the B bars (dots 4 and 8, brighter) and blinks dot 8 when the next phrase brings a new plan.
 
 ### Songs: an intro, the main, an outro
@@ -793,10 +811,12 @@ doesn't have is left empty, so the same thing sits in the same place on every la
 | Drums (SEQ) | Kick, Hits, Vary, — | Kick: Tune, Length, Punch, Rumble | Hats: Level, Tone, Length; Pattern |
 | Noise (SAVE) | Density, Vary, —, — | Noise voice: Air, Tone, Decay, Width | Noise LFO |
 
-**Vary**, on every layer's part page, is how often that layer's part changes, with Evolve (the Form
-page) over all of them. At 50, every piece's, each changes as Evolve alone changed it before; down to
-0 less and less, and at 0 never, at any Evolve (the part held as it is); up to 100 about three times
-as often. What changes is each layer's own: the chord's stab pattern, the pings' loops (a note moved,
+**Vary**, on every layer's part page, is a trim on the Form page's Vary (1.4.0): that layer's amount
+is Form's Vary plus its trim. The ring starts at the top: 0 follows Form's Vary (every layer of the
+pieces follows it, or close); to the right, that layer more restless than the rest, up to +50; to the
+left, stiller; at the far left, **Hold**, the ring's start marked and the word inside it: that layer
+never turns, whatever Form's Vary says. (Each layer's Vary before 1.4.0 was a factor on Evolve, 50
+as Evolve alone: an older project's are kept as the trims that sound the same.) What changes is each layer's own: the chord's stab pattern, the pings' loops (a note moved,
 a pass sat out), the bass's plan (its phrase's figure, the octave note), the drums' (how long the
 kick holds its shape and how far it wanders, the shaker's steps trading places, the clap), the
 noise's groove (drawn anew, or kept).
@@ -860,54 +880,76 @@ Each stays when the voice changes, and is kept by the piece.
 
 ### The LFO pages
 
-![The Chord LFO page: TO CUTOFF, DEPTH 60, RATE 4 bars, SHAPE Sine, DRIFT 30, 4 BARS + DRIFT ON CUTOFF over the filter's sine riding its drift over the last 16 bars in the middle](img/screen-chord-lfo.png "The Chord LFO page")
+![The Chord LFO page: TO CUTOFF, DRIFT, WAVE, RATE 4 bars, TARGET Cutoff; the picture across the screen: the past at the left, now a dot in the middle, the wave ahead at the right, 890 Hz and 290 Hz at the left edge, the bars under it](img/screen-chord-lfo.png "The Chord LFO page")
 
-Two layers move by themselves, slowly: the chord's filter (or, by its Destination, its resonance or
-its Colour) and a filter on the whole noise, its hits and its hiss (or, by its Destination, its Tone
+Two layers move by themselves, slowly: the chord's filter (or, by its Target, its resonance or
+its Colour) and a filter on the whole noise, its hits and its hiss (or, by its Target, its Tone
 or its Air). Each moves two ways at once, a
-**wave** locked to the bars and a **drift**, a slow random wander; either can be off. Each has an
+**wave**, a sine locked to the bars, and a **wander**, slow and random; how much of each, the page's
+**Wave**; how far the two together, the Form page's **Drift** (1.4.0, the variety plan: each its own
+Depth and Drift before), each page's own **Drift** more or less of it (the same name as Form's, as the
+layers' Vary: it is Form's Drift for this LFO). Each has an
 **LFO page**: ENV a fourth time (Chord, Chord voice, Chord FM, **Chord LFO**, then back to Chord), and SAVE
 a third time (Noise, Noise voice, **Noise LFO**, then back to Noise). The button blinks while you're
-there. ALGORITHM on either picks where its LFO goes, its **Destination** (below); the noise's
-character is on its other pages. The middle shows the LFO's path,
-the last 16 bars of it (see [The screen](#4-the-screen)); the lane under it is the layer's, as on its
-page.
+there. Its knobs: **Drift**, **Wave**, **Rate**, **Target** (KNOB 4, or ALGORITHM: where it goes); the
+noise's character is on its other pages.
 
-- **Depth:** how deep the wave, 0 (off) to 100. The chord's filter: up to two and a half octaves
-  either way (on Reso or Colour, as far along their knob: below) (gently low on the knob, deep near the top: the pieces' 20 to 45 a gentle sweep). The
-  noise's filter: open at the wave's top, closing towards its bottom, up to three and a half octaves
-  (from 20 kHz down to about 1.4 kHz) with the drift (on Tone or Air: below).
+The picture runs across the screen, the present in the middle (a dot on what's heard, a dotted line
+down through it):
+
+- **At the left, what it did:** what you hear (the wave and the wander together) bold in the layer's
+  colour, older fainter; the wave's part alone a thin white line, the wander's part a thin pink one.
+  Turn Wave and the two lines trade places: at 0 only the wander (the bold line is the pink one), at 100
+  only the wave.
+- **At the right, where the wave is going**, a thin dim line (the wander can't be known ahead: it isn't
+  drawn there).
+- **The span:** 4 bars each way for a wave of 1 or 2 bars, 8 for 4, 16 for 8 or more and for the
+  wander alone, so a cycle or two shows on each side.
+- **Under it, the bars:** a tick each, taller where the wave's cycle starts (on the wander alone,
+  where a phrase starts).
+- **At one scale,** the most it can ever reach, so it grows and shrinks in height with Form's Drift
+  and the page's (flat when still); its reach now dotted above and below.
+- **At the left edge, its reach in its Target's units,** just inside the reach on a dark patch (outside
+  it while the reach is small): the chord's cutoff in Hz (around the cutoff its knobs give, before each
+  stab's own envelope opens it), Reso and Colour, the noise's Tone and Air as their knobs show them, the
+  noise's Filter in Hz (20 kHz at the top: open).
+- **No title:** the knobs under it say the Rate, the Wave and the Target, so the picture has the whole
+  height.
+
+The lane under it is the layer's, as on its page.
+
+- **Drift:** more or less than Form's Drift for this LFO, centred: 0 (the middle, the notch) as Form's says,
+  +50 twice as far, the far left **Still** (it doesn't move, whatever Form's Drift says). The chord's filter
+  goes about an octave either way at Drift 50 (the wave and the wander together), 1.7 at
+  100, 2.2 at most (Form's Drift 100, this one +50); on Reso or Colour as far along their knob (below). The
+  noise's filter: open at the top of its reach, closing towards the bottom, up to three and a half
+  octaves (from 20 kHz down to about 1.4 kHz) at Form's Drift 100 and this one +50 (on Tone or Air: below).
+- **Wave** (1.4.0, the user's): the share between the wave and the wander, 0 to 100: **0** the wander
+  alone, **50** half each, **100** the wave alone; continuous, the reach the same whatever it says.
+  The wave is a sine, its top a quarter of the way into the cycle (the other shapes the test builds had,
+  the triangle and the ramps, went: dub doesn't use them, and the balance matters more).
 - **Rate:** how long the wave, a switch, one position a click: **1 bar** (one redonda (whole note)),
-  **2, 4, 8, 16 or 32 bars**, locked to the bars.
-- **Shape:** the wave's shape: **Sine**, **Triangle**, **Ramp up** (a slow rise, then back at once),
-  **Ramp down**. The sine's and the triangle's top comes a quarter of the way into the cycle.
-- **Drift:** how far the slow random wander goes, 0 (off) to 100: up to about 0.6 octave either way on
-  the chord's filter. Like a hand riding the filter: every 8 to 32 bars it picks a new place somewhere
+  **2, 4, 8, 16 or 32 bars**, locked to the bars. (At Wave 0 it has nothing to time.)
+- **The wander** (Wave's other share). Like a hand riding the filter: every 8 to 32 bars it picks a new place somewhere
   within its reach (a real move, not a twitch), and glides there, smoothly, easing in and out, over
   most of the time until the next; then it rests there a little. Its moves don't wait for a barline,
   it never repeats a path, and the chord's and the noise's wander each on their own. It runs under
   the wave, so the wave rides on it. This is how the records move (the study behind it: they drift
   far more than they cycle).
-  On the Chord LFO page, Drift and Depth together also set **how much the whole piece breathes**
-  (1.4.0, after the variety study; Motion's until then): how far the filter's long sweeps go (up to
-  about 1.6 octaves either way, a new place every 4 to 14 bars, off the phrase's line), and how much
-  the stabs' filter, the echo's heads and the band-pass wander. Drift counts three times as much as
-  Depth; at Drift 0 and Depth 0 the piece's sound holds still (a Break still goes dark, and a Thin a
-  little).
-- **Destination** (ALGORITHM, on the Chord LFO page; round, a click a step): what the chord's wave and
-  drift move: **Cutoff** (the filter, as ever), **Reso** (the filter's resonance) or **Colour** (the
+  How much the whole piece breathes (the filter's long sweeps, the echo's wander) is the Form page's
+  Drift's, not this page's.
+- **Target** (KNOB 4, or ALGORITHM, round, a click a step): what the chord's wave and wander move: **Cutoff** (the filter, as ever), **Reso** (the filter's resonance) or **Colour** (the
   voice's colour, the Chord FM page's KNOB 4). On Reso and Colour they go as far along that knob as
-  they would along the Cutoff's (an octave a 5.5th of its sweep: about ±45 of its 100 at Depth 100,
-  ±11 with the drift at 100), never past the knob's own ends: Depth 100 sweeps most of the
-  resonance, never past what the knob itself reaches. The filter then stays where its Cutoff is. The
-  big ring names it as it turns (DESTINATION over it), the rule over the knobs says TO CUTOFF, TO RESO,
+  they would along the Cutoff's (an octave a 5.5th of its sweep: about ±18 of its 100 at Drift 50,
+  ±40 at the most), never past the knob's own ends. The filter then stays where its Cutoff is. The
+  big ring names it as ALGORITHM turns (DESTINATION over it), the rule over the knobs says TO CUTOFF, TO RESO,
   TO COLOUR, and the moving knob (see [ENV again: Chord voice](#env-again-chord-voice)) follows it to
   its page. Each piece keeps its own; every recipe's is Cutoff.
-- **The noise's Destination** (ALGORITHM, on the Noise LFO page; round): **Filter** (the low-pass on
+- **The noise's Target** (KNOB 4, or ALGORITHM, on the Noise LFO page): **Filter** (the low-pass on
   the whole noise, as ever), **Tone** (the Noise voice's Tone: its rings and its hiss darker and
   brighter) or **Air** (the hiss's level, rising and falling under the hits). On Tone and Air they go a
-  quarter of the knob's sweep for each 100 of Depth or Drift (Depth 100 and Drift 100 together: half
-  of it either way), never past the knob's own ends; the filter then stays open. The big ring names it
+  quarter of the knob's sweep at Drift 100 (with this page's Drift +50: half of it either way), never past the
+  knob's own ends; the filter then stays open. The big ring names it
   (DESTINATION), the rule says TO FILTER, TO TONE or TO AIR, and on the Noise voice page the Tone or
   Air knob shows it moving, as the chord's do (the Filter has no knob: the LFO page's path shows it).
   Every recipe's is Filter.
@@ -916,10 +958,11 @@ page.
 
 ![The Chord LFO page, ALGORITHM turned: the big ring, DESTINATION over it, Reso in it, What the LFO moves under it; TO RESO on the rule](img/screen-chord-lfo-dest.png "The Chord LFO page: the Destination")
 
-Every piece drifts (its chord 25 to 45, its noise 20 to 35). Chamber's, Fog's and Haze's chords, the
-slow, ambient ones, drift alone (the wave off); Fog's and Haze's noise too. The others add a wave:
-Basic, Pressure and Concrete's chords on 4 bars, Steppers' on 2, Night Drive's on 8 (each piece's in
-[Parameters](#12-parameters)). The defaults: a sine, 4 bars.
+Every piece moves (its Drift 27 to 80). Chamber's and Haze's chords, the slow, ambient ones, wander
+alone (Wave 0); Fog's and Haze's noise too. The others mix a wave in, as much as their old Depth and
+Drift gave it: Concrete's chord most (76), Night Drive's 63, Steppers' 59, Pressure's 56, Basic's 51,
+Fog's 48; Basic, Pressure and Concrete's chords on 4 bars, Steppers' on 2, Night Drive's on 8 (each
+piece's in [Parameters](#12-parameters)). The defaults: Wave 50, 4 bars, Drift 0.
 
 The bass and the pings have no LFO (DUB-1 1.4.0: the records never move a dub bass that way, and the
 pings' was barely heard). The bass moves with the arrangement and the hand: Energy, Motion, a
@@ -961,7 +1004,7 @@ the voice and the piece. The bass's Bite and the pings' Ratio are on their FM pa
 
 ### HOME: Form
 
-![The Form page: ENERGY 0, EVOLVE 55, MOTION 30 (its ring marked at 40 and 70), the fourth knob free](img/screen-main.png "The Form page")
+![The Form page: ENERGY 0, VARY 45, MOTION 30 (its ring marked at 40 and 70), DRIFT 41](img/screen-main.png "The Form page")
 
 How the piece unfolds (the Dub page until 1.4.0). **ALGORITHM** (here and on any page but a layer's, the Noise page or the Chords page): the middle of the screen as ripples, scope,
 spectrum or tape (see [The screen](#4-the-screen)). **HOME** again: the Song page (below), then the Key page.
@@ -976,26 +1019,33 @@ spectrum or tape (see [The screen](#4-the-screen)). **HOME** again: the Song pag
   stays where it is when you change piece. (The Arrangement page's KNOB 1 too until 1.4.0's space
   pages, now there the Width; the DJ filter, KNOB 1 here until 1.4.0's Chord pages, is on SELECT, on
   every page.)
-- **Evolve:** how restless and loose it is: the stab pattern turning and gaining or losing stabs,
-  stabs and whole bars dropping out (as far as each layer's Vary lets it: its page), each stab's own cutoff, the shaker's pattern and looser hats,
-  the pings' notes, loops sitting out, octave jumps in the bass, how far the kick's shape wanders,
-  and whether there are dub throws at all (see [The layers](#5-the-layers)). At 0, with Motion at 0
-  and the Drums page's Kick on Four too, it's a strict loop: every stab every bar, the kick four
-  on the floor, no throws, no fills, the phrase plan as it was drawn when the music started (good
-  for playing along with other gear). To keep the groove at any Evolve, hold SEL: Lock. Above 40
-  it also nudges the sound by itself: now and then, on a phrase's first bar, one or two of one
-  layer's sound values take a step (half a nudge by hand's), so over a long run the piece slowly
-  changes colour (at 100, about every third phrase; at 40 and under, never; under Lock, never). It never shakes.
-  Above 60 it also moves the **bass's groove**, rarely, to a neighbour (Offbeat to Dotted, say), and
-  back towards the piece's own later: at 100, every few minutes; at 60 and under, never. The groove
-  away from home usually lasts a few minutes, so a long run's bass line slowly breathes.
+- **Vary** (1.4.0, Evolve's place): how much the loop changes, from held to restless: the stab
+  pattern turning and gaining or losing stabs, stabs and whole bars dropping out, the shaker's
+  pattern, the pings' notes, loops sitting out, octave jumps in the bass, how far the kick's shape
+  wanders (see [The layers](#5-the-layers)). Each layer's own Vary (its part page) trims it for that
+  layer, or holds it. A continuous knob, every step heard, no thresholds. At 0, with Motion at 0 and the
+  Drums page's Kick on Four too, it's a strict loop: every stab every bar, the kick four on the floor,
+  no fills, the phrase plan as it was drawn when the music started (good for playing along with other
+  gear), and no throws. To keep the groove now, at any Vary, hold
+  SEL: Lock. Vary also moves the **bass's groove**, rarely, to a neighbour (Offbeat to Dotted, say),
+  and back towards the piece's own later, as the square of the bass's amount: at 100, every few
+  minutes; at 50, a quarter as often; at 0 (or the bass on Hold), never. It no longer nudges the
+  sound by itself (Evolve did, above 40): the sound moves with Drift.
 - **Motion:** the arrangement, in three regions (marks on the ring at 40 and 70): under 40 the loop
   holds, 40 to 70 a variation now and then, from 70 Breaks too (see [The arrangement](#6-the-arrangement)).
-  Only the arrangement (1.4.0, after the variety study): how far the filter sweeps and how much the
-  echo's heads, the filter and the band-pass wander are the chord LFO's Drift and Depth now (ENV
-  four times; see [The Chord LFO](#5-the-layers)), so a still arrangement can still breathe, and a
-  busy one can be dry.
-- KNOB 4 is free for now: Drift, how long a chord lasts, went to the Chord page (as Change).
+  Only the arrangement (1.4.0, after the variety study): how far the sound moves is Drift's, so a still
+  arrangement can still breathe, and a busy one can be dry.
+- **Drift** (1.4.0, the variety plan): how much the sound moves, from still to restless, one amount for
+  all of it: the chord's and the noise's LFOs (their wave and their random wander; see
+  [The LFO pages](#the-lfo-pages): each LFO page's Drift more or less of it), how far the filter's long
+  sweeps go (about 1.6 octaves either way at 50, a little more above, a new place every 4 to 14 bars, off the
+  phrase's line), how much the stabs' filter, the echo's heads, its band-pass and its feedback wander
+  (Motion's until now), and the dub mixer's slow rides of the parts' levels and sends (the Arrangement
+  page's Mixer until now). A continuous knob, every step heard. At 0 the piece's sound holds still (a
+  Break still goes dark, a Thin a little); at 50 the classic records' middle (about an octave of the
+  chord's filter, the levels a few dB); at 100 the most restless of them. Turning it leaves the music's
+  choices as they were: the notes, the patterns and the arrangement go on the same. (The Drift that
+  was here until 1.4.0's Chord pages, how long a chord lasts, is the Chord page's Change.)
 
 ### HOME again: Song
 
@@ -1046,19 +1096,18 @@ changes); **Chord voice**, its sound; **Chord FM**, the FM voice and its Colour 
 then back to Chord.
 
 - **Density:** how many stabs a bar, from one (0 to 9) to six (90 and up), on a Euclidean pattern
-  off the beat. Evolve may add or take one now and then, leave one out, or rest a whole bar (as far as Vary lets it).
+  off the beat. Vary may add or take one now and then, leave one out, or rest a whole bar.
 - **Throws:** how often a stab is thrown into the echo: at 0, never (but the last stab of a fill);
-  at 50, about one stab in eight; at 100, about one in three. More in a Break; none at Evolve 0. A
+  at 50, about one stab in eight; at 100, about one in three. More in a Break; fewer in the tighter pieces (their looseness). A
   thrown stab's dry is 6 dB down. The chord's throw (the Arrangement page's F♯3 held) and the grid's Throw throw every stab, whatever it is.
 - **Change:** how long a chord lasts before it moves on: 2, 4, 8, 16, 32 or 64 bars, or Hold (it
   moves only when you press EDIT); a switch, its seven positions as dots. The chord moves at the
   start of a bar. (The Form page's Drift until 1.4.0's Chord pages: the same value, kept.)
-- **Vary:** how often the stabs' pattern turns (a step round, or a stab gained or lost, within one of
-  Density's), Evolve over it. At 50, every piece's, it turns as Evolve alone turned it before; down
-  to 0 less and less, and at 0 never, at any Evolve: the pattern still, every stab of it played (no
-  stab left out, no bar without one; the arrangement's Groove and Break still thin it). Up to 100
-  about three times as often: at Evolve 40, about every seventh bar at 50, every third at 100. At
-  Evolve 0 it's still whatever Vary.
+- **Vary:** the chord's trim on the Form page's Vary: how often the stabs' pattern turns (a step
+  round, or a stab gained or lost, within one of Density's), more or less than Form's Vary has it
+  (0: as Form's). At Hold (the far left) never, at any Vary: the pattern still, every stab of it played
+  (no stab left out, no bar without one; the arrangement's Groove and Break still thin it). At Vary 40,
+  about every seventh bar at 0, more than twice as often at +50.
 
 The chord's **Wet** (the stabs dry against their echo) left this page in 1.4.0's Chord pages. Its
 sends are now the chord's **channel strip** on the Arrangement page (white 1 held: Level, Echo,
@@ -1076,7 +1125,7 @@ FM page, ENV again). ALGORITHM still changes the voice.
   the piece's brightness; −50 darker, +50 brighter, each step about an 18th of an octave (±2.75
   octaves at the ends), as the main filter turns around its middle. (The piece's own, its recipe's,
   is 110 Hz to 5.4 kHz; the filter goes from 90 Hz to 12 kHz.) Each stab opens it further for a
-  moment, the arrangement's sweep moves it (with Motion), and with Evolve each stab sits a little
+  moment, the arrangement's sweep moves it (with Motion), and with the piece's looseness each stab sits a little
   higher or lower (up to about half an octave). (A 0–100 knob until 1.4.0's layers' pages: what you
   had set is kept, as its offset from the piece's own.)
 - **Reso:** the filter's resonance, −50 to +50 around the voice's own.
@@ -1098,8 +1147,8 @@ The pings' part. ARP again: the **Pings voice** (below); again, the **Pings FM**
 
 - **Density:** how many notes each loop holds, none at 0 to five at the top, a little fewer while
   the sweep is dark. A change shows up as each loop comes round.
-- **Vary:** how often the loops change (a note moved, or one sat out for a pass), Evolve over it:
-  50 as Evolve alone, 0 never, 100 about three times as often (see [The pages](#8-the-pages)).
+- **Vary:** the pings' trim on Form's Vary: how often the loops change (a note moved, or one sat out
+  for a pass), 0 as Form's, Hold never (see [The pages](#8-the-pages)).
 - KNOB 3 is empty: the pings' Wet (their dry against the echo) left the page in 1.4.0's layers'
   pages. Their sends are their **channel strip** on the Arrangement page (white 2 held); the dry
   against them stays each piece's own, and the Arrangement page's Wet moves it on top.
@@ -1128,7 +1177,7 @@ The noise isn't a bed of hiss but a voice of its own, played like the drums:
 - **The crackle groove:** hits on a two-bar pattern of sixteenths, spread evenly (a Euclidean
   pattern), turned and with a hit or two nudged a step off, now and then one a quiet ghost. When a
   phrase starts the pattern is drawn again, or now and then kept, so a motif comes back (kept more
-  often as Evolve falls). Break and Thin phrases have fewer hits.
+  often as Vary falls). Break and Thin phrases have fewer hits.
 - **Rung on the chord:** each hit is a short burst of noise that strikes three resonators tuned to
   the chord's root, third and fifth, low (E1 to Eb2), the root in the middle, the third left, the
   fifth right. They're retuned at each hit, so the crackle follows the chord. Then a band-pass
@@ -1142,9 +1191,9 @@ The Noise page, its part:
 - **Density:** how many hits ring in the two bars, from none at 0 to 16 at 100 (8 at 50); the dry
   clicks come with it, and at 0 they're gone too (the hiss stays: Air). A turn is heard from the
   next bar.
-- **Vary:** how often its groove is drawn anew at a phrase's start, rather than kept: 50 as each
-  piece has it (its own pace, and Evolve over it), 0 never (the groove kept), 100 about three times
-  as often (see [The pages](#8-the-pages)).
+- **Vary:** the noise's trim on Form's Vary: how often its groove is drawn anew at a phrase's start,
+  rather than kept (each piece's own pace under it): 0 as Form's, Hold never (the groove kept) (see
+  [The pages](#8-the-pages)).
 
 ![The Noise voice page: VINYL, AIR 66, TONE 0, DECAY 50, WIDTH 50](img/screen-noise-voice.png "The Noise voice page")
 
@@ -1179,7 +1228,7 @@ page that held them (SAVE a third time, until 1.4.0's channel strips) is gone.
 
 How fast its levels, tone and decay drift is each piece's own (its recipe), and so is the pace its
 groove changes at, under the Noise page's Vary; the groove is drawn anew at a phrase's start now and
-then, more often as Evolve rises, and Lock keeps it. Its drifts move on the barlines.
+then, more often as Vary rises, and Lock keeps it. Its drifts move on the barlines.
 
 The Arrangement page's Wet moves the noise too: its dry down and its plate and echo up, or the other way.
 
@@ -1194,9 +1243,9 @@ there (see [The FM pages](#the-fm-pages)); again, back.
 - **Groove:** the pattern, from sparse to busy: Drone (one note a bar, held almost to the next),
   Offbeat (the four off-beat eighths), Dotted (two notes a dotted eighth apart, twice a bar), Sync
   (three notes, syncopated) and Roller (six notes a bar, rolling). Density thins any of them.
-- **Vary:** how often the phrase plan is drawn anew (which notes play, its octave note: below),
-  Evolve over it: 50 as Evolve alone, 0 never (the plan kept as it was first drawn), 100 about three
-  times as often (see [The pages](#8-the-pages)).
+- **Vary:** the bass's trim on Form's Vary: how often the phrase plan is drawn anew (which notes
+  play, its octave note: below), and the borrowed groove (Form's Vary, above): 0 as Form's, Hold never
+  (the plan kept as it was first drawn) (see [The pages](#8-the-pages)).
 - **Density:** how many of the groove's notes play. At 100, every one; lower, some are left out
   (at 50 about half), the bar's first note always kept. Which ones is drawn once a phrase (the
   phrase plan): the same every A bar, every other one in a sparse B bar, the whole groove in a busy
@@ -1220,20 +1269,19 @@ The drums' part. SEQ again: the **Kick** page (its sound); again, the **Hats** p
 - **Kick:** the kick's shape, a switch, from the fullest to the sparest: **Four** (four on the floor),
   **Ghost** (four, with two and four ghosted, about 10 dB softer), **Half** (one and three), **One**
   (the downbeat alone). One click is one position. It takes effect from the next bar, even at a
-  piece's opening, and holds for a few phrases; with Evolve up it wanders now and then to a
-  neighbouring shape (on Four, a Thin phrase ghosted or half). Evolve lets it wander
+  piece's opening, and holds for a few phrases; with Vary up it wanders now and then to a
+  neighbouring shape (on Four, a Thin phrase ghosted or half). Vary lets it wander
   further, a Thin phrase takes it a step sparser, and Energy (the Form page) moves it. The kick is out in
   a Break and the second half of a fill; with the Pattern page on Pattern, your kick lane plays
   instead.
 - **Hits:** how busy the hats are. The shaker plays from none to all twelve sixteenths that aren't
   the open hat's, the ones before the beats first. The open hat comes in at 15, on the off-beat of
   beats 1 and 3, and plays all four off-beats from 40. At 0, the kick only. Which of them rest
-  (with Evolve) and their feel are drawn once a phrase: the phrase plan (see
+  (with the piece's looseness) and their feel are drawn once a phrase: the phrase plan (see
   [The arrangement](#6-the-arrangement)).
-- **Vary:** how often the drums' part changes, Evolve over it: how long the kick holds its shape and
-  how far it wanders, the shaker's steps trading places, the clap now and then. 50 as Evolve alone,
-  0 the kick settled on Kick's own shape and the shaker's pattern kept, 100 about three times as
-  often (see [The pages](#8-the-pages)).
+- **Vary:** the drums' trim on Form's Vary: how long the kick holds its shape and how far it wanders,
+  the shaker's steps trading places, the clap now and then. 0 as Form's; Hold the kick kept (a section
+  still brings its own) and the shaker's pattern kept (see [The pages](#8-the-pages)).
 
 Duck, how far each beat pushes the rest down, is the Arrangement page's KNOB 4 now (see [Controls](#3-controls)).
 Swing is on the Key page (HOME, then HOME again).
@@ -1406,7 +1454,7 @@ you set**, and the values that are new (the chord's Wet, the kick's Density, the
 and Width, the noise's Decay, Width, Plate and Echo, the hats' length) come from its recipe. A
 value saved past a knob's range as it is now (the chord's Attack, the pings' Bend and the FM
 pages' Feedback are 0–100 from the voice's own now; the FM pages' Mod dec is now the LFO) is
-brought to that range's nearest end, the rest kept. From 1.4.0, the LFOs' Rates, Shapes and
+brought to that range's nearest end, the rest kept. From 1.4.0, the LFOs' Rates, Waves and
 Drifts come from the recipe (a 1.4.0 test build's Rate on Drift becomes the Drift knob, the wave off);
 the pings' and the bass's LFO values are kept but do nothing. From 1.4.0's Chord pages (format 21),
 the chord's Vary and its LFO's Destination come from the recipe (Vary 50, Cutoff: as it played before),
@@ -1425,7 +1473,9 @@ each piece's song comes from its recipe (Intro 32, Main 160, Outro 32 bars, its 
 Endless, as it played before. From 1.4.0's song structure (format 26), each piece's Mixer comes from its
 recipe. From 1.4.0's dub mixer (format 27), each strip's Low cut (0–100, a high-pass) becomes its
 Filter's high-pass at the same cutoff, as near as a step goes (a Low cut of 100, about 600 Hz, is +36);
-the tempo and the scales keep their values (the new range only reaches further). To get a changed piece's
+the tempo and the scales keep their values (the new range only reaches further). From the variety plan's step 1 (format 29) and before, each piece's LFOs' Depth and Drift and its
+Mixer become the Form page's Drift and the LFO pages' Drifts, and each LFO's Wave the share its Depth and Drift gave
+the wave (0 where its wave was off), as near as they sounded, and the throws are set at the chord's Vary as it was. To get a changed piece's
 whole new recipe, hold GLO for 1.5 s on it.
 Projects saved by AMB-1 aren't read by DUB-1: the first start after installing it begins with the
 eight recipes.
@@ -1489,8 +1539,9 @@ The defaults are Basic's; each piece has its own.
 | Page | Value | Range | Basic |
 |---|---|---|---|
 | Form | Energy | −100 – 0 – +100 (for playing, not saved) | 0 |
-| Form | Evolve | 0–100 | 45 |
+| Form | Vary | 0–100 (0 the loop held – continuous – 100 restless) | 45 |
 | Form | Motion | 0–100 (under 40 held, 40–70 variations, 70– Breaks) | 30 |
+| Form | Drift | 0–100 (0 still – continuous – 100 restless): the LFOs, the sweeps, the echo's wander, the dub mixer's rides | 41 |
 | Song | Intro | None, 8 – 128 bars, a phrase a click | 32 bars |
 | Song | Main | 32 – 512 bars, a phrase a click | 160 bars |
 | Song | Outro | None, 8 – 128 bars, a phrase a click | 32 bars |
@@ -1498,27 +1549,27 @@ The defaults are Basic's; each piece has its own.
 | Chord | Density | 0–100 (1 to 6 stabs a bar) | 30 |
 | Chord | Throws | 0–100 (none – about 1 stab in 8 at 50 – about 1 in 3) | 70 |
 | Chord | Change | 2, 4, 8, 16, 32, 64 bars, Hold | 64 bars |
-| Chord | Vary | 0–100 (0 the stabs' pattern still – 50 as Evolve turns it – 100 three times as often) | 50 |
+| Chord | Vary | −50–+50, a trim on Form's Vary (Hold at the far left – 0 as Form's – +50) | 0 |
 | (no knob: the piece's own) | the chord's dry against its sends | 0–100 (the dry 0 dB – −6 dB at 50 – −20 dB) | 45 |
 | Pings | Density | 0–100 (0 to 5 notes a loop) | 30 |
-| Pings | Vary | 0–100 (0 the loops still – 50 as Evolve changes them – 100 three times as often) | 50 |
+| Pings | Vary | −50–+50, a trim on Form's Vary (Hold – 0 as Form's – +50) | 0 |
 | (no knob: the piece's own) | the pings' dry against their sends | 0–100 (the dry 0 dB – −6 dB at 50 – −20 dB) | 70 |
 | Pings voice | Octave | −2 – +2 | 0 |
 | Pings voice | Tone, Length | −50 – +50 | 0 |
 | Pings voice | Bend | 0–100 (from the voice's own) | 0 |
 | Noise | Density | 0–100 (hits in two bars: none – 16) | the piece's |
-| Noise | Vary | 0–100 (0 the groove kept – 50 the piece's own pace – 100 three times as often) | 50 |
+| Noise | Vary | −50–+50, a trim on Form's Vary (Hold – 0 as Form's – +50) | 0 |
 | Noise voice | Air | 0–100 (the hiss: none – the loudest) | the piece's |
 | Noise voice | Tone | −50 – +50 | 0 |
 | Noise voice | Decay | 0–100 (about 70 ms – over a second) | 50 |
 | Noise voice | Width | 0–100 (50: as the pieces have it) | 50 |
 | Noise pages | Character (ALGORITHM) | Vinyl, Tape, Dust, Room, Machine | Vinyl |
-| Noise LFO | Depth | 0–100 (on its Destination: a filter on the whole noise, closing up to 3.5 octaves with the drift; or Tone, or Air) | 25 |
+| Noise LFO | Drift | Still, −49 – 0 – +50 (on Drift: none – as Drift – twice) | +5 |
+| Noise LFO | Wave | 0–100 (0 the wander alone, 50 half each, 100 the wave alone, a sine) | 56 |
 | Noise LFO | Rate | 1, 2, 4, 8, 16, 32 bars | 4 bars |
-| Noise LFO | Shape | Sine, Triangle, Ramp up, Ramp down | Sine |
-| Noise LFO | Drift | 0–100 (the slow random wander) | 20 |
+| Noise LFO | Target | Filter (on the whole noise, closing up to 3.5 octaves), Tone, Air | Filter |
 | Bass | Groove | Drone, Offbeat, Dotted, Sync, Roller | Offbeat |
-| Bass | Vary | 0–100 (0 the plan kept – 50 as Evolve redraws it – 100 three times as often) | 50 |
+| Bass | Vary | −50–+50, a trim on Form's Vary (Hold – 0 as Form's – +50) | 0 |
 | Bass | Density | 0–100 (100: every note of the groove) | 90 |
 | Bass | Fifth | 0–100 | 20 |
 | Bass voice | Octave | −1 – +1 | 0 |
@@ -1529,7 +1580,7 @@ The defaults are Basic's; each piece has its own.
 | Key | Swing | 50%–70% | 51% |
 | Drums | Kick (its shape) | Four, Ghost, Half, One | Four |
 | Drums | Hits | 0–100 | 10 |
-| Drums | Vary | 0–100 (0 the kick settled, the shaker kept – 50 as Evolve – 100 three times as often) | 50 |
+| Drums | Vary | −50–+50, a trim on Form's Vary (Hold – 0 as Form's – +50) | 0 |
 | Kick | Tune | −12 – +12 semitones | 0 |
 | Kick | Length, Punch | −50 – +50 | 0 |
 | Kick | Rumble | 0–100 (none – a deep roar) | 21 |
@@ -1550,7 +1601,6 @@ The defaults are Basic's; each piece has its own.
 | SELECT | Filter | −100 – 0 – +100 (Shut, Off, Open); for playing, not saved | Off |
 | Arrangement | Width | 0–100 (the whole mix: mono – wide) | 40 |
 | Arrangement | Wet | −100 – 0 – +100; for playing, not saved | 0 |
-| Arrangement | Mixer | 0–100 (off – the desk riding itself most); the piece's, saved | 45, 55, 20, 90, 90, 45, 40, 60 |
 | Arrangement | Duck | 0–100 (to −12 dB); the piece's, saved | 50 |
 | Strip (white 1–6 held) | Level | the part's level (as OCT− / OCT+; the kick's and the hats' their own, ×1 at 50) | 52, 30, 68, 50, 40, 8 |
 | Strip | Echo, Plate | 0–100 (0 none – 50 as the piece sends – 100 twice; the kick's 0 none – 100 a full send) | 50 (the bass's Echo 0, the kick's 0) |
@@ -1562,8 +1612,8 @@ The defaults are Basic's; each piece has its own.
 | ALGORITHM | Ping voice (Pings page) | 5 voices | Blip |
 | ALGORITHM | Bass voice (Bass page) | 5 voices | Sub |
 | ALGORITHM | Kit (Drums page) | 5 kits | Tight |
-| ALGORITHM | Destination (Chord LFO page) | Cutoff, Reso, Colour | Cutoff |
-| ALGORITHM | Destination (Noise LFO page) | Filter, Tone, Air | Filter |
+| ALGORITHM | Target (Chord LFO page, its KNOB 4 too) | Cutoff, Reso, Colour | Cutoff |
+| ALGORITHM | Target (Noise LFO page, its KNOB 4 too) | Filter, Tone, Air | Filter |
 | Chord voice | Cutoff | −50 – +50 around the piece's own (its recipe's 0–100: 110 Hz – 5.4 kHz; Basic's 40) | 0 |
 | Chord voice | Reso | −50 – +50 | 0 |
 | Chord voice | Attack | 0–100 (from the voice's own strike) | 0 |
@@ -1574,10 +1624,10 @@ The defaults are Basic's; each piece has its own.
 | Chord, Pings, Bass FM | Feedback (from the voice's own) | 0–100 | 0 |
 | Chord FM | Colour (every chord voice) | −50 – +50 | 0 |
 | Bass FM | Bite (every bass voice) | −50 – +50 | 0 |
-| Chord LFO | Depth | 0–100 (the filter's wave: to ±2.5 octaves; on Reso, Colour as far along their knob; with Drift, the piece's breathing) | 30 |
+| Chord LFO | Drift | Still, −49 – 0 – +50 (on Drift: none – as Drift, about ±1 octave at 50 – twice) | −2 |
+| Chord LFO | Wave | 0–100 (0 the wander alone, 50 half each, 100 the wave alone, a sine) | 51 |
 | Chord LFO | Rate | 1, 2, 4, 8, 16, 32 bars | 4 bars |
-| Chord LFO | Shape | Sine, Triangle, Ramp up, Ramp down | Sine |
-| Chord LFO | Drift | 0–100 (the slow random wander: to ±0.6 octave; with Depth, the piece's breathing) | 45 |
+| Chord LFO | Target | Cutoff, Reso, Colour | Cutoff |
 | OCT− / OCT+ (a layer's page), a strip's Level (Arrangement, white 1–6 held) | Levels: chord, pings, bass, drums, noise (a strip: its part's) | 0–100, 5 a press | 52, 30, 68, 80 (noise 8) |
 
 Set by the piece (no knob of its own): the pings' tone (from a round blip to a metallic clank;
@@ -1595,22 +1645,22 @@ each stab opens the filter. Each piece also has its own voices.
 | Pressure | Tonewheel | Wood | Growl | Deep | 35 | 65 |
 | Haze | Pad | Glass | Sub | Dusty | 25 | 35 |
 
-The LFOs, each piece's (all sines):
+Drift and the LFOs, each piece's (the waves sines; Wave 0 the wander alone):
 
-| Piece | Chord wave (depth, rate) | Chord drift | Noise wave (depth, rate) | Noise drift |
-|---|---|---|---|---|
-| Basic | 30, 4 bars | 45 | 25, 4 bars | 20 |
-| Chamber | off | 25 | 30, 8 bars | 25 |
-| Steppers | 35, 2 bars | 35 | 30, 4 bars | 20 |
-| Fog | 35, 32 bars | 90 | off | 50 |
-| Concrete | 75, 4 bars | 75 | 45, 2 bars | 25 |
-| Night Drive | 45, 8 bars | 55 | 40, 8 bars | 25 |
-| Pressure | 35, 4 bars | 45 | 20, 4 bars | 20 |
-| Haze | off | 55 | off | 30 |
+| Piece | Drift | Chord LFO (Drift, Wave, Rate) | Noise LFO (Drift, Wave, Rate) |
+|---|---|---|---|
+| Basic | 41 | −2, 51, 4 bars | +5, 56, 4 bars |
+| Chamber | 27 | −25, 0 | +50, 55, 8 bars |
+| Steppers | 35 | +11, 59, 2 bars | +21, 60, 4 bars |
+| Fog | 72 | −12, 48, 32 bars | −15, 0 |
+| Concrete | 80 | +50, 76, 4 bars | −6, 64, 2 bars |
+| Night Drive | 50 | +12, 63, 8 bars | +15, 62, 8 bars |
+| Pressure | 43 | +3, 56, 4 bars | −3, 50, 4 bars |
+| Haze | 41 | −25, 0 | −13, 0 |
 
-(1.4.0, after the variety study: the chords' drift and depth up on most pieces, so their sound moves as their
-records' does, about twice a minute, near an octave; Chamber's down, its record barely moving. The chord's Drift and
-Depth also set how far the whole piece's filter breathes.)
+(1.4.0, the variety plan's step 2: each piece's Drift and its LFOs' Drifts as near as its LFOs' Depth and Drift and its
+Mixer sounded: Drift from how far its filter breathed, the LFOs' Drifts the reach each LFO had; layout B, each Wave
+the share of the wave its old Depth and Drift gave.)
 
 ---
 

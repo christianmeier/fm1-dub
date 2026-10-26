@@ -27,6 +27,11 @@
  *   store8                       save the project as DUB-1 1.0.0 did (format 8): reboot then reads it
  *   store10                      save it as 1.2.0 did (format 10, without the noise's five)
  *   storefile PATH               a saved project from a file (tests/host/proj-*.bin)
+ *   store30s                     save it as step 2's test builds did (zzo, zzp: format 30, the LFOs' Shape, Sine
+ *                                or Wander, in the Wave's slots, no layout B mark)
+ *   store29                      save it as the variety plan's step 1 did (format 29: no Drift, no LFO Trims, no
+ *                                throws' amount: the LFOs' Depth and Drift and the Mixer as they are)
+ *   store28                      save it as 1.4.0's Filter did (format 28: no looseness, the Varys 0..100 on Evolve)
  *   store27                      save it as 1.4.0's dub mixer did (format 27, the strips' Low cut, 0..100)
  *   store26                      save it as 1.4.0's song structure did (format 26, without the dub mixer)
  *   store25                      save it as 1.4.0's noise LFO Destination did (format 25, without song structure)
@@ -637,10 +642,30 @@ static int expect(const char *what, const char *val)
 
 #ifndef EN_WEB
 /* (1.4.0, format 28) the strips' Filter folded back to the Low cut an older format saved (0..100; a low-pass: none) */
-static void lc_fold(int16_t *par, int n)
+static void vy_fold(int16_t *par, int n)        /* (before 29) the layers' Vary trims as the old Varys (0..100, a factor
+                                                  * on Evolve: 1 at 50, 3 at 100; Hold 0), project.c's trim28 undone */
+{
+    static const uint8_t VP[5] = {P_CVARY, P_PVARY, P_BVARY, P_DVARY, P_NVARY};
+    int k;
+    for (k = 0; k < 5; k++)
+        if (VP[k] < n) {
+            const int e = par[P_VARY], t = par[VP[k]], a = e + t < 0 ? 0 : e + t > 100 ? 100 : e + t;
+            float f;
+            int o;
+            if (t <= -50) {
+                par[VP[k]] = 0;
+                continue;
+            }
+            f = e > 0 ? (float)a / (float)e : 1.0f;
+            o = f <= 1.0f ? (int)(50.0f * f + 0.5f) : (int)(50.0f + 25.0f * (f - 1.0f) + 0.5f);
+            par[VP[k]] = (int16_t)(o < 1 && a > 0 ? 1 : o > 100 ? 100 : o);
+        }
+}
+static void lc_fold(int16_t *par, int n)        /* (before 28: the strips' Low cut; and before 29 the Varys, vy_fold) */
 {
     static const uint8_t LC[6] = {P_CLOW, P_PLOW, P_BLOW, P_DLOW, P_NLOW, P_KLOW};
     int k;
+    vy_fold(par, n);
     for (k = 0; k < 6; k++)
         if (LC[k] < n) {
             const int v = par[LC[k]], o = v <= 0 ? 0 : 1 + (int)((float)(v - 1) * (99.0f * 6.966f / (49.0f * 4.907f)) + 0.5f);
@@ -871,15 +896,61 @@ int main(int argc, char **argv)
             proj.screen = (uint8_t)atoi(a);
             proj.slot[proj.piece].screen = proj.screen;
             plat_store_save(OBJ_PROJ, &proj, sizeof proj);
-        } else if (!strcmp(cmd, "store27")) {    /* the project as 1.4.0's dub mixer saved it (27: the strips' Low cut) */
+        } else if (!strcmp(cmd, "store27") || !strcmp(cmd, "store28")) {   /* the project as 1.4.0's dub mixer
+                                                  * saved it (27: the strips' Low cut) or Robert's Filter (28): no
+                                                  * looseness, the Varys 0..100 on Evolve */
+            static project28_t o;
+            const int f27 = !strcmp(cmd, "store27");
+            int i;
+            keep();
+            memset(&o, 0, sizeof o);
+            o.magic = PROJ_MAGIC, o.format = f27 ? 27u : 28u;
+            memcpy(o.par, proj.par, sizeof o.par);
+            if (f27)
+                lc_fold(o.par, NPAR28);
+            else
+                vy_fold(o.par, NPAR28);
+            o.pool = proj.pool, o.leds = proj.leds, o.piece = proj.piece, o.screen = proj.screen;
+            for (i = 0; i < NPIECES; i++) {
+                memcpy(o.slot[i].par, proj.slot[i].par, sizeof o.slot[i].par);
+                if (f27)
+                    lc_fold(o.slot[i].par, NPAR28);
+                else
+                    vy_fold(o.slot[i].par, NPAR28);
+                o.slot[i].pool = proj.slot[i].pool;
+                memcpy(o.slot[i].pings, proj.slot[i].pings, sizeof o.slot[i].pings);
+                o.slot[i].pings_ok = proj.slot[i].pings_ok;
+                o.slot[i].screen = proj.slot[i].screen;
+            }
+            plat_store_save(OBJ_PROJ, &o, sizeof o);
+        } else if (!strcmp(cmd, "store30s")) {   /* the project as step 2's test builds saved it (zzo, zzp: format 30,
+                                                  * the LFOs' Shape in the Wave's slots, Wander 4 or Sine 0, no mark) */
             static project_t o;
             int i;
             keep();
             o = proj;
-            o.format = 27u;
-            lc_fold(o.par, P_NPARAMS);
-            for (i = 0; i < NPIECES; i++)
-                lc_fold(o.slot[i].par, P_NPARAMS);
+            o.rsv[0] = 0;
+            o.par[P_CLWAVE] = (int16_t)(o.par[P_CLWAVE] ? 0 : 4), o.par[P_NLWAVE] = (int16_t)(o.par[P_NLWAVE] ? 0 : 4);
+            for (i = 0; i < NPIECES; i++) {
+                o.slot[i].par[P_CLWAVE] = (int16_t)(o.slot[i].par[P_CLWAVE] ? 0 : 4);
+                o.slot[i].par[P_NLWAVE] = (int16_t)(o.slot[i].par[P_NLWAVE] ? 0 : 4);
+            }
+            plat_store_save(OBJ_PROJ, &o, sizeof o);
+        } else if (!strcmp(cmd, "store29")) {    /* the project as the variety plan's step 1 saved it (29) */
+            static project29_t o;
+            int i;
+            keep();
+            memset(&o, 0, sizeof o);
+            o.magic = PROJ_MAGIC, o.format = 29u;
+            memcpy(o.par, proj.par, sizeof o.par);
+            o.pool = proj.pool, o.leds = proj.leds, o.piece = proj.piece, o.screen = proj.screen;
+            for (i = 0; i < NPIECES; i++) {
+                memcpy(o.slot[i].par, proj.slot[i].par, sizeof o.slot[i].par);
+                o.slot[i].pool = proj.slot[i].pool;
+                memcpy(o.slot[i].pings, proj.slot[i].pings, sizeof o.slot[i].pings);
+                o.slot[i].pings_ok = proj.slot[i].pings_ok;
+                o.slot[i].screen = proj.slot[i].screen;
+            }
             plat_store_save(OBJ_PROJ, &o, sizeof o);
         } else if (!strcmp(cmd, "store26")) {    /* the project as 1.4.0's song structure saved it (26) */
             static project26_t o;
@@ -960,9 +1031,11 @@ int main(int argc, char **argv)
             memset(&o, 0, sizeof o);
             o.magic = PROJ_MAGIC, o.format = 22u;
             memcpy(o.par, proj.par, sizeof o.par);
+            vy_fold(o.par, NPAR22);
             o.pool = proj.pool, o.leds = proj.leds, o.piece = proj.piece, o.screen = proj.screen;
             for (i = 0; i < NPIECES; i++) {
                 memcpy(o.slot[i].par, proj.slot[i].par, sizeof o.slot[i].par);
+                vy_fold(o.slot[i].par, NPAR22);
                 o.slot[i].pool = proj.slot[i].pool;
                 memcpy(o.slot[i].pings, proj.slot[i].pings, sizeof o.slot[i].pings);
                 o.slot[i].pings_ok = proj.slot[i].pings_ok;
@@ -976,11 +1049,13 @@ int main(int argc, char **argv)
             memset(&o, 0, sizeof o);
             o.magic = PROJ_MAGIC, o.format = 21u;
             memcpy(o.par, proj.par, sizeof o.par);
+            vy_fold(o.par, NPAR21);
             o.par[P_CUTOFF] = cut_abs(proj.par);
             o.pool = proj.pool, o.leds = proj.leds, o.piece = proj.piece, o.screen = proj.screen;
             for (i = 0; i < NPIECES; i++) {
                 memcpy(o.slot[i].par, proj.slot[i].par, sizeof o.slot[i].par);
                 o.slot[i].par[P_CUTOFF] = cut_abs(proj.slot[i].par);
+                vy_fold(o.slot[i].par, NPAR21);
                 o.slot[i].pool = proj.slot[i].pool;
                 memcpy(o.slot[i].pings, proj.slot[i].pings, sizeof o.slot[i].pings);
                 o.slot[i].pings_ok = proj.slot[i].pings_ok;

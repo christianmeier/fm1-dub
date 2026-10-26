@@ -10,9 +10,9 @@
  *   OCT- / OCT+    on a layer's page (Chord, Pings, Bass, Drums, Noise, and their sound pages): its level -5 / +5
  *                  (held: on); both together, quickly: the layer muted or back (held 5 s: the update mode)
  *   SEL            the ARRANGEMENT page (PERFORM's that was): the keys mute (white 1-6; held, a part's channel
- *                  strip) and solo (black 1-5) the parts, throw the hats (black 6) and, held, make the dub moves
- *                  (white 8-12; white 7 the gap); the knobs Width, Mixer (the dub mixer), Wet, Duck; the screen the
- *                  parts' meters
+ *                  strip), solo (black 1-5: the chord, pings, bass, hats, kick; held, that part thrown into the
+ *                  echo) and, held, make the dub moves (white 8-11) and five effects (white 12-16; white 7 the gap);
+ *                  the knobs Width, Wet, Duck; the screen the parts' meters
  *   SELECT         the DJ filter, on every page (1.4.0; with HOME held: the tempo)   ALGORITHM the voice, the walk
  *                  (Chords), the noise's character, else the screen   PRESETS the piece
  *   FX ENV LFO GLO / HOME SAVE ARP SEQ   the pages: DUB, CHORD, BASS, SETUP / FORM, NOISE, PINGS, DRUMS (1.4.0's
@@ -157,9 +157,9 @@ enum { K_LEDS = 200, K_CPU, K_NONE, K_SLOT, K_CQ, K_CX,    /* (the Chords page: 
 static const char *const LANE_NAME[EN_NDRUM] = {"Kick", "Shaker", "Open", "Rim", "Clap"};
 _Static_assert(P_NPARAMS <= K_LEDS, "the knobs' own codes must come after the parameters");
 static const uint16_t VIEW_KNOB[NVIEWS][4] = {
-    {K_ENERGY, P_EVOLVE, P_MOTION, K_NONE},      /* (1.4.0, the user's: Energy here alone (the Arrangement page's
-                                                  * until its Width); the Filter on SELECT only; Drift the Chord page's
-                                                  * Change; the fourth free) */
+    {K_ENERGY, P_VARY, P_MOTION, P_MOVE},      /* (1.4.0, the user's: Energy here alone (the Arrangement page's
+                                                  * until its Width); the Filter on SELECT only; the old Drift the Chord
+                                                  * page's Change; format 30, the fourth Drift, how much the sound moves) */
     {P_STABS, P_CTHROW, P_DRIFT, P_CVARY},       /* (1.4.0, the user's: the chord's part: Change, how long a chord lasts
                                                   * (Drift, from the Form page), Vary; Wet to the channel strip, to come) */
     {P_DENSITY, P_PVARY, K_NONE, K_NONE},        /* (1.4.0, the user's: the layers' parts, the empty places kept: the
@@ -183,9 +183,10 @@ static const uint16_t VIEW_KNOB[NVIEWS][4] = {
     {P_BALG, P_BFRAT, P_BFB, P_BBITE},           /* (Bite on every voice, the only one on a voice not FM) */
     {K_SLOT, K_CQ, K_CX, K_PLAY},
     {K_LANE, P_DACCENT, K_LCH, P_DMODE},
-    {P_EWIDTH, P_MIXER, K_DUB, P_DUCK},          /* (Wet: an offset for playing; Duck the piece's own. 1.4.0, the
+    {P_EWIDTH, K_NONE, K_DUB, P_DUCK},           /* (Wet: an offset for playing; Duck the piece's own. 1.4.0, the
                                                   * user's: the Filter on SELECT only; KNOB 2 the dub mixer, how much
-                                                  * the desk rides itself;
+                                                  * the desk rode itself, gone (format 30: its rides Form's Drift's, its
+                                                  * moves the piece's, Motion's to come): free;
                                                   * KNOB 1 the desk's Width, the whole mix's stereo field (from the
                                                   * Echo page), Energy on the Form page alone) */
     {P_TEMPO, P_ROOT, K_MODE, P_SWING},
@@ -193,9 +194,10 @@ static const uint16_t VIEW_KNOB[NVIEWS][4] = {
                                                   * layers'; its Drift the recipes') */
     {P_EBLUR, P_ETONE, P_SIZE, P_CLOUD},         /* (1.4.0, the user's: the space together; Width to the Form page) */
     {P_NWIDTH, P_NPLATE, P_NECHO, K_NONE},       /* (the Noise page's third: SAVE again; its Change the recipes') */
-    {P_CFDEC, P_CLRATE, P_CLSHAPE, P_CLWALK},    /* (1.4.0) the LFO pages: the wave's depth, rate and shape; the
-                                                  * drift (the user's: the records' random walk, its own, always on) */
-    {P_NLFO, P_NLRATE, P_NLSHAPE, P_NLWALK},
+    {P_CLTRIM, P_CLWAVE, P_CLRATE, P_CLDEST},   /* (1.4.0) the LFO pages: (format 30, the variety plan's step 2) its
+                                                  * Drift on Form's Drift; (layout B, the user's) its Wave, the wave's
+                                                  * share against the wander; its rate; where it goes (ALGORITHM's too) */
+    {P_NLTRIM, P_NLWAVE, P_NLRATE, P_NLDEST},
     {P_HATSLVL, P_HTONE, P_HLEN, K_NONE},        /* (1.4.0) the Hats page: SEQ a third time, the Pattern after it */
     {P_NROOM, P_NCOL, P_NTUNE, P_NWIDTH},        /* (1.4.0) the Noise voice: SAVE again; its Width from the Noise space
                                                   * page (gone: its sends the noise's channel strip) */
@@ -238,7 +240,7 @@ static const char *view_name(int v)              /* a page's name (a strip's: it
     return v == V_STRIP ? SN[strip_part] : VIEW_NAME[v];
 }
 static const char *const KNOB_LABEL[NVIEWS][4] = {
-    {"Energy", "Evolve", "Motion", ""},
+    {"Energy", "Vary", "Motion", "Drift"},
     {"Density", "Throws", "Change", "Vary"},
     {"Density", "Vary", "", ""},
     {"Groove", "Vary", "Density", "Fifth"},
@@ -255,13 +257,13 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Algo", "Ratio", "Feedback", "Bite"},
     {"Slot", "Chord", "Type", "Play"},
     {"Lane", "Accent", "Chance", "Play"},
-    {"Width", "Mixer", "Wet", "Duck"},
+    {"Width", "", "Wet", "Duck"},
     {"Tempo", "Root", "Mode", "Swing"},
     {"Density", "Vary", "", ""},
     {"Blur", "Tone", "Size", "Cloud"},
     {"Width", "Plate", "Echo", ""},
-    {"Depth", "Rate", "Shape", "Drift"},
-    {"Depth", "Rate", "Shape", "Drift"},
+    {"Drift", "Wave", "Rate", "Target"},
+    {"Drift", "Wave", "Rate", "Target"},
     {"Level", "Tone", "Length", ""},
     {"Air", "Tone", "Decay", "Width"},
     {"Level", "Echo", "Plate", "Filter"},   /* (1.4.0, format 28, Robert's: the Low cut a centred filter) */
@@ -272,14 +274,14 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
 /* what each knob does, a line: under the big ring in the middle while it's being turned (each fits 228 px: the
  * host's expect helpfit) */
 static const char *const KNOB_HELP[NVIEWS][4] = {
-    {"Sparse and dry, to busy and bright", "How restless: stabs come and go", "How often it leaves Full, and sweeps",
-     ""},
+    {"Sparse and dry, to busy and bright", "How much the loop changes: held to restless", "How often it leaves Full",
+     "How much the sound moves: still to restless"},
     {"Stabs a bar, one to six", "How often a stab is thrown to the echo", "How long a chord lasts",
-     "How often the stabs' pattern turns"},
-    {"How many notes each loop holds", "How often the loops change", "", ""},
-    {"The pattern, from sparse to busy", "How often its phrase's figure changes", "How many of the groove's notes play",
+     "The stabs' turns, more or less; left: Hold"},
+    {"How many notes each loop holds", "The loops' changes, more or less; left: Hold", "", ""},
+    {"The pattern, from sparse to busy", "Its figure's changes, more or less; left: Hold", "How many of the groove's notes play",
      "How often the fifth, not the root"},
-    {"The kick's shape, Evolve its wander", "How busy the hats are", "How often the kick and the hats change", ""},
+    {"The kick's shape, Vary its wander", "How busy the hats are", "The kick's and hats' changes; left: Hold", ""},
     {"How much goes into the echo", "The tape loop's length, in beats", "How long the repeats go on",
      "How much goes into the plate"},
     {"Fine tuning, in cents", "Notes and clock out over MIDI", "The keys' and buttons' lights",
@@ -303,17 +305,17 @@ static const char *const KNOB_HELP[NVIEWS][4] = {
      "Endless, or the slots in a loop"},
     {"The lane you're writing", "How much quieter the other steps", "How likely the lane's steps play",
      "Auto patterns, or your own"},
-    {"The whole mix mono, to wide", "A hand on the faders and sends, by itself", "The whole music dry, or drowned",
+    {"The whole mix mono, to wide", "", "The whole music dry, or drowned",
      "How far each beat pushes the rest down"},
     {"Beats a minute", "The key's root note", "The scale: Minor, Dorian, ...", "Off sixteenths late: the whole groove"},
-    {"How many hits ring, in two bars", "How often its groove changes", "", ""},
+    {"How many hits ring, in two bars", "Its groove's changes, more or less; left: Hold", "", ""},
     {"Clean repeats, to a dissolving wash", "The repeats darker, or brighter", "How long the plate rings",
      "The reverb through the grain cloud"},
     {"The noise mono, to wide", "How much of it rings in the plate", "How much of it goes into the echo", ""},
-    {"How deep the wave", "How long the wave: 1 to 32 bars", "The wave's shape",
-     "A slow random wander, as a hand on the knob"},
-    {"How deep the noise's wave", "How long the wave: 1 to 32 bars", "The wave's shape",
-     "A slow random wander, as a hand on the knob"},
+    {"More or less than Drift; left: still", "Wander to wave: 0 wander, 100 wave", "How long the wave: 1 to 32 bars",
+     "What it moves: Cutoff, Reso, Colour"},
+    {"More or less than Drift; left: still", "Wander to wave: 0 wander, 100 wave", "How long the wave: 1 to 32 bars",
+     "What it moves: Filter, Tone, Air"},
     {"The hats' level against the kick", "The hats, dark to bright", "How long the hats ring", ""},
     {"The hiss under it, softer or more", "The rings darker, or brighter", "How long each hit rings on the chord",
      "The noise mono, to wide"},
@@ -899,10 +901,12 @@ static void set_piece(int i)                    /* the piece playing kept as it 
  * grid's effects):
  *   white 1-6    the parts, a tap each: muted and back, their levels kept (chord, pings, bass, kick, hats, noise: the
  *                mutes OCT- + OCT+ make on a layer's page, the same); held, the part's channel strip on the knobs
- *   black 1-5    each the part of the white key on its left: the chord (F#3), the pings, the bass, the hats (C#4) and
- *                the noise (D#4); the kick (B3) has none. A tap: soloed and back (more than one: they play together;
- *                the rest muted); held: that part thrown into the echo while held (the chord every stab thrown; the
- *                others their echo send pushed, a little more feedback), the tails left to ring
+ *   black 1-5    the chord (F#3), the pings, the bass (A#3), the hats (C#4): each the part of the white key on its
+ *                left; and (the user's, zzq: the kick rather than the noise) the kick (D#4), which has no black key
+ *                of its own (B3, its white, has none after it); the noise none (white 6 still mutes it). A tap:
+ *                soloed and back (more than one: they play together; the rest muted); held: that part thrown into
+ *                the echo while held (the chord every stab thrown; the others their echo send pushed, a little more
+ *                feedback), the tails left to ring
  *   white 7      none: dark, the gap
  *   white 8-11   the global moves, held as long as the key is: the filter pushed open, pushed shut, the floor dropped
  *                (the kick and the bass out), the echo pushed (all in, feeding back)
@@ -923,15 +927,16 @@ static const uint8_t PERF_KEY[PERF_N] = {0, 2, 4, 6, 7, 9,           /* white 1-
                                          1, 3, 5, 8, 10};            /* black 1-5: the parts' solos and throws */
 static const char *const PERF_NAME[PERF_N] = {"CHORD", "PINGS", "BASS", "KICK", "HATS", "NOISE", "OPEN", "SHUT", "DROP",
                                               "ECHO", "TIME X2", "FREEZE", "TAPE STOP", "STUTTER", "SIREN", "CHORD",
-                                              "PINGS", "BASS", "HATS", "NOISE"};
+                                              "PINGS", "BASS", "HATS", "KICK"};
 static const uint16_t PERF_MBIT[PERF_NM] = {EN_PF_OPEN, EN_PF_CLOSE, EN_PF_KICKDROP, EN_PF_ECHO};
 static const uint8_t PERF_FX[PERF_NF] = {1, 10, 2, 12, 14};   /* (EN_FX_NAME's: Time x2, Freeze, Tape stop, Stutter, Siren) */
-static const uint8_t PERF_BPART[PERF_NB] = {0, 1, 2, 4, 5};   /* each black key's part (EN_M_* bit) */
-static const uint16_t PERF_BTHR[PERF_NB] = {EN_PF_THROW, EN_PF_PTHROW, EN_PF_BTHROW, EN_PF_HATTHROW, EN_PF_NTHROW};
-static const char *const PERF_THRNAME[PERF_NB] = {"CHORD THROW", "PINGS THROW", "BASS THROW", "HATS THROW", "NOISE THROW"};
+static const uint8_t PERF_BPART[PERF_NB] = {0, 1, 2, 4, 3};   /* each black key's part (EN_M_* bit; the last the kick's,
+                                                  * the noise's before: the user's, zzq) */
+static const uint16_t PERF_BTHR[PERF_NB] = {EN_PF_THROW, EN_PF_PTHROW, EN_PF_BTHROW, EN_PF_HATTHROW, EN_PF_KTHROW};
+static const char *const PERF_THRNAME[PERF_NB] = {"CHORD THROW", "PINGS THROW", "BASS THROW", "HATS THROW", "KICK THROW"};
 static const char *const PERF_THRWHAT[PERF_NB] = {"every stab into the echo", "the pings into the echo",
                                                   "the bass into the echo", "the hats into the echo",
-                                                  "the noise into the echo"};
+                                                  "the kick into the echo"};
 static void perf_mutes(void)                     /* to the engine: the mutes, and with a solo, all but it */
 {
     en_mute(ui.mutes | (ui.solo ? 0x3Fu & ~ui.solo : 0u));
@@ -944,7 +949,7 @@ static int perf_sounds(int i)                    /* part i (0..5) heard: not mut
 }
 static void set_view(int v);
 static void lock_toggle(void)                    /* SEL held: Lock, on or off: the phrases keep their kick, groove and plan,
-                                                  * Evolve's own moves rest (not saved; off at boot) */
+                                                  * the borrowed groove rests (not saved; off at boot) */
 {
     ui.lock = (uint8_t)!ui.lock;
     en_lock(ui.lock);
@@ -1542,8 +1547,8 @@ static void midi_in(void)
 /* NUDGE: a layer's button held (ENV the chord, ARP the pings, LFO the bass, SEQ the drums): its sound a small step
  * further, a few of its values each a few units, a walk pulled back to the piece's recipe (the further a value has
  * gone, the likelier it steps back), so nudges explore round the piece's sound and never wander off. The biggest
- * change said, and the layer's sound page shown, that knob lit. Evolve nudges by itself: now and then on a phrase's
- * first bar, one layer, a smaller step (nudge_tick) */
+ * change said, and the layer's sound page shown, that knob lit. (1.4.0, format 29, the variety plan: Evolve's own
+ * nudges, by themselves, gone: the sound moves by hand, by Drift's LFOs and the dub mixer; Vary is the patterns) */
 #define NUDGE_HOLD 500u
 #define SHAKE_HOLD 1500u                  /* held on: a shake (a new voice, every value a big step) */
 #define NNUDGE 6
@@ -1574,8 +1579,8 @@ static void groove_step(int recipe, int pull)
         d = g == 0 ? 1 : g == hi ? -1 : nrand(2) ? 1 : -1;
     knob_set(P_GROOVE, g + d);
 }
-enum { NUDGE_EVOLVE, NUDGE_HAND, NUDGE_SHAKE };
-/* how a nudge goes: EVOLVE (Evolve's, 1-2 values, half steps, nothing said), HAND (the button held: 3-4 values, steps
+enum { NUDGE_HAND, NUDGE_SHAKE };
+/* how a nudge goes: HAND (the button held: 3-4 values, steps
  * up to an eighth of the range), SHAKE (held on: a new voice or kit, and every value a big step). Each value walks
  * from where it is, pulled back to the recipe: back as likely as it is far from it, always back from a quarter of
  * the range away */
@@ -1631,16 +1636,14 @@ static void nudge(int layer, int how)
         if (!dup)
             pick[np++] = NUDGE_PAR[layer][j];
     }
-    n = how == NUDGE_SHAKE ? np : how == NUDGE_HAND ? 3 + nrand(2) : 1 + nrand(2);
+    n = how == NUDGE_SHAKE ? np : 3 + nrand(2);
     for (j = 0; j < n && np; j++) {
         int w = nrand(np), p = pick[w], lo = en_param_info(p)->lo, hi = en_param_info(p)->hi;
         int st = (hi - lo) / (p == P_DECAY || p == P_CCUT || p == P_FEEDBACK ? 16 : 8), v = proj.par[p], d;
         pick[w] = pick[--np];                    /* (not twice in one nudge) */
         if (p == P_KTUNE)
             st = 2;                              /* (the kick's tune: semitones) */
-        if (how == NUDGE_EVOLVE)
-            st = (st + 1) / 2;
-        else if (how == NUDGE_SHAKE)
+        if (how == NUDGE_SHAKE)
             st = st * 3 / 2;
         if (st < 1)
             st = 1;
@@ -1661,8 +1664,6 @@ static void nudge(int layer, int how)
     }
     if (layer == 1 && (how == NUDGE_SHAKE || nrand(2)))   /* the pings: now and then a note of one loop, another */
         en_ping_nudge();
-    if (how == NUDGE_EVOLVE)
-        return;
     {   /* said: "CHORD NUDGE  Colour +9", "CHORD SHAKE  Keys" */
         char t[24], head[16], v[8];
         const char *nm = how == NUDGE_SHAKE ? vn : best >= 0 ? en_param_info(best)->name : "";
@@ -1684,7 +1685,7 @@ static void nudge(int layer, int how)
         head[i] = 0;
         if (!nudge_quiet)
             say(head, t);
-        if (how != NUDGE_EVOLVE && !nudge_quiet) /* (yours, not Evolve's: a card in the middle too) */
+        if (!nudge_quiet)                        /* (a card in the middle too) */
             card_show(head, t, how == NUDGE_SHAKE ? K_FROST : K_PULSE, how == NUDGE_SHAKE);
     }
     if (!ui.perf && !nudge_quiet) {
@@ -1710,20 +1711,20 @@ static void nudge(int layer, int how)
             }
     }
 }
-static void nudge_tick(void)                     /* Evolve's nudges: on a phrase's first bar, now and then, one layer */
+static void groove_tick(void)                    /* (1.4.0, format 29) the bass's borrowed groove: on a phrase's first
+                                                  * bar, now and then, by the bass's amount (Vary and its trim) */
 {
     static uint8_t last_pb = 0xFF;
     uint8_t pb = en_phrase_bar;
-    int ev = proj.par[P_EVOLVE];
+    const int t = proj.par[P_BVARY], a0 = proj.par[P_VARY] + t, a = t <= -50 ? 0 : a0 < 0 ? 0 : a0 > 100 ? 100 : a0;
     if (pb == last_pb)
         return;
     last_pb = pb;
-    if (pb != 0 || !en_playing || en_frozen || ev <= 40 || ui.lock)   /* (Lock: they rest) */
+    if (pb != 0 || !en_playing || en_frozen || !a || ui.lock)   /* (Lock, or the bass held: it rests) */
         return;
-    if (nrand(100) < (ev - 40) * 2 / 3)          /* (Evolve 100: 40% of the phrases; 70: 20%; 40 and under: none) */
-        nudge(nrand(NNUDGE), NUDGE_EVOLVE);
-    if (ev > 60 && nrand(400) < (ev - 60) * 7 / 10) {   /* the bass's groove, rarely, to a neighbour and back (Evolve
-                                                  * 100: 7% of the phrases, every few minutes; 60 and under: never) */
+    if (nrand(4000000) < a * a * 7) {            /* the bass's groove, rarely, to a neighbour and back: as the square
+                                                  * of the amount, no threshold (100: 7 phrases in 400, every few
+                                                  * minutes, as Evolve 100 had it; 50: a quarter of that; 0 never) */
         int16_t rec[P_NPARAMS];
         uint16_t pool;
         en_piece(proj.piece, rec, &pool);
@@ -3418,70 +3419,163 @@ static void draw_noise_lane(void)
     }
 }
 
-/* (1.4.0) an LFO page: the modulation's path, as heard, the last 16 bars (en_lfo_tr), in the layer's colour, older
- * fainter, the present at the right with a dot; a faint line at the middle (the knob's own value), its reach at the
- * depth dotted above and below; the bars ticked on the middle line; the rate over it */
+/* (1.4.0, the user's: the LFO pages' picture across the screen, VARIETY-PLAN.md) an LFO page: its past, now and
+ * future, the full width and (zzq, the user's: the knobs say the Rate, the Wave and the Target) the full height, no
+ * title; now (a dot on what's heard) in the middle. Left, what it did: what's heard (the wave and the wander together,
+ * en_lfo_tr) bold in the layer's colour, older fainter; the wave's part alone a thin white line, the wander's a thin
+ * pink one (zzq: solid, a dotted one lost on the FM-1's screen). Right, where the wave goes (dim; the wander can't be
+ * known, not drawn ahead). At one scale, the most Drift and the page's Drift reach, so it shrinks to flat with them,
+ * or grows; its reach dotted. Under it the bars, the wave's cycles (or, on the wander alone, the phrases) taller. The
+ * span each side: 4 bars for a 1- or 2-bar wave, 8 for 4, else 16 (two cycles where they fit). Its reach's ends in
+ * its Target's units at the left edge, inside the reach on a dark patch (outside it while it's small): the chord's
+ * cutoff in Hz around its knobs' own (before each stab's envelope), Reso's and Colour's and the noise's Tone and Air
+ * as their knobs show them, the noise's Filter in Hz */
+static void lfo_hz(float f, char *b)             /* (570 Hz, 2.3 kHz, 20 kHz) */
+{
+    const int hz = (int)(f + 0.5f);
+    char t[12];
+    int j = 0, k;
+    if (hz >= 10000) {
+        itoa_u((uint32_t)((hz + 500) / 1000), t);
+    } else if (hz >= 1000) {
+        const int h = (hz + 50) / 100;
+        itoa_u((uint32_t)(h / 10), t);
+        for (k = 0; t[k]; k++)
+            ;
+        t[k++] = '.', t[k++] = (char)('0' + h % 10), t[k] = 0;
+    } else {
+        itoa_u((uint32_t)(hz >= 100 ? (hz + 5) / 10 * 10 : hz), t);
+    }
+    for (k = 0; t[k]; k++)
+        b[j++] = t[k];
+    b[j++] = ' ';
+    if (hz >= 1000)
+        b[j++] = 'k';
+    b[j++] = 'H', b[j++] = 'z', b[j] = 0;
+}
+static void lfo_units(int k, float re, char *hi, char *lo)   /* (its reach's ends in its Target's units) */
+{
+    const int dst = proj.par[k ? P_NLDEST : P_CLDEST];
+    if (!k && dst == EN_CLD_CUTOFF) {
+        const float b = en_chord_cut(), e = fm_exp2f(re);
+        lfo_hz(fm_clampf(b * e, 90.0f, 12000.0f), hi);
+        lfo_hz(fm_clampf(b / e, 90.0f, 12000.0f), lo);
+    } else if (k && dst == EN_NLD_FILTER) {
+        lfo_hz(20000.0f, hi);
+        lfo_hz(20000.0f * fm_exp2f(-1.9f * fm_minf(2.0f * re, 2.0f)), lo);
+    } else {                                     /* (a knob's: as far along it, within its ends) */
+        const int p = k ? (dst == EN_NLD_TONE ? P_NCOL : P_NROOM) : dst == EN_CLD_RESO ? P_CRES : P_CCOL,
+                  lo0 = p == P_NROOM ? 0 : -50, hi0 = p == P_NROOM ? 100 : 50,
+                  dl = (int)((k ? 25.0f * re : 50.0f * (2.0f / 5.5f) * re) + 0.5f), v = proj.par[p];
+        en_param_text(p, v + dl > hi0 ? hi0 : v + dl, hi);
+        en_param_text(p, v - dl < lo0 ? lo0 : v - dl, lo);
+    }
+}
 static void draw_lfo(int k)
 {
-    const int32_t x0 = 60, w = 124, yc = 60, rr = 28;   /* (between the meters and the duck, under the page's name,
-                                                  * over the lane; 127: rr pixels) */
-    const uint16_t col = k ? K_NOISE : K_PAD;
-    const uint32_t wn = en_lfo_w, n = wn < EN_LFO_N ? wn : EN_LFO_N, b16 = en_bars ? en_bars - 1u : 0u;
-    const int d = proj.par[k ? P_NLFO : P_CFDEC], dw = proj.par[k ? P_NLWALK : P_CLWALK],
-              reach = d > 0 || dw > 0 ? rr : 0;  /* (the trace at its own reach: the wave's and the drift's) */
+    const int32_t xl = 4, xn = 120, xr = 236, half = xn - xl, yc = 44, rr = 36;   /* (the picture's rows, 8..80, the
+                                                  * ticks under them: the lanes below kept clear; 127: rr pixels) */
+    const uint16_t col = k ? K_NOISE : K_PAD, cw = mix(K_BG, K_TEXT, 14), cf = mix(K_BG, K_TEXT, 6),
+                   cd = mix(K_BG, K_RIM, 14);   /* (what's heard the layer's colour; the wave white, the wander pink) */
+    const uint32_t wn = en_lfo_w, n = wn < EN_LFO_N ? wn : EN_LFO_N, cur = en_bars ? en_bars - 1u : 0u;
+    const float mx = k ? 2.0f : 2.2f, re = en_lfo_reach_of(k);   /* (the scale: the most either reaches, LFO_CR_MAX,
+                                                  * LFO_NR_MAX; its reach now) */
+    const int rate = proj.par[k ? P_NLRATE : P_CLRATE], bars = en_lfo_bars(rate),
+              dw = re > 0.0f, d = dw && proj.par[k ? P_NLWAVE : P_CLWAVE] > 0, wd = dw && proj.par[k ? P_NLWAVE : P_CLWAVE] < 100,
+              reach = (int)(re / mx * (float)rr + 0.5f),
+              hb = !d || !bars ? 16 : bars <= 2 ? 4 : bars == 4 ? 8 : 16;
+    const uint32_t span = (uint32_t)hb * 16u;   /* (sixteenths each side) */
     int32_t x, y0 = yc, yy;
-    char t[32], tt[32];
-    if (d > 0) {                                 /* (what moves it: "4 BARS", "4 BARS + DRIFT", "DRIFT") */
-        int j = 0;
-        en_param_text(k ? P_NLRATE : P_CLRATE, proj.par[k ? P_NLRATE : P_CLRATE], t);
-        while (t[j])
-            j++;
-        if (dw > 0)
-            t[j++] = ' ', t[j++] = '+', t[j++] = ' ', t[j++] = 'D', t[j++] = 'r', t[j++] = 'i', t[j++] = 'f', t[j++] = 't';
-        t[j] = 0;
-    } else {
-        t[0] = 0;
-        if (dw > 0)
-            t[0] = 'D', t[1] = 'r', t[2] = 'i', t[3] = 'f', t[4] = 't', t[5] = 0;
-    }
-    if (t[0]) {                                  /* (1.4.0: where it goes, "4 BARS + DRIFT ON RESO", "... ON AIR") */
-        const char *w = k ? EN_NLDEST_NAME[proj.par[P_NLDEST] % EN_NNLDEST] : EN_CLDEST_NAME[proj.par[P_CLDEST] % EN_NCLDEST];
-        int j = 0;
-        while (t[j])
-            j++;
-        t[j++] = ' ', t[j++] = 'o', t[j++] = 'n', t[j++] = ' ';
-        while (*w && j < (int)sizeof t - 1)
-            t[j++] = *w++;
-        t[j] = 0;
-    }
-    caps(tt, t, sizeof tt);
-    text_c(120, MAIN_SHIFT - 1, &FONT_XS, tt, K_DIM);   /* (where it was on the screen: the canvas's top, 1.4.0) */
-    cv_rect(x0, yc, w, 1, mix(K_BG, K_LINE, 10));
-    for (x = 0; x < w; x += 4)                   /* (its reach, at the depth) */
+    cv_rect(xl, yc, xr - xl, 1, mix(K_BG, K_LINE, 10));
+    for (x = xl; x < xr; x += 4)                 /* (its reach) */
         if (reach > 0) {
-            cv_rect(x0 + x, yc - reach, 1, 1, K_LINE);
-            cv_rect(x0 + x, yc + reach, 1, 1, K_LINE);
+            cv_rect(x, yc - reach, 1, 1, K_LINE);
+            cv_rect(x, yc + reach, 1, 1, K_LINE);
         }
-    for (x = 0; x < w; x++) {                    /* (the bars, on the middle line: the oldest at the left) */
-        const uint32_t age = (uint32_t)(w - 1 - x) * EN_LFO_N / (uint32_t)w, age2 = (uint32_t)(w - x) * EN_LFO_N / (uint32_t)w;
-        if (age2 <= b16 && ((b16 - age) >> 4) != ((b16 - age2) >> 4))
-            cv_rect(x0 + x, yc - 1, 1, 3, K_LINE);
+    for (yy = yc - rr; yy <= yc + rr; yy += 3)   /* (now) */
+        cv_rect(xn, yy, 1, 1, K_LINE);
+    {   /* (the bars under it: each a tick, the wave's cycles taller, or the phrases on the wander alone) */
+        const int32_t yt = yc + rr + 4;
+        const uint32_t cb = cur >> 4;
+        int64_t sp = -1;
+        for (x = xl; x < xr; x++) {
+            const int64_t s = x <= xn ? (int64_t)cur - (int64_t)((uint32_t)(xn - x) * span / (uint32_t)half)
+                                      : (int64_t)cur + (int64_t)((uint32_t)(x - xn) * span / (uint32_t)half);
+            if (x > xl && s >= 0 && (s >> 4) != (sp >> 4)) {
+                const uint32_t b = (uint32_t)(s >> 4);
+                const int tall = d && bars ? b % (uint32_t)bars == 0u
+                                           : ((b + 8u - cb % 8u + en_phrase_bar) & 7u) == 0u;
+                cv_rect(x, tall ? yt - 1 : yt + 1, 1, tall ? 5 : 2, tall ? K_DIM : K_LINE);
+            }
+            sp = s;
+        }
     }
-    for (x = 0; x < w; x++) {
-        const uint32_t age = (uint32_t)(w - 1 - x) * EN_LFO_N / (uint32_t)w;
+    if (d)                                       /* (the wave ahead, dim, as it will go) */
+        for (x = xn + 1; x < xr; x++) {
+            const uint32_t s = cur + (uint32_t)(x - xn) * span / (uint32_t)half;
+            const float wp = en_lfo_wave_part(k, s) / mx * (float)rr;
+            int32_t a0, a1;
+            yy = yc - (int32_t)(wp + (wp < 0.0f ? -0.5f : 0.5f));
+            if (x == xn + 1) {
+                const float w0 = en_lfo_wave_part(k, cur) / mx * (float)rr;
+                y0 = yc - (int32_t)(w0 + (w0 < 0.0f ? -0.5f : 0.5f));
+            }
+            a0 = y0 < yy ? y0 : yy, a1 = y0 > yy ? y0 : yy;
+            cv_rect(x, a0, 1, a1 - a0 + 1, cf);
+            y0 = yy;
+        }
+    for (x = xl; x <= xn; x++) {                 /* (what was heard, bold, the oldest at the left, fainter) */
+        const uint32_t age = (uint32_t)(xn - x) * span / (uint32_t)half;
         int32_t a0, a1;
         if (age >= n)                            /* (not played yet so far back) */
             continue;
         yy = yc - (int32_t)en_lfo_tr[k][(wn - 1u - age) % EN_LFO_N] * rr / 127;
-        if (x == 0 || age + 1u >= n)
+        if (x == xl || age + 1u >= n)
             y0 = yy;
         a0 = y0 < yy ? y0 : yy, a1 = y0 > yy ? y0 : yy;
-        cv_rect(x0 + x, a0 - 1, 1, a1 - a0 + 3, mix(K_BG, col, 5 + (int)(11u - age * 11u / EN_LFO_N)));   /* (the
-                                                  * user's: a tad bolder, 3 px) */
+        cv_rect(x, a0 - 1, 1, a1 - a0 + 3, mix(K_BG, col, 6 + (int)(10u - age * 10u / span)));
         y0 = yy;
     }
-    if (n)                                       /* (now: a dot at the right) */
-        cv_disc(x0 + w - 1, yc - (int32_t)en_lfo_tr[k][(wn - 1u) % EN_LFO_N] * rr / 127, 4, en_playing ? K_TEXT : col);
+    if (wd)                                      /* (the wander's part, a thin pink line over it) */
+        for (x = xl; x <= xn; x++) {
+            const uint32_t age = (uint32_t)(xn - x) * span / (uint32_t)half;
+            int32_t a0, a1;
+            if (age >= n)
+                continue;
+            yy = yc - (int32_t)en_lfo_wd[k][(wn - 1u - age) % EN_LFO_N] * rr / 127;
+            if (x == xl || age + 1u >= n)
+                y0 = yy;
+            a0 = y0 < yy ? y0 : yy, a1 = y0 > yy ? y0 : yy;
+            cv_rect(x, a0, 1, a1 - a0 + 1, cd);
+            y0 = yy;
+        }
+    if (d)                                       /* (the wave's part, a thin white line over them) */
+        for (x = xl; x <= xn; x++) {
+            const uint32_t age = (uint32_t)(xn - x) * span / (uint32_t)half;
+            int32_t a0, a1;
+            if (age >= n)
+                continue;
+            yy = yc - (int32_t)en_lfo_wv[k][(wn - 1u - age) % EN_LFO_N] * rr / 127;
+            if (x == xl || age + 1u >= n)
+                y0 = yy;
+            a0 = y0 < yy ? y0 : yy, a1 = y0 > yy ? y0 : yy;
+            cv_rect(x, a0, 1, a1 - a0 + 1, cw);
+            y0 = yy;
+        }
+    if (n)                                       /* (now: a dot on what's heard, in the middle) */
+        cv_disc(xn, yc - (int32_t)en_lfo_tr[k][(wn - 1u) % EN_LFO_N] * rr / 127, 4, en_playing ? K_TEXT : col);
+    if (dw) {                                    /* (its reach's ends, in its Target's units, at the left edge: inside
+                                                  * the reach on a dark patch, over the oldest past; outside it while the
+                                                  * reach is too small for two; FONT_XS's glyphs its cell's rows 1..12) */
+        char hi[12], lo[12];
+        const int in = reach >= 16;
+        const int32_t yh = in ? yc - reach + 1 : yc - reach - 13, yl = in ? yc + reach - 13 : yc + reach + 1;
+        lfo_units(k, re, hi, lo);
+        cv_shade(xl - 2, yh + 1, text_w(&FONT_XS, hi) + 4, 12, 2, 12u, K_BG);
+        cv_shade(xl - 2, yl + 1, text_w(&FONT_XS, lo) + 4, 12, 2, 12u, K_BG);
+        cv_text(xl, yh, &FONT_XS, hi, K_DIM);
+        cv_text(xl, yl, &FONT_XS, lo, K_DIM);
+    }
 }
 
 /* (1.4.0, the user's: song structure) the Song pages' picture, in the lanes' place: the song as set, its intro,
@@ -4155,7 +4249,7 @@ static void draw_tape(uint32_t now)
 {
     static float al, ar;
     static uint32_t t_last;
-    const int32_t lx = 76, rx = 164, cy = 50;
+    const int32_t lx = 33, rx = 207, cy = 50;   /* (zzr, the user's: the reels at the edges, the counter between) */
     const uint32_t dt = t_last ? (now - t_last > 100u ? 100u : now - t_last) : 0u;
     const float bars = (float)en_bars * (1.0f / 16.0f),
                 q = en_song_ph != EN_SG_OFF && en_song_be ? fm_minf(bars / (float)en_song_be, 1.0f)
@@ -4179,7 +4273,7 @@ static void draw_tape(uint32_t now)
     cv_rect(116, 86, 8, 4, lvl);
     cv_rect(129, 86, 8, 4, ec);
     {   /* (1.4.0, the user's) the tape's counter, seen nowhere else: at the left, where the song is (INTRO, MAIN,
-         * OUTRO; ENDLESS) and the bars left of it (BARS); at the right, the time since PLAY, and in a song its whole length */
+         * OUTRO; ENDLESS) and the bars left of it (BARS); at its right, the time since PLAY, and in a song its whole length */
         static uint32_t t0, shown, last_b;
         static uint8_t was;
         const uint32_t b = en_bars / 16u;
@@ -4191,14 +4285,14 @@ static void draw_tape(uint32_t now)
         was = en_playing, last_b = b;
         if (en_playing)
             shown = (now - t0) / 1000u;
-        text_c(25, 40, &FONT_XS, song ? (en_song_ph == EN_SG_INTRO ? "INTRO" : en_song_ph == EN_SG_MAIN ? "MAIN" : "OUTRO")
+        text_c(94, 42, &FONT_XS, song ? (en_song_ph == EN_SG_INTRO ? "INTRO" : en_song_ph == EN_SG_MAIN ? "MAIN" : "OUTRO")
                                       : en_song_ph == EN_SG_END ? "END" : "ENDLESS", song ? K_ACC : K_DIM);
         if (song) {
             const uint32_t end = en_song_ph == EN_SG_INTRO ? en_song_b0 : en_song_ph == EN_SG_MAIN ? en_song_bo : en_song_be;
             const uint32_t left = end > b ? end - b : 0u;
             itoa_u(left, t);
-            text_c(25, 52, &FONT_B, t, tc);
-            text_c(25, 72, &FONT_XS, left == 1u ? "BAR" : "BARS", K_DIM);
+            text_c(94, 53, &FONT_B, t, tc);
+            text_c(94, 70, &FONT_XS, left == 1u ? "BAR" : "BARS", K_DIM);
         }
         {
             uint32_t k = 0, m = shown / 60u, sec = shown % 60u;
@@ -4207,8 +4301,8 @@ static void draw_tape(uint32_t now)
             while (c[k])
                 k++;
             c[k++] = ':', c[k++] = (char)('0' + sec / 10u), c[k++] = (char)('0' + sec % 10u), c[k] = 0;
-            text_c(214, 52, &FONT_B, c, tc);
-            text_c(214, 40, &FONT_XS, "TIME", K_DIM);
+            text_c(146, 53, &FONT_B, c, tc);
+            text_c(146, 42, &FONT_XS, "TIME", K_DIM);
             if (song && proj.par[P_TEMPO] > 0) {  /* (the song's whole length, at this tempo) */
                 const uint32_t tot = en_song_be * 240u / (uint32_t)proj.par[P_TEMPO];
                 k = 0;
@@ -4217,7 +4311,7 @@ static void draw_tape(uint32_t now)
                 while (c[k])
                     k++;
                 c[k++] = ':', c[k++] = (char)('0' + tot % 60u / 10u), c[k++] = (char)('0' + tot % 10u), c[k] = 0;
-                text_c(214, 72, &FONT_XS, c, K_DIM);
+                text_c(146, 70, &FONT_XS, c, K_DIM);
             }
         }
     }
@@ -4522,7 +4616,7 @@ static void draw_main(void)
 static int ride_on_knob(int k, float *at)        /* a strip's knob the mixer is riding: where it is now (knob units) */
 {
     int w;
-    if (ui.view != V_STRIP || !proj.par[P_MIXER])
+    if (ui.view != V_STRIP)                      /* (format 30: the rides Drift's, the moves the Mixer's) */
         return 0;
     for (w = 0; w < 3; w++)
         if (STRIP_PAR[strip_part][w] == k) {
@@ -4563,10 +4657,14 @@ static int text_has_digit(const char *t)
  * judged by the knob's ends, not its value now (the Filter's "Off" at 0 stays a unit) */
 enum { KK_RING, KK_UNIT, KK_SEL };
 static void knob_text(int k, char *b);
+static int vary_trim(int k)                      /* (format 29: a layer's Vary trim; 30: an LFO's Trim) */
+{
+    return k == P_CVARY || (k >= P_PVARY && k <= P_NVARY) || k == P_CLTRIM || k == P_NLTRIM;
+}
 static int knob_kind(int k, int lo, int hi)
 {
     char a[16], z[16];
-    if (k == K_CPU)
+    if (k == K_CPU || vary_trim(k))              /* (a layer's Vary trim: a centred ring, Hold its far left) */
         return KK_RING;
     if (hi - lo < 10)
         return KK_SEL;
@@ -4746,6 +4844,8 @@ static void draw_knobs(void)
                 const float c = (float)(v - lo) / (float)(hi - lo);
                 arc_span(cx, KNB_CY, KNB_R, c - rr, c + rr, c + nw, mix(fill, K_TEXT, 11), en_playing ? K_TEXT : mix(fill, K_TEXT, 11));
             }
+            if (vary_trim(k))                    /* (1.4.0, format 29: a Vary trim's far left, Hold, marked) */
+                arc_mark_th(cx, KNB_CY, KNB_R, KNB_TH, 0.0f, K_TEXT);
             if (k == P_MOTION) {                 /* (Motion's three regions: the loop held, variations, Breaks) */
                 arc_mark_th(cx, KNB_CY, KNB_R, KNB_TH, 0.4f, K_TEXT);
                 arc_mark_th(cx, KNB_CY, KNB_R, KNB_TH, 0.7f, K_TEXT);
@@ -4753,7 +4853,7 @@ static void draw_knobs(void)
             {   /* (1.4.0, the user's) inside the ring: a unit's value always, small ("LP 2.6k", "32 bars"); a number only
                  * a moment as the page opens (or always, Setup's Values), as big as fits */
                 const int32_t in = 2 * (KNB_R - (int32_t)KNB_TH) - 2;
-                const int f = kind == KK_UNIT ? 16 : peek;
+                const int f = kind == KK_UNIT || (vary_trim(k) && v <= lo) ? 16 : peek;   /* (Hold: said always) */
                 if (f > 0) {
                     const felucca_font_t *fn = kind == KK_UNIT ? &FONT_XS : knob_font(t, in);
                     if (kind == KK_UNIT && text_w(&FONT_XS, t) > in + 6) {   /* (too wide: the unit's word dropped, the
@@ -5324,7 +5424,7 @@ static void set_tick(void)
 void ui_frame(void)
 {
     prog_take();
-    nudge_tick();
+    groove_tick();
     input();
     set_tick();
     autosave();

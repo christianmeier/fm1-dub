@@ -907,7 +907,84 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
     calmer (Fog, Pressure, Haze, Chamber, Basic, Night Drive), the sound moving more (Drift, Depth, Mixer up), Change
     64 bars on Concrete and Haze (32 on Night Drive).
   - **Pending, for discussion:** the bigger proposal (Vary, Drift, Motion on the Form page; the layer Varys as trims;
-    the kick's short drop-outs).
+    the kick's short drop-outs). Decided: build/design/VARIETY-PLAN.md (decisions 1-11), built a step at a time.
+- **The variety plan, step 1: Vary and its trims** (VARIETY-PLAN.md decision 7; branch dub-1.4-vary, format 29;
+  build/design/REPORT-vary.md). **Built:**
+  - Form's KNOB 2 **Vary** in Evolve's place (P_VARY, Evolve's index and value kept: no sound change at the recipes),
+    continuous, 0 the loop held (the kick keeps its shape, the plan, the stabs, the loops, the noise's groove all
+    still; a section still draws its kick).
+  - The layers' Varys **trims** on it (P_CVARY, P_PVARY .. P_NVARY, -50..+50; the layer's amount Vary + trim, 0..100;
+    0 follows, -50 **Hold**: that layer never turns). A centred ring (the knob's notch at 0), Hold's place marked at
+    the ring's start and the word inside it. The recipes' turned into the trims that sound the same (Evolve times
+    the old factor: Chamber -17/-12/-15/-15, Steppers pings -14 drums -21, Fog chord and pings -16, Night Drive bass
+    and drums -16, Pressure four at -15, Haze four at -12).
+  - **Evolve's own nudges removed** (by hand, a layer's button held, as ever). The bass's **borrowed groove**
+    continuous: as the square of the bass's amount (100: 7 phrases in 400, as Evolve 100 had it; no threshold at 60).
+  - **The looseness the piece's own** (P_LOOSE, on no knob; Evolve's 2.5 times, to 100, before): Basic, Fog,
+    Concrete, Night Drive 100, Steppers 88, Pressure 75, Chamber 63, Haze 50. It sets each stab's cutoff, the hats'
+    rests and lean, the bass's late notes and the throws (Vary 0 no longer stops the throws: Looseness does).
+  - Format 29: 27 and 28 read (their layout), every older one as before; Evolve kept as Vary, each saved Vary the
+    trim of the same amount (0 Hold), the looseness the recipe's; the host's store28 (and store21-27 writing the old
+    Varys); the upgrade scenario a 28 project.
+  - **To judge:** Vary's 50 and 100 against the classics and Coldest Season (still Evolve's scale: step 5 sets the
+    recipes against their models); whether the drums' Hold should keep the kick through the sections too.
+  - **The user's answers (on zzn, 2026-10-26):** Vary's scale fine; the drums' Hold not covering the sections fine;
+    the clap's 3% at Hold fine; the trims keep the name Vary. Vary 0 must mean no variation at all: the throws stop
+    there (built in step 2, below).
+- **The variety plan, step 2: Drift and the LFO pages** (VARIETY-PLAN.md decisions 1, 2, 4, 9, 10; branch
+  dub-1.4-drift on dub-1.4-vary, format 30; build/design/REPORT-drift.md). **Built:**
+  - Form's KNOB 4 **Drift** (P_MOVE, 0..100, continuous): one amount for the sound moving. The chord's and the
+    noise's LFOs (their wave and their random wander, half each), the filter's slow arc and the stabs' and the
+    plate's slow wobble (sl_d: 2 x Drift to 1 at 50, 1.3 at 100), the echo's heads, the feedback's lean and the
+    second head's moves (Motion's before: Motion is the arrangement alone now), the dub mixer's slow rides (the
+    Mixer's before). The second head's moves draw from their own randomness: Drift turned leaves the music's
+    choices as they were.
+  - **The LFO pages, layout A: Trim, Rate, Shape, Target.** Trim on Drift, centred (-50..+50: x1 at 0, Still at
+    -50, x2 at +50; the step 1 trims' look, the far left marked and named). The chord's reach a(2.3 - 0.6a)
+    octaves (a = Drift x Trim, 0..2: about 1 octave at Drift 50, 1.7 at 100, 2.2 at most), the noise's a. Shape:
+    Sine, Triangle, Ramp up, Ramp down (each with the wander) or Drift (the wander alone). Target (the old
+    Destination, on ALGORITHM too) on KNOB 4 ("Target": "Destination" too wide for the cell). The trace at one
+    scale (the most either reaches), so Drift and the Trim show. The old Depth and Drift (P_CFDEC, P_CLWALK, P_NLFO,
+    P_NLWALK) unread, kept in the format.
+  - **The Mixer knob gone** from the Arrangement page (KNOB 2 empty). Its moves (out and back, swells) stay at the
+    piece's value (P_MIXER, on no knob) until Motion takes them in step 3.
+  - **The throws on Vary** (the user's, from step 1): the chance times the chord's amount (Vary + its trim) over
+    P_TVARY, the amount the piece's throws are set at (its recipe's, on no knob): none at Vary 0 or Hold, as before
+    at the recipe, up to 3x.
+  - The recipes from their old knobs by the same rule as old projects (en_move29): Drift from the slow arc's depth
+    (or the Mixer's rides where the arc was full), each Trim the reach its LFO had: Basic 41 (-2, +5), Chamber 27
+    (-25 wander, +50), Steppers 35 (+11, +21), Fog 72 (-12, -15 wander), Concrete 80 (+50, -6), Night Drive 50
+    (+12, +15), Pressure 43 (+3, -3), Haze 41 (-25 wander, -13 wander).
+  - Format 30: 29 read; every older one through it; the host's store29; the upgrade scenario a 29 project.
+  - **To judge:** the fixed half-and-half share of wave and wander (Concrete's wave smaller, its wander bigger);
+    the rides now on Drift (Fog and Concrete ride less than at Mixer 90, Chamber much less than at 55: the arc's
+    depth chose their Drift); "Target" for Destination.
+  - **Then (the user, 2026-10-26):** the Trim named **Drift** (as the layers' Vary on Form's Vary), the Shape Drift
+    **Wander** (ceab43b); and **layout B** (dub-1.4-lfovis, still format 30; build/design/REPORT-lfovis.md):
+    **Drift, Wave, Rate, Target**. Wave (P_CLWAVE, P_NLWAVE, in the Shape's slots): the wave's share against the
+    wander, 0 the wander alone, 50 half each, 100 the wave alone, continuous; the wave always a sine (the other
+    shapes unused in dub; the balance matters more). The recipes' Wave the share their old Depth and Drift gave the
+    wave: Basic 51/56, Chamber 0/55, Steppers 59/60, Fog 48/0, Concrete 76/64 (its bigger wave back), Night Drive
+    63/62, Pressure 56/50, Haze 0/0 (chord/noise); the same rule for old projects (en_move29); a format 30 save from
+    zzo/zzp (no PROJ_WAVE_MARK in rsv[0]) its Shape a Wave, Wander 0, the others 50 (host: store30s).
+  - **The LFO pages' picture across the screen** (VARIETY-PLAN.md, the user's 1 + 2 + 3; dub-1.4-lfovis): the
+    past at the left (what's heard bold, the wave's part thin, the wander's dotted: en_lfo_wv, en_lfo_wd recorded
+    a sixteenth at a time), now a dot in the middle, the wave ahead at the right (dim: en_lfo_wave_part); 4, 8 or
+    16 bars each side by the Rate; the bars ticked under it, the cycles (or the phrases) taller; the reach in its
+    Target's units at the left edge (the chord's cutoff in Hz around its knobs', en_chord_cut; Reso, Colour, Tone,
+    Air as their knobs; the noise's Filter in Hz). Host: ~8.1 us a draw (7.1 before), once a sixteenth.
+  - **zzr, the user's review of zzq:** the picture without its title (the knobs say the Rate, the Wave and the
+    Target), taller (rows 8..80), the wander a solid pink line (dotted was lost on the device), the wave white, what's
+    heard the layer's colour; the units inside the reach on a dark patch (outside it while small). **PERFORM's black 5
+    (D#4) the kick** (a tap its solo, held its throw: EN_PF_KTHROW), the noise's solo and throw gone (white 6 still
+    mutes it). **The throws made audible** (the user: "no audible difference"): measured on the host, Basic, Steppers,
+    Fog, each part soloed, the echo's return held two bars against not: before, the bass and the hats 11-24 dB under the
+    part's own peak, the kick none; their sends went through the piece's Echo (its square: Basic's 0.3) and the strip's,
+    the feedback +0.08. Now each throw on its own bus into the echo (tsend), at the part's level whatever the Echo and
+    the strip (chord 1, pings 1.6, bass 3 driven through sat, as an overdriven aux, the hats 4, the kick 3), the
+    feedback pushed towards 0.93 while held (the repeats stack; the loop's soft clip), the strikes not ducking the
+    returns; eased in 15 ms, out 60 ms. After: every throw's echo -7..+19 dB against the part's own peak. A few
+    multiplies a sample; build/design/REPORT-lfovis.md.
 - **The header, where we are** (the user, 2026-10-25: the top-left block "too small and reads badly, but at the same
   time it clutters"; option A; prototype on branch dub-1.4-header, to judge on the FM-1): the phrase in the header,
   beside the piece's tag (the section's word, or INTRO / OUTRO, and the eight bars as larger cells, the B bars
