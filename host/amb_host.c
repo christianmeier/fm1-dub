@@ -29,6 +29,8 @@
  *   storefile PATH               a saved project from a file (tests/host/proj-*.bin)
  *   store30s                     save it as step 2's test builds did (zzo, zzp: format 30, the LFOs' Shape, Sine
  *                                or Wander, in the Wave's slots, no layout B mark)
+ *   store30 [MIXER]              save it as the variety plan's step 2 did (format 30: Motion and the Mixer in their
+ *                                old meaning; MIXER the playing piece's Mixer)
  *   store29                      save it as the variety plan's step 1 did (format 29: no Drift, no LFO Trims, no
  *                                throws' amount: the LFOs' Depth and Drift and the Mixer as they are)
  *   store28                      save it as 1.4.0's Filter did (format 28: no looseness, the Varys 0..100 on Evolve)
@@ -540,6 +542,13 @@ static int expect(const char *what, const char *val)
                     printf("  too wide: %s\n", KNOB_HELP[v][k]), got++;
                 }
             }
+        for (v = 0; v < NKNOB_ZONES; v++)           /* (format 31: the zones' sentences, under the big ring) */
+            for (k = 0; k < KNOB_ZONES[v].n; k++) {
+                char a2[48], b2[48];
+                const zone_t *z = &KNOB_ZONES[v].z[k];
+                if (!help_lines(z->help, a2, b2, (int)sizeof a2) || (z->help0 && !help_lines(z->help0, a2, b2, (int)sizeof a2)))
+                    printf("  too wide: %s\n", z->help), got++;
+            }
     }
     else if (!strcmp(what, "nev"))                /* the noise's events that show, so far */
         got = (int)en_nev_w;
@@ -672,6 +681,23 @@ static void lc_fold(int16_t *par, int n)        /* (before 28: the strips' Low c
             par[LC[k]] = (int16_t)(o > 100 ? 100 : o);
         }
 }
+/* (format 31, the variety plan's step 3) the recipes' Motion before 31 (its old meaning: Full only to 40, the Mixer
+ * the moves): an older format's store writes it where a piece has today's, as that build's recipe had it (a piece
+ * never changed then known by its old recipe on the upgrade, as on a device) */
+static void motion_before31(void)
+{
+    static const int16_t MOT30[NPIECES] = {30, 30, 25, 72, 35, 45, 25, 35};
+    int16_t rec[P_NPARAMS];
+    uint16_t pool;
+    int i;
+    for (i = 0; i < NPIECES; i++) {
+        en_piece(i, rec, &pool);
+        if (proj.slot[i].par[P_MOTION] == rec[P_MOTION])
+            proj.slot[i].par[P_MOTION] = MOT30[i];
+    }
+    proj.par[P_MOTION] = proj.slot[proj.piece].par[P_MOTION];
+}
+
 int main(int argc, char **argv)
 {
     FILE *sc;
@@ -701,9 +727,18 @@ int main(int argc, char **argv)
     }
     while (fgets(line, sizeof line, sc)) {
         char cmd[32] = {0}, a[256] = {0}, b[64] = {0}, c[64] = {0};
+        static project_t st_keep;
+        int st_old;
         lineno++;
         if (line[0] == '#' || sscanf(line, "%31s %255s %63s %63s", cmd, a, b, c) < 1)
             continue;
+        st_old = !strncmp(cmd, "store", 5) && strcmp(cmd, "storefile") && strcmp(cmd, "storescreen");
+        if (st_old) {                            /* (format 31) an older format's store: the pieces' Motion as their
+                                                  * recipes had it then, where it's today's */
+            keep();
+            st_keep = proj;
+            motion_before31();
+        }
         if (!strcmp(cmd, "wait"))
             run_ms((uint32_t)atoi(a));
         else if (!strcmp(cmd, "press") || !strcmp(cmd, "release") || !strcmp(cmd, "tap")) {
@@ -929,11 +964,25 @@ int main(int argc, char **argv)
             int i;
             keep();
             o = proj;
+            o.format = 30u;                      /* (format 31: the same layout) */
             o.rsv[0] = 0;
             o.par[P_CLWAVE] = (int16_t)(o.par[P_CLWAVE] ? 0 : 4), o.par[P_NLWAVE] = (int16_t)(o.par[P_NLWAVE] ? 0 : 4);
             for (i = 0; i < NPIECES; i++) {
                 o.slot[i].par[P_CLWAVE] = (int16_t)(o.slot[i].par[P_CLWAVE] ? 0 : 4);
                 o.slot[i].par[P_NLWAVE] = (int16_t)(o.slot[i].par[P_NLWAVE] ? 0 : 4);
+            }
+            plat_store_save(OBJ_PROJ, &o, sizeof o);
+        } else if (!strcmp(cmd, "store30")) {    /* store30 [MIXER]: the project as the variety plan's step 2 saved it
+                                                  * (30: today's layout, Motion's old meaning, the Mixer read; MIXER the
+                                                  * playing piece's Mixer, else as it is) */
+            static project_t o;
+            keep();
+            o = proj;
+            o.format = 30u;
+            o.rsv[0] = PROJ_WAVE_MARK;
+            if (a[0]) {
+                o.par[P_MIXER] = (int16_t)atoi(a);
+                o.slot[o.piece].par[P_MIXER] = o.par[P_MIXER];
             }
             plat_store_save(OBJ_PROJ, &o, sizeof o);
         } else if (!strcmp(cmd, "store29")) {    /* the project as the variety plan's step 1 saved it (29) */
@@ -1222,6 +1271,8 @@ int main(int argc, char **argv)
             printf("line %d: unknown command %s\n", lineno, cmd);
             return 2;
         }
+        if (st_old)
+            proj = st_keep;
     }
     wav_close();
     if (midi_log)

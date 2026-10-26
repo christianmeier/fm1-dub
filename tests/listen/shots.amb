@@ -158,7 +158,8 @@ wait 1500
 spin K4 -30
 tap HOME
 turn K3 50
-wait 166000
+wait 92000
+expect section 2
 shot screen-groove.png
 # the Echo page (FX, FX again)
 tap FX
@@ -246,3 +247,13 @@ shot screen-chords.png
 tap EDIT
 wait 2500
 shot screen-walk.png
+# (format 31, the variety plan's step 3) Motion's zones: the Form page's KNOB 3 turned into Sections, the big ring in
+# segments, the zones' names round it, the zone's under the value, its sentence under the ring
+tap HOME
+wait 300
+expect view 0
+spin K3 -100
+spin K3 55
+wait 300
+expect par15 55
+shot screen-motion.png

@@ -321,9 +321,9 @@ wait 300
 said Vary 0
 spin K3 100
 wait 300
-said Motion 100
+said Motion 100, Breaks
 # WHERE: everything again (the chord held now)
 where
-said Form page: Energy 0, Vary 0, Motion 100, Drift 41. Piece Basic, F Dorian, tempo 42, resting
+said Form page: Energy 0, Vary 0, Motion 100, Breaks, Drift 41. Piece Basic, F Dorian, tempo 42, resting
 where
 said , held. Section 

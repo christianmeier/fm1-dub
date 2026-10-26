@@ -4,7 +4,7 @@
 storefile tests/host/proj-1.2.0.bin
 reboot
 wait 500
-expect format 30
+expect format 31
 expect piece 0
 # Basic as 1.3.0 has it (Stabs 30, Feedback 62; 1.2.0's were 30 and 60), its noise Vinyl
 expect par28 30
@@ -31,7 +31,7 @@ expect par0 50
 storefile tests/host/proj-1.3.0-test14.bin
 reboot
 wait 500
-expect format 30
+expect format 31
 expect par11 62
 expect par29 8
 storefile tests/host/proj-1.3.0-test14-resaved15.bin
@@ -45,7 +45,7 @@ expect par29 8
 storefile tests/host/proj-1.4.0-test18.bin
 reboot
 wait 500
-expect format 30
+expect format 31
 expect piece 0
 expect par125 25
 expect par127 2
@@ -69,7 +69,7 @@ expect par6 3
 store20
 reboot
 wait 500
-expect format 30
+expect format 31
 expect piece 3
 expect par6 3
 expect par133 -16
@@ -95,7 +95,7 @@ expect par139 8
 store21
 reboot
 wait 500
-expect format 30
+expect format 31
 expect piece 3
 expect par6 3
 expect par12 46
@@ -127,7 +127,7 @@ expect par157 2
 store24
 reboot
 wait 500
-expect format 30
+expect format 31
 expect piece 3
 expect par6 3
 expect par157 0
@@ -162,7 +162,7 @@ expect par161 7
 store25
 reboot
 wait 500
-expect format 30
+expect format 31
 expect piece 3
 expect par6 3
 expect par157 2
@@ -187,7 +187,7 @@ expect par161 3
 store26
 reboot
 wait 500
-expect format 30
+expect format 31
 expect piece 0
 expect par161 3
 # (the variety study: Basic's Mixer 45, Fog's 90)
@@ -220,7 +220,7 @@ wait 300
 store27
 reboot
 wait 1000
-expect format 30
+expect format 31
 expect par148 28
 expect par149 0
 # (1.4.0, format 29, the variety plan's step 1) a Filter project (format 28): Evolve Form's Vary, as it was; each
@@ -247,7 +247,7 @@ expect par135 -50
 store28
 reboot
 wait 1000
-expect format 30
+expect format 31
 expect piece 0
 expect par5 60
 expect par133 -18
@@ -259,7 +259,7 @@ expect par164 100
 store29
 reboot
 wait 1000
-expect format 30
+expect format 31
 expect piece 0
 expect par5 60
 expect par133 -18
@@ -288,7 +288,7 @@ expect piece 0
 store30s
 reboot
 wait 1000
-expect format 30
+expect format 31
 expect piece 0
 expect par5 60
 expect par165 41
@@ -317,3 +317,34 @@ wait 1000
 expect piece 0
 expect par129 50
 expect par130 50
+# (format 31, the variety plan's step 3) a step 2 project (format 30): Motion the arrangement only, the Mixer's moves
+# in it. A changed piece's Motion under 40 (Full only then) 0.4 of its Mixer (Basic, Motion 30 and Mixer 60: 24, its
+# Breathes), the Mixer kept (unread); one at 55 (Sections then) 58, as often a Thin or a Groove; a piece never changed
+# (Pressure: its 25 then) today's recipe (8)
+expect view 0
+expect par15 18
+spin K3 12
+wait 300
+expect par15 30
+store30 60
+reboot
+wait 1000
+expect format 31
+expect piece 0
+expect par15 24
+expect par163 60
+turn PRESET 6
+wait 300
+expect piece 6
+expect par15 8
+turn PRESET -6
+wait 300
+expect piece 0
+spin K3 31
+wait 300
+expect par15 55
+store30
+reboot
+wait 1000
+expect piece 0
+expect par15 58
