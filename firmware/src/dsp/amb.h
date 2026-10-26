@@ -13,8 +13,9 @@
  *           many) and an open hat off the beat.
  *
  * Over it all, the ARRANGEMENT: eight-bar phrases, each Full, a Break (the kick and the bass out, the filter
- * building), a Groove (fewer stabs) or Thin (no bass, no shaker); MOTION sets how often it leaves Full. Before
- * the kick comes back, a fill. VARY turns the patterns and throws a stab into the echo now and then.
+ * building), a Groove (fewer stabs) or Thin (no bass, no shaker); MOTION sets how much it changes: under 40 the
+ * parts ridden out and back and the kick out a bar or two (Breathes), then Thin and Groove (Sections), from 70
+ * Breaks too. Before the kick comes back, a fill. VARY turns the patterns and throws a stab into the echo now and then.
  * Then a tape echo (to ~5.6 s, two heads, a band-pass in its feedback that the arrangement sweeps, a
  * saturating feedback that may pass 100%), a short Echoplex, a granular CLOUD (after JIANT's) blooming into
  * Dattorro's plate, and a bed of vinyl crackle.
@@ -150,7 +151,7 @@ enum {
     /* (1.4.0, format 27, the user's: the virtual dub mixer, the Arrangement page's KNOB 2) how much DUB-1 rides the
      * desk by itself, 0..100: 0 off (the music as it was, bit for bit); the parts' faders and sends, the chord's
      * filter and the echo's feedback moved slowly, off the phrase lines, around the knobs' values (never on them) */
-    P_MIXER,
+    P_MIXER,                                     /* (format 31: retired, unread: its moves Motion's, its rides Drift's) */
     /* (1.4.0, format 29, the variety plan's step 1) how loose the playing is, 0..100: the stabs' own cutoffs, the hats'
      * and the bass's late notes, the throws; each piece's own (its recipe's), on no knob (Evolve's before: 2.5 times it,
      * to 100). (And P_VARY is Form's Vary, Evolve's place; P_CVARY, P_PVARY .. P_NVARY each layer's trim on it, -50..+50:
@@ -224,12 +225,17 @@ extern const char *const EN_SMODE_NAME[EN_NSMODE], *const EN_SKIND_NAME[EN_NSKIN
 void en_outro(void);
 extern volatile uint8_t en_song_ph;
 extern volatile uint32_t en_song_b0, en_song_bo, en_song_be;
-/* (1.4.0) the dub mixer (P_MIXER) as heard now: each part's level ride (dB, a move out and back in it), its echo and
+/* (1.4.0) the dub mixer (format 31: its rides Drift's, its moves Motion's) as heard now: each part's level ride (dB, a move out and back in it), its echo and
  * plate sends' (dB); the move under way (0 none, 1 a part out and back, 2 an echo swell); the moves begun and those on
  * a phrase's first bar (for the tests) */
 extern volatile float en_mx_db[EN_NPART], en_mx_snd[EN_NPART][2];
 extern volatile uint32_t en_mx_moves, en_mx_line;
 extern volatile uint8_t en_mx_ev;
+/* (format 31, the variety plan's step 3) Motion's moves begun so far: a part ridden out and back, an echo swell, the
+ * kick dropped out a bar or two; the kick's drop-out now (the bars it's still out, 0: in). For the tests and the logs */
+enum { EN_MO_OUT, EN_MO_SWELL, EN_MO_KICK, EN_MO_N };
+extern volatile uint32_t en_mo_count[EN_MO_N];
+extern volatile uint8_t en_mo_kick;
 extern volatile float en_fader[EN_NPART];       /* each part's fader as heard now, 0..1 (for tests and the screen) */
 float en_song_in(int kind, int part);
 float en_song_out(int part);
@@ -372,6 +378,8 @@ extern volatile uint32_t en_lfo_picks[2];        /* the drifts' new places so fa
 int en_lfo_bars(int v);                          /* a rate's bars (0: Drift) */
 float en_filter_hz(int v);                       /* a strip's Filter (-50..+50): its cutoff, Hz (0: off) */
 int en_nlfo18(int old);                          /* (format 19) a Noise LFO before 19 as 19's (its depth kept) */
+void en_motion30(int16_t *par);                  /* (format 31) a piece before 31 as 31's: its Motion and Mixer as
+                                                  * Motion, the arrangement only */
 void en_move29(int16_t *par);                    /* (format 30) a piece before 30 as 30's: its LFOs' Depth and Drift and
                                                   * its Mixer as Drift and the LFOs' Trims (and a Shape Drift where the
                                                   * wave was off), as near as they sounded */

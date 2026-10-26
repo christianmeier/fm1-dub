@@ -893,7 +893,7 @@ static void shape30(int16_t *par)                /* (format 30, step 2's test bu
 int project_load(void)
 {
     project_t *const pbuf = &app_scratch.load;   /* (the boot's buffer, lent by the scratch: app.h) */
-    int n, old = 0, i;
+    int n, old = 0, i, old30 = 0;
     uint8_t fresh[NPIECES];                      /* (a piece never changed: today's recipe) */
     memset(fresh, 0, sizeof fresh);
     memset(pbuf, 0, sizeof *pbuf);
@@ -1030,7 +1030,15 @@ int project_load(void)
         from29((const project29_t *)(const void *)pbuf);
     } else {
         proj = *pbuf;
-        if (n >= 8 && proj.magic == PROJ_MAGIC && proj.format == PROJ_FORMAT && proj.rsv[0] != PROJ_WAVE_MARK) {
+        if (n >= 8 && proj.magic == PROJ_MAGIC && proj.format == 30u) {   /* (30: today's layout; its Motion and Mixer
+                                                  * as 31's below, the pieces never changed known first, by their
+                                                  * recipes then) */
+            old30 = 1;
+            for (i = 0; i < NPIECES; i++)
+                fresh[i] = (uint8_t)untouched_now(&proj.slot[i], i);
+            proj.format = PROJ_FORMAT;
+        }
+        if (old30 && proj.rsv[0] != PROJ_WAVE_MARK) {
             /* (a step 2 test build's, zzo's or zzp's: the LFOs' Shape in the Wave's slots; the Shape Wander, the
              * wander alone, Wave 0, the waves half each, 50; a piece never changed, known by that build's recipe,
              * takes today's below) */
@@ -1111,6 +1119,15 @@ int project_load(void)
         en_move29(proj.par);
         for (i = 0; i < NPIECES; i++)
             en_move29(proj.slot[i].par);
+    }
+    if (old || old30) {                          /* (before 31: Motion the arrangement only, the Mixer's moves in it,
+                                                  * as near as they sounded; the pieces never changed take today's
+                                                  * recipe below) */
+        for (i = 0; i < NPIECES; i++)            /* (a piece as a recipe before 31 had it, all of it: never changed) */
+            fresh[i] = (uint8_t)(fresh[i] || untouched_now(&proj.slot[i], i));
+        en_motion30(proj.par);
+        for (i = 0; i < NPIECES; i++)
+            en_motion30(proj.slot[i].par);
     }
     if (n >= 8 && proj.magic == PROJ_MAGIC && proj.format == PROJ_FORMAT) {   /* (the ranges as they are now) */
         proj.screen = ui_screen_ok(proj.screen);   /* (1.4.0: the echo trail and the fifths gone: the ripples) */

@@ -127,7 +127,7 @@ static const struct {
     const char *name;
     int16_t v[P_NPARAMS];
 } PIECES[EN_NPIECES] = {
-    {"Basic",      {52, 30, 68, 80, 30, 45, 5, 10, 55, 1, 35, 62, 40, 25, 40, 30, 0, 1, 122, 5, 1, 0,
+    {"Basic",      {52, 30, 68, 80, 30, 45, 5, 10, 55, 1, 35, 62, 40, 25, 40, 12, 0, 1, 122, 5, 1, 0,
                     0, 0, 1, 20, 5, 50, 30, 8, 50, 55, 30, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 30, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -149,7 +149,7 @@ static const struct {
                     0,
                     0, 4, 20, 4, 1, 45, 100,
                     41, -2, 5, 45}},
-    {"Chamber",    {55, 20, 62, 72, 20, 25, 6, 40, 70, 4, 45, 72, 50, 55, 30, 30, 0, 1, 128, 9, 5, 0,
+    {"Chamber",    {55, 20, 62, 72, 20, 25, 6, 40, 70, 4, 45, 72, 50, 55, 30, 8, 0, 1, 128, 9, 5, 0,
                     2, 0, 0, 10, 0, 40, 5, 12, 45, 70, 45, 2, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -171,7 +171,7 @@ static const struct {
                     0,
                     0, 4, 20, 4, 0, 55, 63,
                     27, -25, 50, 25}},
-    {"Steppers",   {52, 35, 80, 82, 35, 35, 6, 45, 50, 1, 30, 50, 55, 25, 50, 25, 0, 1, 126, 2, 1, 0,
+    {"Steppers",   {52, 35, 80, 82, 35, 35, 6, 45, 50, 1, 30, 50, 55, 25, 50, 10, 0, 1, 126, 2, 1, 0,
                     0, 0, 2, 35, 45, 60, 25, 5, 60, 50, 20, 1, 1, 2,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 35, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -193,7 +193,7 @@ static const struct {
                     0,
                     0, 4, 20, 4, 1, 20, 88,
                     35, 11, 21, 35}},
-    {"Fog",        {50, 34, 58, 62, 40, 40, 5, 42, 75, 2, 55, 72, 46, 80, 25, 72, 0, 1, 120, 7, 5, 0,
+    {"Fog",        {50, 34, 58, 62, 40, 40, 5, 42, 75, 2, 55, 72, 46, 80, 25, 42, 0, 1, 120, 7, 5, 0,
                     3, -1, 0, 15, 0, 30, 5, 30, 35, 80, 60, 0, 0, 3,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 35, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -215,7 +215,7 @@ static const struct {
                     0,
                     0, 4, 20, 4, 0, 90, 100,
                     72, -12, -15, 24}},
-    {"Concrete",   {58, 45, 70, 85, 25, 50, 5, 55, 50, 1, 25, 62, 60, 20, 60, 35, 0, 1, 136, 0, 7, 0,
+    {"Concrete",   {58, 45, 70, 85, 25, 50, 5, 55, 50, 1, 25, 62, 60, 20, 60, 20, 0, 1, 136, 0, 7, 0,
                     6, 0, 4, 30, 10, 75, 30, 5, 50, 45, 15, 2, 3, 2,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 75, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -237,7 +237,7 @@ static const struct {
                     0,
                     0, 4, 20, 4, 1, 90, 100,
                     80, 50, -6, 50}},
-    {"Night Drive", {48, 45, 68, 78, 45, 40, 4, 35, 60, 3, 35, 65, 50, 40, 45, 45, 0, 1, 120, 10, 1, 0,
+    {"Night Drive", {48, 45, 68, 78, 45, 40, 4, 35, 60, 3, 35, 65, 50, 40, 45, 38, 0, 1, 120, 10, 1, 0,
                     1, 0, 1, 25, 13, 55, 20, 15, 50, 60, 35, 4, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 45, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -259,7 +259,7 @@ static const struct {
                     0,
                     0, 4, 20, 4, 0, 45, 100,
                     50, 12, 15, 40}},
-    {"Pressure",   {55, 20, 75, 92, 20, 30, 6, 38, 55, 1, 20, 55, 48, 30, 35, 25, 0, 1, 126, 4, 2, 0,
+    {"Pressure",   {55, 20, 75, 92, 20, 30, 6, 38, 55, 1, 20, 55, 48, 30, 35, 8, 0, 1, 126, 4, 2, 0,
                     5, 0, 1, 10, 5, 65, 25, 30, 70, 40, 40, 3, 4, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 35, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -281,7 +281,7 @@ static const struct {
                     0,
                     0, 4, 20, 4, 1, 40, 75,
                     43, 3, -3, 15}},
-    {"Haze",       {45, 42, 58, 55, 50, 20, 5, 35, 80, 3, 60, 70, 45, 80, 25, 35, 0, 1, 116, 3, 0, 1,
+    {"Haze",       {45, 42, 58, 55, 50, 20, 5, 35, 80, 3, 60, 70, 45, 80, 25, 10, 0, 1, 116, 3, 0, 1,
                     3, 0, 0, 20, 10, 35, 5, 20, 30, 85, 70, 2, 0, 4,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -2227,13 +2227,13 @@ EN_COLD static void song_outro(void)                     /* HOME held + PLAY: th
  *    wait; how far they reach is Mixer's (at 100: the levels -1.5 .. -7 dB down and +1 .. +3 up, never more; the sends
  *    -8 .. +6 dB; the filter +-0.55 octave; the feedback a little), the kick's the least (its level only: the kick
  *    never leaves the classics);
- *  - the moves, rarer (one a minute or so at 100, every two at 50; half of them on a phrase's line): a part ridden out
- *    and back (the pings, the hats, the noise right out; the chord and the bass down 12 dB; the kick out only over
- *    75, rarely: the US branch's drop-outs, 0.9-2.8 in 5 minutes), or its echo send swelled, the feedback with it.
+ *  - the moves, rarer (format 31: Motion's Breathes, one a minute at Motion 40; half of them on a phrase's line): a
+ *    part ridden out and back (the pings, the hats, the noise right out; the chord and the bass down 12 dB), or its
+ *    echo send swelled, the feedback with it; the kick its own drop-out, a bar or two (bar_start).
  * Around the knobs (never on them): offsets on the parts' faders (the song's, times), the sends, the filter, the
  * feedback. Not in a Break or a Thin (Motion's own), nor in a song's intro or outro (the song's; its rides at half
- * depth there); Lock and dub hold rest it (no new places, no new moves: what's under way ends). Mixer 0: off, every
- * ride glided home, then bit for bit as without it */
+ * depth there); Lock and dub hold rest it (no new places, no new moves: what's under way ends). Motion and Drift at 0:
+ * off, every ride glided home, then bit for bit as without it */
 #define MX_N 20
 enum { MX_LV = 0, MX_EC = 6, MX_PL = 12, MX_CO = 18, MX_FB = 19 };
 static const float MX_LO[MX_N] = {-5.0f, -6.0f, -3.0f, -1.5f, -7.0f, -7.0f,   /* (at 100: the levels, dB: the chord, the
@@ -2245,11 +2245,18 @@ static const float MX_HI[MX_N] = {2.5f, 2.5f, 1.5f, 1.0f, 2.5f, 3.0f,
                                   6.0f, 6.0f, 3.0f, 0.0f, 6.0f, 5.0f,
                                   4.0f, 4.0f, 2.0f, 0.0f, 4.0f, 4.0f,
                                   0.55f, 0.10f};
-static float mx_m, mx_rd;                        /* Mixer, 0..1 (format 30: its moves alone, on no knob); the slow
-                                                  * rides' depth, Form's Drift's (format 30: the Mixer's before) */
+static float mx_m, mx_rd;                        /* (format 31) the moves' depth, Motion's Breathes (0..1: Motion 0..40,
+                                                  * then 1; the Mixer's before); the slow rides' depth, Form's Drift's
+                                                  * (format 30: the Mixer's before) */
 static float mx_c[MX_N], mx_t[MX_N], mx_r[MX_N]; /* each ride: where it is, where it goes, how fast (a sample) */
 static uint32_t mx_due[MX_N];                    /* (the sixteenth its next place is drawn on) */
 static uint32_t mx_rng = 0x2545F491u;            /* (its own: the engine's draws as they were) */
+static uint32_t mo_rng = 0x6C8E9CF5u;            /* (format 31: Motion's moves their own, so turning Motion leaves the
+                                                  * rides be, and turning Drift the moves) */
+static uint8_t kd_left;                          /* (format 31: the kick's drop-out, Motion's: the bars it's still out,
+                                                  * this one too) */
+volatile uint32_t en_mo_count[EN_MO_N];
+volatile uint8_t en_mo_kick;
 static uint8_t mx_act;                           /* (up, or a ride still on its way home) */
 static float mx_g[EN_NPART] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f}, mx_e[EN_NPART] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f},
              mx_p[EN_NPART] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f}, mx_co, mx_fb;   /* (what the parts hear: x1 and
@@ -2266,6 +2273,16 @@ static float mx_u(void)
     mx_rng = mx_rng * 1664525u + 1013904223u;
     return (float)(mx_rng >> 8) * (1.0f / 16777216.0f);
 }
+static float mo_u(void)
+{
+    mo_rng = mo_rng * 1664525u + 1013904223u;
+    return (float)(mo_rng >> 8) * (1.0f / 16777216.0f);
+}
+/* (format 31, the variety plan's step 3) Motion's Breathes, how often a minute: a part ridden out and back or an echo
+ * swell (one a minute at 40, then up to 1.5 at 100), the kick dropping out a bar or two (one in two minutes at 40:
+ * Coldest Season's 2-3 in five; then up to 0.75 a minute at 100); none at 0, growing straight from it */
+static float mo_rate(float m) { return m < 0.4f ? m * (1.0f / 0.4f) : 1.0f + 0.5f * (m - 0.4f) * (1.0f / 0.6f); }
+static float kd_rate(float m) { return 0.5f * mo_rate(m); }
 static uint32_t mx_six(float s) { return (uint32_t)(s * EN_SR / fm_maxf(step_len, 1.0f)) + 1u; }   /* seconds, in sixteenths */
 static void mx_count(uint32_t at)                /* (a move begun: on a phrase's first bar, or off it) */
 {
@@ -2273,13 +2290,13 @@ static void mx_count(uint32_t at)                /* (a move begun: on a phrase's
     if (((at >> 4) & 7u) == 0u)
         en_mx_line++;
 }
-static int mx_pick(const float *w)               /* a part, by weight */
+static int mx_pick(const float *w)               /* a part, by weight (Motion's draw) */
 {
     float t = 0.0f, r;
     int i;
     for (i = 0; i < EN_NPART; i++)
         t += w[i];
-    r = mx_u() * t;
+    r = mo_u() * t;
     for (i = 0; i < EN_NPART - 1; i++)
         if ((r -= w[i]) < 0.0f)
             break;
@@ -2309,15 +2326,13 @@ EN_COLD static void mixer_tick(void)                     /* each sixteenth: new 
     if (ev_st && ev_at > sixteenth + 40u * 16u)  /* (a new start: the move let go) */
         ev_st = 0, ev_a = 0.0f, ev_kind = 0;
     if (!ev_st && !(sixteenth & 15u) && mx_m > 0.0f && main && !rest && (sec == SEC_FULL || sec == SEC_GROOVE) &&
-        mx_u() < mx_m * 16.0f * step_len / (60.0f * EN_SR)) {
+        mo_u() < mo_rate(motion) * 16.0f * step_len / (60.0f * EN_SR)) {
+        /* (format 31: Motion's, from the Mixer's: the pings, the hats and the noise right out, the chord and the bass
+         * down 12 dB, never out (the bass the less likely the lower Motion); the kick not here: its own drop-out) */
         static const float SW[EN_NPART] = {3.0f, 2.0f, 0.0f, 0.0f, 2.0f, 1.0f};
-        float ow[EN_NPART] = {1.5f, 3.0f, 0.0f, 0.0f, 3.0f, 2.0f};
-        const int bars = (int)(mx_u() * 4.0f);
-        if (mx_m > 0.5f)
-            ow[2] = 0.7f;
-        if (mx_m > 0.75f)
-            ow[3] = 0.3f;
-        if (mx_u() < 0.4f) {                     /* a swell: the echo send up, the feedback with it */
+        const float ow[EN_NPART] = {1.5f, 3.0f, 0.7f * mx_m, 0.0f, 3.0f, 2.0f};
+        const int bars = (int)(mo_u() * 4.0f);
+        if (mo_u() < 0.4f) {                     /* a swell: the echo send up, the feedback with it */
             ev_kind = 2, ev_part = (uint8_t)mx_pick(SW);
             ev_depth = 4.0f + 4.0f * mx_m;       /* (dB: +4 .. +8) */
             ev_len[0] = 16u * (uint32_t)(1 + bars % 3), ev_len[1] = 16u * (uint32_t)(1 + bars % 2),
@@ -2325,11 +2340,11 @@ EN_COLD static void mixer_tick(void)                     /* each sixteenth: new 
         } else {                                 /* out and back */
             ev_kind = 1, ev_part = (uint8_t)mx_pick(ow);
             ev_depth = ev_part == 0 || ev_part == 2 ? 0.75f : 1.0f;   /* (the chord and the bass down 12 dB, the rest out) */
-            ev_len[0] = 16u * (uint32_t)(2 + bars), ev_len[1] = 16u * (uint32_t)(4 + (int)(mx_u() * 9.0f)),
-            ev_len[2] = 16u * (uint32_t)(2 + (int)(mx_u() * 5.0f));
+            ev_len[0] = 16u * (uint32_t)(2 + bars), ev_len[1] = 16u * (uint32_t)(4 + (int)(mo_u() * 9.0f)),
+            ev_len[2] = 16u * (uint32_t)(2 + (int)(mo_u() * 5.0f));
         }
         ev_st = 1;
-        ev_at = mx_u() < 0.5f ? (sixteenth + 127u) & ~127u : sixteenth + (uint32_t)(mx_u() * 16.0f);   /* (half on a
+        ev_at = mo_u() < 0.5f ? (sixteenth + 127u) & ~127u : sixteenth + (uint32_t)(mo_u() * 16.0f);   /* (half on a
                                                   * phrase's line, half anywhere in this bar) */
     }
     if (ev_st && sixteenth >= ev_at) {
@@ -2338,6 +2353,7 @@ EN_COLD static void mixer_tick(void)                     /* each sixteenth: new 
                 ev_st = 0, ev_kind = 0;
             } else {
                 mx_count(sixteenth);
+                en_mo_count[ev_kind == 2 ? EN_MO_SWELL : EN_MO_OUT]++;
                 ev_st = 2, ev_da = 1.0f / ((float)ev_len[0] * step_len), ev_at = sixteenth + ev_len[0];
             }
         } else if (ev_st == 2) {
@@ -2390,7 +2406,7 @@ static void mixer_step(uint32_t n)               /* each block: the rides glided
 EN_COLD static void mixer_reset(void)                    /* (a new engine: every ride home, no move) */
 {
     int i;
-    mx_act = 0, mx_m = mx_rd = 0.0f, ev_st = 0, ev_kind = 0, ev_a = ev_da = 0.0f, en_mx_ev = 0;
+    mx_act = 0, mx_m = mx_rd = 0.0f, ev_st = 0, ev_kind = 0, ev_a = ev_da = 0.0f, en_mx_ev = 0, kd_left = 0;
     for (i = 0; i < MX_N; i++)
         mx_c[i] = mx_t[i] = mx_r[i] = 0.0f, mx_due[i] = 0u;
     for (i = 0; i < EN_NPART; i++) {
@@ -2399,12 +2415,12 @@ EN_COLD static void mixer_reset(void)                    /* (a new engine: every
     }
     mx_co = mx_fb = 0.0f;
 }
-/* the Mixer (P_MIXER: its moves) or Form's Drift (P_MOVE: its slow rides) turned */
+/* Motion (its Breathes: the moves; format 31, the Mixer's before) or Form's Drift (P_MOVE: its slow rides) turned */
 EN_COLD static void mixer_set(void)
 {
-    const int on = par[P_MIXER] > 0 || par[P_MOVE] > 0;
+    const int on = par[P_MOTION] > 0 || par[P_MOVE] > 0;
     int i;
-    mx_m = (float)par[P_MIXER] * 0.01f;
+    mx_m = fm_minf((float)par[P_MOTION] * (1.0f / 40.0f), 1.0f);
     mx_rd = (float)par[P_MOVE] * 0.01f;
     if (on && !mx_act) {                         /* (on: the first places a little apart, within 20 s) */
         mx_act = 1;
@@ -2414,7 +2430,8 @@ EN_COLD static void mixer_set(void)
     if (par[P_MOVE] == 0 && mx_act)              /* (no Drift: every ride home over four bars) */
         for (i = 0; i < MX_N; i++)
             mx_t[i] = 0.0f, mx_r[i] = fm_fabsf(mx_c[i]) / (64.0f * fm_maxf(step_len, 1.0f)) + 1e-9f;
-    if (par[P_MIXER] == 0 && mx_act) {           /* (no moves: one under way back) */
+    if (par[P_MOTION] == 0 && mx_act) {          /* (no moves: one under way back; the kick back in) */
+        kd_left = 0;
         if (ev_st == 1)
             ev_st = 0, ev_kind = 0;
         else if (ev_st == 2 || ev_st == 3)
@@ -2458,10 +2475,13 @@ EN_COLD static void section_set(int s)
 }
 
 /* the next phrase (the classics pass, REPORT9: the classics hold one loop for minutes, the kick never leaving). Motion
- * in three regions: under 40 the loop holds (Full only: the change is the filter's, the echo's, the texture's); 40-70
- * a variation now and then (Groove or Thin, a phrase or two; the kick half-time at most); from 70 Breaks too (the
- * kick and the bass out, a phrase). Within a region, more often as Motion rises; at least four phrases (32 bars) in
- * Full between departures */
+ * in three zones (format 31, the variety plan's step 3: the arrangement only, every step heard): Breathes, under 40,
+ * Full only (the parts ridden out and back, the kick out a bar or two: the dub mixer's moves and the kick's drop-out,
+ * off the phrase's line); Sections, 40-70, a variation now and then (Groove or Thin, a phrase or two; the kick half-time
+ * at most), from rarely (5% of the phrases that may, at 40) to often (50%, at 70); Breaks, from 70, Breaks join (the
+ * kick and the bass out, a phrase), none at 70 to 60% of the departures at 100, the departures on up to 65%. At least
+ * four phrases (32 bars) in Full between departures. (Before 31: 15% at 40 (Motion 40 itself, a float's rounding, still
+ * Full), and the Breaks' zone began again from rarely at 70) */
 static uint8_t sec_age;                         /* phrases in Full since the last departure */
 static uint8_t ph_age, ph_reset;                /* phrases since the kick's shape or the plan last changed */
 static uint8_t kick_now;                        /* (the kick's Density turned: its shape drawn again at the next bar) */
@@ -2469,17 +2489,19 @@ static uint8_t nz_now;                          /* (the noise's Density turned: 
 static uint8_t kick_hand;                       /* (and from then on, the piece's opening on four left be: the knob's) */
 EN_COLD static int section_pick(void)
 {
-    float r = frand(), m;
-    if (motion < 0.4f)
+    const int mv = par[P_MOTION];                /* (the zones in whole steps: 40 Sections' first, 70 Breaks') */
+    float r = frand(), m, mb;
+    if (mv < 40)
         return SEC_FULL;
+    mb = (float)(mv > 70 ? mv - 70 : 0) * (1.0f / 30.0f);   /* (Breaks: 0 at 70, 1 at 100) */
     if (sec != SEC_FULL)                         /* back, mostly; from a Break, a Thin now and then */
-        return r < 0.75f ? SEC_FULL : sec == SEC_BREAK ? SEC_THIN : motion >= 0.7f && frand() < 0.5f ? SEC_BREAK : sec;
+        return r < 0.75f ? SEC_FULL : sec == SEC_BREAK ? SEC_THIN : mv >= 70 && frand() < 0.8f * mb ? SEC_BREAK : sec;
     if (sec_age < 4)
         return SEC_FULL;
-    m = motion < 0.7f ? (motion - 0.4f) * (1.0f / 0.3f) : (motion - 0.7f) * (1.0f / 0.3f);
-    if (r >= 0.15f + 0.35f * m)
+    m = (float)(mv < 70 ? mv - 40 : 30) * (1.0f / 30.0f);
+    if (r >= 0.05f + 0.45f * m + 0.15f * mb)
         return SEC_FULL;
-    if (motion >= 0.7f && frand() < 0.4f + 0.3f * m)
+    if (mv >= 70 && frand() < 0.6f * mb)
         return SEC_BREAK;
     return frand() < 0.5f ? SEC_GROOVE : SEC_THIN;
 }
@@ -2621,6 +2643,24 @@ EN_COLD static void bar_start(void)
             hats_publish();
         }
     }
+    {   /* (format 31, the variety plan's step 3: Motion's Breathes) the kick out a bar or two inside a phrase, off its
+         * line (the records': Coldest Season's 2-3 in five minutes, Intrusion's 1): in Full or a Groove, in the main
+         * (not a song's intro or outro), not in its first two phrases, nor under Lock or dub hold; from the phrase's
+         * second bar to its seventh (a fill has the eighth), its own draws */
+        const int main = song_ph == EN_SG_OFF || song_ph == EN_SG_MAIN;
+        if (kd_left)
+            kd_left--;
+        if (motion <= 0.0f || !lay_kick || !main)
+            kd_left = 0;
+        else if (!kd_left && pb >= 1 && pb <= 6 && bar >= 16u && !lock && !en_frozen && kick_shape != KS_NONE &&
+                 (sec == SEC_FULL || sec == SEC_GROOVE) &&
+                 mo_u() < kd_rate(motion) * (8.0f / 6.0f) * 16.0f * step_len / (60.0f * EN_SR)) {
+            kd_left = (uint8_t)(pb <= 5 && mo_u() < 0.4f ? 2 : 1);
+            en_mo_count[EN_MO_KICK]++;
+        }
+        en_pulse_rest = (uint8_t)(!lay_kick || kd_left);
+        en_mo_kick = kd_left;
+    }
     if (sec == SEC_BREAK && pb == 2)            /* two bars in, the filter starts to open */
         arc_tgt = 1.0f, arc_tau = 2.2f * 16.0f * step_len;
     fill = 0;
@@ -2629,7 +2669,7 @@ EN_COLD static void bar_start(void)
         /* the last bar before the kick: a fill (the kick drops out halfway, the last stab is thrown) */
         /* (the classics pass: under Motion 40 none, the kick never leaving; then into or out of a change, or now and
          * then as Motion rises) */
-        if (sec_next != SEC_BREAK && (sec == SEC_BREAK || (motion >= 0.4f && (sec_next != sec ||
+        if (sec_next != SEC_BREAK && (sec == SEC_BREAK || (par[P_MOTION] >= 40 && (sec_next != sec ||
                                                                              frand() < 0.5f * (motion - 0.4f)))))
             fill = 1;
         /* (the variety study: Energy no longer pins the section, Motion's at any Energy; Energy far up keeps a
@@ -2710,7 +2750,7 @@ EN_COLD static int kick_draw(int next)
     for (k = 0; k < KS_N - 1; k++)
         if ((r -= w[k]) < 0.0f)
             break;
-    if (k == KS_NONE && next == SEC_FULL && motion < 0.7f)   /* (the kick gone only in a Break, or from Motion 70) */
+    if (k == KS_NONE && next == SEC_FULL && par[P_MOTION] < 70)   /* (the kick gone only in a Break, or from Motion 70) */
         k = KS_ONE;
     return k;
 }
@@ -2722,7 +2762,7 @@ static uint32_t dpat(int d) { return par[P_DMODE] ? (uint32_t)(uint16_t)par[P_DP
 EN_COLD static void lanes(void)
 {
     const uint32_t mu = mutes | fd_quiet;   /* (1.4.0: a part the song has out, as muted) */
-    const int kick = lay_kick && !(mu & EN_M_KICK) && !(perf & EN_PF_KICKDROP) && par[P_DRUMS] > 0,
+    const int kick = lay_kick && !kd_left && !(mu & EN_M_KICK) && !(perf & EN_PF_KICKDROP) && par[P_DRUMS] > 0,
               hats = !(mu & EN_M_HATS) && par[P_DRUMS] > 0;
     en_lane[0] = (uint16_t)(mu & EN_M_CHORD || !par[P_CHORD] ? 0u : en_stab_pat);
     en_lane[1] = (uint16_t)(kick ? bar_k & (fill ? 0x00FFu : 0xFFFFu) : 0u);
@@ -2785,7 +2825,7 @@ EN_COLD static void tick(void)
     }
     song_tick();
     mixer_tick();                                /* (1.4.0: the dub mixer: its rides' targets, its moves) */
-    const int kick = lay_kick && !(mutes & EN_M_KICK) && !(perf & EN_PF_KICKDROP), hats = !(mutes & EN_M_HATS);
+    const int kick = lay_kick && !kd_left && !(mutes & EN_M_KICK) && !(perf & EN_PF_KICKDROP), hats = !(mutes & EN_M_HATS);
     lanes();
     {
         const float fv = (float)ph.vel[st] * (1.0f / 255.0f);   /* (the phrase's feel: this step's accent) */
@@ -2799,7 +2839,7 @@ EN_COLD static void tick(void)
             drum_hit(0, v0, 0);
         else if (!(st & 3) && par[P_DRUMS] > 0) {   /* the ghost duck: the music breathes on every beat, the kick
                                                     * or not (lighter without one; lightest in a Break) */
-            const float gd = lay_kick ? 0.7f : 0.45f;
+            const float gd = lay_kick && !kd_left ? 0.7f : 0.45f;
             duck_x = fm_maxf(duck_x, gd);
             duck_xb = fm_maxf(duck_xb, gd);
         }
@@ -3515,6 +3555,24 @@ EN_COLD void en_move29(int16_t *p)
     a = p[P_CVARY] <= -50 ? 0 : p[P_VARY] + p[P_CVARY];
     p[P_TVARY] = (int16_t)(a < 1 ? 1 : a > 100 ? 100 : a);
 }
+/* (format 31) a piece before 31 as 31's, as near as it sounded: Motion the arrangement only, the Mixer's moves folded
+ * in. Up to 40 (40 too: a float's rounding kept it Full) the arrangement was Full only, the Mixer's moves one a minute
+ * at 100: Motion 0.4 of the Mixer (its moves as often: Breathes' one a minute at 40), under 40. 41-70: the Sections
+ * as often (they began at 15% then, 5% now: 47 .. 69). 71-100: the Breaks as often (they began again from rarely at
+ * 70 then, from none now: 76 .. 98). The Mixer kept, read by no one */
+EN_COLD void en_motion30(int16_t *p)
+{
+    const int o = p[P_MOTION] < 0 ? 0 : p[P_MOTION] > 100 ? 100 : p[P_MOTION],
+              x = p[P_MIXER] < 0 ? 0 : p[P_MIXER] > 100 ? 100 : p[P_MIXER];
+    int m;
+    if (o <= 40)
+        m = (int)(0.4f * (float)x + 0.5f), m = m > 39 ? 39 : m;
+    else if (o <= 70)
+        m = (int)(46.7f + 0.778f * (float)(o - 40) + 0.5f), m = m > 69 ? 69 : m;
+    else
+        m = (int)(76.0f + 0.72f * (float)(o - 70) + 0.5f);
+    p[P_MOTION] = (int16_t)m;
+}
 static float lfo_wave(int rate, float fr)       /* the wave's place now, -1..1, from the grid's: a sine, its crest a
                                                   * quarter in (layout B, the user's: the other shapes, unused in dub,
                                                   * gone) */
@@ -3606,7 +3664,8 @@ EN_COLD static void apply(int p, int v)
         st_fdec = fm_expf(-6.9f * 32.0f / ((0.25f * st_t60 + 0.02f) * EN_SR));   /* (1.3.0: a shorter strike) */
         break;
     case P_PTONE: case P_PTON: btone = fm_clampf((float)(par[P_PTONE] + par[P_PTON]), 0.0f, 100.0f) * 0.01f; break;
-    case P_MOTION: motion = (float)v * 0.01f; break;
+    case P_MOTION: motion = (float)v * 0.01f; mixer_set(); break;   /* (format 31: the arrangement only; its Breathes
+                                                  * the dub mixer's moves, the Mixer's before) */
     case P_VARY: vary_m = (float)v * 0.01f; lay_set(); break;   /* (format 29: Form's Vary, and the layers' amounts on it) */
     case P_CVARY: case P_PVARY: case P_BVARY: case P_DVARY: case P_NVARY: lay_set(); break;   /* (their trims) */
     case P_LOOSE: loose_v = (float)v * 0.01f; break;
@@ -3682,7 +3741,8 @@ EN_COLD static void apply(int p, int v)
                                                   * as the rim's into the echo, the clap's into the plate) */
         kick_snd[p - P_KECHO] = (float)v * (p == P_KECHO ? 0.008f : 0.006f);
         break;
-    case P_MIXER: mixer_set(); break;            /* (1.4.0: the dub mixer: its moves; format 30, its rides Drift's) */
+    /* (P_MIXER: format 31, retired: its moves Motion's, its rides Drift's (30); kept in the format, read by no one but
+     * the upgrades) */
     case P_MOVE:                                 /* (format 30: Form's Drift: the LFOs, the slow arc, the echo's moves,
                                                   * the mixer's rides) */
         mv_d = (float)v * 0.01f;
@@ -4045,6 +4105,7 @@ EN_COLD static void drain(void)
             lfo_dr[0].rng ^= (uint32_t)(b & 0xFFFF) * 2246822519u;   /* (the drifts too: each play its own path) */
             lfo_dr[1].rng ^= (uint32_t)(b & 0xFFFF) * 3266489917u;
             mx_rng ^= (uint32_t)(b & 0xFFFF) * 2654435769u;   /* (the dub mixer's too) */
+            mo_rng ^= (uint32_t)(b & 0xFFFF) * 2246822507u;   /* (format 31: Motion's moves too) */
             break;
         case C_CLOCK:
             en_ext = 1;

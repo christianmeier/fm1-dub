@@ -16,7 +16,12 @@
 #define PROJ_WAVE_MARK 0xB1u           /* (format 30, the LFO pages' layout B) proj.rsv[0] in a save whose LFOs
                                          * have a Wave (P_CLWAVE, P_NLWAVE: 0..100); a format 30 save without it is
                                          * the step 2 test builds' (zzo, zzp), those slots their Shape (0..4) */
-#define PROJ_FORMAT 30u                  /* 30: the variety plan's step 2: Drift, Form's KNOB 4 (P_MOVE: the LFOs,
+#define PROJ_FORMAT 31u                  /* 31: the variety plan's step 3: Motion the arrangement only (P_MOTION:
+                                         * Breathes 0-39, the parts ridden out and back and the kick out a bar or
+                                         * two; Sections 40-69, Thin and Groove; Breaks 70-100), the Mixer's moves
+                                         * folded in (P_MIXER retired, unread); 30's (and older) Motion and Mixer
+                                         * as Motion, as they sounded (en_motion30); 8-30 read;
+                                         * 30: the variety plan's step 2: Drift, Form's KNOB 4 (P_MOVE: the LFOs,
                                          * the slow arc, the echo's slow moves, the mixer's rides), each LFO's Trim
                                          * on it (P_CLTRIM, P_NLTRIM; their Depth and Drift unread); (layout B) each
                                          * LFO's Wave, the wave's share against the wander, in its Shape's slots

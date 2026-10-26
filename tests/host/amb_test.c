@@ -28,13 +28,13 @@ static int fails;
 static uint32_t midi_count, kicks, kick_off_beat, drum_notes37, claps;
 static int bass_lo = 999, bass_hi = -1, bass_pcs;  /* the bass's note-ons (channel 3): its range, its pitch classes */
 #define KBARS 512
-static uint8_t kick_bar[KBARS], bar_sec[KBARS];
+static uint8_t kick_bar[KBARS], bar_sec[KBARS], bar_kd[KBARS];   /* (bar_kd: format 31, Motion's kick drop-out on) */
 void en_midi_out(uint32_t st, uint32_t d1, uint32_t d2)
 {
     uint32_t b = en_bars / 16u;
     midi_count++;
     if ((st & 0xF0u) == 0x90u && d2 > 0u && b < KBARS)
-        bar_sec[b] = en_section;
+        bar_sec[b] = en_section, bar_kd[b] = (uint8_t)(en_mo_kick != 0);
     if (st == 0x92u && d2 > 0u) {
         bass_lo = (int)d1 < bass_lo ? (int)d1 : bass_lo;
         bass_hi = (int)d1 > bass_hi ? (int)d1 : bass_hi;
@@ -177,6 +177,36 @@ static int same_with(int p, int v)
     return h0 == h1;
 }
 
+/* (format 31) p at v0 and at v1 from here (a fork): the same notes for secs (the stabs' pattern and the chord, every
+ * 0.2 s)? */
+static uint32_t chord_sig(void);
+static int same_notes(int p, int v0, int v1, float secs)
+{
+    int fd[2], k;
+    pid_t pid;
+    uint32_t h0 = 0, h1 = 0;
+    fflush(stdout);
+    if (pipe(fd))
+        return -1;
+    pid = fork();
+    en_set(p, pid == 0 ? v1 : v0);
+    for (k = 0; k < (int)(secs * 5.0f); k++) {
+        run(0.2f);
+        h0 = h0 * 16777619u ^ (en_stab_pat | chord_sig() << 16);
+    }
+    if (pid == 0) {
+        if (write(fd[1], &h0, sizeof h0) != (ssize_t)sizeof h0)
+            _exit(1);
+        _exit(0);
+    }
+    if (read(fd[0], &h1, sizeof h1) != (ssize_t)sizeof h1)
+        h1 = ~h0;
+    waitpid(pid, 0, 0);
+    close(fd[0]);
+    close(fd[1]);
+    return h0 == h1;
+}
+
 /* a new engine, stopped, the count from the top (en_init leaves the transport, en_bars, as they were) */
 /* (1.4.0) the kick's rumble alone: one engine, from here two ways (a fork), the rumble at 0 and at v, the same
  * otherwise; the difference's mid (m), its side's energy, and each sample's sixteenth within its beat (q: 0 on the
@@ -241,6 +271,7 @@ static void fresh(void)
     bad = 0;
     memset(kick_bar, 0, sizeof kick_bar);
     memset(bar_sec, 0xFF, sizeof bar_sec);
+    memset(bar_kd, 0, sizeof bar_kd);
 }
 
 static uint32_t chord_sig(void)
@@ -518,23 +549,26 @@ int main(void)
 
     /* Throws: 0 none (Motion 0: no fills), 100 well over 50 (the same draws) */
     {
-        uint32_t n[3];
-        int k;
+        uint32_t n[3] = {0, 0, 0};
+        int k, sd;
         static const int TV[3] = {0, 50, 100};
-        for (k = 0; k < 3; k++) {
-            fresh();
-            en_seed(7);
-            en_set(P_VARY, 100);
-            en_set(P_MOTION, 0);
-            en_set(P_STABS, 100);
-            en_set(P_CTHROW, TV[k]);
-            en_regrow();
-            en_play(1);
-            n[k] = en_throws;
-            run(60.0f);
-            n[k] = en_throws - n[k];
-        }
-        printf("  throws in a minute at Throws 0 / 50 / 100: %u / %u / %u\n", n[0], n[1], n[2]);
+        for (k = 0; k < 3; k++)
+            for (sd = 7; sd < 10; sd++) {        /* (format 31: three seeds, a minute each: the engine's draws as the
+                                                  * tests before left them) */
+                uint32_t t0;
+                fresh();
+                en_seed((uint32_t)sd);
+                en_set(P_VARY, 100);
+                en_set(P_MOTION, 0);
+                en_set(P_STABS, 100);
+                en_set(P_CTHROW, TV[k]);
+                en_regrow();
+                en_play(1);
+                t0 = en_throws;
+                run(60.0f);
+                n[k] += en_throws - t0;
+            }
+        printf("  throws in three minutes at Throws 0 / 50 / 100: %u / %u / %u\n", n[0], n[1], n[2]);
         CHECK(n[0] == 0 && n[1] > 0 && n[2] * 2u > n[1] * 3u, "Throws: %u / %u / %u", n[0], n[1], n[2]);
     }
 
@@ -933,14 +967,18 @@ int main(void)
                 run(1.0f);
                 secs[en_section < EN_NSEC ? en_section : 0]++;
             }
-            if (MOT[m]) {                        /* the kick: four a bar while Full (but a fill), none in a Break */
-                uint32_t b, kf = 0, kb = 0, nb = 0;
+            if (MOT[m]) {                        /* the kick: four a bar while Full (but a fill, and Motion's drop-outs:
+                                                  * none then), none in a Break */
+                uint32_t b, kf = 0, kb = 0, nb = 0, kd = 0;
                 for (b = 0; b + 1 < en_bars / 16u && b < KBARS; b++) {
-                    if (bar_sec[b] == SEC_FULL && (b & 7u) != 7u)
+                    if (bar_sec[b] == SEC_FULL && bar_kd[b])
+                        kd++, kf += kick_bar[b] != 0;
+                    else if (bar_sec[b] == SEC_FULL && (b & 7u) != 7u)
                         kf += kick_bar[b] != 4;
                     if (bar_sec[b] == SEC_BREAK)
                         nb++, kb += kick_bar[b];
                 }
+                printf("  Motion 100: the kick out a bar or two (Motion's drop-outs) in %u Full bars\n", kd);
                 CHECK(!kf && !kb && nb > 10u, "Motion 100: %u Full bars without four kicks, %u kicks in %u Break bars",
                       kf, kb, nb);
             }
@@ -952,6 +990,89 @@ int main(void)
             else
                 CHECK(secs[SEC_FULL] == 600, "Motion 0 left Full (%d s Full)", secs[SEC_FULL]);
         }
+    }
+
+    /* (format 31, the variety plan's step 3) Motion, the arrangement only, in three zones, every step heard: at 0
+     * nothing leaves; Breathes (to 39) the parts ridden out and back and the kick out a bar or two, more as it rises,
+     * the kick's off the phrase's line, no section; Sections (40-69) Thin and Groove join, no Break; Breaks (70-100)
+     * Breaks join. Five minutes of Fog a run, four seeds */
+    {
+        static const int MZ[6] = {0, 10, 20, 39, 55, 85};
+        uint32_t ev[6][EN_MO_N + 3], kline = 0;
+        int z, sd, k;
+        memset(ev, 0, sizeof ev);
+        for (z = 0; z < 6; z++)
+            for (sd = 1; sd <= 4; sd++) {
+                int16_t pp[P_NPARAMS];
+                uint16_t pl;
+                uint32_t c0[EN_MO_N], lastb = 0;
+                fresh();
+                en_piece(3, pp, &pl);
+                pp[P_MOTION] = (int16_t)MZ[z];
+                for (k = 0; k < P_NPARAMS; k++)
+                    en_set(k, pp[k]);
+                en_pool(pl);
+                en_seed((uint32_t)sd);
+                en_regrow();
+                en_play(1);
+                run(0.05f);
+                for (k = 0; k < EN_MO_N; k++)
+                    c0[k] = en_mo_count[k];
+                for (k = 0; k < 3000; k++) {     /* (five minutes, a tenth of a second at a time) */
+                    const uint32_t kd = en_mo_count[EN_MO_KICK];
+                    run(0.1f);
+                    if (en_mo_count[EN_MO_KICK] != kd && (en_phrase_bar == 0 || en_phrase_bar == 7))
+                        kline++;
+                    if (en_bars / 16u != lastb && en_phrase_bar == 0) {   /* (a phrase begun: its section) */
+                        lastb = en_bars / 16u;
+                        if (en_section != SEC_FULL)
+                            ev[z][EN_MO_N + (en_section == SEC_BREAK ? 2 : 1)]++;
+                    }
+                }
+                for (k = 0; k < EN_MO_N; k++)
+                    ev[z][k] += en_mo_count[k] - c0[k];
+            }
+        for (z = 0; z < 6; z++)
+            printf("  Motion %2d, Fog, 4 x 5 min: %u ride-outs, %u swells, %u kick drop-outs; %u Thin or Groove phrases, %u "
+                   "Breaks\n", MZ[z], ev[z][EN_MO_OUT], ev[z][EN_MO_SWELL], ev[z][EN_MO_KICK], ev[z][EN_MO_N + 1],
+                   ev[z][EN_MO_N + 2]);
+        CHECK(!ev[0][EN_MO_OUT] && !ev[0][EN_MO_SWELL] && !ev[0][EN_MO_KICK] && !ev[0][EN_MO_N + 1] && !ev[0][EN_MO_N + 2],
+              "Motion 0: something left (%u %u %u %u %u)", ev[0][0], ev[0][1], ev[0][2], ev[0][3], ev[0][4]);
+        for (z = 1; z < 4; z++)
+            CHECK(ev[z][EN_MO_N + 1] == 0 && ev[z][EN_MO_N + 2] == 0 && ev[z][EN_MO_KICK] > 0,
+                  "Breathes (Motion %d): a section, or no kick drop-out", MZ[z]);
+        CHECK(ev[1][EN_MO_KICK] + ev[1][EN_MO_OUT] + ev[1][EN_MO_SWELL] < ev[3][EN_MO_KICK] + ev[3][EN_MO_OUT] + ev[3][EN_MO_SWELL],
+              "Breathes growing: Motion 10 no quieter than 39");
+        CHECK(ev[3][EN_MO_KICK] >= 4u && ev[3][EN_MO_KICK] <= 24u,
+              "Motion 39: the kick out about Coldest Season's 2-3 times in 5 minutes (%u in 4 x 5)", ev[3][EN_MO_KICK]);
+        CHECK(kline == 0, "the kick's drop-outs off the phrase's line (%u on its first or last bar)", kline);
+        CHECK(ev[4][EN_MO_N + 1] > 0 && ev[4][EN_MO_N + 2] == 0, "Sections (Motion 55): Thin or Groove, no Break");
+        CHECK(ev[5][EN_MO_N + 2] > 0, "Breaks (Motion 85): a Break");
+    }
+    /* (format 31) under 40 the arrangement's draws are Motion's own: Motion 10 and 30 play the same notes (the stabs,
+     * the chords), only the moves and the kick's drop-outs differ */
+    {
+        fresh();
+        en_seed(3);
+        en_regrow();
+        en_play(1);
+        run(0.05f);
+        CHECK(same_notes(P_MOTION, 10, 30, 180.0f), "Motion 10 and 30: other notes");
+    }
+    /* (format 31) a save before 31: its Motion and Mixer as Motion (en_motion30) */
+    {
+        static const int16_t IN[7][2] = {{0, 0}, {30, 45}, {40, 100}, {10, 25}, {55, 60}, {70, 20}, {100, 90}};
+        static const int16_t OUT[7] = {0, 18, 39, 10, 58, 69, 98};
+        int16_t pp[P_NPARAMS];
+        int i, ok = 1;
+        for (i = 0; i < 7; i++) {
+            memset(pp, 0, sizeof pp);
+            pp[P_MOTION] = IN[i][0], pp[P_MIXER] = IN[i][1];
+            en_motion30(pp);
+            if (pp[P_MOTION] != OUT[i])
+                printf("  (Motion %d, Mixer %d: %d, not %d)\n", IN[i][0], IN[i][1], pp[P_MOTION], OUT[i]), ok = 0;
+        }
+        CHECK(ok, "the format 31 upgrade's Motion");
     }
 
     /* throws: with the piece's looseness up, stabs go into the echo (format 29: the looseness the piece's own, P_LOOSE,
@@ -1572,6 +1693,7 @@ int main(void)
         int k, i;
         fresh();
         en_seed(3);                              /* (its own seed: not what the tests before it left) */
+        en_set(P_MOTION, 0);                     /* (format 31: no part ridden out, Motion's, while it's listened to) */
         en_play(1);
         en_set(P_CRACKLE, 60);
         en_meter_on = 1;
@@ -1963,7 +2085,9 @@ int main(void)
             printf("\n");
             if (!kind)
                 CHECK(first_in[5] == 0 && first_in[5] <= first_in[0] && first_in[0] < first_in[3] &&
-                          first_in[3] < first_in[2] && first_in[2] < first_in[1] && first_in[1] < first_in[4],
+                          first_in[3] <= first_in[2] && first_in[2] < first_in[1] && first_in[1] < first_in[4],   /* (the
+                                                  * kick and the bass a bar off their places either way: they may
+                                                  * share one) */
                       "ambient first: the order in");
             else
                 CHECK(first_in[3] == 0 && first_in[2] == 0 && first_in[0] < first_in[1] && first_in[1] <= first_in[5] &&   /* (the
@@ -2067,6 +2191,7 @@ int main(void)
         int k, b, ok, evs = 0, was = 0, inev = 0;
         fresh();
         en_seed(9);
+        en_set(P_MOTION, 0);                     /* (format 31: the moves Motion's, the Mixer's before) */
         en_meter_on = 1;
         en_play(1);
         m0 = en_mx_moves;
@@ -2079,8 +2204,8 @@ int main(void)
         }
         for (k = 0, ok = 1; k < EN_NPART; k++)
             ok &= en_mx_db[k] == 0.0f && en_mx_snd[k][0] == 0.0f && en_mx_snd[k][1] == 0.0f;
-        CHECK(ok && en_mx_moves == m0, "Mixer 0: nothing rides (%u moves)", en_mx_moves - m0);
-        en_set(P_MIXER, 100);
+        CHECK(ok && en_mx_moves == m0, "Motion 0, Drift 0: nothing rides (%u moves)", en_mx_moves - m0);
+        en_set(P_MOTION, 100);
         en_set(P_MOVE, 100);
         for (k = 0; k < EN_NPART; k++)
             lo[k] = 99.0f, hi[k] = -99.0f;
@@ -2126,16 +2251,16 @@ int main(void)
         run(90.0f);
         CHECK(en_mx_moves == m1, "Lock rests the dub mixer (%u moves)", en_mx_moves - m1);
         en_lock(0);
-        en_set(P_MIXER, 0);                      /* (back to 0: home, exactly) */
+        en_set(P_MOTION, 0);                     /* (back to 0: home, exactly) */
         en_set(P_MOVE, 0);
         run(30.0f);
         for (k = 0, ok = 1; k < EN_NPART; k++)
             ok &= en_mx_db[k] == 0.0f && en_mx_snd[k][0] == 0.0f && en_mx_snd[k][1] == 0.0f;
-        CHECK(ok && !en_mx_ev, "Mixer back to 0: every ride home");
+        CHECK(ok && !en_mx_ev, "Motion and Drift back to 0: every ride home");
         /* a song: the intro the song's (no moves; the rides at half depth), the main the mixer's too */
         fresh();
         en_seed(5);
-        en_set(P_MIXER, 100);
+        en_set(P_MOTION, 100);
         en_set(P_MOVE, 100);
         en_set(P_SMODE, 1);
         en_set(P_SINTRO, 8);

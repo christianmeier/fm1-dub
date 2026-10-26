@@ -185,8 +185,8 @@ static const uint16_t VIEW_KNOB[NVIEWS][4] = {
     {K_LANE, P_DACCENT, K_LCH, P_DMODE},
     {P_EWIDTH, K_NONE, K_DUB, P_DUCK},           /* (Wet: an offset for playing; Duck the piece's own. 1.4.0, the
                                                   * user's: the Filter on SELECT only; KNOB 2 the dub mixer, how much
-                                                  * the desk rode itself, gone (format 30: its rides Form's Drift's, its
-                                                  * moves the piece's, Motion's to come): free;
+                                                  * the desk rode itself, gone (format 30: its rides Form's Drift's;
+                                                  * format 31, its moves Motion's): free;
                                                   * KNOB 1 the desk's Width, the whole mix's stereo field (from the
                                                   * Echo page), Energy on the Form page alone) */
     {P_TEMPO, P_ROOT, K_MODE, P_SWING},
@@ -274,8 +274,8 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
 /* what each knob does, a line: under the big ring in the middle while it's being turned (each fits 228 px: the
  * host's expect helpfit) */
 static const char *const KNOB_HELP[NVIEWS][4] = {
-    {"Sparse and dry, to busy and bright", "How much the loop changes: held to restless", "How often it leaves Full",
-     "How much the sound moves: still to restless"},
+    {"Sparse and dry, to busy and bright", "How much the loop changes: held to restless",
+     "How much the arrangement changes", "How much the sound moves: still to restless"},
     {"Stabs a bar, one to six", "How often a stab is thrown to the echo", "How long a chord lasts",
      "The stabs' turns, more or less; left: Hold"},
     {"How many notes each loop holds", "The loops' changes, more or less; left: Hold", "", ""},
@@ -2211,6 +2211,89 @@ static void arc_mark_th(int32_t cx, int32_t cy, int32_t r, float th, float v, ui
 }
 static void arc_mark(int32_t cx, int32_t cy, int32_t r, float v, uint16_t col) { arc_mark_th(cx, cy, r, 3.4f, v, col); }
 
+/* (format 31, the variety plan's step 3) a knob's zones: a continuous knob whose range moves something all the way
+ * (no dead zone), each zone where a new kind of event joins (decision 6). Each zone: where it begins (the knob's
+ * value), its name (under the big ring's value, round the ring, the reader's), its sentence (the help line while it's
+ * turned). Motion's first; the others (Hits, Energy, ...) theirs in step 4 */
+typedef struct {
+    int16_t at;
+    const char *name, *help, *help0;             /* (help0: the sentence at its first value, if that's another: 0) */
+} zone_t;
+static const zone_t MOTION_ZONES[] = {
+    {0, "Breathes", "Parts out and back, the kick out a bar or two", "Nothing leaves: the loop as it is"},
+    {40, "Sections", "Thin and Groove phrases join, rarely to often", 0},
+    {70, "Breaks", "Breaks join: the kick and the bass out a phrase", 0},
+};
+static const char *zone_help(const zone_t *z, int v) { return z->help0 && v == z->at ? z->help0 : z->help; }
+static const struct {
+    uint16_t k;
+    uint8_t n;
+    const zone_t *z;
+} KNOB_ZONES[] = {
+    {P_MOTION, 3, MOTION_ZONES},
+};
+#define NKNOB_ZONES ((int)(sizeof KNOB_ZONES / sizeof KNOB_ZONES[0]))
+static int knob_zones(int k, const zone_t **z)   /* its zones, how many (0: none) */
+{
+    int i;
+    for (i = 0; i < NKNOB_ZONES; i++)
+        if (KNOB_ZONES[i].k == k) {
+            *z = KNOB_ZONES[i].z;
+            return KNOB_ZONES[i].n;
+        }
+    *z = 0;
+    return 0;
+}
+static int zone_at(int k, int v)                 /* the zone v is in (-1: the knob has none) */
+{
+    const zone_t *z;
+    int n = knob_zones(k, &z), i;
+    for (i = n - 1; i > 0 && v < z[i].at; i--)
+        ;
+    return n ? i : -1;
+}
+static float zone_frac(int k, int v)             /* a value's place on the ring, 0..1 */
+{
+    const en_param_t *p = en_param_info(k);
+    return p->hi > p->lo ? (float)(v - p->lo) / (float)(p->hi - p->lo) : 0.0f;
+}
+/* the ring in segments, one a zone: a gap in the background's colour where each begins, the zone the knob is in its
+ * track lit a little (its fill as it is) */
+static void arc_zones_th(int32_t cx, int32_t cy, int32_t r, float th, int k, int v, uint16_t lit, uint16_t bg)
+{
+    const zone_t *z;
+    const int n = knob_zones(k, &z), at = zone_at(k, v);
+    int i;
+    if (!n)
+        return;
+    {   /* (the zone's track, past the value, lit) */
+        const float a0 = 0.375f, sweep = 0.75f, f0 = fm_maxf(zone_frac(k, z[at].at), zone_frac(k, v)),
+                    f1 = at + 1 < n ? zone_frac(k, z[at + 1].at) : 1.0f, ro = (float)r, ri = ro - th;
+        int32_t x, y;
+        for (y = -r - 1; y <= r + 1; y++)
+            for (x = -r - 1; x <= r + 1; x++) {
+                float dx = (float)x, dy = (float)y, d = fm_sqrtf(dx * dx + dy * dy), t, a;
+                a = fm_clampf(ro + 0.5f - d, 0.0f, 1.0f) * fm_clampf(d - ri + 0.5f, 0.0f, 1.0f);
+                if (a <= 0.0f)
+                    continue;
+                t = turns(dy, dx) - a0;
+                if (t < 0.0f)
+                    t += 1.0f;
+                t /= sweep;
+                if (t > f0 + 0.02f && t < f1)
+                    px_blend(cx + x, cy + y, lit, (uint32_t)(a * 16.0f + 0.5f));
+            }
+    }
+    for (i = 1; i < n; i++) {                    /* (the gaps: a radial line, ~2 px wide (3 on the big ring)) */
+        const float a = (0.375f + 0.75f * zone_frac(k, z[i].at)) * FM_TWO_PI, c = fm_cosf(a), sn = fm_sinf(a);
+        const float w = th > 4.0f && r > 30 ? 1.4f : 0.9f;
+        float d, o;
+        for (d = (float)r - th - 0.8f; d <= (float)r + 0.8f; d += 0.4f)
+            for (o = -w; o <= w; o += 0.45f)
+                px_blend(cx + (int32_t)(c * d - sn * o + 0.5f), cy + (int32_t)(sn * d + c * o + 0.5f), bg, 16u);
+    }
+}
+
 static void caps(char *d, const char *s, int n)  /* s in capitals, at most n - 1 characters */
 {
     int i;
@@ -3866,6 +3949,28 @@ static void draw_slots(void)
 #define BIG_R 40                                 /* (1.4.0) the big rings' radius (the level's, a knob's) */
 #define BIG_CY 64                                /* (1.4.0, the user's: their name over them, large; the ring a little
                                                   * lower for it, the help under it) */
+/* (format 31) a zone's name round the big ring: outside it, at the middle of its arc (pushed off the ring's top to a
+ * side, the knob's name over it there), left of the ring to its left, right to its right; its top-left and width */
+static void zone_label_at(int k, const zone_t *z, int n, int i, int32_t cy, int32_t r, const char *t, int32_t *x0,
+                          int32_t *y0, int32_t *w)
+{
+    const float f0 = zone_frac(k, z[i].at), f1 = i + 1 < n ? zone_frac(k, z[i + 1].at) : 1.0f;
+    float a = (0.375f + 0.75f * 0.5f * (f0 + f1)) * FM_TWO_PI, c = fm_cosf(a), sn = fm_sinf(a);
+    float rr = (float)r + 7.0f;
+    if (fm_fabsf(c) > 0.85f)                     /* (beside the ring: clear of its handle) */
+        rr += 3.0f;
+    if (sn < 0.0f && fm_fabsf(c) < 0.7f) {       /* (near the top: to the side it leans to, 45 degrees up) */
+        c = c < 0.0f ? -0.7071f : 0.7071f;
+        sn = -0.7071f;
+    }
+    *w = text_w(&FONT_XS, t);
+    *y0 = cy + (int32_t)(sn * rr) - 7;
+    *x0 = c < -0.3f ? CX + (int32_t)(c * rr) - *w : c > 0.3f ? CX + (int32_t)(c * rr) : CX + (int32_t)(c * rr) - *w / 2;
+    if (*x0 < 4)
+        *x0 = 4;
+    if (*x0 + *w > 236)
+        *x0 = 236 - *w;
+}
 /* over a big ring: its name, large */
 static void big_title(const char *name, uint16_t col)
 {
@@ -3971,11 +4076,12 @@ static void draw_oct_at(uint32_t now)
 static void draw_big_at(uint32_t now)
 {
     const int32_t r = BIG_R, cy = BIG_CY;        /* (1.4.0: its name over it now; a little lower for it) */
-    int k = ui.big_k, v, f, lo, hi;
+    int k = ui.big_k, v, f, lo, hi, zn = 0, za = 0, i;
     int32_t f2;
     uint16_t c, tr, tx;
     char t[16];
-    const char *under;
+    const char *under, *help = ui.big_help;
+    const zone_t *zs = 0;
     const felucca_font_t *fn;
     if (!big_on(now))
         return;
@@ -3995,17 +4101,32 @@ static void draw_big_at(uint32_t now)
     c = mix(K_BG, (lo < 0 && !v) ? K_DIM : ui.big_col, f);
     tr = mix(K_BG, K_LINE, f);
     tx = mix(K_BG, K_TEXT, f);
+    if (!ui.big_txt[0] && k < P_NPARAMS && (zn = knob_zones(k, &zs)) > 0) {   /* (format 31: a knob's zones: the one
+                                                  * it's in, its sentence the help) */
+        za = zone_at(k, v);
+        help = zone_help(&zs[za], v);
+    }
     {   /* (1.4.0, the user's) the panel behind it all: the ring, its name, its help */
         int32_t hw = 0, y1 = cy + r + 6;
-        if (ui.big_help) {
+        if (help) {
             char a[48], b[48];
-            const int nl = help_lines(ui.big_help, a, b, (int)sizeof a);
+            const int nl = help_lines(help, a, b, (int)sizeof a);
             if (nl) {
                 hw = text_w(&FONT_S, a);
                 if (nl == 2 && text_w(&FONT_S, b) > hw)
                     hw = text_w(&FONT_S, b);
                 y1 = cy + r + 3 + nl * 14 + 4;
             }
+        }
+        for (i = 0; i < zn; i++) {               /* (the zones' names round the ring: the panel wide enough) */
+            int32_t x0, y0, w;
+            char zt[16];
+            caps(zt, zs[i].name, sizeof zt);
+            zone_label_at(k, zs, zn, i, cy, r, zt, &x0, &y0, &w);
+            if (2 * (CX - x0) - 12 > hw)
+                hw = 2 * (CX - x0) - 12;
+            if (2 * (x0 + w - CX) - 12 > hw)
+                hw = 2 * (x0 + w - CX) - 12;
         }
         big_panel(k == K_FILTER ? "Filter" : ui.big_name, hw, y1, ui.big_col, f);
     }
@@ -4014,9 +4135,16 @@ static void draw_big_at(uint32_t now)
         cv_rect(CX - w, cy + f2, 2 * w + 1, 1, K_BG);
     }
     arc_th(CX, cy, r, 6.0f, ui.big_v, tr, c, K_BG, lo < 0);
-    if (k == P_MOTION) {                         /* (Motion's three regions) */
-        arc_mark_th(CX, cy, r, 6.0f, 0.4f, tx);
-        arc_mark_th(CX, cy, r, 6.0f, 0.7f, tx);
+    if (zn) {                                    /* (format 31: the zones, the ring in segments, the names round it: the
+                                                  * one it's in in the ring's colour) */
+        arc_zones_th(CX, cy, r, 6.0f, k, v, mix(K_BG, mix(K_LINE, ui.big_col, 4), f), K_BG);
+        for (i = 0; i < zn; i++) {
+            int32_t x0, y0, w;
+            char zt[16];
+            caps(zt, zs[i].name, sizeof zt);
+            zone_label_at(k, zs, zn, i, cy, r, zt, &x0, &y0, &w);
+            cv_text(x0, y0, &FONT_XS, zt, i == za ? c : mix(K_BG, K_DIM, f));
+        }
     }
     under = ui.big_name;
     if (k == K_FILTER) {                         /* (the filter: the amount large, Shut or Open under it) */
@@ -4035,14 +4163,19 @@ static void draw_big_at(uint32_t now)
         knob_text(k, t);
     }
     fn = text_w(&FONT_L, t) <= 2 * r - 12 ? &FONT_L : text_w(&FONT_C, t) <= 2 * r - 10 ? &FONT_C : &FONT_B;
-    text_c(CX, cy - (fn == &FONT_L ? 16 : fn == &FONT_C ? 11 : 8) - (k == K_FILTER && v ? 5 : 0), fn, t, tx);
+    text_c(CX, cy - (fn == &FONT_L ? 16 : fn == &FONT_C ? 11 : 8) - ((k == K_FILTER && v) || zn ? 5 : 0), fn, t, tx);
     if (k == K_FILTER && v)                      /* (the filter: Shut or Open under its amount) */
         text_c(CX, cy + 12, &FONT_XS, under, c);
+    if (zn) {                                    /* (format 31: the zone's name under the value, as the filter's) */
+        char zt[16];
+        caps(zt, zs[za].name, sizeof zt);
+        text_c(CX, cy + 12, &FONT_XS, zt, c);
+    }
     big_title(k == K_FILTER ? "Filter" : ui.big_name, c);   /* (1.4.0, the user's: the name over the ring, large;
                                                   * the header the piece's alone) */
-    if (ui.big_help) {                           /* what it does, under the name: one line or two, centred */
+    if (help) {                                  /* what it does, under the name: one line or two, centred */
         char a[48], b[48];
-        int nl = help_lines(ui.big_help, a, b, (int)sizeof a);
+        int nl = help_lines(help, a, b, (int)sizeof a);
         if (nl) {
             const int32_t y0 = cy + r + 3;
             uint16_t hc = mix(K_BG, mix(K_DIM, K_TEXT, 7), f);   /* (a light grey, under the ring) */
@@ -4848,10 +4981,8 @@ static void draw_knobs(void)
             }
             if (vary_trim(k))                    /* (1.4.0, format 29: a Vary trim's far left, Hold, marked) */
                 arc_mark_th(cx, KNB_CY, KNB_R, KNB_TH, 0.0f, K_TEXT);
-            if (k == P_MOTION) {                 /* (Motion's three regions: the loop held, variations, Breaks) */
-                arc_mark_th(cx, KNB_CY, KNB_R, KNB_TH, 0.4f, K_TEXT);
-                arc_mark_th(cx, KNB_CY, KNB_R, KNB_TH, 0.7f, K_TEXT);
-            }
+            if (!off)                            /* (format 31: a knob's zones, its ring in segments: Motion's) */
+                arc_zones_th(cx, KNB_CY, KNB_R, KNB_TH, k, v, mix(K_LINE, fill, 3), bg);
             {   /* (1.4.0, the user's) inside the ring: a unit's value always, small ("LP 2.6k", "32 bars"); a number only
                  * a moment as the page opens (or always, Setup's Values), as big as fits */
                 const int32_t in = 2 * (KNB_R - (int32_t)KNB_TH) - 2;
@@ -4996,11 +5127,18 @@ static void sp_value(int k)
     knob_text(k, t);
     sp_cat(t);
 }
-static void sp_knob(int view, int i)           /* "Stabs 30": the name the page gives it, then its value */
+static void sp_knob(int view, int i)           /* "Stabs 30": the name the page gives it, then its value (format 31: and
+                                                  * its zone, "Motion 30, Breathes") */
 {
+    const zone_t *z;
+    const int k = vknob(view, i);
     sp_cat(KNOB_LABEL[view][i]);
     sp_cat(" ");
-    sp_value(vknob(view, i));
+    sp_value(k);
+    if (k < P_NPARAMS && knob_zones(k, &z)) {
+        sp_cat(", ");
+        sp_cat(z[zone_at(k, knob_get(k))].name);
+    }
 }
 
 static void sp_chord_q(int root, const char *q)   /* "E minor 7" */
