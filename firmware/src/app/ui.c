@@ -4249,7 +4249,7 @@ static void draw_tape(uint32_t now)
 {
     static float al, ar;
     static uint32_t t_last;
-    const int32_t lx = 33, rx = 207, cy = 50;   /* (zzr, the user's: the reels at the edges, the counter between) */
+    const int32_t lx = 42, rx = 198, cy = 48;   /* (zzr, the user's: the reels apart, the counter between them) */
     const uint32_t dt = t_last ? (now - t_last > 100u ? 100u : now - t_last) : 0u;
     const float bars = (float)en_bars * (1.0f / 16.0f),
                 q = en_song_ph != EN_SG_OFF && en_song_be ? fm_minf(bars / (float)en_song_be, 1.0f)
@@ -4257,21 +4257,21 @@ static void draw_tape(uint32_t now)
                 p = q <= 1.0f ? q : 2.0f - q;
     const int32_t rl = 9 + (int32_t)(19.0f * (1.0f - p) + 0.5f), rr = 9 + (int32_t)(19.0f * p + 0.5f);
     const float v = en_playing && !en_frozen ? 0.03f * (float)proj.par[P_TEMPO] * (1.0f / 122.0f) : 0.0f;
-    const uint16_t tape = mix(K_BG, RGB(132, 92, 60), 9), lvl = mix(K_BG, K_ACC, q16((mt.db[EN_MT_MASTER] + 36.0f) * (1.0f / 36.0f))),
-                   ec = mix(K_BG, K_PAD, q16(fm_minf(epk[(epk_w + EPK_N - 1u) % EPK_N].pk * 4.0f, 1.0f)));
+    const uint16_t tape = mix(K_BG, RGB(132, 92, 60), 9), lvl = mix(K_LINE, K_ACC, q16((mt.db[EN_MT_MASTER] + 36.0f) * (1.0f / 36.0f))),
+                   ec = mix(K_LINE, K_PAD, q16(fm_minf(epk[(epk_w + EPK_N - 1u) % EPK_N].pk * 4.0f, 1.0f)));
     t_last = now;
     al += v * (float)dt / (float)rl;              /* (the same tape speed: the smaller reel turns faster) */
     ar += v * (float)dt / (float)rr;
     al -= al > 6.2831853f ? 6.2831853f : 0.0f;
     ar -= ar > 6.2831853f ? 6.2831853f : 0.0f;
-    line(lx, cy + rl, 100, 84, tape), line(lx + 1, cy + rl, 101, 84, tape);   /* the tape's path, under the reels' edges */
-    cv_rect(100, 84, 41, 2, tape);
-    line(rx, cy + rr, 140, 84, tape), line(rx - 1, cy + rr, 139, 84, tape);
+    line(lx, cy + rl, 84, 86, tape), line(lx + 1, cy + rl, 85, 86, tape);   /* the tape's path, under the reels' edges */
+    cv_rect(84, 86, 73, 2, tape);                /* (the deck's run wider: the counter's room above it) */
+    line(rx, cy + rr, 156, 86, tape), line(rx - 1, cy + rr, 155, 86, tape);
     tp_reel(lx, cy, rl, al, tape);
     tp_reel(rx, cy, rr, ar, tape);
-    cv_rect(103, 86, 8, 4, K_LINE);               /* erase, record, play */
-    cv_rect(116, 86, 8, 4, lvl);
-    cv_rect(129, 86, 8, 4, ec);
+    cv_rect(96, 88, 10, 5, K_DIM);               /* erase, record, play (each seen, unlit too) */
+    cv_rect(115, 88, 10, 5, lvl);
+    cv_rect(134, 88, 10, 5, ec);
     {   /* (1.4.0, the user's) the tape's counter, seen nowhere else: at the left, where the song is (INTRO, MAIN,
          * OUTRO; ENDLESS) and the bars left of it (BARS); at its right, the time since PLAY, and in a song its whole length */
         static uint32_t t0, shown, last_b;
@@ -4285,14 +4285,14 @@ static void draw_tape(uint32_t now)
         was = en_playing, last_b = b;
         if (en_playing)
             shown = (now - t0) / 1000u;
-        text_c(94, 42, &FONT_XS, song ? (en_song_ph == EN_SG_INTRO ? "INTRO" : en_song_ph == EN_SG_MAIN ? "MAIN" : "OUTRO")
-                                      : en_song_ph == EN_SG_END ? "END" : "ENDLESS", song ? K_ACC : K_DIM);
+        text_c(98, 24, &FONT_XS, song ? (en_song_ph == EN_SG_INTRO ? "INTRO" : en_song_ph == EN_SG_MAIN ? "MAIN" : "OUTRO")
+                                      : en_song_ph == EN_SG_END ? "END" : "ENDLESS", K_DIM);   /* (TIME's colour) */
         if (song) {
             const uint32_t end = en_song_ph == EN_SG_INTRO ? en_song_b0 : en_song_ph == EN_SG_MAIN ? en_song_bo : en_song_be;
             const uint32_t left = end > b ? end - b : 0u;
             itoa_u(left, t);
-            text_c(94, 53, &FONT_B, t, tc);
-            text_c(94, 70, &FONT_XS, left == 1u ? "BAR" : "BARS", K_DIM);
+            text_c(98, 38, &FONT_C, t, tc);
+            text_c(98, 64, &FONT_XS, left == 1u ? "BAR" : "BARS", K_DIM);
         }
         {
             uint32_t k = 0, m = shown / 60u, sec = shown % 60u;
@@ -4301,8 +4301,8 @@ static void draw_tape(uint32_t now)
             while (c[k])
                 k++;
             c[k++] = ':', c[k++] = (char)('0' + sec / 10u), c[k++] = (char)('0' + sec % 10u), c[k] = 0;
-            text_c(146, 53, &FONT_B, c, tc);
-            text_c(146, 42, &FONT_XS, "TIME", K_DIM);
+            text_c(142, 38, &FONT_C, c, tc);
+            text_c(142, 24, &FONT_XS, "TIME", K_DIM);
             if (song && proj.par[P_TEMPO] > 0) {  /* (the song's whole length, at this tempo) */
                 const uint32_t tot = en_song_be * 240u / (uint32_t)proj.par[P_TEMPO];
                 k = 0;
@@ -4311,7 +4311,7 @@ static void draw_tape(uint32_t now)
                 while (c[k])
                     k++;
                 c[k++] = ':', c[k++] = (char)('0' + tot % 60u / 10u), c[k++] = (char)('0' + tot % 10u), c[k] = 0;
-                text_c(146, 70, &FONT_XS, c, K_DIM);
+                text_c(142, 64, &FONT_XS, c, K_DIM);
             }
         }
     }
