@@ -16,7 +16,12 @@
 #define PROJ_WAVE_MARK 0xB1u           /* (format 30, the LFO pages' layout B) proj.rsv[0] in a save whose LFOs
                                          * have a Wave (P_CLWAVE, P_NLWAVE: 0..100); a format 30 save without it is
                                          * the step 2 test builds' (zzo, zzp), those slots their Shape (0..4) */
-#define PROJ_FORMAT 31u                  /* 31: the variety plan's step 3: Motion the arrangement only (P_MOTION:
+#define PROJ_FORMAT 32u                  /* 32: the variety plan's step 4: no dead steps: Stabs the count (1..6);
+                                         * Hits', the bass's Density's and the noise's Density's last step faded
+                                         * in (the bass's from its first note alone to all); the hats', the pings'
+                                         * and the noise's Tone, the noise's Decay, the echo's Tone and the Pad's
+                                         * Attack to their ends; 31's (and older) as they sounded (en_zones31);
+                                         * 31: the variety plan's step 3: Motion the arrangement only (P_MOTION:
                                          * Breathes 0-39, the parts ridden out and back and the kick out a bar or
                                          * two; Sections 40-69, Thin and Groove; Breaks 70-100), the Mixer's moves
                                          * folded in (P_MIXER retired, unread); 30's (and older) Motion and Mixer

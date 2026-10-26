@@ -29,6 +29,8 @@
  *   storefile PATH               a saved project from a file (tests/host/proj-*.bin)
  *   store30s                     save it as step 2's test builds did (zzo, zzp: format 30, the LFOs' Shape, Sine
  *                                or Wander, in the Wave's slots, no layout B mark)
+ *   store31                      save it as the variety plan's step 3 did (format 31: Stabs 0..100, Hits, the
+ *                                Densities, the Tones, the noise's Decay, the echo's Tone and Attack as they were)
  *   store30 [MIXER]              save it as the variety plan's step 2 did (format 30: Motion and the Mixer in their
  *                                old meaning; MIXER the playing piece's Mixer)
  *   store29                      save it as the variety plan's step 1 did (format 29: no Drift, no LFO Trims, no
@@ -552,6 +554,20 @@ static int expect(const char *what, const char *val)
                     printf("  too wide: %s\n", z->help), got++;
             }
     }
+    else if (!strcmp(what, "zonexs")) {           /* (format 32) the zones' sentences wider than 228 px in FONT_XS, on one
+                                                   * line (0: all fit); the names wider than the big ring's side, 70 px */
+        int v, k;
+        got = 0;
+        for (v = 0; v < NKNOB_ZONES; v++)
+            for (k = 0; k < KNOB_ZONES[v].n; k++) {
+                const zone_t *z = &KNOB_ZONES[v].z[k];
+                char zt[16];
+                caps(zt, z->name, sizeof zt);
+                if (text_w(&FONT_XS, z->help) > 228 || (z->help0 && text_w(&FONT_XS, z->help0) > 228) ||
+                    text_w(&FONT_XS, zt) > 70)
+                    printf("  too wide: %s (%d px), %s\n", z->help, (int)text_w(&FONT_XS, z->help), zt), got++;
+            }
+    }
     else if (!strcmp(what, "nev"))                /* the noise's events that show, so far */
         got = (int)en_nev_w;
     else if (!strcmp(what, "blits")) {           /* the screen's draws since the last ask */
@@ -700,6 +716,69 @@ static void motion_before31(void)
     proj.par[P_MOTION] = proj.slot[proj.piece].par[P_MOTION];
 }
 
+/* (format 32, the variety plan's step 4) the knobs rescaled in 32 as they were before it: an older format's store
+ * writes them in their old meaning, a piece at today's recipe as that build's recipe had it (known by it on the
+ * upgrade, as on a device), another the value that sounded as it does now (en_zones31 the way back) */
+static int zb_clamp(int v, int lo, int hi) { return v < lo ? lo : v > hi ? hi : v; }
+static void zones_back(int16_t *p, const int16_t *rec, int i)
+{
+    static const int16_t STB[NPIECES] = {30, 5, 25, 5, 30, 20, 25, 5}, HIT[NPIECES] = {10, 40, 45, 42, 55, 35, 38, 35},
+                         BNT[NPIECES] = {90, 100, 90, 100, 85, 90, 90, 100}, NGR[NPIECES] = {56, 44, 63, 44, 56, 38, 19, 69},
+                         NCL[NPIECES] = {0, -5, 5, -10, 0, 0, -10, 5};
+    static const uint16_t GR[5] = {0x0001u, 0x4444u, 0x0909u, 0x4949u, 0x0481u};
+    static const uint8_t GP[5] = {0, 1, 2, 4, 3};
+    static const float TONE[5] = {0.0f, -0.2f, 0.3f, -0.3f, 0.15f}, DEC[5] = {0.0f, 0.6f, 0.0f, 0.5f, 0.2f},
+                       SPAN[7] = {9.0f, 9.0f, 8.966f, 1.585f, 9.0f, 9.0f, 9.0f};
+    const int n = __builtin_popcount(GR[GP[(unsigned)p[P_GROOVE] < 5u ? p[P_GROOVE] : 0]]);
+    const unsigned c = (unsigned)p[P_NCHAR] < 5u ? (unsigned)p[P_NCHAR] : 0u;
+    int k;
+    p[P_STABS] = p[P_STABS] == rec[P_STABS] ? STB[i] : (int16_t)((zb_clamp(p[P_STABS], 1, 6) - 1) * 20);
+    if (p[P_HITS] == rec[P_HITS])
+        p[P_HITS] = HIT[i];
+    if (p[P_BNOTES] == rec[P_BNOTES]) {
+        p[P_BNOTES] = BNT[i];
+    } else if (n > 1) {
+        const float t = 1.0f + (float)(n - 1) * (float)p[P_BNOTES] * 0.01f;
+        k = (int)t + (t > (float)(int)t + 0.004f ? 1 : 0);
+        p[P_BNOTES] = (int16_t)zb_clamp((k * 100 + n / 2) / n, 0, 100);
+    }
+    if (p[P_NGRAIN] == rec[P_NGRAIN])
+        p[P_NGRAIN] = NGR[i];
+    {   /* (the Tones: base + t, from the room either side) */
+        for (k = 0; k < 2; k++) {
+            const int tp = k ? P_PTON : P_HTONE, b = zb_clamp(p[k ? P_PTONE : P_HATS], 0, 100);
+            p[tp] = (int16_t)zb_clamp((int)(en_tone_at(b, p[tp]) + 0.5f) - b, -50, 50);
+        }
+    }
+    if (p[P_ETONE] > 50)
+        p[P_ETONE] = (int16_t)(50 + (int)((float)(p[P_ETONE] - 50) * (0.026439f / 0.04f) + 0.5f));
+    if (p[P_NCOL] == rec[P_NCOL]) {
+        p[P_NCOL] = NCL[i];
+    } else {
+        const float o = TONE[c], ta = (float)p[P_NCOL] * 0.02f, nc = o + ta * (ta > 0.0f ? 1.0f - o : 1.0f + o);
+        p[P_NCOL] = (int16_t)zb_clamp((int)((nc - o) * 50.0f + (nc >= o ? 0.501f : -0.501f)), -50, 50);
+    }
+    if (p[P_NTUNE] > 50 && DEC[c] > 0.0f) {
+        const float o = 0.3f * DEC[c], x = (float)p[P_NTUNE] * 0.01f, d = o + 0.5f + (x - 0.5f) * (1.0f - 2.0f * o);
+        p[P_NTUNE] = (int16_t)zb_clamp((int)((d - o) * 100.0f + 0.5f), 0, 100);
+    }
+    p[P_CATT] = (int16_t)zb_clamp((int)((float)p[P_CATT] * SPAN[(unsigned)p[P_CVOICE] < 7u ? p[P_CVOICE] : 0] / 9.0f + 0.5f), 0, 100);
+    if (n == 1 && p[P_BLEN] > 0)
+        p[P_BLEN] = (int16_t)(int)((float)p[P_BLEN] * 0.075f + 0.5f);
+}
+static void zones_before32(void)
+{
+    int16_t rec[P_NPARAMS];
+    uint16_t pool;
+    int i;
+    for (i = 0; i < NPIECES; i++) {
+        en_piece(i, rec, &pool);
+        zones_back(proj.slot[i].par, rec, i);
+    }
+    for (i = 0; i < P_NPARAMS; i++)
+        proj.par[i] = proj.slot[proj.piece].par[i];
+}
+
 int main(int argc, char **argv)
 {
     FILE *sc;
@@ -739,7 +818,9 @@ int main(int argc, char **argv)
                                                   * recipes had it then, where it's today's */
             keep();
             st_keep = proj;
-            motion_before31();
+            zones_before32();                    /* (format 32: the rescaled knobs, in their old meaning) */
+            if (strcmp(cmd, "store31"))
+                motion_before31();
         }
         if (!strcmp(cmd, "wait"))
             run_ms((uint32_t)atoi(a));
@@ -973,6 +1054,14 @@ int main(int argc, char **argv)
                 o.slot[i].par[P_CLWAVE] = (int16_t)(o.slot[i].par[P_CLWAVE] ? 0 : 4);
                 o.slot[i].par[P_NLWAVE] = (int16_t)(o.slot[i].par[P_NLWAVE] ? 0 : 4);
             }
+            plat_store_save(OBJ_PROJ, &o, sizeof o);
+        } else if (!strcmp(cmd, "store31")) {    /* the project as the variety plan's step 3 saved it (31: today's
+                                                  * layout, the knobs with dead steps in their old meaning) */
+            static project_t o;
+            keep();
+            o = proj;
+            o.format = 31u;
+            o.rsv[0] = PROJ_WAVE_MARK;
             plat_store_save(OBJ_PROJ, &o, sizeof o);
         } else if (!strcmp(cmd, "store30")) {    /* store30 [MIXER]: the project as the variety plan's step 2 saved it
                                                   * (30: today's layout, Motion's old meaning, the Mixer read; MIXER the
