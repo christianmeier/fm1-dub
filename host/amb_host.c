@@ -552,6 +552,20 @@ static int expect(const char *what, const char *val)
                     printf("  too wide: %s\n", z->help), got++;
             }
     }
+    else if (!strcmp(what, "zonexs")) {           /* (format 32) the zones' sentences wider than 228 px in FONT_XS, on one
+                                                   * line (0: all fit); the names wider than the big ring's side, 70 px */
+        int v, k;
+        got = 0;
+        for (v = 0; v < NKNOB_ZONES; v++)
+            for (k = 0; k < KNOB_ZONES[v].n; k++) {
+                const zone_t *z = &KNOB_ZONES[v].z[k];
+                char zt[16];
+                caps(zt, z->name, sizeof zt);
+                if (text_w(&FONT_XS, z->help) > 228 || (z->help0 && text_w(&FONT_XS, z->help0) > 228) ||
+                    text_w(&FONT_XS, zt) > 70)
+                    printf("  too wide: %s (%d px), %s\n", z->help, (int)text_w(&FONT_XS, z->help), zt), got++;
+            }
+    }
     else if (!strcmp(what, "nev"))                /* the noise's events that show, so far */
         got = (int)en_nev_w;
     else if (!strcmp(what, "blits")) {           /* the screen's draws since the last ask */

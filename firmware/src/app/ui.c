@@ -2215,7 +2215,9 @@ static void arc_mark(int32_t cx, int32_t cy, int32_t r, float v, uint16_t col) {
 /* (format 31, the variety plan's step 3) a knob's zones: a continuous knob whose range moves something all the way
  * (no dead zone), each zone where a new kind of event joins (decision 6). Each zone: where it begins (the knob's
  * value), its name (under the big ring's value, round the ring, the reader's), its sentence (the help line while it's
- * turned). Motion's first; the others (Hits, Energy, ...) theirs in step 4 */
+ * turned). Motion's first; (format 32, step 4) Hits' and the bass's Density's. Every other knob has none: continuous
+ * (0..100 or centred, every step moving), or a selector (its named or counted values: Stabs, Groove, Kick, Change, ...);
+ * Energy, Vary, Drift and the Densities of the pings and the noise continuous, no event joining at a threshold */
 typedef struct {
     int16_t at;
     const char *name, *help, *help0;             /* (help0: the sentence at its first value, if that's another: 0) */
@@ -2225,6 +2227,21 @@ static const zone_t MOTION_ZONES[] = {
     {40, "Sections", "Thin and Groove phrases join, rarely to often", 0},
     {70, "Breaks", "Breaks join: the kick and the bass out a phrase", 0},
 };
+/* (format 32, the variety plan's step 4) the Drums page's Hits: the shaker's steps growing all the way (each its last
+ * step faded in), the open hat joining at 15 (the offbeats of one and three), on every offbeat from 40, the rim on two
+ * and four from 70 (hats_publish) */
+static const zone_t HITS_ZONES[] = {
+    {0, "Shaker", "The shaker alone, a step more as it turns", "No hats at all"},
+    {15, "Open hat", "The open hat joins on one and three's offbeat", 0},
+    {40, "Offbeats", "The open hat on every offbeat", 0},
+    {70, "Rim", "The rim joins on two and four: the dub snare", 0},
+};
+/* the Bass page's Density: from the bar's first note alone to the whole groove (the last note faded in); from 30 a busy
+ * fourth or eighth bar plays the whole groove and a pickup into the next (ph_bar) */
+static const zone_t BNOTES_ZONES[] = {
+    {0, "Sparse", "The groove's notes join one by one", "The bar's first note alone"},
+    {30, "Pickups", "Busy bars add a pickup into the next", 0},
+};
 static const char *zone_help(const zone_t *z, int v) { return z->help0 && v == z->at ? z->help0 : z->help; }
 static const struct {
     uint16_t k;
@@ -2232,6 +2249,8 @@ static const struct {
     const zone_t *z;
 } KNOB_ZONES[] = {
     {P_MOTION, 3, MOTION_ZONES},
+    {P_HITS, 4, HITS_ZONES},
+    {P_BNOTES, 2, BNOTES_ZONES},
 };
 #define NKNOB_ZONES ((int)(sizeof KNOB_ZONES / sizeof KNOB_ZONES[0]))
 static int knob_zones(int k, const zone_t **z)   /* its zones, how many (0: none) */

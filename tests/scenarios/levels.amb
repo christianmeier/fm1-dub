@@ -62,7 +62,7 @@ wait 300
 # Density and Level
 tap ENV
 wait 300
-said Chord page, voice Saws: Density 30, Throws 70, Change 64 bars, Vary 0
+said Chord page, voice Saws: Density 3, Throws 70, Change 64 bars, Vary 0
 shot chord_page.png
 spin K2 10
 wait 300
@@ -103,12 +103,18 @@ expect par21 1
 spin K1 -1
 tap LFO
 wait 300
-said Bass page, voice Sub: Groove Offbeat, Vary 0, Density 90, Fifth 20
+said Bass page, voice Sub: Groove Offbeat, Vary 0, Density 100, Pickups, Fifth 20
 shot bass_page.png
 spin K3 -40
 wait 300
-said Density 50
-expect par113 50
+said Density 60, Pickups
+expect par113 60
+# (format 32, the variety plan's step 4) its zones: Sparse under 30, the busy bars' pickups from 30
+spin K3 -31
+wait 300
+said Density 29, Sparse
+spin K3 31
+wait 300
 spin K1 3
 wait 300
 said Groove Roller
@@ -130,7 +136,7 @@ expect par136 3
 spin K2 -5
 tap SEQ
 wait 300
-said Drums page, kit Tight: Kick Four, Hits 10, Vary 0
+said Drums page, kit Tight: Kick Four, Hits 8, Shaker, Vary 0
 shot drums_page.png
 spin K1 1
 wait 300
@@ -143,6 +149,23 @@ wait 300
 said Vary -8
 expect par137 -8
 spin K3 10
+# (format 32, the variety plan's step 4) Hits' zones: the shaker alone to 14, the open hat from 15, on every offbeat
+# from 40, the rim from 70
+spin K2 6
+wait 300
+said Hits 14, Shaker
+spin K2 1
+wait 300
+said Hits 15, Open hat
+spin K2 25
+wait 300
+said Hits 40, Offbeats
+spin K2 30
+wait 300
+said Hits 70, Rim
+spin K2 -62
+wait 300
+expect par7 8
 # (1.4.0) the hats' own page: SEQ a third time (the Kick page the second)
 tap SEQ
 wait 300
@@ -381,7 +404,8 @@ expect mutes 0
 expect par0 90
 tap HOME
 # a 1.3.0 ladder project (format 12): the groove a ladder step, now a pattern and Notes (Basic's, Thin sync: Sync
-# at 65); the other pieces' full steps their patterns at 100; Throws, Ghost, Hats level from the recipes
+# at 65, two of its three notes: format 32's 50, the first note and one more); the other pieces' full steps their
+# patterns at 100; Throws, Ghost, Hats level from the recipes
 turn PRESET 2
 wait 300
 expect par24 2
@@ -390,10 +414,10 @@ wait 300
 store12 5
 reboot
 wait 1000
-expect format 31
+expect format 32
 expect piece 0
 expect par24 3
-expect par113 65
+expect par113 50
 expect par111 70
 expect par112 70
 expect par114 40
@@ -405,7 +429,7 @@ expect par113 100
 turn PRESET -2
 wait 300
 expect par24 3
-expect par113 65
+expect par113 50
 # a 1.3.0 pages project (format 13): everything kept, the chord's Ghost .. the shimmer's Tune from the recipes
 # (the Cloud, 1.4.0: on the Echo page, FX again)
 tap FX
@@ -418,7 +442,7 @@ expect par32 40
 store13
 reboot
 wait 1000
-expect format 31
+expect format 32
 expect par32 40
 expect par115 45
 expect par116 100
