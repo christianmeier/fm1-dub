@@ -83,6 +83,111 @@ wait 500
 said_none THROW
 key b5 up
 wait 200
+# (the user's) black 8-11, the dub sirens: Wail (A#4), Whoop (C#5), Hi-lo (D#5), Laser (F#5); F#4 and G#4 nothing (dark).
+# A tap: a short one (about a bar), played to its end; held past a third of a second: the slow one, looping till let
+# go (then it fades). One voice: a new one takes over. Lit, dark while one sounds
+expect litkey13 0
+expect litkey15 0
+expect litkey17 1
+expect litkey20 1
+expect litkey22 1
+expect litkey25 1
+expect sirenon 0
+tapkey b7
+wait 200
+said WAIL
+said_none HELD
+expect sirenon 1
+expect litkey17 0
+expect litkey20 1
+wait 3000
+expect sirenon 0
+expect litkey17 1
+tapkey b8
+wait 200
+said WHOOP
+said_none HELD
+expect sirenon 2
+expect litkey20 0
+wait 3000
+expect sirenon 0
+tapkey b9
+wait 200
+said HI-LO
+expect sirenon 3
+wait 1000
+expect sirenon 3
+wait 1500
+expect sirenon 0
+tapkey b10
+wait 200
+said LASER
+expect sirenon 4
+expect litkey25 0
+wait 2000
+expect sirenon 0
+expect litkey25 1
+# held: the slow one, on past 4 bars, gone once let go (its fade ~150 ms)
+key b7 down
+wait 500
+said WAIL HELD
+expect sirenon 1
+wait 9000
+expect sirenon 1
+expect litkey17 0
+key b7 up
+wait 400
+expect sirenon 0
+expect litkey17 1
+key b8 down
+wait 500
+said WHOOP HELD
+wait 9000
+expect sirenon 2
+key b8 up
+wait 400
+expect sirenon 0
+key b10 down
+wait 500
+said LASER HELD
+wait 9000
+expect sirenon 4
+key b10 up
+wait 400
+expect sirenon 0
+# a new one takes over: Hi-lo held, a Laser tapped over it (Hi-lo's release then leaves the Laser be)
+key b9 down
+wait 500
+said HI-LO HELD
+expect sirenon 3
+tapkey b10
+wait 200
+said LASER
+expect sirenon 4
+expect litkey22 1
+expect litkey25 0
+key b9 up
+wait 200
+expect sirenon 4
+wait 1800
+expect sirenon 0
+# leaving the page (a page's button) lets a held one go
+key b9 down
+wait 500
+said HI-LO HELD
+tap HOME
+wait 400
+said ARRANGEMENT OFF
+expect sirenon 0
+key b9 up
+wait 200
+said_none ADDED
+said_none REMOVED
+expect pool 0x6AD
+tap SEL
+wait 200
+said ARRANGEMENT ON
+expect view 17
 # white 6: the noise, a tap a mute (its level kept), as the others
 tapkey w5
 wait 200
