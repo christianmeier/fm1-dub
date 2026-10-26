@@ -4452,6 +4452,9 @@ static void draw_main(void)
                 t[k] = w[k];
             t[k] = 0;
         }
+        /* (the user's: the lines over the moving picture hard to read; the picture kept, it's part of the load) a
+         * see-through panel under them, the picture a fifth through */
+        cv_shade(4, MAIN_SHIFT + 1, text_w(&FONT_XS, "PEAK 9.9 DRN9.9 BAS9.9 PNG9.9 DRM9.9") + 8, 72, 5, 13u, K_BG);
         cv_text(8, MAIN_SHIFT + 4, &FONT_XS, "CLOCK", K_DIM);
         cv_text(48, MAIN_SHIFT + 4, &FONT_XS, t, (m ? m >= 350u : stock) ? K_PAD : K_CLAP);
         k = 0;
@@ -4461,8 +4464,8 @@ static void draw_main(void)
             t[k++] = ' ';
         }
         t[k - 1] = 0;
-        cv_text(8, MAIN_SHIFT + 18, &FONT_XS, t, mix(K_BG, K_DIM, 10));
-        cv_text(8, MAIN_SHIFT + 32, &FONT_XS, "BUILD " EN_BUILD, mix(K_BG, K_DIM, 10));   /* (which build runs) */
+        cv_text(8, MAIN_SHIFT + 18, &FONT_XS, t, mix(K_BG, K_DIM, 12));
+        cv_text(8, MAIN_SHIFT + 32, &FONT_XS, "BUILD " EN_BUILD, mix(K_BG, K_DIM, 12));   /* (which build runs) */
         {   /* (1.4.0, the FM-1's peaks) the audio's time by stage, in ms: the heaviest block of the last ~2 s and the
              * window's mean, each its total and its four biggest stages */
             static const char *const SN[PLAT_NPROF] = {"DRN", "CTL", "FAD", "STB", "BAS", "PNG", "WID", "DRM", "NOI",
@@ -4502,7 +4505,7 @@ static void draw_main(void)
                         break;
                 }
                 t[k ? k - 1 : 0] = 0;
-                cv_text(8, MAIN_SHIFT + 46 + 14 * (int32_t)row, &FONT_XS, t, mix(K_BG, K_DIM, 12));
+                cv_text(8, MAIN_SHIFT + 46 + 14 * (int32_t)row, &FONT_XS, t, K_DIM);
             }
         }
     }
