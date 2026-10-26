@@ -519,6 +519,8 @@ static int expect(const char *what, const char *val)
     }
     else if (!strncmp(what, "litkey", 6))         /* litkeyN: key N (0..26) lit */
         got = (int)(lit_keys >> (atoi(what + 6) % 27) & 1u);
+    else if (!strcmp(what, "sirenon"))            /* (1.4.0) the dub siren sounding (its gate open): EN_SIR_* + 1, 0 none */
+        got = (int)en_sir_on;
     else if (!strcmp(what, "mutes"))              /* the layers muted (EN_M_*: 1 chord .. 16 hats, 32 noise) */
         got = (int)ui.mutes;
     else if (!strcmp(what, "scopepk")) {          /* the scope's buffer, its peak (the page's layer alone, or the whole) */

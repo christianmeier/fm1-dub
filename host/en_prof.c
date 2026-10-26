@@ -3,7 +3,9 @@
  * FM-1's), several times with the same seed, each block's time the least of the runs (the host's own noise out), and
  * prints the distribution (mean, p99, p99.9, max) and what the heaviest blocks are made of (amb.c's EN_PROF stages).
  *
- *   en_prof steady PIECE SECS [RUNS] [SEED] [NAME=V ...]   the piece at its recipe (and the overrides), Endless
+ *   en_prof steady PIECE SECS [RUNS] [SEED] [NAME=V ...]   the piece at its recipe (and the overrides), Endless;
+ *                                               fx=N: the effects grid's effect N held throughout; siren=S: PERFORM's
+ *                                               dub siren S (EN_SIR_*) held throughout
  *   en_prof change FROM TO [RUNS]               FROM for 12 s, then TO as the UI sends a piece (every parameter,
  *                                               the pool, a seed, a regrow): the worst blocks around the change
  *
@@ -49,6 +51,8 @@ static void piece_send(int i)                    /* as the UI's set_piece: every
 }
 
 static int nov, ovp[32], ovv[32];               /* (steady: NAME=V overrides, after the recipe) */
+static uint32_t pr_fx;                           /* (steady: fx=N, the grid's effects held) */
+static int pr_siren = -1;                        /* (steady: siren=S, a dub siren held) */
 static int find_param(const char *name, int len)
 {
     int i, k;
@@ -76,6 +80,10 @@ static int run(int mode, int a, int b, double secs, unsigned seed, int r)   /* o
     en_seed(seed);
     en_regrow();
     en_play(1);
+    if (pr_fx)
+        en_fx(pr_fx);
+    if (pr_siren >= 0)
+        en_siren(pr_siren, EN_SIR_TAP), en_siren(pr_siren, EN_SIR_HOLD);
     if (nb > NB_MAX)
         nb = NB_MAX;
     for (i = 0; i < nb; i++) {
@@ -126,7 +134,16 @@ int main(int argc, char **argv)
             seed = (unsigned)atoi(argv[5]);
         for (i = 6; i < argc && nov < 32; i++) {
             const char *eq = strchr(argv[i], '=');
-            int p = eq ? find_param(argv[i], (int)(eq - argv[i])) : -1;
+            int p;
+            if (!strncmp(argv[i], "fx=", 3)) {
+                pr_fx |= 1u << (atoi(argv[i] + 3) & 15);
+                continue;
+            }
+            if (!strncmp(argv[i], "siren=", 6)) {
+                pr_siren = atoi(argv[i] + 6);
+                continue;
+            }
+            p = eq ? find_param(argv[i], (int)(eq - argv[i])) : -1;
             if (p < 0) {
                 fprintf(stderr, "no parameter %s\n", argv[i]);
                 return 2;

@@ -246,6 +246,16 @@ enum { EN_FX_THROW, EN_FX_TIME, EN_FX_TAPESTOP, EN_FX_SWELL, EN_FX_LOWPASS, EN_F
        EN_FX_VERB, EN_FX_CRASH, EN_FX_FREEZE, EN_FX_WASH, EN_FX_STUTTER, EN_FX_GATE, EN_FX_SIREN, EN_FX_RISER, EN_NFX };
 extern const char *const EN_FX_NAME[EN_NFX];
 void en_fx(uint32_t mask);
+/* (1.4.0, the user's) the dub sirens, the Arrangement page's four right-most black keys: one voice, tuned to the key
+ * (the root, the fifth, the octave), into the echo as the grid's Siren. Wail and Whoop follow the tempo, Hi-lo and
+ * Laser don't. EN_SIR_TAP (a press): the short one, about a bar, played to its end; EN_SIR_HOLD (still held past a
+ * third of a second): the slow one, from where it is, looping; EN_SIR_OFF (a held one let go): it fades, the echo's
+ * tails ringing. A new one takes over from the one sounding. Not saved */
+enum { EN_SIR_WAIL, EN_SIR_WHOOP, EN_SIR_HILO, EN_SIR_LASER, EN_NSIR };
+enum { EN_SIR_OFF, EN_SIR_TAP, EN_SIR_HOLD };
+void en_siren(int siren, int act);
+extern volatile uint8_t en_sir_on;              /* the siren sounding (its gate open): its number + 1; 0 none */
+extern volatile float en_sir_st, en_sir_hz;     /* its pitch now: semitones over the root as voiced, Hz (for tests) */
 /* MIDI clock in (as FoMni): ticks drive the 1/16 grid (6 a step) while they keep coming */
 enum { EN_CLK_TICK, EN_CLK_START, EN_CLK_CONTINUE, EN_CLK_STOP };
 void en_clock(int msg);

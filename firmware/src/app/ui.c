@@ -12,7 +12,8 @@
  *   SEL            the ARRANGEMENT page (PERFORM's that was): the keys mute (white 1-6; held, a part's channel
  *                  strip), solo (black 1-5: the chord, pings, bass, hats, kick; held, that part thrown into the
  *                  echo) and, held, make the dub moves (white 9-12) and four effects (white 13-16; white 7-8 the gap);
- *                  the knobs Width, Wet, Duck; the screen the parts' meters
+ *                  black 8-11 the dub sirens (a tap a short one, held a slow one); the knobs Width, Wet, Duck; the
+ *                  screen the parts' meters
  *   SELECT         the DJ filter, on every page (1.4.0; with HOME held: the tempo)   ALGORITHM the voice, the walk
  *                  (Chords), the noise's character, else the screen   PRESETS the piece
  *   FX ENV LFO GLO / HOME SAVE ARP SEQ   the pages: DUB, CHORD, BASS, SETUP / FORM, NOISE, PINGS, DRUMS (1.4.0's
@@ -362,6 +363,8 @@ static struct {
     uint32_t mutes, moves;             /* the layers muted (EN_M_*), the moves held (EN_PF_*) */
     uint8_t bkey, bkey_thr;            /* (1.4.0) a black key down in PERFORM (its index + 1), its throw begun */
     uint32_t bkey_t;                   /* when it went down */
+    uint8_t skey, skey_hold;           /* (1.4.0) a siren's key down in PERFORM (its index + 1), its hold begun */
+    uint32_t skey_t;                   /* when it went down */
     uint32_t pfx;                      /* PERFORM's effects held (EN_FX_* bits), with the grid's */
     uint32_t solo;                     /* the layers soloed (EN_M_*): the others muted while any is */
     int8_t mac[EN_NMAC];               /* the master actions (HOME's Filter, PERFORM's knobs): -50..50, never saved */
@@ -912,9 +915,14 @@ static void set_piece(int i)                    /* the piece playing kept as it 
  *   white 9-12   the global moves, held as long as the key is: the filter pushed open, pushed shut, the floor dropped
  *                (the kick and the bass out), the echo pushed (all in, feeding back)
  *   white 13-16  four of the grid's effects (REC held), held as long as the key is: Time x2, Freeze, Tape stop,
- *                Stutter (the right-most black keys kept for dub sirens, later)
+ *                Stutter
+ *   black 8-11   (the user's) the dub sirens, one voice (a new one takes over), tuned to the key, into the echo:
+ *                Wail (A#4), Whoop (C#5), Hi-lo (D#5), Laser (F#5). A tap: a short one, about a bar, played to its
+ *                end; held past a third of a second: the slow one, from where it is, looping till let go (then it
+ *                fades, the echo ringing on). Wail and Whoop follow the tempo, Hi-lo and Laser don't
  * Each key that does something is lit: a part while it sounds, a solo (blinking while on), a move, an effect, a
- * throw (dark while held). The rest do nothing (F#4 up: unlit); MIDI notes in still change the scale */
+ * throw, a siren (dark while held, or sounding). The rest do nothing (F#4, G#4: unlit); MIDI notes in still change
+ * the scale */
 #define PERF_NP 6                                /* the parts: 0..5; the moves 6..9; the effects 10..13; the blacks 14..18 */
 #define PERF_NM 4
 #define PERF_NF 4
@@ -938,6 +946,13 @@ static const char *const PERF_THRNAME[PERF_NB] = {"CHORD THROW", "PINGS THROW", 
 static const char *const PERF_THRWHAT[PERF_NB] = {"every stab into the echo", "the pings into the echo",
                                                   "the bass into the echo", "the hats into the echo",
                                                   "the kick into the echo"};
+#define PERF_NS 4                                /* (the user's) the dub sirens: black 8-11 (EN_SIR_*'s order) */
+static const uint8_t PERF_SKEY[PERF_NS] = {17, 20, 22, 25};   /* (A#4, C#5, D#5, F#5) */
+static const char *const PERF_SNAME[PERF_NS] = {"WAIL", "WHOOP", "HI-LO", "LASER"};
+static const char *const PERF_STAP[PERF_NS] = {"one bar", "four whoops, a bar", "two seconds of swaps",
+                                               "one drop"};
+static const char *const PERF_SHOLD[PERF_NS] = {"held: every 4 bars", "held: a bar each, rising",
+                                                "held: slow swaps, rising", "held: a slow fall, again"};
 static void perf_mutes(void)                     /* to the engine: the mutes, and with a solo, all but it */
 {
     en_mute(ui.mutes | (ui.solo ? 0x3Fu & ~ui.solo : 0u));
@@ -992,9 +1007,33 @@ static void perf_throw(int b, int on)            /* a black key held: its part t
         card_show(PERF_THRNAME[b], PERF_THRWHAT[b], K_FROST, 0);
     }
 }
+static void perf_siren(int s, int down)          /* a siren's key: the short one at once; held, the slow one (strip_tick);
+                                                  * let go: a held one fades, a tap's plays to its end */
+{
+    if (down) {
+        ui.skey = (uint8_t)(s + 1);
+        ui.skey_t = plat_ms();
+        ui.skey_hold = 0;
+        en_siren(s, EN_SIR_TAP);
+        say(PERF_SNAME[s], 0);
+        card_show(PERF_SNAME[s], PERF_STAP[s], K_FROST, 0);
+        return;
+    }
+    if (ui.skey != s + 1)
+        return;                                  /* (another took over: this one's already gone) */
+    if (ui.skey_hold)
+        en_siren(s, EN_SIR_OFF);
+    ui.skey = 0, ui.skey_hold = 0;
+}
 static void perf_key(uint32_t key, int down)
 {
     int i;
+    for (i = 0; i < PERF_NS && PERF_SKEY[i] != key; i++)
+        ;
+    if (i < PERF_NS) {
+        perf_siren(i, down);
+        return;
+    }
     for (i = 0; i < PERF_N && PERF_KEY[i] != key; i++)
         ;
     if (i >= PERF_N)
@@ -1074,8 +1113,16 @@ static void strip_open(void)                     /* the held key's part's strip 
     strip_part = (uint8_t)(ui.strip_key - 1);
     set_view(V_STRIP);                           /* (the reader: the page, "Chord strip page: Level 52, ...") */
 }
-static void strip_tick(void)                     /* a part's key held long enough: its strip; a black key: its throw */
+static void strip_tick(void)                     /* a part's key held long enough: its strip; a black key: its throw; a
+                                                  * siren's: its slow one */
 {
+    if (ui.skey && !ui.skey_hold && ui.perf && plat_ms() - ui.skey_t >= STRIP_HOLD) {
+        const int s = ui.skey - 1;
+        ui.skey_hold = 1;
+        en_siren(s, EN_SIR_HOLD);
+        say(PERF_SNAME[s], "HELD");
+        card_show(PERF_SNAME[s], PERF_SHOLD[s], K_FROST, 0);
+    }
     if (ui.strip_key && ui.perf && ui.view == V_PERF && plat_ms() - ui.strip_t >= STRIP_HOLD)
         strip_open();
     if (ui.bkey && !ui.bkey_thr && ui.perf && plat_ms() - ui.bkey_t >= STRIP_HOLD) {
@@ -1101,6 +1148,11 @@ static void perf_set(int on)                     /* on: the mixer on the knobs; 
         }
         ui.strip_key = 0;
         ui.bkey = 0, ui.bkey_thr = 0;
+        if (ui.skey) {                           /* (a siren held: let go, it fades) */
+            if (ui.skey_hold)
+                en_siren(ui.skey - 1, EN_SIR_OFF);
+            ui.skey = 0, ui.skey_hold = 0;
+        }
         if (ui.view == V_PERF || ui.view == V_STRIP)
             set_view(ui.perf_from);
     }
@@ -5057,6 +5109,9 @@ static void leds(void)
         for (i = 0; i < PERF_NB; i++)            /* (a throw: dark while held; a solo: blinking) */
             if (!(ui.moves & PERF_BTHR[i]) && (!(ui.solo >> PERF_BPART[i] & 1u) || blink))
                 k |= 1u << PERF_KEY[PERF_B0 + i];
+        for (i = 0; i < PERF_NS; i++)            /* (a siren: dark while it sounds) */
+            if (en_sir_on != i + 1)
+                k |= 1u << PERF_SKEY[i];
 
     } else if (proj.leds) {
         for (i = 0; i < NKEYS; i++)
@@ -5493,6 +5548,12 @@ static void speak_dump(void)
     }
     msg_text("SOLO", "OFF", t);
     sp_print("MSG", t);
+    for (x = 0; x < PERF_NS; x++) {
+        msg_text(PERF_SNAME[x], 0, t);
+        sp_print("MSG", t);
+        msg_text(PERF_SNAME[x], "HELD", t);
+        sp_print("MSG", t);
+    }
     for (x = 0; x < PERF_B0; x++) {
         msg_text(PERF_NAME[x], x < PERF_NP ? "OFF" : 0, t);
         sp_print("MSG", t);

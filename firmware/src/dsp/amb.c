@@ -695,7 +695,7 @@ volatile uint32_t en_prof[EN_PROF_N];
 #endif
 
 /* ------------------------------------------------------------ commands --- */
-enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_MUTE, C_PERF, C_FX, C_PINGS, C_MACRO, C_PROT, C_REWALK, C_PNUDGE, C_LOCK, C_OUTRO };
+enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_MUTE, C_PERF, C_FX, C_PINGS, C_MACRO, C_PROT, C_REWALK, C_PNUDGE, C_LOCK, C_OUTRO, C_SIREN };
 #define QN 512u                                 /* (a piece is every parameter at once: room for twice over and more) */
 _Static_assert(QN >= 2u * (P_NPARAMS + 8), "the command queue can't hold a piece's parameters twice over");
 static uint32_t q[QN];
@@ -725,6 +725,7 @@ void en_fx(uint32_t m) { post(C_FX, 0, (int)(m & 0xFFFFu)); }
 void en_macro(int i, int v) { post(C_MACRO, i, v + 50); }   /* (sent as 0..100) */
 void en_lock(int on) { post(C_LOCK, on != 0, 0); }
 void en_outro(void) { post(C_OUTRO, 0, 0); }
+void en_siren(int s, int act) { post(C_SIREN, s, act); }
 void en_prog_rotate(void) { post(C_PROT, 0, 0); }
 void en_prog_rewalk(void) { post(C_REWALK, 0, 0); }
 void en_ping_nudge(void) { post(C_PNUDGE, 0, 0); }
@@ -3905,6 +3906,32 @@ static void notes_off(void)
     en_midi_out(0xB9, 123, 0);
 }
 
+/* (1.4.0, the user's) the dub sirens (the Arrangement page's four right-most black keys): one voice, its own state.
+ * sv_x the cycle's place (Wail, Whoop, Laser), sv_z the swaps (Hi-lo), sv_y the slow drift (Hi-lo's pair rising),
+ * sv_wb the Laser's warble, sv_rest its rest on the root between falls (held); sv_st the pitch, semitones over the
+ * root as voiced, glided; sv_inc/sv_g the phase step and the gain the last chunk ended on, sv_inc1/sv_g1 this one's */
+static int8_t sv_k = -1;                         /* the siren (EN_SIR_*), -1: none (costs nothing) */
+static uint8_t sv_gate, sv_held, sv_again, sv_fresh;
+static float sv_x, sv_y, sv_z, sv_wb, sv_rest, sv_amp, sv_st, sv_ph, sv_inc, sv_inc1, sv_g, sv_g1;
+volatile uint8_t en_sir_on;
+volatile float en_sir_st, en_sir_hz;
+EN_COLD static void sir_cmd(int s, int act)      /* a tap starts one (taking over); held, the slow one; let go, it fades */
+{
+    if (act == EN_SIR_TAP && (unsigned)s < EN_NSIR) {
+        sv_fresh = sv_k < 0 || sv_amp < 0.001f;  /* (from silence: no glide in, the phase from 0) */
+        if (sv_fresh)
+            sv_amp = sv_g = 0.0f, sv_ph = 0.0f;
+        sv_k = (int8_t)s;
+        sv_gate = 1, sv_held = 0, sv_again = 0;
+        sv_x = sv_y = sv_z = sv_wb = sv_rest = 0.0f;
+    } else if (s == sv_k && sv_gate) {
+        if (act == EN_SIR_HOLD)
+            sv_held = 1;
+        else if (act == EN_SIR_OFF && sv_held)   /* (a tap's plays to its end) */
+            sv_gate = 0;
+    }
+}
+
 EN_COLD static void quiet(void)
 {
     int i;
@@ -3915,6 +3942,7 @@ EN_COLD static void quiet(void)
     st_env = st_amp = 0.0f;
     bass.env = 0.0f;
     bass.gate = 0;
+    sv_k = -1, sv_gate = 0, sv_amp = sv_g = sv_g1 = 0.0f, en_sir_on = 0;   /* (the sirens too) */
     notes_off();
 }
 
@@ -4154,6 +4182,7 @@ EN_COLD static void drain(void)
         }
         case C_LOCK: lock = (uint8_t)a; break;
         case C_OUTRO: song_outro(); break;
+        case C_SIREN: sir_cmd(a, b); break;
         case C_PNUDGE: {                         /* a nudge on the pings: one note of one loop, another */
             int l = irand(EN_NLOOP), k = loop_pick(l);
             if (k >= 0)
@@ -5240,7 +5269,116 @@ static float crash_lp, crash_att;                /* (the Crash: darker, eased in
 static float fx_vt, fx_wash, fx_cf, crash, sir_amp, sir_ph, sir_lfo, ris_amp, ris_oct, ris_s[2], ris_c[4];
 static uint32_t fx_noise = 9871u;
 
-static void fx_ctl(uint32_t n)                   /* once a chunk: the effects' easing, the filters' coefficients */
+/* the dub sirens, once a chunk: the cycle moved on, the pitch (the turning points the root, the fifth, the octave:
+ * the mode's fifth, a b5 or a #5 where it has no 5), the gain; the render glides the step and the gain over the chunk.
+ * Wail and Whoop a bar a cycle tapped, four held (step_len: the tempo, the MIDI clock's too); Hi-lo and Laser in
+ * seconds. Each its register (the root at or above: Wail and Hi-lo C4, Whoop and Laser G3), its drive (the sine's
+ * edge: Hi-lo square-ish, as the grid's), its level (near the grid's Siren: 1.3.0 put it 4 dB down) */
+static const float SIR_LO[EN_NSIR] = {60.0f, 55.0f, 60.0f, 55.0f}, SIR_DRV[EN_NSIR] = {1.3f, 2.0f, 3.0f, 1.6f},
+                   SIR_LV[EN_NSIR] = {0.09f, 0.072f, 0.072f, 0.082f};
+static void sir_ctl(uint32_t n)
+{
+    const float t = (float)n / EN_SR;
+    const int k = sv_k;
+    const float f5 = pool >> 7 & 1u ? 7.0f : pool >> 6 & 1u ? 6.0f : pool >> 8 & 1u ? 8.0f : 7.0f;
+    float st, art = 1.0f, glide = 0.008f, f, sm;
+    int r;
+    if (k == EN_SIR_WAIL || k == EN_SIR_WHOOP) { /* a bar a cycle, or four held */
+        sv_x += (float)n / ((sv_held ? 64.0f : 16.0f) * step_len);
+        if (sv_x >= 1.0f) {
+            if (sv_held)
+                sv_x -= 1.0f;
+            else
+                sv_x = 1.0f, sv_gate = 0;        /* (a tap's: to its end, on the root) */
+        }
+    }
+    if (k == EN_SIR_WAIL) {                      /* root -> fifth -> octave and back, lingering on each */
+        f = sv_x < 0.5f ? 4.0f * sv_x : 4.0f - 4.0f * sv_x;
+        r = f >= 1.0f;
+        f -= (float)r;
+        sm = f * f * (3.0f - 2.0f * f);
+        st = r ? f5 + (12.0f - f5) * sm : f5 * sm;
+    } else if (k == EN_SIR_WHOOP) {              /* four whoops a cycle (a negra (quarter) each tapped, a bar each
+                                                  * held): root -> octave, dropping back; held, each from higher: the
+                                                  * root, the root, the fifth, the octave */
+        const float q = 4.0f * sv_x;
+        int w = (int)q;
+        float b0, b1;
+        if (w > 3)
+            w = 3;
+        f = q - (float)w;
+        b0 = !sv_held || w < 2 ? 0.0f : w == 2 ? f5 : 12.0f;
+        b1 = !sv_held || w == 0 || w == 3 ? 0.0f : w == 1 ? f5 : 12.0f;
+        if (f < 0.75f) {
+            f = 1.0f - f * (1.0f / 0.75f);
+            st = b0 + 12.0f * (1.0f - f * f);
+        } else {
+            f = (f - 0.75f) * 4.0f;
+            sm = f * f * (3.0f - 2.0f * f);
+            st = b0 + 12.0f + (b1 - b0 - 12.0f) * sm;
+            art = 1.0f - 0.8f * sm;
+        }
+    } else if (k == EN_SIR_HILO) {               /* root and fifth swapped, 4 a second tapped (2 s), 1 held; held, the
+                                                  * pair rising to the fifth and the octave over 8 s and back */
+        sv_z += t * (sv_held ? 1.0f : 4.0f);
+        if (sv_held) {
+            if (sv_z >= 2.0f)
+                sv_z -= 2.0f;
+            sv_y += t * (1.0f / 16.0f);
+            if (sv_y >= 1.0f)
+                sv_y -= 1.0f;
+        } else if (sv_z >= 8.0f) {
+            sv_z = 8.0f, sv_gate = 0;            /* (the tap's: back on the root, fading) */
+        }
+        f = 0.5f - 0.5f * sine(sv_y + 0.25f);
+        st = (int)sv_z & 1 ? f5 + (12.0f - f5) * f : f5 * f;
+        glide = 0.012f;
+    } else {                                     /* Laser: two octaves down to the root, warbling ~6 Hz; tapped 1.5 s,
+                                                  * held 8 s, then half a second on the root, fading, and again */
+        if (sv_rest > 0.0f) {
+            sv_rest += t;
+            art = fm_maxf(1.0f - (sv_rest - 0.001f) * 2.0f, 0.0f);
+            if (sv_rest >= 0.5f)
+                sv_rest = 0.0f, sv_x = 0.0f, sv_again = 1;
+        } else {
+            sv_x += t * (sv_held ? 0.125f : 1.0f / 1.5f);
+            if (sv_x >= 1.0f) {
+                sv_x = 1.0f;
+                if (sv_held)
+                    sv_rest = 0.001f;
+                else
+                    sv_gate = 0;
+            }
+            if (sv_again)
+                art = fm_minf(sv_x * 40.0f, 1.0f);
+        }
+        sv_wb += t * 6.0f;
+        if (sv_wb >= 1.0f)
+            sv_wb -= 1.0f;
+        f = 1.0f - sv_x;
+        st = 24.0f * f * f + 0.6f * fm_minf(f * 6.0f, 1.0f) * sine(sv_wb);
+        if (sv_x == 0.0f && sv_again)
+            glide = 0.0f;                        /* (back up at once, under the fade) */
+    }
+    sv_amp += ((sv_gate ? 1.0f : 0.0f) - sv_amp) * fm_minf(t / (sv_gate ? 0.02f : 0.06f), 1.0f);
+    if (sv_fresh || glide <= 0.0f)
+        sv_st = st;
+    else
+        sv_st += (st - sv_st) * fm_minf(t / glide, 1.0f);
+    {
+        const float lo = SIR_LO[k], hz = mtof(lo + (float)(((int)par[P_ROOT] - (int)lo % 12 + 12) % 12) + sv_st);
+        sv_inc1 = hz * (1.0f / EN_SR);
+        if (sv_fresh)
+            sv_inc = sv_inc1, sv_fresh = 0;
+        sv_g1 = sv_amp * art * SIR_LV[k];
+        en_sir_st = sv_st, en_sir_hz = hz;
+    }
+    en_sir_on = sv_gate ? (uint8_t)(k + 1) : 0u;
+    if (!sv_gate && sv_amp < 0.0005f)
+        sv_k = -1, sv_g = sv_g1 = 0.0f;          /* (silent: nothing more until the next) */
+}
+
+static void fx_ctl(uint32_t n)                  /* once a chunk: the effects' easing, the filters' coefficients */
 {
     const float t = (float)n / EN_SR;
     uint32_t on = fxm, rise = fxm & ~fxm_was;
@@ -5292,11 +5430,31 @@ static void fx_ctl(uint32_t n)                   /* once a chunk: the effects' e
     }
     if (ris_amp > 0.0005f)
         svf_coefs(ris_c, 250.0f * fm_exp2f(ris_oct), 0.5f);
+    if (sv_k >= 0)
+        sir_ctl(n);                              /* (the dub sirens, PERFORM's) */
 }
 
-static void render_fx(uint32_t n)                /* the Siren and the Riser: two more voices, into the mix */
+static void render_fx(uint32_t n)                /* the Siren and the Riser: two more voices, into the mix; and PERFORM's
+                                                  * dub sirens, a third */
 {
     uint32_t j;
+    if (sv_k >= 0) {                             /* the sirens' voice: the step and the gain glided over the chunk, into
+                                                  * the echo as the grid's Siren */
+        const float dn = 1.0f / (float)n, drv = SIR_DRV[sv_k], di = (sv_inc1 - sv_inc) * dn, dg = (sv_g1 - sv_g) * dn;
+        float ph = sv_ph, inc = sv_inc, g = sv_g;
+        for (j = 0; j < n; j++) {
+            float x;
+            inc += di, g += dg;
+            ph += inc;
+            if (ph >= 1.0f)
+                ph -= 1.0f;
+            x = sat(sine(ph) * drv) * g;
+            mixl[j] += x;
+            mixr[j] += x;
+            esend[j] += x * 2.0f;
+        }
+        sv_ph = ph, sv_inc = sv_inc1, sv_g = sv_g1;
+    }
     if (sir_amp > 0.0005f)
         for (j = 0; j < n; j++) {               /* a square-ish tone, its pitch swung by a triangle, ~0.8 a second */
             float tri, x;
@@ -5427,7 +5585,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         if (mo)
             mpk[EN_MT_NOISE] = mt_pk(crl, crr, n);
     }
-    if (fxm || sir_amp > 0.0005f || ris_amp > 0.0005f)
+    if (fxm || sir_amp > 0.0005f || ris_amp > 0.0005f || sv_k >= 0)
         { PROF_B(p9); render_fx(n); PROF_E(9, p9); }
     eg += (1.0f - eg) * fx_wash;                 /* Wash: everything into the echo */
     epk = en_echo_pk;
