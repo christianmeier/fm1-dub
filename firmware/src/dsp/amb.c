@@ -5271,8 +5271,8 @@ static uint32_t fx_noise = 9871u;
 
 /* the dub sirens, once a chunk: the cycle moved on, the pitch (the turning points the root, the fifth, the octave:
  * the mode's fifth, a b5 or a #5 where it has no 5), the gain; the render glides the step and the gain over the chunk.
- * Wail and Whoop a bar a cycle tapped, four held (step_len: the tempo, the MIDI clock's too); Hi-lo and Laser in
- * seconds. Each its register (the root at or above: Wail and Hi-lo C4, Whoop and Laser G3), its drive (the sine's
+ * Wail and Whoop a bar a cycle tapped, four held (step_len: the tempo, the MIDI clock's too); Hi-lo too (the user's,
+ * zzz: its swaps on the beat, a groove), a corchea (8th) a swap tapped, a negra (quarter) held; Laser in seconds. Each its register (the root at or above: Wail and Hi-lo C4, Whoop and Laser G3), its drive (the sine's
  * edge: Hi-lo square-ish, as the grid's), its level (near the grid's Siren: 1.3.0 put it 4 dB down) */
 static const float SIR_LO[EN_NSIR] = {60.0f, 55.0f, 60.0f, 55.0f}, SIR_DRV[EN_NSIR] = {1.3f, 2.0f, 3.0f, 1.6f},
                    SIR_LV[EN_NSIR] = {0.09f, 0.072f, 0.072f, 0.082f};
@@ -5318,13 +5318,14 @@ static void sir_ctl(uint32_t n)
             st = b0 + 12.0f + (b1 - b0 - 12.0f) * sm;
             art = 1.0f - 0.8f * sm;
         }
-    } else if (k == EN_SIR_HILO) {               /* root and fifth swapped, 4 a second tapped (2 s), 1 held; held, the
-                                                  * pair rising to the fifth and the octave over 8 s and back */
-        sv_z += t * (sv_held ? 1.0f : 4.0f);
+    } else if (k == EN_SIR_HILO) {               /* root and fifth swapped, a corchea (8th) each tapped (eight: a bar), a
+                                                  * negra (quarter) each held; held, the pair rising to the fifth and the
+                                                  * octave over 4 bars and back over 4 */
+        sv_z += (float)n / ((sv_held ? 4.0f : 2.0f) * step_len);
         if (sv_held) {
             if (sv_z >= 2.0f)
                 sv_z -= 2.0f;
-            sv_y += t * (1.0f / 16.0f);
+            sv_y += (float)n / (128.0f * step_len);
             if (sv_y >= 1.0f)
                 sv_y -= 1.0f;
         } else if (sv_z >= 8.0f) {

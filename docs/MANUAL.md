@@ -300,13 +300,13 @@ without looking. (1.4.0: the gap was one key; the Siren's key went and the moves
   tails ring on after it. **A tap** plays a short one, about a bar, to its end even though you let go at once.
   **Held** past a third of a second, it turns into the slow one from where it is (no jump) and loops until you let
   go; then it fades over about 150 ms and the echo carries the tail. A new siren takes over from the one sounding.
-  Wail and Whoop follow the tempo; Hi-lo and Laser don't.
+  Wail, Whoop and Hi-lo follow the tempo; Laser doesn't.
 
   | Key | Siren | A tap | Held |
   |---|---|---|---|
   | A♯4 | **Wail**: a near-sine tone gliding root, fifth, octave and back, lingering on each | one rise and fall over a bar | one rise and fall every 4 bars |
   | C♯5 | **Whoop**: sweeps rising from the root to the octave, each dropping back | four whoops, one a negra (quarter) | a whoop a bar, from the root, the root, the fifth, the octave: rising to an octave higher over 4 bars |
-  | D♯5 | **Hi-lo**: the root and the fifth swapped, square-ish (the old police siren) | 2 seconds of fast swaps (4 a second) | slow swaps (1 a second), the pair rising to the fifth and the octave over 8 seconds and back |
+  | D♯5 | **Hi-lo**: the root and the fifth swapped, square-ish (the old police siren) | a bar of swaps, one a corchea (8th) | swaps a negra (quarter) each, the pair rising to the fifth and the octave over 4 bars and back over 4 |
   | F♯5 | **Laser**: a fall from two octaves up to the root, warbling (6 a second) | one 1.5-second drop | 8-second falls, half a second on the root fading, then again |
 
   The effects grid's Siren (REC held, key 15) is unchanged. Leaving the page lets a held siren go.

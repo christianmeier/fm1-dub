@@ -2622,14 +2622,16 @@ int main(void)
                 for (b = 0, sk = 0; b < npk; b++)
                     sk += fabsf(pk[b] - 12.0f - f5) < 0.1f;
                 CHECK(npk >= 8 && sk >= 2, "Whoop held: %d tops, %d of them on the fifth over the octave", npk, sk);
-                /* Hi-lo, tapped: 2 s, root and fifth swapped 4 a second; held: the pair up to the fifth and the octave */
-                n = sir_trace(EN_SIR_HILO, -1.0f, 2.5f);
-                free_gate[0][tt] = sir_gate(n);
+                /* Hi-lo, tapped: a bar, root and fifth swapped a corchea (8th) each (the tempo's, zzz); held: the pair up
+                 * to the fifth and the octave */
+                n = sir_trace(EN_SIR_HILO, -1.0f, bar + 0.5f);
+                g = sir_gate(n);
+                CHECK(fabsf(g - bar) < 0.02f, "Hi-lo tapped: %.3f s, a bar is %.3f", (double)g, (double)bar);
                 for (b = 0; b < 8; b++) {
-                    const float s = sir_st[(int)((0.25f * (float)b + 0.125f) / bt)];
+                    const float s = sir_st[(int)((bar * 0.125f * ((float)b + 0.5f)) / bt)];
                     CHECK(fabsf(s - (b & 1 ? f5 : 0.0f)) < 0.02f, "Hi-lo: swap %d on %.3f", b, (double)s);
                 }
-                n = sir_trace(EN_SIR_HILO, 20.0f, 21.0f);
+                n = sir_trace(EN_SIR_HILO, 9.0f * bar, 9.0f * bar + 1.0f);
                 mx = -99.0f, mn = 99.0f;
                 for (b = 0; b < n; b++)
                     if (sir_on[b])
@@ -2653,10 +2655,8 @@ int main(void)
                 CHECK(!bad && peak < 0.99f, "the sirens: peak %f", (double)peak);
                 (void)mn;
             }
-        for (b = 0; b < 2; b++)
-            CHECK(fabsf(free_gate[b][0] - free_gate[b][1]) < 0.01f && fabsf(free_gate[b][0] - (b ? 1.5f : 2.0f)) < 0.02f,
-                  "%s: %.3f s at 122, %.3f at 80 (free of the tempo)", b ? "Laser" : "Hi-lo", (double)free_gate[b][0],
-                  (double)free_gate[b][1]);
+        CHECK(fabsf(free_gate[1][0] - free_gate[1][1]) < 0.01f && fabsf(free_gate[1][0] - 1.5f) < 0.02f,
+              "Laser: %.3f s at 122, %.3f at 80 (free of the tempo)", (double)free_gate[1][0], (double)free_gate[1][1]);
         /* one voice: a new one takes over; a held one let go by another's key does nothing */
         fresh();
         en_play(1);
