@@ -241,22 +241,23 @@ Level is its strip's now, the noise's too.)
 A thrown stab (and any part thrown with its black key) still goes into the echo whatever its strip's Echo, and the Arrangement page's Wet
 moves everything on top. The strips are the piece's, saved with it.
 A page's button goes to its page (HOME: the Form page). The keys, from the lowest up, are the parts (a black key a
-part's solo and throw), an empty white key, the global moves, then five of the effects grid's effects.
+part's solo and throw), two empty white keys, the global moves, then four of the effects grid's effects.
 Each key that does something is lit:
 
 | Keys | Notes | A tap | Held |
 |---|---|---|---|
 | **White 1–6** | F3 G3 A3 B3 C4 D4 | mutes the chord, pings, bass, kick, hats, noise (and back) | that part's channel strip on the knobs (above) |
 | **Black 1–5** | F♯3 G♯3 A♯3 C♯4 D♯4 | solos the chord, pings, bass, hats, kick (and back) | **throws** that part into the echo while held |
-| **White 7** | E4 | the gap: dark, does nothing | |
-| **White 8–11** | F4 G4 A4 B4 | | the global moves: **Open**, **Shut**, **Drop**, **Echo** |
-| **White 12–16** | C5 D5 E5 F5 G5 | | five effects: **Time x2**, **Freeze**, **Tape stop**, **Stutter**, **Siren** |
+| **White 7–8** | E4 F4 | the gap: dark, does nothing | |
+| **White 9–12** | G4 A4 B4 C5 | | the global moves: **Open**, **Shut**, **Drop**, **Echo** |
+| **White 13–16** | D5 E5 F5 G5 | | four effects: **Time x2**, **Freeze**, **Tape stop**, **Stutter** |
 | Black 6–11 | F♯4 and up | nothing (dark) | |
 
 The first four black keys belong to the white key on their left: F♯3 the chord (F3), G♯3 the pings, A♯3 the bass,
 C♯4 the hats (C4). The kick's white key (B3) has no black key after it, so the last one, D♯4, is the kick's (1.4.0:
-it was the noise's; the noise has no solo or throw now, white 6 still mutes it). White 7 (E) is dark and does
-nothing: the gap between the parts and the moves, so you can find them without looking.
+it was the noise's; the noise has no solo or throw now, white 6 still mutes it).
+White 7 and 8 (E4, F4) are dark and do nothing: the gap between the parts and the moves, so you can find them
+without looking. (1.4.0: the gap was one key; the Siren's key went and the moves and effects moved one key up.)
 
 - **White 1–6, the chord, pings, bass, kick, hats and noise:** a tap mutes the part, another brings it
   back (the mute as you let go: held, the key is the part's channel strip, above); lit while it plays.
@@ -277,7 +278,7 @@ nothing: the gap between the parts and the moves, so you can find them without l
   **bass** goes in driven, as an overdriven aux: the echo takes nothing under about 350 Hz, so a round bass (Sub)
   would throw almost nothing; driven, its harmonics are heard. (1.4.0: the throws were nearly inaudible before:
   they went through the piece's Echo and the strip's send, the bass and the hats 10 to 25 dB under the part.)
-- **White 8–11, the global moves, held** (lit; dark while held):
+- **White 9–12, the global moves, held** (lit; dark while held):
   - **Open:** the music thins and brightens over the kick: a resonant high-pass on everything but
     the kick sweeps up to about 400 Hz, and the chords' filter opens three octaves and sings, the
     echo's band-pass and the pings brighter with it.
@@ -288,8 +289,8 @@ nothing: the gap between the parts and the moves, so you can find them without l
     press again; Drop is the move you hold for a bar or two and release on the downbeat.
   - **Echo:** the echo pushed: everything into it, feeding back more.
   - Each sweeps in over about half a second; letting go eases back (to where the Filter knob is).
-- **White 12–16, five effects, held** (lit; dark while held): **Time x2**, **Freeze**, **Tape stop**,
-  **Stutter** and **Siren**, the same as the effects grid's (REC held, below), one key each
+- **White 13–16, four effects, held** (lit; dark while held): **Time x2**, **Freeze**, **Tape stop**
+  and **Stutter**, the same as the effects grid's (REC held, below), one key each
   and nearer to hand. They play together with the grid's.
 - The other keys do nothing on the Arrangement page; MIDI notes in still change the scale.
 

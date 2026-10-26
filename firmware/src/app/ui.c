@@ -11,7 +11,7 @@
  *                  (held: on); both together, quickly: the layer muted or back (held 5 s: the update mode)
  *   SEL            the ARRANGEMENT page (PERFORM's that was): the keys mute (white 1-6; held, a part's channel
  *                  strip), solo (black 1-5: the chord, pings, bass, hats, kick; held, that part thrown into the
- *                  echo) and, held, make the dub moves (white 8-11) and five effects (white 12-16; white 7 the gap);
+ *                  echo) and, held, make the dub moves (white 9-12) and four effects (white 13-16; white 7-8 the gap);
  *                  the knobs Width, Wet, Duck; the screen the parts' meters
  *   SELECT         the DJ filter, on every page (1.4.0; with HOME held: the tempo)   ALGORITHM the voice, the walk
  *                  (Chords), the noise's character, else the screen   PRESETS the piece
@@ -907,29 +907,30 @@ static void set_piece(int i)                    /* the piece playing kept as it 
  *                soloed and back (more than one: they play together; the rest muted); held: that part thrown into
  *                the echo while held (the chord every stab thrown; the others their echo send pushed, a little more
  *                feedback), the tails left to ring
- *   white 7      none: dark, the gap
- *   white 8-11   the global moves, held as long as the key is: the filter pushed open, pushed shut, the floor dropped
+ *   white 7-8    none: dark, the gap (1.4.0, the user's: two keys, the Siren gone, the moves and the effects one
+ *                key up)
+ *   white 9-12   the global moves, held as long as the key is: the filter pushed open, pushed shut, the floor dropped
  *                (the kick and the bass out), the echo pushed (all in, feeding back)
- *   white 12-16  five of the grid's effects (REC held), held as long as the key is: Time x2, Freeze, Tape stop,
- *                Stutter, Siren
+ *   white 13-16  four of the grid's effects (REC held), held as long as the key is: Time x2, Freeze, Tape stop,
+ *                Stutter (the right-most black keys kept for dub sirens, later)
  * Each key that does something is lit: a part while it sounds, a solo (blinking while on), a move, an effect, a
  * throw (dark while held). The rest do nothing (F#4 up: unlit); MIDI notes in still change the scale */
-#define PERF_NP 6                                /* the parts: 0..5; the moves 6..9; the effects 10..14; the blacks 15..19 */
+#define PERF_NP 6                                /* the parts: 0..5; the moves 6..9; the effects 10..13; the blacks 14..18 */
 #define PERF_NM 4
-#define PERF_NF 5
+#define PERF_NF 4
 #define PERF_NB 5
 #define PERF_N (PERF_NP + PERF_NM + PERF_NF + PERF_NB)
 #define PERF_F0 (PERF_NP + PERF_NM)
 #define PERF_B0 (PERF_F0 + PERF_NF)
 static const uint8_t PERF_KEY[PERF_N] = {0, 2, 4, 6, 7, 9,           /* white 1-6: the parts */
-                                         12, 14, 16, 18,             /* white 8-11: the moves */
-                                         19, 21, 23, 24, 26,         /* white 12-16: the effects */
+                                         14, 16, 18, 19,             /* white 9-12: the moves */
+                                         21, 23, 24, 26,             /* white 13-16: the effects */
                                          1, 3, 5, 8, 10};            /* black 1-5: the parts' solos and throws */
 static const char *const PERF_NAME[PERF_N] = {"CHORD", "PINGS", "BASS", "KICK", "HATS", "NOISE", "OPEN", "SHUT", "DROP",
-                                              "ECHO", "TIME X2", "FREEZE", "TAPE STOP", "STUTTER", "SIREN", "CHORD",
+                                              "ECHO", "TIME X2", "FREEZE", "TAPE STOP", "STUTTER", "CHORD",
                                               "PINGS", "BASS", "HATS", "KICK"};
 static const uint16_t PERF_MBIT[PERF_NM] = {EN_PF_OPEN, EN_PF_CLOSE, EN_PF_KICKDROP, EN_PF_ECHO};
-static const uint8_t PERF_FX[PERF_NF] = {1, 10, 2, 12, 14};   /* (EN_FX_NAME's: Time x2, Freeze, Tape stop, Stutter, Siren) */
+static const uint8_t PERF_FX[PERF_NF] = {1, 10, 2, 12};   /* (EN_FX_NAME's: Time x2, Freeze, Tape stop, Stutter) */
 static const uint8_t PERF_BPART[PERF_NB] = {0, 1, 2, 4, 3};   /* each black key's part (EN_M_* bit; the last the kick's,
                                                   * the noise's before: the user's, zzq) */
 static const uint16_t PERF_BTHR[PERF_NB] = {EN_PF_THROW, EN_PF_PTHROW, EN_PF_BTHROW, EN_PF_HATTHROW, EN_PF_KTHROW};
@@ -4909,7 +4910,7 @@ static void leds(void)
     } else if (ui.perf) {                        /* PERFORM: the layers heard, the solos, the moves (dark while held) */
         const int blink = (plat_ms() / 250u) & 1u;
         b |= 1u << B_SEL;
-        for (i = 0; i < PERF_NP; i++)            /* (white 7, the gap: dark) */
+        for (i = 0; i < PERF_NP; i++)            /* (white 7-8, the gap: dark) */
             if (perf_sounds((int)i))
                 k |= 1u << PERF_KEY[i];
         for (i = 0; i < PERF_NM; i++)

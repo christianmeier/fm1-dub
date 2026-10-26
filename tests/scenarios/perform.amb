@@ -1,8 +1,8 @@
 # the Arrangement page (SEL; PERFORM's that was): white 1-6 mute the parts (1.4.0, the user's: the chord, the pings,
 # the bass, the kick, the hats, the noise; held, a part's strip: strips.amb); black 1-5 the chord, the pings, the bass,
 # the hats (each the part of the white key on its left) and (the user's, zzq) the kick (D#4; the noise none now): a
-# tap a solo, held a throw (that part into the echo); white 7 none (the gap), white 8-11 held the global moves (Open, Shut, Drop, Echo), white 12-16
-# held five of the grid's effects (Time x2, Freeze, Tape stop, Stutter, Siren); the knobs Width, (none), Wet, Duck (the
+# tap a solo, held a throw (that part into the echo); white 7-8 none (the gap), white 9-12 held the global moves (Open, Shut, Drop, Echo), white 13-16
+# held four of the grid's effects (Time x2, Freeze, Tape stop, Stutter); the knobs Width, (none), Wet, Duck (the
 # Mix, white 6 held, gone: the levels the strips'); SEL again stays (one page); a page's button or SELECT gives the
 # scale back
 listen
@@ -17,33 +17,38 @@ said KICK OFF
 tapkey w0
 wait 200
 said CHORD OFF
-# white 7: none (the gap between the parts and the moves; dark)
+# white 7-8: none (the gap between the parts and the moves; dark)
 tapkey w6
 wait 200
 expect mutes 9
 expect view 17
-# white 8-11: the global moves, held (Open, Shut, Drop, Echo)
-key w7 down
+tapkey w7
+wait 200
+expect mutes 9
+expect view 17
+# white 9-12: the global moves, held (Open, Shut, Drop, Echo)
+key w8 down
 wait 200
 said OPEN
 wait 1000
-key w7 up
-key w10 down
+key w8 up
+key w11 down
 wait 200
 said ECHO
 wait 1000
-key w10 up
-# white 12-16: the grid's effects, held (Time x2 .. Siren), alongside the grid's own
-key w11 down
+key w11 up
+# white 13-16: the grid's effects, held (Time x2 .. Stutter), alongside the grid's own (the Siren's key gone)
+key w12 down
 wait 200
 said TIME X2
-expect litkey19 0
-expect litkey21 1
+expect litkey21 0
+expect litkey23 1
+expect litkey19 1
 wait 800
-key w11 up
+key w12 up
 key w15 down
 wait 200
-said SIREN
+said STUTTER
 wait 800
 key w15 up
 # (a black key held: its part thrown; the chord's (F#3) every stab, the hats' (C#4) the hats, the rim, the clap (the
