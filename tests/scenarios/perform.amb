@@ -2,7 +2,7 @@
 # the bass, the kick, the hats, the noise; held, a part's strip: strips.amb); black 1-5 each the part of the white key
 # on its left (the chord, the pings, the bass, the hats, the noise; the kick none): a tap a solo, held a throw (that
 # part into the echo); white 7 none (the gap), white 8-11 held the global moves (Open, Shut, Drop, Echo), white 12-16
-# held five of the grid's effects (Time x2, Freeze, Tape stop, Stutter, Siren); the knobs Width, Mixer, Wet, Duck (the
+# held five of the grid's effects (Time x2, Freeze, Tape stop, Stutter, Siren); the knobs Width, (none), Wet, Duck (the
 # Mix, white 6 held, gone: the levels the strips'); SEL again stays (one page); a page's button or SELECT gives the
 # scale back
 listen
@@ -80,8 +80,9 @@ wait 200
 said NOISE ON
 expect mutes 9
 expect view 17
-# (1.4.0) the Arrangement page's knobs: Width (the whole mix's: the user's, Energy on the Form page alone), Mixer (the
-# dub mixer: how much the desk rides itself; Basic's 25), Wet, Duck (the Filter on SELECT only, every page's)
+# (1.4.0) the Arrangement page's knobs: Width (the whole mix's: the user's, Energy on the Form page alone), none (the
+# dub mixer's knob gone, format 30: its rides Form's Drift's, its moves the piece's), Wet, Duck (the Filter on SELECT
+# only, every page's)
 spin K1 -20
 wait 300
 said Width 20
@@ -92,11 +93,7 @@ said Width 40
 expect par119 40
 spin K2 10
 wait 300
-said Mixer 55
-expect par163 55
-spin K2 -10
-wait 300
-said Mixer 45
+expect par163 45
 expect view 17
 spin K3 27
 wait 300

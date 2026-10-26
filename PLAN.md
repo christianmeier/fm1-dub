@@ -928,6 +928,37 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
     Varys); the upgrade scenario a 28 project.
   - **To judge:** Vary's 50 and 100 against the classics and Coldest Season (still Evolve's scale: step 5 sets the
     recipes against their models); whether the drums' Hold should keep the kick through the sections too.
+  - **The user's answers (on zzn, 2026-10-26):** Vary's scale fine; the drums' Hold not covering the sections fine;
+    the clap's 3% at Hold fine; the trims keep the name Vary. Vary 0 must mean no variation at all: the throws stop
+    there (built in step 2, below).
+- **The variety plan, step 2: Drift and the LFO pages** (VARIETY-PLAN.md decisions 1, 2, 4, 9, 10; branch
+  dub-1.4-drift on dub-1.4-vary, format 30; build/design/REPORT-drift.md). **Built:**
+  - Form's KNOB 4 **Drift** (P_MOVE, 0..100, continuous): one amount for the sound moving. The chord's and the
+    noise's LFOs (their wave and their random wander, half each), the filter's slow arc and the stabs' and the
+    plate's slow wobble (sl_d: 2 x Drift to 1 at 50, 1.3 at 100), the echo's heads, the feedback's lean and the
+    second head's moves (Motion's before: Motion is the arrangement alone now), the dub mixer's slow rides (the
+    Mixer's before). The second head's moves draw from their own randomness: Drift turned leaves the music's
+    choices as they were.
+  - **The LFO pages, layout A: Trim, Rate, Shape, Target.** Trim on Drift, centred (-50..+50: x1 at 0, Still at
+    -50, x2 at +50; the step 1 trims' look, the far left marked and named). The chord's reach a(2.3 - 0.6a)
+    octaves (a = Drift x Trim, 0..2: about 1 octave at Drift 50, 1.7 at 100, 2.2 at most), the noise's a. Shape:
+    Sine, Triangle, Ramp up, Ramp down (each with the wander) or Drift (the wander alone). Target (the old
+    Destination, on ALGORITHM too) on KNOB 4 ("Target": "Destination" too wide for the cell). The trace at one
+    scale (the most either reaches), so Drift and the Trim show. The old Depth and Drift (P_CFDEC, P_CLWALK, P_NLFO,
+    P_NLWALK) unread, kept in the format.
+  - **The Mixer knob gone** from the Arrangement page (KNOB 2 empty). Its moves (out and back, swells) stay at the
+    piece's value (P_MIXER, on no knob) until Motion takes them in step 3.
+  - **The throws on Vary** (the user's, from step 1): the chance times the chord's amount (Vary + its trim) over
+    P_TVARY, the amount the piece's throws are set at (its recipe's, on no knob): none at Vary 0 or Hold, as before
+    at the recipe, up to 3x.
+  - The recipes from their old knobs by the same rule as old projects (en_move29): Drift from the slow arc's depth
+    (or the Mixer's rides where the arc was full), each Trim the reach its LFO had: Basic 41 (-2, +5), Chamber 27
+    (-25 wander, +50), Steppers 35 (+11, +21), Fog 72 (-12, -15 wander), Concrete 80 (+50, -6), Night Drive 50
+    (+12, +15), Pressure 43 (+3, -3), Haze 41 (-25 wander, -13 wander).
+  - Format 30: 29 read; every older one through it; the host's store29; the upgrade scenario a 29 project.
+  - **To judge:** the fixed half-and-half share of wave and wander (Concrete's wave smaller, its wander bigger);
+    the rides now on Drift (Fog and Concrete ride less than at Mixer 90, Chamber much less than at 55: the arc's
+    depth chose their Drift); "Target" for Destination.
 - **The header, where we are** (the user, 2026-10-25: the top-left block "too small and reads badly, but at the same
   time it clutters"; option A; prototype on branch dub-1.4-header, to judge on the FM-1): the phrase in the header,
   beside the piece's tag (the section's word, or INTRO / OUTRO, and the eight bars as larger cells, the B bars

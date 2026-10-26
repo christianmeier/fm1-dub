@@ -27,6 +27,8 @@
  *   store8                       save the project as DUB-1 1.0.0 did (format 8): reboot then reads it
  *   store10                      save it as 1.2.0 did (format 10, without the noise's five)
  *   storefile PATH               a saved project from a file (tests/host/proj-*.bin)
+ *   store29                      save it as the variety plan's step 1 did (format 29: no Drift, no LFO Trims, no
+ *                                throws' amount: the LFOs' Depth and Drift and the Mixer as they are)
  *   store28                      save it as 1.4.0's Filter did (format 28: no looseness, the Varys 0..100 on Evolve)
  *   store27                      save it as 1.4.0's dub mixer did (format 27, the strips' Low cut, 0..100)
  *   store26                      save it as 1.4.0's song structure did (format 26, without the dub mixer)
@@ -913,6 +915,22 @@ int main(int argc, char **argv)
                     lc_fold(o.slot[i].par, NPAR28);
                 else
                     vy_fold(o.slot[i].par, NPAR28);
+                o.slot[i].pool = proj.slot[i].pool;
+                memcpy(o.slot[i].pings, proj.slot[i].pings, sizeof o.slot[i].pings);
+                o.slot[i].pings_ok = proj.slot[i].pings_ok;
+                o.slot[i].screen = proj.slot[i].screen;
+            }
+            plat_store_save(OBJ_PROJ, &o, sizeof o);
+        } else if (!strcmp(cmd, "store29")) {    /* the project as the variety plan's step 1 saved it (29) */
+            static project29_t o;
+            int i;
+            keep();
+            memset(&o, 0, sizeof o);
+            o.magic = PROJ_MAGIC, o.format = 29u;
+            memcpy(o.par, proj.par, sizeof o.par);
+            o.pool = proj.pool, o.leds = proj.leds, o.piece = proj.piece, o.screen = proj.screen;
+            for (i = 0; i < NPIECES; i++) {
+                memcpy(o.slot[i].par, proj.slot[i].par, sizeof o.slot[i].par);
                 o.slot[i].pool = proj.slot[i].pool;
                 memcpy(o.slot[i].pings, proj.slot[i].pings, sizeof o.slot[i].pings);
                 o.slot[i].pings_ok = proj.slot[i].pings_ok;

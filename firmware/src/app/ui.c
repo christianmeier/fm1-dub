@@ -157,9 +157,9 @@ enum { K_LEDS = 200, K_CPU, K_NONE, K_SLOT, K_CQ, K_CX,    /* (the Chords page: 
 static const char *const LANE_NAME[EN_NDRUM] = {"Kick", "Shaker", "Open", "Rim", "Clap"};
 _Static_assert(P_NPARAMS <= K_LEDS, "the knobs' own codes must come after the parameters");
 static const uint16_t VIEW_KNOB[NVIEWS][4] = {
-    {K_ENERGY, P_VARY, P_MOTION, K_NONE},      /* (1.4.0, the user's: Energy here alone (the Arrangement page's
-                                                  * until its Width); the Filter on SELECT only; Drift the Chord page's
-                                                  * Change; the fourth free) */
+    {K_ENERGY, P_VARY, P_MOTION, P_MOVE},      /* (1.4.0, the user's: Energy here alone (the Arrangement page's
+                                                  * until its Width); the Filter on SELECT only; the old Drift the Chord
+                                                  * page's Change; format 30, the fourth Drift, how much the sound moves) */
     {P_STABS, P_CTHROW, P_DRIFT, P_CVARY},       /* (1.4.0, the user's: the chord's part: Change, how long a chord lasts
                                                   * (Drift, from the Form page), Vary; Wet to the channel strip, to come) */
     {P_DENSITY, P_PVARY, K_NONE, K_NONE},        /* (1.4.0, the user's: the layers' parts, the empty places kept: the
@@ -183,9 +183,10 @@ static const uint16_t VIEW_KNOB[NVIEWS][4] = {
     {P_BALG, P_BFRAT, P_BFB, P_BBITE},           /* (Bite on every voice, the only one on a voice not FM) */
     {K_SLOT, K_CQ, K_CX, K_PLAY},
     {K_LANE, P_DACCENT, K_LCH, P_DMODE},
-    {P_EWIDTH, P_MIXER, K_DUB, P_DUCK},          /* (Wet: an offset for playing; Duck the piece's own. 1.4.0, the
+    {P_EWIDTH, K_NONE, K_DUB, P_DUCK},           /* (Wet: an offset for playing; Duck the piece's own. 1.4.0, the
                                                   * user's: the Filter on SELECT only; KNOB 2 the dub mixer, how much
-                                                  * the desk rides itself;
+                                                  * the desk rode itself, gone (format 30: its rides Form's Drift's, its
+                                                  * moves the piece's, Motion's to come): free;
                                                   * KNOB 1 the desk's Width, the whole mix's stereo field (from the
                                                   * Echo page), Energy on the Form page alone) */
     {P_TEMPO, P_ROOT, K_MODE, P_SWING},
@@ -193,9 +194,10 @@ static const uint16_t VIEW_KNOB[NVIEWS][4] = {
                                                   * layers'; its Drift the recipes') */
     {P_EBLUR, P_ETONE, P_SIZE, P_CLOUD},         /* (1.4.0, the user's: the space together; Width to the Form page) */
     {P_NWIDTH, P_NPLATE, P_NECHO, K_NONE},       /* (the Noise page's third: SAVE again; its Change the recipes') */
-    {P_CFDEC, P_CLRATE, P_CLSHAPE, P_CLWALK},    /* (1.4.0) the LFO pages: the wave's depth, rate and shape; the
-                                                  * drift (the user's: the records' random walk, its own, always on) */
-    {P_NLFO, P_NLRATE, P_NLSHAPE, P_NLWALK},
+    {P_CLTRIM, P_CLRATE, P_CLSHAPE, P_CLDEST},   /* (1.4.0) the LFO pages: (format 30, the variety plan's step 2) its
+                                                  * Trim on Form's Drift, its rate, its shape (the last, Drift, the
+                                                  * random wander alone), where it goes (ALGORITHM's too) */
+    {P_NLTRIM, P_NLRATE, P_NLSHAPE, P_NLDEST},
     {P_HATSLVL, P_HTONE, P_HLEN, K_NONE},        /* (1.4.0) the Hats page: SEQ a third time, the Pattern after it */
     {P_NROOM, P_NCOL, P_NTUNE, P_NWIDTH},        /* (1.4.0) the Noise voice: SAVE again; its Width from the Noise space
                                                   * page (gone: its sends the noise's channel strip) */
@@ -238,7 +240,7 @@ static const char *view_name(int v)              /* a page's name (a strip's: it
     return v == V_STRIP ? SN[strip_part] : VIEW_NAME[v];
 }
 static const char *const KNOB_LABEL[NVIEWS][4] = {
-    {"Energy", "Vary", "Motion", ""},
+    {"Energy", "Vary", "Motion", "Drift"},
     {"Density", "Throws", "Change", "Vary"},
     {"Density", "Vary", "", ""},
     {"Groove", "Vary", "Density", "Fifth"},
@@ -255,13 +257,13 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Algo", "Ratio", "Feedback", "Bite"},
     {"Slot", "Chord", "Type", "Play"},
     {"Lane", "Accent", "Chance", "Play"},
-    {"Width", "Mixer", "Wet", "Duck"},
+    {"Width", "", "Wet", "Duck"},
     {"Tempo", "Root", "Mode", "Swing"},
     {"Density", "Vary", "", ""},
     {"Blur", "Tone", "Size", "Cloud"},
     {"Width", "Plate", "Echo", ""},
-    {"Depth", "Rate", "Shape", "Drift"},
-    {"Depth", "Rate", "Shape", "Drift"},
+    {"Trim", "Rate", "Shape", "Target"},
+    {"Trim", "Rate", "Shape", "Target"},
     {"Level", "Tone", "Length", ""},
     {"Air", "Tone", "Decay", "Width"},
     {"Level", "Echo", "Plate", "Filter"},   /* (1.4.0, format 28, Robert's: the Low cut a centred filter) */
@@ -272,8 +274,8 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
 /* what each knob does, a line: under the big ring in the middle while it's being turned (each fits 228 px: the
  * host's expect helpfit) */
 static const char *const KNOB_HELP[NVIEWS][4] = {
-    {"Sparse and dry, to busy and bright", "How much the loop changes: held to restless", "How often it leaves Full, and sweeps",
-     ""},
+    {"Sparse and dry, to busy and bright", "How much the loop changes: held to restless", "How often it leaves Full",
+     "How much the sound moves: still to restless"},
     {"Stabs a bar, one to six", "How often a stab is thrown to the echo", "How long a chord lasts",
      "The stabs' turns, more or less; left: Hold"},
     {"How many notes each loop holds", "The loops' changes, more or less; left: Hold", "", ""},
@@ -303,17 +305,17 @@ static const char *const KNOB_HELP[NVIEWS][4] = {
      "Endless, or the slots in a loop"},
     {"The lane you're writing", "How much quieter the other steps", "How likely the lane's steps play",
      "Auto patterns, or your own"},
-    {"The whole mix mono, to wide", "A hand on the faders and sends, by itself", "The whole music dry, or drowned",
+    {"The whole mix mono, to wide", "", "The whole music dry, or drowned",
      "How far each beat pushes the rest down"},
     {"Beats a minute", "The key's root note", "The scale: Minor, Dorian, ...", "Off sixteenths late: the whole groove"},
     {"How many hits ring, in two bars", "Its groove's changes, more or less; left: Hold", "", ""},
     {"Clean repeats, to a dissolving wash", "The repeats darker, or brighter", "How long the plate rings",
      "The reverb through the grain cloud"},
     {"The noise mono, to wide", "How much of it rings in the plate", "How much of it goes into the echo", ""},
-    {"How deep the wave", "How long the wave: 1 to 32 bars", "The wave's shape",
-     "A slow random wander, as a hand on the knob"},
-    {"How deep the noise's wave", "How long the wave: 1 to 32 bars", "The wave's shape",
-     "A slow random wander, as a hand on the knob"},
+    {"More or less than Drift; left: still", "How long the wave: 1 to 32 bars", "The wave; Drift: a wander alone",
+     "What it moves: Cutoff, Reso, Colour"},
+    {"More or less than Drift; left: still", "How long the wave: 1 to 32 bars", "The wave; Drift: a wander alone",
+     "What it moves: Filter, Tone, Air"},
     {"The hats' level against the kick", "The hats, dark to bright", "How long the hats ring", ""},
     {"The hiss under it, softer or more", "The rings darker, or brighter", "How long each hit rings on the chord",
      "The noise mono, to wide"},
@@ -3415,16 +3417,20 @@ static void draw_noise_lane(void)
 }
 
 /* (1.4.0) an LFO page: the modulation's path, as heard, the last 16 bars (en_lfo_tr), in the layer's colour, older
- * fainter, the present at the right with a dot; a faint line at the middle (the knob's own value), its reach at the
- * depth dotted above and below; the bars ticked on the middle line; the rate over it */
+ * fainter, the present at the right with a dot; a faint line at the middle (the knob's own value), its reach dotted
+ * above and below; the bars ticked on the middle line; the rate over it. (Format 30: the path at one scale, the most
+ * Drift and the Trim reach, so the wave shrinks to flat with them, or grows) */
 static void draw_lfo(int k)
 {
     const int32_t x0 = 60, w = 124, yc = 60, rr = 28;   /* (between the meters and the duck, under the page's name,
                                                   * over the lane; 127: rr pixels) */
     const uint16_t col = k ? K_NOISE : K_PAD;
     const uint32_t wn = en_lfo_w, n = wn < EN_LFO_N ? wn : EN_LFO_N, b16 = en_bars ? en_bars - 1u : 0u;
-    const int d = proj.par[k ? P_NLFO : P_CFDEC], dw = proj.par[k ? P_NLWALK : P_CLWALK],
-              reach = d > 0 || dw > 0 ? rr : 0;  /* (the trace at its own reach: the wave's and the drift's) */
+    const float am = (float)proj.par[P_MOVE] * (float)(proj.par[k ? P_NLTRIM : P_CLTRIM] + 50) * 0.0002f,
+                re = k ? am * (1.0f / 2.0f) : am * (2.3f - 0.6f * am) * (1.0f / 2.2f);   /* (as the engine's: 0..1 of
+                                                  * the most it reaches) */
+    const int dw = re > 0.0f, d = dw && proj.par[k ? P_NLSHAPE : P_CLSHAPE] != EN_LSH_DRIFT,
+              reach = (int)(re * (float)rr + 0.5f);   /* (the wave's and the wander's together) */
     int32_t x, y0 = yc, yy;
     char t[32], tt[32];
     if (d > 0) {                                 /* (what moves it: "4 BARS", "4 BARS + DRIFT", "DRIFT") */
@@ -4518,7 +4524,7 @@ static void draw_main(void)
 static int ride_on_knob(int k, float *at)        /* a strip's knob the mixer is riding: where it is now (knob units) */
 {
     int w;
-    if (ui.view != V_STRIP || !proj.par[P_MIXER])
+    if (ui.view != V_STRIP)                      /* (format 30: the rides Drift's, the moves the Mixer's) */
         return 0;
     for (w = 0; w < 3; w++)
         if (STRIP_PAR[strip_part][w] == k) {
@@ -4559,7 +4565,10 @@ static int text_has_digit(const char *t)
  * judged by the knob's ends, not its value now (the Filter's "Off" at 0 stays a unit) */
 enum { KK_RING, KK_UNIT, KK_SEL };
 static void knob_text(int k, char *b);
-static int vary_trim(int k) { return k == P_CVARY || (k >= P_PVARY && k <= P_NVARY); }   /* (format 29) */
+static int vary_trim(int k)                      /* (format 29: a layer's Vary trim; 30: an LFO's Trim) */
+{
+    return k == P_CVARY || (k >= P_PVARY && k <= P_NVARY) || k == P_CLTRIM || k == P_NLTRIM;
+}
 static int knob_kind(int k, int lo, int hi)
 {
     char a[16], z[16];

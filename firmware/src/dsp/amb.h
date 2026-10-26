@@ -154,6 +154,18 @@ enum {
      * to 100). (And P_VARY is Form's Vary, Evolve's place; P_CVARY, P_PVARY .. P_NVARY each layer's trim on it, -50..+50:
      * the layer's amount Vary plus its trim, 0..100; 0 follows Vary; -50 Hold, that layer never turns) */
     P_LOOSE,
+    /* (1.4.0, format 30, the variety plan's step 2) Drift, Form's KNOB 4, 0..100: how much the sound moves, one amount
+     * for all of it: the chord's and the noise's LFOs (each its wave and its random wander, in a fixed share), the
+     * filter's slow arc and the echo's slow moves (from Motion), the dub mixer's slow rides (from the Mixer). 0 still;
+     * 50 the classics' median (about an octave, two sweeps a minute, the levels a few dB); 100 Coldest Season.
+     * (P_DRIFT, the name's first owner, is the Chord page's Change.) Then each LFO's Trim on it, -50..+50: x1 at 0,
+     * still at -50, x2 at +50 (their old Depth and Drift, P_CFDEC, P_CLWALK, P_NLFO, P_NLWALK, kept in the format,
+     * unread: format 30's step turned them into these) */
+    P_MOVE, P_CLTRIM, P_NLTRIM,
+    /* (format 30, the user's: Vary 0 no variation at all) the stabs' throws scale with the chord's amount (Form's Vary
+     * plus its trim: none at 0 or Hold): as often as the looseness and Throws had them where the chord's amount is
+     * this, 1..100 (each piece's own, its recipe's amount; on no knob) */
+    P_TVARY,
     P_NPARAMS
 };
 typedef struct {
@@ -323,10 +335,14 @@ int en_nz_dens18(int old, int character);         /* (format 18) the noise's Den
  * each -127..127 of its depth's reach (its knob: 127 at 100, a sine or a drift alike); en_lfo_w the sixteenths
  * written so far (the next goes at en_lfo_w % EN_LFO_N) */
 #define EN_LFO_N 256
-#define EN_NLSHAPE 4                             /* (the LFOs' waves: EN_LFO_SHAPE) */
+#define EN_NLSHAPE 5                             /* (the LFOs' waves: EN_LFO_SHAPE; format 30: the last, Drift, the random
+                                                  * wander alone, no wave) */
+#define EN_LSH_DRIFT 4
 extern const char *const EN_LFO_SHAPE[EN_NLSHAPE];
-#define EN_LFO_DRIFT 6 /* (before 20, a rate: Drift; now its own knob, P_CLWALK) */                           /* (the rate's last: Drift) */
+#define EN_LFO_DRIFT 6                           /* (before 20, a rate: Drift; then its own knob, P_CLWALK; format 30,
+                                                  * a Shape) */
 extern volatile int8_t en_lfo_tr[2][EN_LFO_N];
+extern volatile uint8_t en_lfo_solo;             /* (for tests) 1: an LFO's wave alone, no wander (format 30) */
 extern volatile uint32_t en_lfo_w;
 extern volatile float en_lfo_now, en_lfo_reach;   /* (1.4.0, the user's) the chord's LFO and drift now, and how far
                                                    * they reach either way, in octaves of its Cutoff (a 5.5th of the
@@ -352,6 +368,9 @@ extern volatile uint32_t en_lfo_picks[2];        /* the drifts' new places so fa
 int en_lfo_bars(int v);                          /* a rate's bars (0: Drift) */
 float en_filter_hz(int v);                       /* a strip's Filter (-50..+50): its cutoff, Hz (0: off) */
 int en_nlfo18(int old);                          /* (format 19) a Noise LFO before 19 as 19's (its depth kept) */
+void en_move29(int16_t *par);                    /* (format 30) a piece before 30 as 30's: its LFOs' Depth and Drift and
+                                                  * its Mixer as Drift and the LFOs' Trims (and a Shape Drift where the
+                                                  * wave was off), as near as they sounded */
 extern volatile float en_nz_t60;                 /* how long a hit rings, to -60 dB, seconds */
 extern volatile float en_stab_t60;              /* (1.4.0, the chord's page) a stab's length to -60 dB, seconds */
 extern volatile uint16_t en_stab_thr;            /* this bar's stabs thrown so far (bit a step) */

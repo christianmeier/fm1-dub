@@ -13,7 +13,13 @@
 #define EN_VERSION "DEV"
 #endif
 #define PROJ_MAGIC 0x31425544u           /* "DUB1": AMB-1's projects ("ENO1") give the recipes */
-#define PROJ_FORMAT 29u                  /* 29: the variety plan's step 1: Evolve is Form's Vary (P_VARY, its
+#define PROJ_FORMAT 30u                  /* 30: the variety plan's step 2: Drift, Form's KNOB 4 (P_MOVE: the LFOs,
+                                         * the slow arc, the echo's slow moves, the mixer's rides), each LFO's Trim
+                                         * on it (P_CLTRIM, P_NLTRIM; their Depth and Drift unread), a Shape Drift;
+                                         * the throws on the chord's Vary (P_TVARY: the amount they're set at); the
+                                         * Mixer its moves alone, on no knob; from the old knobs as they sounded
+                                         * (en_move29); 8-29 read;
+                                         * 29: the variety plan's step 1: Evolve is Form's Vary (P_VARY, its
                                          * value kept), the layers' Varys trims on it (P_CVARY .. P_NVARY, -50..+50:
                                          * the old factor's amount as Vary + trim, 0 Hold), the piece's looseness
                                          * its own (P_LOOSE, from the recipes; Evolve's before); 8-28 read;

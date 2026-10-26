@@ -117,7 +117,7 @@ release GLO
 wait 300
 reboot
 wait 1000
-expect format 29
+expect format 30
 expect par158 2
 expect piece 6
 expect par160 4
