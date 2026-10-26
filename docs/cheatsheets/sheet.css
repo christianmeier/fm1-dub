@@ -69,3 +69,22 @@ svg .mono { font-family: "IBM Plex Mono", monospace; }
 svg .plain { font-family: "Barlow", sans-serif; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; column-gap: 18px; }
 .grid2 .row { grid-template-columns: 40px 1fr; padding: 3px 0; }
+
+/* (sheets 3-14) the device's screens, a row of them, each with its caption */
+.shots { display: flex; gap: 10px; align-items: flex-start; margin: 0 0 8px; }
+.shot { flex: 0 0 auto; margin: 0; }
+.shot img { display: block; width: 100%; height: auto; border-radius: 6px; image-rendering: pixelated; }
+.shot figcaption { font-size: 8.3px; color: var(--grey); margin-top: 2px; line-height: 1.3; }
+.shot figcaption b { color: var(--ink); font-weight: 600; }
+.shots .draw { flex: 1 1 0; min-width: 0; }
+/* a small table inside a card */
+table.t { width: 100%; border-collapse: collapse; margin: 3px 0 4px; }
+table.t th { font-family: "Barlow Condensed", sans-serif; font-weight: 600; font-size: 10.5px; color: var(--teal);
+             text-transform: uppercase; letter-spacing: .02em; text-align: left; padding: 2px 4px 2px 0;
+             border-bottom: 1px solid var(--line); }
+table.t td { padding: 2px 4px 2px 0; border-top: 1px solid var(--rule); vertical-align: top; }
+table.t td.m, table.t .m { font-family: "IBM Plex Mono", monospace; font-size: 9px; color: var(--ink); white-space: nowrap; }
+table.t td.nm { font-family: "Barlow Condensed", sans-serif; font-weight: 600; font-size: 11px; color: var(--teal);
+                text-transform: uppercase; letter-spacing: .02em; white-space: nowrap; }
+/* a colour swatch */
+.sw { display: inline-block; width: 9px; height: 9px; border-radius: 2px; vertical-align: -1px; margin-right: 3px; }

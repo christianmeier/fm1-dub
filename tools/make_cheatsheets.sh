@@ -2,6 +2,7 @@
 # The cheat sheets (docs/cheatsheets/*.html) printed to A4 PDFs with headless Chrome, one page each; with --png, each
 # also rendered to build/cheatsheets/<name>.png (110 dpi) to look at.
 #   tools/make_cheatsheets.sh [--png] [name ...]      (no names: every sheet)
+# A sheet with a template (build/cheatsheets/src/<name>.tpl.html) is spliced first (its drawings and screens inlined).
 set -eu
 cd "$(dirname "$0")/.."
 CHROME=${CHROME:-"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"}
@@ -15,6 +16,9 @@ fail=0
 for name in "$@"; do
     html="$PWD/$DIR/$name.html"
     pdf="$DIR/$name.pdf"
+    if [ -f "build/cheatsheets/src/$name.tpl.html" ]; then
+        python3 -I build/cheatsheets/src/splice.py "$name"
+    fi
     [ -f "$html" ] || { echo "make_cheatsheets: no $html"; exit 1; }
     # (the fonts come from Google Fonts: the virtual time lets them load before the print)
     "$CHROME" --headless --disable-gpu --no-pdf-header-footer --virtual-time-budget=10000 \
