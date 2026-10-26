@@ -241,7 +241,8 @@ Level is its strip's now, the noise's too.)
 A thrown stab (and any part thrown with its black key) still goes into the echo whatever its strip's Echo, and the Arrangement page's Wet
 moves everything on top. The strips are the piece's, saved with it.
 A page's button goes to its page (HOME: the Form page). The keys, from the lowest up, are the parts (a black key a
-part's solo and throw), two empty white keys, the global moves, then four of the effects grid's effects.
+part's solo and throw), two empty white keys, the global moves, then four of the effects grid's effects; the
+four right-most black keys are the dub sirens.
 Each key that does something is lit:
 
 | Keys | Notes | A tap | Held |
@@ -251,7 +252,8 @@ Each key that does something is lit:
 | **White 7–8** | E4 F4 | the gap: dark, does nothing | |
 | **White 9–12** | G4 A4 B4 C5 | | the global moves: **Open**, **Shut**, **Drop**, **Echo** |
 | **White 13–16** | D5 E5 F5 G5 | | four effects: **Time x2**, **Freeze**, **Tape stop**, **Stutter** |
-| Black 6–11 | F♯4 and up | nothing (dark) | |
+| Black 6–7 | F♯4 G♯4 | nothing (dark) | |
+| **Black 8–11** | A♯4 C♯5 D♯5 F♯5 | a short **dub siren**: **Wail**, **Whoop**, **Hi-lo**, **Laser** (about a bar) | the slow one, looping until you let go |
 
 The first four black keys belong to the white key on their left: F♯3 the chord (F3), G♯3 the pings, A♯3 the bass,
 C♯4 the hats (C4). The kick's white key (B3) has no black key after it, so the last one, D♯4, is the kick's (1.4.0:
@@ -292,7 +294,23 @@ without looking. (1.4.0: the gap was one key; the Siren's key went and the moves
 - **White 13–16, four effects, held** (lit; dark while held): **Time x2**, **Freeze**, **Tape stop**
   and **Stutter**, the same as the effects grid's (REC held, below), one key each
   and nearer to hand. They play together with the grid's.
-- The other keys do nothing on the Arrangement page; MIDI notes in still change the scale.
+- **Black 8–11, the dub sirens** (lit; dark while one sounds). One siren voice, tuned to the piece's key: its
+  turning points are the root, the fifth and the octave (the mode's fifth: a flat fifth in Iwato), and it slides
+  between them. It goes into the echo as the grid's Siren does (at the piece's Echo), at about its level, so its
+  tails ring on after it. **A tap** plays a short one, about a bar, to its end even though you let go at once.
+  **Held** past a third of a second, it turns into the slow one from where it is (no jump) and loops until you let
+  go; then it fades over about 150 ms and the echo carries the tail. A new siren takes over from the one sounding.
+  Wail and Whoop follow the tempo; Hi-lo and Laser don't.
+
+  | Key | Siren | A tap | Held |
+  |---|---|---|---|
+  | A♯4 | **Wail**: a near-sine tone gliding root, fifth, octave and back, lingering on each | one rise and fall over a bar | one rise and fall every 4 bars |
+  | C♯5 | **Whoop**: sweeps rising from the root to the octave, each dropping back | four whoops, one a negra (quarter) | a whoop a bar, from the root, the root, the fifth, the octave: rising to an octave higher over 4 bars |
+  | D♯5 | **Hi-lo**: the root and the fifth swapped, square-ish (the old police siren) | 2 seconds of fast swaps (4 a second) | slow swaps (1 a second), the pair rising to the fifth and the octave over 8 seconds and back |
+  | F♯5 | **Laser**: a fall from two octaves up to the root, warbling (6 a second) | one 1.5-second drop | 8-second falls, half a second on the root fading, then again |
+
+  The effects grid's Siren (REC held, key 15) is unchanged. Leaving the page lets a held siren go.
+- The other keys (F♯4, G♯4) do nothing on the Arrangement page; MIDI notes in still change the scale.
 
 **Lock** (SEL held for half a second, on any page; held again, off). The groove stays as it is:
 each new phrase keeps the kick's shape, the noise's groove, the drums' and the bass's phrase plan
