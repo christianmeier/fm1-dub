@@ -174,6 +174,12 @@ uint32_t plat_cpu_pct(void) { return cpu_pct; }
 uint32_t plat_xruns(void) { return 0; }
 uint32_t plat_clock_mhz(void) { return 0; }
 void plat_clock_regs(uint32_t r[3]) { r[0] = r[1] = r[2] = 0; }
+void plat_prof(uint32_t peak[PLAT_NPROF], uint32_t mean[PLAT_NPROF])
+{
+    int i;
+    for (i = 0; i < PLAT_NPROF; i++)
+        peak[i] = mean[i] = 0;
+}
 uint32_t plat_cpu_peak(void) { return cpu_pct; }
 int32_t plat_battery(void) { return getenv("AMB_BATT") ? atoi(getenv("AMB_BATT")) : -1; }   /* (to see it drawn) */
 int plat_usb_power(void) { return getenv("AMB_USB") != 0; }

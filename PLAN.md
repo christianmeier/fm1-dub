@@ -1084,6 +1084,25 @@ loop held, the kick never leaving, an echo you hear, movement by hand rather tha
   the effects grid), per piece, average and peak. On the host: each render stage timed per block (a profiling build,
   en_render's blocks); on the FM-1: the same stages timed with fm1_ticks in a test build, shown on the Setup page, so
   the host's split can be checked against the device's. Then a table, and what is worth slimming first.
+- **CPU: the FM-1's peaks** (2026-10-26, the user on dub-1.4.0zzj at the stock 360 MHz, its registers read: a piece
+  change spiking the peak to 100%; Steppers over 100% in steady play, Pressure and Haze ~95% with dropouts, Night
+  Drive heavy; Basic, Chamber gentler; Fog, Concrete fine; the screen's view 74-79 on Fog, hardly a factor). Found
+  (host, host/en_prof.c: the stages block by block, the least of 3 runs): the engine only 3-10% heavier than 99fddc2
+  (the state the user called good) on every piece, mean and p99.9 alike, and its ranking not the FM-1's (Steppers
+  middling on the host): so the FM-1's own; the steady half of every block the mix loop (echo 11 ns a sample, plate 7
+  at half rate, cloud 3: run whatever the sends), the peaks where the stabs (5-11 us a block while they sound) and the
+  pings (6-11) coincide; no denormals to speak of (the engine's statics scanned: only the kick's click and the glows,
+  now flushed); a piece change every parameter and the regrow in one block (+4-7 us, ~25%: the 100%). The engine's
+  code 93 KB (62 when the RAM test was tried), its hot path ~55 KB against a 32 KB I-cache with the UI's between the
+  blocks: the likeliest cause of a ranking the host doesn't see. Built: **A** (f310743): a piece sent while playing
+  spread over a few blocks (28 commands a block, a regrow 10; only a piece's burst, a regrow in it; resting all at
+  once: renders bit for bit), its worst block back to the steady peak (host 33 -> 24 us, Fog to Steppers); the audio's
+  time by stage on the FM-1 itself (the heaviest block of each ~2 s and the mean, on the Setup page: PEAK, MEAN, the
+  total and the four biggest stages in ms); the clock from the registers ("360 MHz (stock)"); **B** (844e476, on its
+  own commit): A and the hot code in RAM (FAST 64 KB, 55,292 B in it; tick and the rest of a step's events, a
+  parameter, a piece, the walk, the start in the flash: EN_COLD). To read on the FM-1 with each: Steppers, Pressure,
+  Haze, Night Drive's CPU now/peak and !n, a piece change's peak, the Setup page's PEAK and MEAN lines
+  (build/design/REPORT-cpu.md).
 - **CPU: 1.4.0's LFO rework** (2026-10-24, the user: dropouts and clicks on Chamber and Concrete, "the CPU higher in
   general"): on the host the engine had grown 5-8% over 1.3.0's, nearly all of it the noise LFO's low-pass (two SVFs a
   sample, on in every piece since each drifts its noise), enough to take 1.3.0's peaks (80-82 on the FM-1) over.
