@@ -2613,7 +2613,9 @@ EN_COLD static void ph_bar(int pb)
         bass_pv = cnt > 1 ? fm_minf(t - (float)(cnt - 1), 1.0f) : 1.0f;
         bass_part = bass_pv < 0.996f ? ph_last : 0u;
     }
-    if (b && ph.busy && d >= 0.3f) {             /* (B, busy: the whole groove and a pickup into the next bar) */
+    if (b && ph.busy && d >= 0.2995f) {          /* (B, busy: the whole groove and a pickup into the next bar; format
+                                                  * 32: from 30 itself, the zone's start: a float's 30 x 0.01 under
+                                                  * 0.3 had it from 31) */
         bar_bass = g | 1u << 14;
         bass_part = 0u;
     } else if (b) {                               /* (B, sparse: every other of A's, the first kept) */
@@ -5037,6 +5039,8 @@ EN_COLD void en_zones31(int16_t *p, int saved)  /* (saved: the parameters the sa
             int c = (n * v + 50) / 100;
             c = c < 1 ? 1 : c;
             p[P_BNOTES] = (int16_t)(((c - 1) * 100 + (n - 1) / 2) / (n - 1));
+        } else if (v == 30) {
+            p[P_BNOTES] = 29;                    /* (Drone's: no pickups at 30 before, a float's rounding) */
         }
         v = zn_clamp(p[P_BLEN], -50, 50);        /* (and Drone's Gate right: the same gate, to the bar at +50) */
         if (n == 1 && v > 0) {

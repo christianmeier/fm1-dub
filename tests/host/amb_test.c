@@ -266,6 +266,7 @@ static int chord_root_pc(void) { return en_chord_root % 12; }
  * (mac: a master action instead, EN_MAC_*) for secs, the output hashed in a child of its own; the steps v -> v + 1
  * that changed nothing at all (bit for bit), and the first of them in *first (-999: none) */
 static void fresh(void);
+static uint32_t dz_seed = 1;                     /* (dead_steps' seed) */
 static int dead_steps(int pc, int p, int mac, int lo, int hi, float secs, int *first)
 {
     int16_t pp[P_NPARAMS];
@@ -283,17 +284,27 @@ static int dead_steps(int pc, int p, int mac, int lo, int hi, float secs, int *f
         if (pid == 0) {
             uint32_t hh = 2166136261u;
             int b, j;
+            close(fd[0]);
+            en_init();                           /* (an engine set up, if this is the first test) */
             fresh();
             en_piece(pc, pp, &pl);
             for (k = 0; k < P_NPARAMS; k++)
                 if (k != P_TUNE && k != P_MIDI)
                     en_set(k, pp[k]);
             en_pool(pl);
+            for (k = 0; k < EN_NMAC; k++)        /* (the master actions, the mutes, the moves, Lock, the effects as at
+                                                  * boot: a test before may have left one) */
+                en_macro(k, 0);
+            en_mute(0);
+            en_perf(0);
+            en_lock(0);
+            en_fx(0);
+            en_freeze(0);
             if (mac >= 0)
                 en_macro(mac, v);
             else
                 en_set(p, v);
-            en_seed(1);
+            en_seed(dz_seed);
             en_regrow();
             en_play(1);
             for (b = 0; b < (int)(secs * 44100.0f / 256.0f); b++) {
@@ -305,11 +316,11 @@ static int dead_steps(int pc, int p, int mac, int lo, int hi, float secs, int *f
                 _exit(1);
             _exit(0);
         }
+        close(fd[1]);                            /* (a child that dies: its end closed, the read returns) */
         if (read(fd[0], &h[v - lo], sizeof h[0]) != (ssize_t)sizeof h[0])
-            h[v - lo] = (uint32_t)v;
+            h[v - lo] = (uint32_t)v | 0x80000000u;
         waitpid(pid, 0, 0);
         close(fd[0]);
-        close(fd[1]);
         if (v > lo && h[v - lo] == h[v - lo - 1]) {
             if (*first == -999)
                 *first = v - 1;
@@ -354,6 +365,19 @@ int main(void)
 {
     int pcs[4], n, i;
     char name[16];
+
+    /* (format 32, the variety plan's step 4) */
+    {   /* (Drone's one note: its Density the Pickups zone alone, from 30 exactly: a busy fourth or eighth bar's
+         * pickup; four seeds, 90 s each; first, the engine as it boots) */
+        int f, n = 0, n2 = 0;
+        for (dz_seed = 1; dz_seed <= 4; dz_seed++) {
+            n += dead_steps(3, P_BNOTES, -1, 29, 30, 90.0f, &f);
+            n2 += dead_steps(3, P_BNOTES, -1, 30, 31, 90.0f, &f);
+        }
+        dz_seed = 1;
+        printf("  Drone's Density, 4 seeds: 29 -> 30 alike in %d, 30 -> 31 in %d\n", n, n2);
+        CHECK(n < 4 && n2 == 4, "Drone's pickups not from 30 (29 -> 30 alike %d, 30 -> 31 alike %d)", n, n2);
+    }
 
     /* Euclid: the classic patterns */
     CHECK(en_euclid(3, 8, 0) == pat("x..x..x."), "E(3,8) %x", en_euclid(3, 8, 0));
@@ -1163,8 +1187,8 @@ int main(void)
             {P_STABS, 30, -1, 0, 3}, {P_STABS, 77, -1, 0, 5}, {P_STABS, 0, -1, 0, 1}, {P_STABS, 100, -1, 0, 6},
             {P_HITS, 10, -1, 0, 8}, {P_HITS, 45, -1, 0, 41}, {P_HITS, 38, -1, 0, 39}, {P_HITS, 0, -1, 0, 0},
             {P_HITS, 100, -1, 0, 100},
-            {P_BNOTES, 90, P_GROOVE, 1, 100}, {P_BNOTES, 50, P_GROOVE, 1, 33}, {P_BNOTES, 30, P_GROOVE, 0, 30},
-            {P_BNOTES, 85, P_GROOVE, 4, 80},
+            {P_BNOTES, 90, P_GROOVE, 1, 100}, {P_BNOTES, 50, P_GROOVE, 1, 33}, {P_BNOTES, 30, P_GROOVE, 0, 29},
+            {P_BNOTES, 85, P_GROOVE, 4, 80}, {P_BNOTES, 60, P_GROOVE, 0, 60},
             {P_NGRAIN, 44, -1, 0, 43}, {P_NGRAIN, 56, -1, 0, 56}, {P_NGRAIN, 0, -1, 0, 0},
             {P_NCOL, -10, P_NCHAR, 1, -13}, {P_NCOL, 5, P_NCHAR, 2, 7}, {P_NCOL, 20, P_NCHAR, 0, 20},
             {P_ETONE, 70, -1, 0, 80}, {P_ETONE, 100, -1, 0, 100}, {P_ETONE, 30, -1, 0, 30},
