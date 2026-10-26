@@ -835,8 +835,20 @@ static inline float lcut_step(float x, float a, int lp, float *s1, float *s2)
 /* (1.4.0, format 24, the user's: the kick and the hats apart) sx[3] and lcut[3] the Hats strip's (the shaker, the open hat,
  * the rim, the clap); lcut[5] the Kick strip's Low cut, kick_lvl its level (x1 at 50), kick_snd its Echo and Plate
  * (absolute: the kick sent nothing before); hat_thr the hats' throw, eased (PERFORM's, EN_PF_HATTHROW) */
-static float kick_lvl = 1.0f, kick_snd[2], hat_thr, png_thr, bas_thr, nz_thr;   /* (1.4.0: the pings', the bass's,
-                                                  * the noise's throws too, as the hats') */
+static float kick_lvl = 1.0f, kick_snd[2], hat_thr, png_thr, bas_thr, kick_thr;   /* (1.4.0: the pings', the bass's,
+                                                  * the kick's throws too, as the hats'; the kick's the noise's before) */
+/* (1.4.0, the user's, zzq: the throws inaudible on the FM-1) PERFORM's six throws, each eased 0..1 (the chord's too,
+ * ch_thr, beside its stabs' own throw), go to the echo on their own bus, tsend: slammed in at the part's own level,
+ * whatever the piece's Echo and the strip's send (both scaled them to nearly nothing before); while any is held the
+ * echo's feedback is pushed up to THR_FB (the repeats stack; the loop's soft clip keeps them in) and the strikes don't
+ * duck the returns; thr_mx the most of the six, a block's */
+#define THR_FB 0.93f
+#define THR_C 3.0f                               /* (each part's into the echo, against its own level: the chord, the */
+#define THR_P 4.0f                               /* pings, the bass, the hats (the shaker, the open hat, the rim, the */
+#define THR_B 6.0f                               /* clap), the kick) */
+#define THR_H 30.0f
+#define THR_K 8.0f
+static float ch_thr, thr_mx;
 static float ec_g = 0.6f, ec_lpc = 0.68f, ec_wide = 1.0f;   /* the echo's Blur, Tone, Width (and the chord's and the
                                                              * pings': widen) */
 static int gpat(void) { return GROOVE_PAT[(unsigned)par[P_GROOVE] < NGROOVE ? par[P_GROOVE] : 0]; }   /* the pattern */
@@ -3154,8 +3166,9 @@ static inline void echoes(float in, float *el, float *er, float *xl, float *xr)
                 tape_w = 0;
             tape[tape_w] = s;
         } else {
-            float g = fm_minf(echo_fb + 0.15f * st_throw + 0.12f * perf_echo + 0.1f * dub_up + 0.08f * fm_maxf(fm_maxf(hat_thr, png_thr), fm_maxf(bas_thr, nz_thr)) + mx_fb, fb_cap);   /* (Dub:
-                                                  * past the knob; the hats' throw, a little longer, as the stabs') */
+            float g = fm_minf(echo_fb + 0.15f * st_throw + 0.12f * perf_echo + 0.1f * dub_up + mx_fb, fb_cap);   /* (Dub:
+                                                  * past the knob) */
+            g += (fm_minf(THR_FB, fb_cap) - g) * thr_mx;   /* (a throw held: up towards THR_FB, the repeats stacking) */
             tape_lp += tape_lpc * (f1 + fb_lean * st_throw * (f2 - f1) - tape_lp);   /* each time round: thinner, darker */
             tape_hp += tape_hpc * (tape_lp - tape_hp);
             fb = ec_fb(tape_lp - tape_hp);       /* (and more dissolved) */
@@ -4111,7 +4124,7 @@ EN_COLD static void drain(void)
 
 /* --------------------------------------------------------------- render --- */
 #define BLK 256
-static float mixl[BLK], mixr[BLK], rsend[BLK], esend[BLK], kickb[BLK], bassb[BLK], crl[BLK], crr[BLK];
+static float mixl[BLK], mixr[BLK], rsend[BLK], esend[BLK], tsend[BLK], kickb[BLK], bassb[BLK], crl[BLK], crr[BLK];
 static float kickr[BLK];                         /* (1.4.0: the kick before its strip's Low cut, for the rumble's ear, while
                                                   * the cut is on: the rumble the Kick page's, never cut) */
 static uint8_t kick_cut;                         /* (this block's kick went through a Low cut: kickr filled) */
@@ -4298,7 +4311,8 @@ static void render_stabs(uint32_t n)
     float s0 = st_s[0], s1 = st_s[1], s2 = st_s[2], s3 = st_s[3], env = st_env, amp = st_amp, thr = st_throw;
     float hl = st_h[0], hr = st_h[1], ll = st_lc[0], lr = st_lc[1], l2l = st_lc2[0], l2r = st_lc2[1];
     const int flp = LPF_MODE(0);
-    const float lc = lcut[0], ce = 0.8f * sx[0][0] * mx_e[0], cp = 0.35f * sx[0][1] * mx_p[0];   /* (the strip: its Filter, its sends) */
+    const float lc = lcut[0], ce = 0.8f * sx[0][0] * mx_e[0], cp = 0.35f * sx[0][1] * mx_p[0],   /* (the strip: its Filter, its sends) */
+                tc = THR_C * ch_thr;             /* (PERFORM's throw, its bus) */
     if (st_midi_left > 0 && (st_midi_left -= (int32_t)n) <= 0)
         for (i = 0; i < EN_NPAD; i++)
             midi(0x80, stab[i].midi_note, 0);
@@ -4418,6 +4432,7 @@ static void render_stabs(uint32_t n)
         mixl[j] += yl * chord_dry * (1.0f - 0.5f * thr);   /* (Ghost: the dry against the sends; a throw's, -6 dB) */
         mixr[j] += yr * chord_dry * (1.0f - 0.5f * thr);
         esend[j] += (yl + yr) * (ce + 2.5f * thr) * chord_snd;   /* (a throw whatever the strip's send) */
+        tsend[j] += (yl + yr) * tc;              /* (PERFORM's: slammed in) */
         rsend[j] += (yl + yr) * cp;
         thr *= throw_dec;
     }
@@ -4455,7 +4470,7 @@ static void render_bass(uint32_t n)
     float ph = bass.ph, env = bass.env, inc, bite = bass_bite, bl = bass_lc, bl2 = bass_lc2;
     int32_t gate = bass.gate;
     const int flp = LPF_MODE(2);
-    const float lc = lcut[2], be = 0.35f * sx[2][0] * mx_e[2] + 1.5f * bas_thr, bp = 0.04f * sx[2][1] * mx_p[2];   /* (the strip: Low cut, sends; its
+    const float lc = lcut[2], be = 0.35f * sx[2][0] * mx_e[2], bp = 0.04f * sx[2][1] * mx_p[2];   /* (the strip: Low cut, sends; its
                                                   * echo none before: 0) */
     if (env < 1e-5f && gate <= 0) {
         bass.env = 0.0f;
@@ -4509,6 +4524,13 @@ static void render_bass(uint32_t n)
     if (be > 0.0f)                               /* (its echo: none in every piece, unless turned up) */
         for (j = 0; j < n; j++)
             esend[j] += bassb[j] * be;
+    if (bas_thr > 0.0f) {                        /* (PERFORM's throw: slammed in, driven: the echo's input takes the
+                                                  * lows away, a Sub's nearly all, so the send overdriven as a desk's
+                                                  * aux, its harmonics heard) */
+        const float tb = 0.2f * THR_B * bas_thr;
+        for (j = 0; j < n; j++)
+            tsend[j] += sat(bassb[j] * 12.0f) * tb;
+    }
     bass.ph = ph;
     bass_bite = fm_flush(bite);
     bass.env = fm_flush(env);
@@ -4520,7 +4542,7 @@ static void render_bells(uint32_t n)
 {
     int i;
     const float g = bell_vol * 1.4f * fd_g[1] * mx_g[1], arate = 0.004f + 0.02f * fm_minf(btone * 2.0f, 1.0f),
-                lc = lcut[1], pp = 0.4f * sx[1][1] * mx_p[1], pe1 = 1.1f * sx[1][0] * mx_e[1] + 2.0f * png_thr;   /* (the strip: its Filter, sends) */
+                lc = lcut[1], pp = 0.4f * sx[1][1] * mx_p[1], pe1 = 1.1f * sx[1][0] * mx_e[1], pt = THR_P * png_thr;   /* (the strip: its Filter, sends) */
     const int flp = LPF_MODE(1);
     for (i = 0; i < NBELL; i++) {
         bell_t *v = &bell[i];
@@ -4550,6 +4572,7 @@ static void render_bells(uint32_t n)
             mixr[j] += x * v->gr * ping_dry;
             rsend[j] += x * pp;
             esend[j] += x * pe1;
+            tsend[j] += x * pt;
             v->drop *= 0.9993f;                  /* (Drop: ~35 ms to fall) */
             amp *= v->adec;
             att += (1.0f - att) * arate;
@@ -4568,7 +4591,7 @@ static void render_bells(uint32_t n)
 /* a hat: the metal and noise, high-passed (Chamberlin SVF, ~1.8 to 5 kHz by Hats) and low-passed (~8 kHz):
  * in the references' 2-8 kHz, not the air above (1.3.0); no pitch; into the echo (metal: the square's share,
  * at: the attack's smoothing) */
-static void render_hat(drum_t *v, uint32_t n, float g, float pl, float pr, float es, float metal, float at)
+static void render_hat(drum_t *v, uint32_t n, float g, float pl, float pr, float es, float ts, float metal, float at)
 {
     uint32_t j;
     int k;
@@ -4602,6 +4625,7 @@ static void render_hat(drum_t *v, uint32_t n, float g, float pl, float pr, float
         mixr[j] += x * pr;
         rsend[j] += x * rs;
         esend[j] += x * es;
+        tsend[j] += x * ts;
         amp *= v->adec;
         att += (1.0f - att) * at;
     }
@@ -4622,7 +4646,7 @@ static void render_drums(uint32_t n)
     /* (1.4.0, the user's: the kick and the hats apart) the Hats strip's: its Low cut, its sends' shares, the throw
      * (the hats, the rim and the clap into the echo while held, whatever their send: ht, added to each one's) */
     const float g = pulse_vol * KIT[kit].gain, fall = KIT[kit].fall, drive = KIT[kit].drive,
-                lc = lcut[3], de = sx[3][0] * mx_e[4], dp = sx[3][1] * mx_p[4], ht = hat_thr, gh = g * fd_g[4] * mx_g[4];   /* (gh: the hats' part,
+                lc = lcut[3], de = sx[3][0] * mx_e[4], dp = sx[3][1] * mx_p[4], ht = THR_H * hat_thr, gh = g * fd_g[4] * mx_g[4];   /* (gh: the hats' part,
                                                   * its fader) */
     const int flp = LPF_MODE(3), klp = LPF_MODE(5);   /* (the Filters' low-pass side: the Hats strip's, the Kick's) */
     drum_t *v = &drum[0];
@@ -4630,7 +4654,8 @@ static void render_drums(uint32_t n)
     if (v->on) {                                 /* the kick: its own bus, ducked by nothing; the Kick strip's level,
                                                   * Low cut and sends (none unless turned up) */
         float ph = v->ph, inc = v->inc, amp = v->amp, att = v->att, clk = v->clk, cl = v->x1, l1 = v->lc, l2 = v->lc2;
-        const float gk = g * kick_lvl * fd_g[3] * mx_g[3], kc = lcut[5], ke = kick_snd[0] * mx_e[3], kp = kick_snd[1] * mx_p[3];
+        const float gk = g * kick_lvl * fd_g[3] * mx_g[3], kc = lcut[5], ke = kick_snd[0] * mx_e[3], tk = THR_K * kick_thr,
+                    kp = kick_snd[1] * mx_p[3];   /* (its throw: the echo send pushed; 0 off, its sends as before) */
         kick_cut = kc > 0.0f;
         for (j = 0; j < n; j++) {
             float x;
@@ -4648,6 +4673,7 @@ static void render_drums(uint32_t n)
                 esend[j] += x * ke;
                 rsend[j] += x * kp;
             }
+            tsend[j] += x * tk;                  /* (PERFORM's throw) */
             ph += inc;
             if (ph >= 1.0f)
                 ph -= 1.0f;
@@ -4668,13 +4694,13 @@ static void render_drums(uint32_t n)
     }
     {   /* (Energy: the hats -6 dB down to +6 dB up) */
         const float hl = fm_exp2f((float)mac[EN_MAC_ENERGY] * (1.0f / 50.0f)) * hats_lvl;   /* (and Hats: +-12 dB) */
-        render_hat(&drum[1], n, gh * 0.16f * hl, 0.6f, 1.0f, 0.2f * de + 0.9f * ht, 0.6f, 0.02f);   /* shaker: a little right, soft, into the echo */
-        render_hat(&drum[2], n, gh * 0.17f * hl, 1.0f, 0.7f, 0.2f * de + 0.9f * ht, 1.0f, 0.3f);   /* open: a little left, some echo */
+        render_hat(&drum[1], n, gh * 0.16f * hl, 0.6f, 1.0f, 0.2f * de, ht, 0.6f, 0.02f);   /* shaker: a little right, soft, into the echo */
+        render_hat(&drum[2], n, gh * 0.17f * hl, 1.0f, 0.7f, 0.2f * de, ht, 1.0f, 0.3f);   /* open: a little left, some echo */
     }
     v = &drum[3];                                /* the rim: two tones (~520 Hz, ~1.7 kHz) and a click of noise */
     if (v->on) {
         float amp = v->amp, att = v->att, clk = v->clk, l1 = v->lc, l2 = v->lc2;
-        const float re = 1.2f * de + 1.8f * ht, rp = 0.5f * dp;
+        const float re = 1.2f * de, rp = 0.5f * dp;
         for (j = 0; j < n; j++) {
             float x;
             v->ph += 520.0f / EN_SR;
@@ -4692,6 +4718,7 @@ static void render_drums(uint32_t n)
             mixl[j] += x * 0.85f;
             mixr[j] += x;
             esend[j] += x * re;                  /* (mostly into the echo: a dub rim) */
+            tsend[j] += x * ht;
             rsend[j] += x * rp;
             amp *= v->adec;
             att += (1.0f - att) * 0.4f;
@@ -4707,7 +4734,7 @@ static void render_drums(uint32_t n)
     v = &drum[4];                                /* the clap: noise through a band-pass (~1.1 kHz), its envelope */
     if (v->on) {                                 /* three bursts 9 ms apart, then the tail */
         float amp = v->amp, t = v->ph, x1 = v->x1, x2 = v->x2, l1 = v->lc, l2 = v->lc2;
-        const float ke = 0.5f * de + 1.2f * ht, kp = 1.4f * dp;
+        const float ke = 0.5f * de, kp = 1.4f * dp;
         for (j = 0; j < n; j++) {
             float w, hp, bp, e, x, tb = t < 1200.0f ? (t - 400.0f * (float)(int)(t * (1.0f / 400.0f))) : 1e9f;
             noise = noise * 1664525u + 1013904223u;
@@ -4729,6 +4756,7 @@ static void render_drums(uint32_t n)
             mixr[j] += x * 0.8f;
             rsend[j] += x * kp;                  /* (into the plate, most of it) */
             esend[j] += x * ke;
+            tsend[j] += x * ht;
             if (t >= 1200.0f)
                 amp *= v->adec;
             t += 1.0f;
@@ -5007,7 +5035,7 @@ static void render_crackle(uint32_t n)
         /* (the second page: Width, Plate, Echo; PERFORM's Wet, -50..+50: the dry x2 .. x0.5, the sends x0.5 .. x2) */
         const float wv = (float)par[P_NWIDTH] * 0.02f, wa = 0.6f + 0.25f * wv, wb = 0.6f - 0.25f * wv,
                     wm = (float)mac[EN_MAC_DUB] * (1.0f / 50.0f), nw = fm_exp2f(-wm),
-                    np = (float)par[P_NPLATE] * 0.02f * fm_exp2f(wm) * mx_p[5], ne = (float)par[P_NECHO] * 0.02f * fm_exp2f(wm) * (1.0f + 3.0f * song_nthr) * mx_e[5] + 4.0f * nz_thr;
+                    np = (float)par[P_NPLATE] * 0.02f * fm_exp2f(wm) * mx_p[5], ne = (float)par[P_NECHO] * 0.02f * fm_exp2f(wm) * (1.0f + 3.0f * song_nthr) * mx_e[5];
         int ph = nz_ph, w = nz_w;
 #define CRU() (cn = cn * 1664525u + 1013904223u, (float)(cn >> 8) * (1.0f / 16777216.0f))
         for (j = 0; j < n; j++) {
@@ -5276,6 +5304,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     const float cl_in = rev_send > 0.0001f ? fm_maxf(rev_send, 0.4f) / rev_send : 0.0f;
     const float push = perf_echo;
     float eg = (echo_send + (1.0f - echo_send) * push) * ein_gain * song_wet, ca = cloud_amt * (sec == SEC_BREAK ? 1.4f : 1.0f);   /* more in a Break */
+    const float tg = ein_gain;                   /* (the throws' bus: the piece's Echo and the song's left out) */
     /* PERFORM's Open and Shut on the music, the kick left out on top: Shut a low-pass down to ~230 Hz, Open a
      * resonant high-pass up to ~400 Hz (thin and bright), both swept with perf_sw */
     const float shut = fm_maxf(-perf_sw, 0.0f), open = fm_maxf(perf_sw, 0.0f);
@@ -5286,7 +5315,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     else
         mb_s[0] = mb_s[1] = mb_s[2] = mb_s[3] = 0.0f;
     for (j = 0; j < n; j++)
-        mixl[j] = mixr[j] = rsend[j] = esend[j] = kickb[j] = bassb[j] = 0.0f;
+        mixl[j] = mixr[j] = rsend[j] = esend[j] = tsend[j] = kickb[j] = bassb[j] = 0.0f;
     {
     PROF_B(pf);
     fader_step(n);                               /* (1.4.0: the parts' faders, the song's) */
@@ -5354,12 +5383,12 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
         duck_xb *= duck_relb;
         dgb = 1.0f - fm_minf(2.0f * duck_depth, 0.9f) * duck_db;
         dlo = fm_minf(dlo, dg), dlob = fm_minf(dlob, dgb);   /* (the meters' GR) */
-        echoes(esend[j] * eg, &el, &er, &xl, &xr);
+        echoes(esend[j] * eg + tsend[j] * tg, &el, &er, &xl, &xr);
         {   /* (a strike: the returns down by up to 6 dB, back over ~150 ms; not a throw's, which rides over) */
             float ge;
             ec_dd += (ec_dk - ec_dd) * 0.05f;
             ec_dk *= 0.99985f;
-            ge = 1.0f - 0.5f * fm_minf(ec_dd, 1.0f) * (1.0f - st_throw);
+            ge = 1.0f - 0.5f * fm_minf(ec_dd, 1.0f) * (1.0f - fm_maxf(st_throw, thr_mx));
             el *= ge;
             er *= ge;
         }
@@ -5531,15 +5560,17 @@ static void control(uint32_t n)                 /* once a chunk: the slow things
         perf_echo += ((perf & EN_PF_ECHO || fxm >> EN_FX_SWELL & 1u ? 1.0f : 0.0f) - perf_echo) * fm_minf((float)n / (0.04f * EN_SR), 1.0f);
         /* (1.4.0, the user's) the hats thrown: in over ~15 ms, out over ~60 ms (the send let go, the echo's tails left
          * to ring); off, 0 exactly (the hats' sends as before, to the bit) */
-        {   /* (the moves rethink: each part's throw alike, the hats', the pings', the bass's, the noise's) */
-            static const uint32_t TB[4] = {EN_PF_HATTHROW, EN_PF_PTHROW, EN_PF_BTHROW, EN_PF_NTHROW};
-            float *const tv[4] = {&hat_thr, &png_thr, &bas_thr, &nz_thr};
+        {   /* (the moves rethink: each part's throw alike, the hats', the pings', the bass's, the kick's) */
+            static const uint32_t TB[5] = {EN_PF_HATTHROW, EN_PF_PTHROW, EN_PF_BTHROW, EN_PF_KTHROW, EN_PF_THROW};
+            float *const tv[5] = {&hat_thr, &png_thr, &bas_thr, &kick_thr, &ch_thr};
             int k;
-            for (k = 0; k < 4; k++) {
+            thr_mx = 0.0f;
+            for (k = 0; k < 5; k++) {
                 const int on = (perf & TB[k]) != 0;
                 *tv[k] += ((on ? 1.0f : 0.0f) - *tv[k]) * fm_minf((float)n / ((on ? 0.015f : 0.06f) * EN_SR), 1.0f);
                 if (!on && *tv[k] < 1e-4f)
                     *tv[k] = 0.0f;
+                thr_mx = fm_maxf(thr_mx, *tv[k]);
             }
         }
     }

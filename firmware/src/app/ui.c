@@ -10,9 +10,9 @@
  *   OCT- / OCT+    on a layer's page (Chord, Pings, Bass, Drums, Noise, and their sound pages): its level -5 / +5
  *                  (held: on); both together, quickly: the layer muted or back (held 5 s: the update mode)
  *   SEL            the ARRANGEMENT page (PERFORM's that was): the keys mute (white 1-6; held, a part's channel
- *                  strip) and solo (black 1-5) the parts, throw the hats (black 6) and, held, make the dub moves
- *                  (white 8-12; white 7 the gap); the knobs Width, Mixer (the dub mixer), Wet, Duck; the screen the
- *                  parts' meters
+ *                  strip), solo (black 1-5: the chord, pings, bass, hats, kick; held, that part thrown into the
+ *                  echo) and, held, make the dub moves (white 8-11) and five effects (white 12-16; white 7 the gap);
+ *                  the knobs Width, Wet, Duck; the screen the parts' meters
  *   SELECT         the DJ filter, on every page (1.4.0; with HOME held: the tempo)   ALGORITHM the voice, the walk
  *                  (Chords), the noise's character, else the screen   PRESETS the piece
  *   FX ENV LFO GLO / HOME SAVE ARP SEQ   the pages: DUB, CHORD, BASS, SETUP / FORM, NOISE, PINGS, DRUMS (1.4.0's
@@ -901,10 +901,12 @@ static void set_piece(int i)                    /* the piece playing kept as it 
  * grid's effects):
  *   white 1-6    the parts, a tap each: muted and back, their levels kept (chord, pings, bass, kick, hats, noise: the
  *                mutes OCT- + OCT+ make on a layer's page, the same); held, the part's channel strip on the knobs
- *   black 1-5    each the part of the white key on its left: the chord (F#3), the pings, the bass, the hats (C#4) and
- *                the noise (D#4); the kick (B3) has none. A tap: soloed and back (more than one: they play together;
- *                the rest muted); held: that part thrown into the echo while held (the chord every stab thrown; the
- *                others their echo send pushed, a little more feedback), the tails left to ring
+ *   black 1-5    the chord (F#3), the pings, the bass (A#3), the hats (C#4): each the part of the white key on its
+ *                left; and (the user's, zzq: the kick rather than the noise) the kick (D#4), which has no black key
+ *                of its own (B3, its white, has none after it); the noise none (white 6 still mutes it). A tap:
+ *                soloed and back (more than one: they play together; the rest muted); held: that part thrown into
+ *                the echo while held (the chord every stab thrown; the others their echo send pushed, a little more
+ *                feedback), the tails left to ring
  *   white 7      none: dark, the gap
  *   white 8-11   the global moves, held as long as the key is: the filter pushed open, pushed shut, the floor dropped
  *                (the kick and the bass out), the echo pushed (all in, feeding back)
@@ -925,15 +927,16 @@ static const uint8_t PERF_KEY[PERF_N] = {0, 2, 4, 6, 7, 9,           /* white 1-
                                          1, 3, 5, 8, 10};            /* black 1-5: the parts' solos and throws */
 static const char *const PERF_NAME[PERF_N] = {"CHORD", "PINGS", "BASS", "KICK", "HATS", "NOISE", "OPEN", "SHUT", "DROP",
                                               "ECHO", "TIME X2", "FREEZE", "TAPE STOP", "STUTTER", "SIREN", "CHORD",
-                                              "PINGS", "BASS", "HATS", "NOISE"};
+                                              "PINGS", "BASS", "HATS", "KICK"};
 static const uint16_t PERF_MBIT[PERF_NM] = {EN_PF_OPEN, EN_PF_CLOSE, EN_PF_KICKDROP, EN_PF_ECHO};
 static const uint8_t PERF_FX[PERF_NF] = {1, 10, 2, 12, 14};   /* (EN_FX_NAME's: Time x2, Freeze, Tape stop, Stutter, Siren) */
-static const uint8_t PERF_BPART[PERF_NB] = {0, 1, 2, 4, 5};   /* each black key's part (EN_M_* bit) */
-static const uint16_t PERF_BTHR[PERF_NB] = {EN_PF_THROW, EN_PF_PTHROW, EN_PF_BTHROW, EN_PF_HATTHROW, EN_PF_NTHROW};
-static const char *const PERF_THRNAME[PERF_NB] = {"CHORD THROW", "PINGS THROW", "BASS THROW", "HATS THROW", "NOISE THROW"};
+static const uint8_t PERF_BPART[PERF_NB] = {0, 1, 2, 4, 3};   /* each black key's part (EN_M_* bit; the last the kick's,
+                                                  * the noise's before: the user's, zzq) */
+static const uint16_t PERF_BTHR[PERF_NB] = {EN_PF_THROW, EN_PF_PTHROW, EN_PF_BTHROW, EN_PF_HATTHROW, EN_PF_KTHROW};
+static const char *const PERF_THRNAME[PERF_NB] = {"CHORD THROW", "PINGS THROW", "BASS THROW", "HATS THROW", "KICK THROW"};
 static const char *const PERF_THRWHAT[PERF_NB] = {"every stab into the echo", "the pings into the echo",
                                                   "the bass into the echo", "the hats into the echo",
-                                                  "the noise into the echo"};
+                                                  "the kick into the echo"};
 static void perf_mutes(void)                     /* to the engine: the mutes, and with a solo, all but it */
 {
     en_mute(ui.mutes | (ui.solo ? 0x3Fu & ~ui.solo : 0u));
@@ -3417,14 +3420,16 @@ static void draw_noise_lane(void)
 }
 
 /* (1.4.0, the user's: the LFO pages' picture across the screen, VARIETY-PLAN.md) an LFO page: its past, now and
- * future, the full width; now (a dot on what's heard) in the middle. Left, what it did: what's heard (the wave and the
- * wander together, en_lfo_tr) bold in the layer's colour, older fainter; the wave's part alone a thin line, the
- * wander's dotted. Right, where the wave goes (dim; the wander can't be known, not drawn ahead). At one scale, the
- * most Drift and the page's Drift reach, so it shrinks to flat with them, or grows; its reach dotted. Under it the
- * bars, the wave's cycles (or, on the wander alone, the phrases) taller. The span each side: 4 bars for a 1- or 2-bar
- * wave, 8 for 4, else 16 (two cycles where they fit). Its reach in its Target's units at the edges: the chord's cutoff
- * in Hz around its knobs' own (before each stab's envelope), Reso's and Colour's and the noise's Tone and Air as
- * their knobs show them, the noise's Filter in Hz. The rate and the Target over it */
+ * future, the full width and (zzq, the user's: the knobs say the Rate, the Wave and the Target) the full height, no
+ * title; now (a dot on what's heard) in the middle. Left, what it did: what's heard (the wave and the wander together,
+ * en_lfo_tr) bold in the layer's colour, older fainter; the wave's part alone a thin white line, the wander's a thin
+ * pink one (zzq: solid, a dotted one lost on the FM-1's screen). Right, where the wave goes (dim; the wander can't be
+ * known, not drawn ahead). At one scale, the most Drift and the page's Drift reach, so it shrinks to flat with them,
+ * or grows; its reach dotted. Under it the bars, the wave's cycles (or, on the wander alone, the phrases) taller. The
+ * span each side: 4 bars for a 1- or 2-bar wave, 8 for 4, else 16 (two cycles where they fit). Its reach's ends in
+ * its Target's units at the left edge, inside the reach on a dark patch (outside it while it's small): the chord's
+ * cutoff in Hz around its knobs' own (before each stab's envelope), Reso's and Colour's and the noise's Tone and Air
+ * as their knobs show them, the noise's Filter in Hz */
 static void lfo_hz(float f, char *b)             /* (570 Hz, 2.3 kHz, 20 kHz) */
 {
     const int hz = (int)(f + 0.5f);
@@ -3468,10 +3473,10 @@ static void lfo_units(int k, float re, char *hi, char *lo)   /* (its reach's end
 }
 static void draw_lfo(int k)
 {
-    const int32_t xl = 4, xn = 120, xr = 236, half = xn - xl, yc = 48, rr = 26;   /* (the picture's rows: the lanes
-                                                  * below kept clear; 127: rr pixels) */
-    const uint16_t col = k ? K_NOISE : K_PAD, cw = mix(K_BG, K_TEXT, 11), cf = mix(K_BG, K_TEXT, 6),
-                   cd = mix(K_BG, K_TEXT, 9);
+    const int32_t xl = 4, xn = 120, xr = 236, half = xn - xl, yc = 44, rr = 36;   /* (the picture's rows, 8..80, the
+                                                  * ticks under them: the lanes below kept clear; 127: rr pixels) */
+    const uint16_t col = k ? K_NOISE : K_PAD, cw = mix(K_BG, K_TEXT, 14), cf = mix(K_BG, K_TEXT, 6),
+                   cd = mix(K_BG, K_RIM, 14);   /* (what's heard the layer's colour; the wave white, the wander pink) */
     const uint32_t wn = en_lfo_w, n = wn < EN_LFO_N ? wn : EN_LFO_N, cur = en_bars ? en_bars - 1u : 0u;
     const float mx = k ? 2.0f : 2.2f, re = en_lfo_reach_of(k);   /* (the scale: the most either reaches, LFO_CR_MAX,
                                                   * LFO_NR_MAX; its reach now) */
@@ -3480,40 +3485,7 @@ static void draw_lfo(int k)
               reach = (int)(re / mx * (float)rr + 0.5f),
               hb = !d || !bars ? 16 : bars <= 2 ? 4 : bars == 4 ? 8 : 16;
     const uint32_t span = (uint32_t)hb * 16u;   /* (sixteenths each side) */
-    int32_t x, y0 = yc, yy, lw = 0;
-    char t[32], tt[32];
-    if (d > 0) {                                 /* (what moves it: "4 BARS", "4 BARS + WANDER", "WANDER") */
-        int j = 0;
-        en_param_text(k ? P_NLRATE : P_CLRATE, rate, t);
-        while (t[j])
-            j++;
-        if (wd)
-            t[j++] = ' ', t[j++] = '+', t[j++] = ' ', t[j++] = 'W', t[j++] = 'a', t[j++] = 'n', t[j++] = 'd', t[j++] = 'e', t[j++] = 'r';
-        t[j] = 0;
-    } else {
-        t[0] = 0;
-        if (wd)
-            t[0] = 'W', t[1] = 'a', t[2] = 'n', t[3] = 'd', t[4] = 'e', t[5] = 'r', t[6] = 0;
-    }
-    if (t[0]) {                                  /* (1.4.0: where it goes, "4 BARS + WANDER ON RESO", "... ON AIR") */
-        const char *w = k ? EN_NLDEST_NAME[proj.par[P_NLDEST] % EN_NNLDEST] : EN_CLDEST_NAME[proj.par[P_CLDEST] % EN_NCLDEST];
-        int j = 0;
-        while (t[j])
-            j++;
-        t[j++] = ' ', t[j++] = 'o', t[j++] = 'n', t[j++] = ' ';
-        while (*w && j < (int)sizeof t - 1)
-            t[j++] = *w++;
-        t[j] = 0;
-    }
-    caps(tt, t, sizeof tt);
-    text_c(120, MAIN_SHIFT - 1, &FONT_XS, tt, K_DIM);   /* (where it was on the screen: the canvas's top, 1.4.0) */
-    if (dw) {                                    /* (its reach's ends, in its Target's units, at the left edge) */
-        char hi[12], lo[12];
-        lfo_units(k, re, hi, lo);
-        cv_text(xl, yc - reach - 15, &FONT_XS, hi, K_DIM);
-        cv_text(xl, yc + reach + 1, &FONT_XS, lo, K_DIM);
-        lw = text_w(&FONT_XS, lo) + 4;
-    }
+    int32_t x, y0 = yc, yy;
     cv_rect(xl, yc, xr - xl, 1, mix(K_BG, K_LINE, 10));
     for (x = xl; x < xr; x += 4)                 /* (its reach) */
         if (reach > 0) {
@@ -3529,7 +3501,7 @@ static void draw_lfo(int k)
         for (x = xl; x < xr; x++) {
             const int64_t s = x <= xn ? (int64_t)cur - (int64_t)((uint32_t)(xn - x) * span / (uint32_t)half)
                                       : (int64_t)cur + (int64_t)((uint32_t)(x - xn) * span / (uint32_t)half);
-            if (x > xl && s >= 0 && (s >> 4) != (sp >> 4) && x >= xl + lw) {
+            if (x > xl && s >= 0 && (s >> 4) != (sp >> 4)) {
                 const uint32_t b = (uint32_t)(s >> 4);
                 const int tall = d && bars ? b % (uint32_t)bars == 0u
                                            : ((b + 8u - cb % 8u + en_phrase_bar) & 7u) == 0u;
@@ -3564,7 +3536,20 @@ static void draw_lfo(int k)
         cv_rect(x, a0 - 1, 1, a1 - a0 + 3, mix(K_BG, col, 6 + (int)(10u - age * 10u / span)));
         y0 = yy;
     }
-    if (d)                                       /* (the wave's part, a thin line over it) */
+    if (wd)                                      /* (the wander's part, a thin pink line over it) */
+        for (x = xl; x <= xn; x++) {
+            const uint32_t age = (uint32_t)(xn - x) * span / (uint32_t)half;
+            int32_t a0, a1;
+            if (age >= n)
+                continue;
+            yy = yc - (int32_t)en_lfo_wd[k][(wn - 1u - age) % EN_LFO_N] * rr / 127;
+            if (x == xl || age + 1u >= n)
+                y0 = yy;
+            a0 = y0 < yy ? y0 : yy, a1 = y0 > yy ? y0 : yy;
+            cv_rect(x, a0, 1, a1 - a0 + 1, cd);
+            y0 = yy;
+        }
+    if (d)                                       /* (the wave's part, a thin white line over them) */
         for (x = xl; x <= xn; x++) {
             const uint32_t age = (uint32_t)(xn - x) * span / (uint32_t)half;
             int32_t a0, a1;
@@ -3577,15 +3562,20 @@ static void draw_lfo(int k)
             cv_rect(x, a0, 1, a1 - a0 + 1, cw);
             y0 = yy;
         }
-    if (wd)                                      /* (the wander's part, dotted) */
-        for (x = xl; x <= xn; x += 2) {
-            const uint32_t age = (uint32_t)(xn - x) * span / (uint32_t)half;
-            if (age >= n)
-                continue;
-            cv_rect(x, yc - (int32_t)en_lfo_wd[k][(wn - 1u - age) % EN_LFO_N] * rr / 127, 1, 1, cd);
-        }
     if (n)                                       /* (now: a dot on what's heard, in the middle) */
         cv_disc(xn, yc - (int32_t)en_lfo_tr[k][(wn - 1u) % EN_LFO_N] * rr / 127, 4, en_playing ? K_TEXT : col);
+    if (dw) {                                    /* (its reach's ends, in its Target's units, at the left edge: inside
+                                                  * the reach on a dark patch, over the oldest past; outside it while the
+                                                  * reach is too small for two; FONT_XS's glyphs its cell's rows 1..12) */
+        char hi[12], lo[12];
+        const int in = reach >= 16;
+        const int32_t yh = in ? yc - reach + 1 : yc - reach - 13, yl = in ? yc + reach - 13 : yc + reach + 1;
+        lfo_units(k, re, hi, lo);
+        cv_shade(xl - 2, yh + 1, text_w(&FONT_XS, hi) + 4, 12, 2, 12u, K_BG);
+        cv_shade(xl - 2, yl + 1, text_w(&FONT_XS, lo) + 4, 12, 2, 12u, K_BG);
+        cv_text(xl, yh, &FONT_XS, hi, K_DIM);
+        cv_text(xl, yl, &FONT_XS, lo, K_DIM);
+    }
 }
 
 /* (1.4.0, the user's: song structure) the Song pages' picture, in the lanes' place: the song as set, its intro,

@@ -238,25 +238,25 @@ Level is its strip's now, the noise's too.)
 
 ![The Noise strip: white 6 held, NOISE PLATE 60 in the big ring, LEVEL 8, ECHO 50, PLATE 60, FILTER Off](img/screen-strip-noise.png "The Noise strip")
 
-A thrown stab (and any part thrown with its black key) still goes into the echo whatever its Echo, and the Arrangement page's Wet
+A thrown stab (and any part thrown with its black key) still goes into the echo whatever its strip's Echo, and the Arrangement page's Wet
 moves everything on top. The strips are the piece's, saved with it.
-A page's button goes to its page (HOME: the Form page). The keys, from the lowest up, are the parts (each black key
-the part of the white key on its left), an empty white key, the global moves, then five of the effects grid's effects.
+A page's button goes to its page (HOME: the Form page). The keys, from the lowest up, are the parts (a black key a
+part's solo and throw), an empty white key, the global moves, then five of the effects grid's effects.
 Each key that does something is lit:
 
 | Keys | Notes | A tap | Held |
 |---|---|---|---|
 | **White 1–6** | F3 G3 A3 B3 C4 D4 | mutes the chord, pings, bass, kick, hats, noise (and back) | that part's channel strip on the knobs (above) |
-| **Black 1–5** | F♯3 G♯3 A♯3 C♯4 D♯4 | solos the chord, pings, bass, hats, noise (and back) | **throws** that part into the echo while held |
+| **Black 1–5** | F♯3 G♯3 A♯3 C♯4 D♯4 | solos the chord, pings, bass, hats, kick (and back) | **throws** that part into the echo while held |
 | **White 7** | E4 | the gap: dark, does nothing | |
 | **White 8–11** | F4 G4 A4 B4 | | the global moves: **Open**, **Shut**, **Drop**, **Echo** |
 | **White 12–16** | C5 D5 E5 F5 G5 | | five effects: **Time x2**, **Freeze**, **Tape stop**, **Stutter**, **Siren** |
 | Black 6–11 | F♯4 and up | nothing (dark) | |
 
-Each black key belongs to the white key on its left: F♯3 the chord (F3), G♯3 the pings, A♯3 the bass, C♯4 the hats
-(C4), D♯4 the noise (D4). The kick (B3) has no black key, so it has no solo and no throw: in the classics the kick is
-never thrown, and soloing it leaves a metronome. White 7 (E) is dark and does nothing: the gap between the parts and
-the moves, so you can find them without looking.
+The first four black keys belong to the white key on their left: F♯3 the chord (F3), G♯3 the pings, A♯3 the bass,
+C♯4 the hats (C4). The kick's white key (B3) has no black key after it, so the last one, D♯4, is the kick's (1.4.0:
+it was the noise's; the noise has no solo or throw now, white 6 still mutes it). White 7 (E) is dark and does
+nothing: the gap between the parts and the moves, so you can find them without looking.
 
 - **White 1–6, the chord, pings, bass, kick, hats and noise:** a tap mutes the part, another brings it
   back (the mute as you let go: held, the key is the part's channel strip, above); lit while it plays.
@@ -268,12 +268,15 @@ the moves, so you can find them without looking.
   more than one and they play together; tap again to let one go. A soloed key blinks; the white keys show what you
   hear. SOLO shows in the header, at its right end. Solos stay when you leave the Arrangement page, as the mutes do.
 - **Black 1–5, held: throws** (past a third of a second; the key goes dark while it throws, and the release
-  solos nothing). The part goes into the echo while you hold it, whatever its strip's Echo, and the echo feeds back
-  a little more; let go and its repeats ring on. The **chord**'s throws every stab, as a dub engineer slams a send
-  on a stab ("CHORD THROW: every stab into the echo"). The **pings**', the **hats**' (with the rim and the clap)
-  and the **noise**'s push their echo sends right up. The **bass**'s too, but the echo takes nothing under about
-  350 Hz: a round bass (Sub) throws only its upper harmonics, quietly; a bass with bite (Growl, Pulse) throws more.
-  The kick is never thrown.
+  solos nothing). As a dub engineer slams a part's aux: the part goes into the echo at its own level while you hold
+  it, whatever its strip's Echo and the piece's Echo (even at 0), and the echo's feedback climbs towards its top, so
+  the repeats stack up over each other (the loop's soft clip keeps them in); the strikes stop ducking the repeats.
+  It comes in over about 15 ms; let go and it leaves over about 60 ms, the feedback back where it was and the
+  repeats ringing on. The **chord**'s also throws every stab ("CHORD THROW: every stab into the echo"), with the
+  second head. The **pings**, the **hats** (with the rim and the clap) and the **kick** go in as they are. The
+  **bass** goes in driven, as an overdriven aux: the echo takes nothing under about 350 Hz, so a round bass (Sub)
+  would throw almost nothing; driven, its harmonics are heard. (1.4.0: the throws were nearly inaudible before:
+  they went through the piece's Echo and the strip's send, the bass and the hats 10 to 25 dB under the part.)
 - **White 8–11, the global moves, held** (lit; dark while held):
   - **Open:** the music thins and brightens over the kick: a resonant high-pass on everything but
     the kick sweeps up to about 400 Hz, and the chords' filter opens three octaves and sings, the
@@ -552,16 +555,15 @@ GLO held on, RESET (red); SEL held, LOCK.
   clicks come at random and aren't shown. (The noise's LFO shows on the Noise LFO page.)
 - **The LFO pages' picture,** across the screen (1.4.0, the user's): the present in the middle, a dot on
   what's heard (white while playing) with a dotted line down through it. At the left, what it did: what
-  you heard bold in the layer's colour, older fainter, the wave's part alone a thin light line and the
-  wander's part dotted; at the right, where the wave is going, thin and dim (the wander can't be known
+  you heard bold in the layer's colour, older fainter, the wave's part alone a thin white line and the
+  wander's part a thin pink one; at the right, where the wave is going, thin and dim (the wander can't be known
   ahead). 4, 8 or 16 bars each side, as the Rate needs; under it the bars ticked, taller where the wave's
   cycle starts (on the wander alone, where a phrase starts). The faint line in the middle is the knob's own
   value (the chord's: its Target's knob, Cutoff, Reso or Colour; the noise's filter half open); the
   dotted lines above and below are the reach of the wave and the wander together, at one scale (the most
   it can reach: Drift and the LFO page's Drift grow and shrink it), with that reach at the left edge in its
-  Target's units ("890 Hz", "290 Hz"; Reso's "+15", "−15"). What moves it is written over it ("4 BARS",
-  "4 BARS + WANDER", "WANDER"), and where it goes ("4 BARS + WANDER ON CUTOFF"). See
-  [The LFO pages](#the-lfo-pages).
+  Target's units ("890 Hz", "290 Hz"; Reso's "+15", "−15"). No title over it: the knobs say the Rate, the
+  Wave and the Target. See [The LFO pages](#the-lfo-pages).
 
 ![The Dub page with FEEDBACK lit as it turns, set to 6.7 s, the big ring in the middle saying HOW LONG THE REPEATS GO ON; ECHO 55, ECHO TIME 1/8., REVERB 35](img/screen-turning.png "Turning Feedback on the Dub page")
 ![The scope: the output as a thick teal line over a dotted centre line, the two traces before it fading behind; Fm7 at the top](img/screen-scope.png "ALGORITHM: the scope")
@@ -878,7 +880,7 @@ Each stays when the voice changes, and is kept by the piece.
 
 ### The LFO pages
 
-![The Chord LFO page: TO CUTOFF, DRIFT, WAVE, RATE 4 bars, TARGET Cutoff; 4 BARS + WANDER ON CUTOFF over the picture across the screen: the past at the left, now a dot in the middle, the wave ahead at the right, 890 Hz and 290 Hz at the left edge, the bars under it](img/screen-chord-lfo.png "The Chord LFO page")
+![The Chord LFO page: TO CUTOFF, DRIFT, WAVE, RATE 4 bars, TARGET Cutoff; the picture across the screen: the past at the left, now a dot in the middle, the wave ahead at the right, 890 Hz and 290 Hz at the left edge, the bars under it](img/screen-chord-lfo.png "The Chord LFO page")
 
 Two layers move by themselves, slowly: the chord's filter (or, by its Target, its resonance or
 its Colour) and a filter on the whole noise, its hits and its hiss (or, by its Target, its Tone
@@ -896,9 +898,9 @@ The picture runs across the screen, the present in the middle (a dot on what's h
 down through it):
 
 - **At the left, what it did:** what you hear (the wave and the wander together) bold in the layer's
-  colour, older fainter; the wave's part alone a thin light line, the wander's part dotted. Turn Wave
-  and the two lines trade places: at 0 only the wander (the bold line is the dotted one), at 100 only
-  the wave.
+  colour, older fainter; the wave's part alone a thin white line, the wander's part a thin pink one.
+  Turn Wave and the two lines trade places: at 0 only the wander (the bold line is the pink one), at 100
+  only the wave.
 - **At the right, where the wave is going**, a thin dim line (the wander can't be known ahead: it isn't
   drawn there).
 - **The span:** 4 bars each way for a wave of 1 or 2 bars, 8 for 4, 16 for 8 or more and for the
@@ -907,11 +909,12 @@ down through it):
   where a phrase starts).
 - **At one scale,** the most it can ever reach, so it grows and shrinks in height with Form's Drift
   and the page's (flat when still); its reach now dotted above and below.
-- **At the left edge, its reach in its Target's units:** the chord's cutoff in Hz (around the cutoff its
-  knobs give, before each stab's own envelope opens it), Reso and Colour, the noise's Tone and Air as
-  their knobs show them, the noise's Filter in Hz (20 kHz at the top: open).
-- **Over it,** what moves it and where: 4 BARS + WANDER ON CUTOFF, 4 BARS ON CUTOFF (the wave alone),
-  WANDER ON FILTER (the wander alone).
+- **At the left edge, its reach in its Target's units,** just inside the reach on a dark patch (outside
+  it while the reach is small): the chord's cutoff in Hz (around the cutoff its knobs give, before each
+  stab's own envelope opens it), Reso and Colour, the noise's Tone and Air as their knobs show them, the
+  noise's Filter in Hz (20 kHz at the top: open).
+- **No title:** the knobs under it say the Rate, the Wave and the Target, so the picture has the whole
+  height.
 
 The lane under it is the layer's, as on its page.
 

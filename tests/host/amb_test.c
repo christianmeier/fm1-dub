@@ -1776,15 +1776,19 @@ int main(void)
     }
 
     /* (1.4.0, the user's: "I can throw the hats to the echo"; the moves rethought: a throw a part, its black key held)
-     * the hats, the pings, the bass, the noise thrown (EN_PF_HATTHROW, _PTHROW, _BTHROW, _NTHROW): each into the echo, its
-     * tail ringing after it's let go (the part alone: the second after it, well over the same without); the kick never
-     * with them (the kick alone: the same, to a hair: the echo's feedback a little up while held, on nothing). And the
+     * the hats, the pings, the bass, the kick thrown (EN_PF_HATTHROW, _PTHROW, _BTHROW, _KTHROW; the kick's the noise's
+     * before, the user's, zzq): each into the echo, its tail ringing after it's let go (the part alone: the second after
+     * it, well over the same without); the kick never with the others (the kick alone: the same, to a hair: the echo's
+     * feedback pushed while held, on nothing); the kick's sends only the kick (the hats' tail rings longer with the
+     * feedback, as with every throw: not checked). (zzq: each throw on its own bus, at the part's own level, the
+     * feedback pushed towards THR_FB) And the
      * Kick strip's Low cut leaves the rumble be (the kick's ear before it). (The bass the least: the echo takes nothing
      * under ~350 Hz, so a Sub is thrown its upper harmonics alone: +1.5 dB at least) */
     {
-        static const uint32_t TH[4] = {EN_PF_HATTHROW, EN_PF_PTHROW, EN_PF_BTHROW, EN_PF_NTHROW},
-                              AL[4] = {EN_M_HATS, EN_M_PINGS, EN_M_BASS, EN_M_NOISE};
-        static const char *const TN[4] = {"hats", "pings", "bass", "noise"};
+        static const uint32_t TH[4] = {EN_PF_HATTHROW, EN_PF_PTHROW, EN_PF_BTHROW, EN_PF_KTHROW},
+                              AL[4] = {EN_M_HATS, EN_M_PINGS, EN_M_BASS, EN_M_KICK},
+                              OT[4] = {EN_M_KICK, EN_M_KICK, EN_M_KICK, EN_M_HATS};   /* (the part that mustn't go) */
+        static const char *const TN[4] = {"hats", "pings", "bass", "kick"};
         int16_t pp[P_NPARAMS];
         uint16_t pl;
         unsigned k;
@@ -1808,7 +1812,7 @@ int main(void)
                     en_set(P_BVOICE, 4);
                 en_seed(5);
                 en_regrow();
-                en_mute(0x3Fu & ~(w ? EN_M_KICK : AL[q]));
+                en_mute(0x3Fu & ~(w ? OT[q] : AL[q]));
                 en_play(1);
                 run(4.0f);
                 fflush(stdout);                  /* (from here two ways, a fork: thrown or not, the same otherwise; the
@@ -1839,14 +1843,16 @@ int main(void)
                 close(fd[1]);
             }
             en_mute(0);
-            printf("  the %s thrown: their tail %.1f dB over not thrown; the kick's %.2f dB (none)\n", TN[q],
-                   10.0 * log10((e[0][1] + 1e-20) / (e[0][0] + 1e-20)), 10.0 * log10((e[1][1] + 1e-20) / (e[1][0] + 1e-20)));
-            /* (the bass x1.3: the echo takes little under ~350 Hz; the noise x1.6: +2.7 dB here at the defaults, its
-             * tone still since the variety study (the chord's Drift 0); the rest x2) */
-            CHECK(e[0][1] > (q == 2 ? 1.3 : TN[q][0] == 'n' ? 1.6 : 2.0) * e[0][0] && e[0][1] > 1e-4, "the %s thrown: their tail %g against %g", TN[q], e[0][1],
+            printf("  the %s thrown: their tail %.1f dB over not thrown; the %s's %.2f dB (none)\n", TN[q],
+                   10.0 * log10((e[0][1] + 1e-20) / (e[0][0] + 1e-20)), q == 3 ? "hats" : "kick",
+                   10.0 * log10((e[1][1] + 1e-20) / (e[1][0] + 1e-20)));
+            /* (the bass x1.3: the echo takes little under ~350 Hz; the rest x2) */
+            CHECK(e[0][1] > (q == 2 ? 1.3 : 2.0) * e[0][0] && e[0][1] > 1e-4, "the %s thrown: their tail %g against %g", TN[q], e[0][1],
                   e[0][0]);
-            CHECK(e[1][1] < 1.05 * e[1][0] + 1e-6 && e[1][1] > 0.95 * e[1][0] - 1e-6,
-                  "the kick not thrown with the %s: %g against %g", TN[q], e[1][1], e[1][0]);
+            CHECK(q == 3 || (e[1][1] < 1.05 * e[1][0] + 1e-6 && e[1][1] > 0.95 * e[1][0] - 1e-6),
+                  "the kick not thrown with the %s: %g against %g", TN[q], e[1][1], e[1][0]);   /* (the kick's own: the
+                                                  * hats not sent, but their echo's feedback pushed while it's held, as
+                                                  * every throw's: their tail longer, not checked) */
         }
     }
     {   /* the rumble's bed the same with the kick's Low cut on: the kick alone, under ~60 Hz, the rumble's share (on less
@@ -2184,6 +2190,10 @@ int main(void)
                     en_set((int)k, pp[k]);
             en_set(P_MOVE, 0);                   /* (format 30: the sound still, the echo's band its middle's: the
                                                   * filter alone heard) */
+            en_set(P_CECHO, 100);                /* (zzq: the chord well into the echo, so its tail is there to measure
+                                                  * whatever the tests before left the random stream at) */
+            en_set(P_ECHO, 80);
+            en_set(P_ETONE, 100);                /* (and bright: its highs there for the low-pass to take) */
             en_pool(pl);
             en_seed(9);
             en_regrow();
@@ -2234,7 +2244,8 @@ int main(void)
             bs[0] = r[0][0], bs[1] = r[1][0];
             printf("  the chord's Filter at %+d: its %s %.1f dB, its echo's %.1f dB, against off\n", FV[w], w ? "lows" : "highs",
                    10.0 * log10((r[0][1] + 1e-20) / (bs[0] + 1e-20)), 10.0 * log10((r[1][1] + 1e-20) / (bs[1] + 1e-20)));
-            CHECK(r[0][1] < 0.5 * bs[0] && r[1][1] < 0.5 * bs[1] && bs[1] > 1e-6,
+            CHECK(r[0][1] < 0.5 * bs[0] && r[1][1] < 0.5 * bs[1] && bs[1] > 1e-8,   /* (zzq: the echo's tail there; its
+                                                  * highs small, the tape at 11 kHz: 1e-6 held by the random stream's luck) */
                   "the chord's Filter at %+d: the dry %g against %g, the echo %g against %g", FV[w], r[0][1], bs[0], r[1][1], bs[1]);
         }
         en_mute(0);

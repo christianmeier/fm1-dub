@@ -973,6 +973,18 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
     16 bars each side by the Rate; the bars ticked under it, the cycles (or the phrases) taller; the reach in its
     Target's units at the left edge (the chord's cutoff in Hz around its knobs', en_chord_cut; Reso, Colour, Tone,
     Air as their knobs; the noise's Filter in Hz). Host: ~8.1 us a draw (7.1 before), once a sixteenth.
+  - **zzr, the user's review of zzq:** the picture without its title (the knobs say the Rate, the Wave and the
+    Target), taller (rows 8..80), the wander a solid pink line (dotted was lost on the device), the wave white, what's
+    heard the layer's colour; the units inside the reach on a dark patch (outside it while small). **PERFORM's black 5
+    (D#4) the kick** (a tap its solo, held its throw: EN_PF_KTHROW), the noise's solo and throw gone (white 6 still
+    mutes it). **The throws made audible** (the user: "no audible difference"): measured on the host, Basic, Steppers,
+    Fog, each part soloed, the echo's return held two bars against not: before, the bass and the hats 11-24 dB under the
+    part's own peak, the kick none; their sends went through the piece's Echo (its square: Basic's 0.3) and the strip's,
+    the feedback +0.08. Now each throw on its own bus into the echo (tsend), at the part's level whatever the Echo and
+    the strip (chord 1, pings 1.6, bass 3 driven through sat, as an overdriven aux, the hats 4, the kick 3), the
+    feedback pushed towards 0.93 while held (the repeats stack; the loop's soft clip), the strikes not ducking the
+    returns; eased in 15 ms, out 60 ms. After: every throw's echo -7..+19 dB against the part's own peak. A few
+    multiplies a sample; build/design/REPORT-lfovis.md.
 - **The header, where we are** (the user, 2026-10-25: the top-left block "too small and reads badly, but at the same
   time it clutters"; option A; prototype on branch dub-1.4-header, to judge on the FM-1): the phrase in the header,
   beside the piece's tag (the section's word, or INTRO / OUTRO, and the eight bars as larger cells, the B bars

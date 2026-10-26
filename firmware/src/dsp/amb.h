@@ -198,9 +198,10 @@ void en_pings(const uint8_t *b);
 enum { EN_M_CHORD = 1, EN_M_PINGS = 2, EN_M_BASS = 4, EN_M_KICK = 8, EN_M_HATS = 16, EN_M_NOISE = 32 };   /* (the noise:
                                                 * OCT- + OCT+ on its page; its level kept) */
 enum { EN_PF_THROW = 1, EN_PF_OPEN = 2, EN_PF_CLOSE = 4, EN_PF_KICKDROP = 8, EN_PF_ECHO = 16, EN_PF_HATTHROW = 32,
-       EN_PF_PTHROW = 64, EN_PF_BTHROW = 128, EN_PF_NTHROW = 256 };   /* (1.4.0, the moves rethink: a throw a part, on
+       EN_PF_PTHROW = 64, EN_PF_BTHROW = 128, EN_PF_KTHROW = 256 };   /* (1.4.0, the moves rethink: a throw a part, on
                                                   * its black key held: the chord's EN_PF_THROW, every stab thrown; the
-                                                  * pings', the bass's, the hats', the noise's, their echo sends pushed) */
+                                                  * pings', the bass's, the hats', their echo sends pushed; the user's,
+                                                  * zzq: the kick's for the noise's, its echo send pushed) */
 /* (KICKDROP: Drop, the kick and the bass. HATTHROW, 1.4.0, the user's: the hats, the rim and the clap thrown into the
  * echo while held, the kick never; their tails left to ring) */
 void en_mute(uint32_t mask);
