@@ -158,7 +158,8 @@ wait 1500
 spin K4 -30
 tap HOME
 turn K3 50
-wait 166000
+wait 92000
+expect section 2
 shot screen-groove.png
 # the Echo page (FX, FX again)
 tap FX
