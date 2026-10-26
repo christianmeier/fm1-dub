@@ -2318,6 +2318,7 @@ static void hdr_phrase(int32_t x0, int32_t x1, uint32_t now)   /* the word and t
                 cv_rect(px + j, 9 + j, 1, 11 - 2 * j, K_DIM);
     }
 }
+static const uint16_t SONG_HUE[3] = {K_ACC, K_TEXT, K_PULSE};   /* a song's parts: the intro, the main, the outro */
 static void hdr_song_line(void)                  /* a song: a line along the bottom, its parts, how far it has gone */
 {
     /* (1.4.0, the user's: the parts in their own hues: the intro teal, the main a light neutral, the outro coral; each
@@ -2326,13 +2327,12 @@ static void hdr_song_line(void)                  /* a song: a line along the bot
     const float k = 224.0f / (float)en_song_be, at = fm_minf((float)en_bars * (1.0f / 16.0f), (float)en_song_be);
     const int32_t xi = 8 + (int32_t)((float)en_song_b0 * k + 0.5f), xo = 8 + (int32_t)((float)en_song_bo * k + 0.5f),
                   xd = 8 + (int32_t)(at * k + 0.5f), y = HDR_H - 2;
-    static const uint16_t HUE[3] = {K_ACC, K_TEXT, K_PULSE};
     int32_t x;
     for (x = 8; x < 232; x++) {
         const int part = x < xi ? 0 : x < xo ? 1 : 2, done = x < xd;
         if ((x == xi && xi > 8) || (x == xo && xo < 232))
             continue;                            /* (a gap where one part ends and the next begins) */
-        cv_rect(x, y, 1, 2, mix(K_BG, HUE[part], done ? (part == 1 ? 11 : 14) : (part == 1 ? 4 : 6)));
+        cv_rect(x, y, 1, 2, mix(K_BG, SONG_HUE[part], done ? (part == 1 ? 11 : 14) : (part == 1 ? 4 : 6)));
     }
     if (en_song_ph != EN_SG_END)
         cv_rect(xd - 1 < 8 ? 8 : xd - 1, y - 1, 3, 3, K_TEXT);   /* (where it is) */
@@ -4258,7 +4258,10 @@ static void draw_tape(uint32_t now)
                 p = q <= 1.0f ? q : 2.0f - q;
     const int32_t rl = 9 + (int32_t)(19.0f * (1.0f - p) + 0.5f), rr = 9 + (int32_t)(19.0f * p + 0.5f);
     const float v = en_playing && !en_frozen ? 0.03f * (float)proj.par[P_TEMPO] * (1.0f / 122.0f) : 0.0f;
-    const uint16_t tape = mix(K_BG, RGB(132, 92, 60), 9), lvl = mix(K_LINE, K_ACC, q16((mt.db[EN_MT_MASTER] + 36.0f) * (1.0f / 36.0f))),
+    /* (zzw, the user's) the tape in its song part's hue, the header line's (the intro teal, the main light, the outro
+     * coral); outside a song, the brown tape */
+    const int part = en_song_ph == EN_SG_INTRO ? 0 : en_song_ph == EN_SG_MAIN ? 1 : en_song_ph == EN_SG_OUTRO ? 2 : -1;
+    const uint16_t tape = part >= 0 ? mix(K_BG, SONG_HUE[part], part == 1 ? 7 : 9) : mix(K_BG, RGB(132, 92, 60), 9), lvl = mix(K_LINE, K_ACC, q16((mt.db[EN_MT_MASTER] + 36.0f) * (1.0f / 36.0f))),
                    ec = mix(K_LINE, K_PAD, q16(fm_minf(epk[(epk_w + EPK_N - 1u) % EPK_N].pk * 4.0f, 1.0f)));
     t_last = now;
     al += v * (float)dt / (float)rl;              /* (the same tape speed: the smaller reel turns faster) */
