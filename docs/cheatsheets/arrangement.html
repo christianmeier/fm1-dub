@@ -14,10 +14,10 @@
      (firmware/src/app/ui.c: the PERFORM section, PERF_KEY, PERF_NAME, PERF_FX, PERF_BPART, perf_key(), perf_solo(),
      perf_throw(), strip_tick() and STRIP_HOLD, perf_set(), lock_toggle(), leds(); VIEW_KNOB / KNOB_LABEL / KNOB_HELP
      for V_PERF and V_STRIP; firmware/src/dsp/amb.c: EN_FX_NAME, the throws, the moves, the strips' parameters).
-     The sirens (black 8-11) as designed in build/design/SIRENS.md, being built: re-check them when they land. -->
+     The sirens (black 8-11) checked against the built ones (dub-1.4-sirens, 194faed; REPORT-sirens). -->
 <div class="sheet">
 <header><span class="badge">DUB-1</span><h1>Arrangement</h1>
-<span class="sub">SEL: the desk, the dub moves and the effects under your fingers, as of 1.4.0 (build c1fdc41). FM-1 firmware.</span></header>
+<span class="sub">SEL: the desk, the dub moves and the effects under your fingers, as of 1.4.0 (build 194faed). FM-1 firmware.</span></header>
 
 <figure>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 246" role="img" aria-label="The keys F3 to G5 on the Arrangement page, each labelled with what it does">
@@ -193,11 +193,11 @@
 
 <div class="card">
 <h2>5 · The sirens <span class="where">black 8–11 · A#4–F#5</span></h2>
-<div class="intro">Tuned to the key (root, fifth, octave). A tap: a short one, about a bar; held past a third of a second, a slow one looping until you let go. One at a time, into the echo.</div>
+<div class="intro">Tuned to the key (root, fifth, octave). A tap: a short one, about a bar, played to its end; held past a third of a second, it turns slow from where it is, looping until you let go (out in ~0.15 s). A new one takes over. Into the echo.</div>
 <div class="row"><div class="n">Wail<small>follows the tempo</small></div><div class="d">A glide root, fifth, octave and back.<span class="r">tap: a rise and fall, a bar · held: every 4 bars</span></div></div>
-<div class="row"><div class="n">Whoop<small>follows the tempo</small></div><div class="d">Sweeps up root to octave, each dropping back.<span class="r">tap: four, a negra (quarter) each · held: one a bar, climbing an octave in 4 bars</span></div></div>
-<div class="row"><div class="n">Hi-lo<small>free</small></div><div class="d">Root and fifth in turn, the old police siren.<span class="r">tap: ~2 s, 4 swaps a second · held: 1 a second, rising a fifth and back</span></div></div>
-<div class="row"><div class="n">Laser drop<small>free</small></div><div class="d">A fall from two octaves up to the root, warbling.<span class="r">tap: one ~1.5 s drop · held: a slow ~8 s fall, again</span></div></div>
+<div class="row"><div class="n">Whoop<small>follows the tempo</small></div><div class="d">Sweeps up root to octave, each dropping back.<span class="r">tap: four, a negra (quarter) each · held: one a bar, from root, root, fifth, octave</span></div></div>
+<div class="row"><div class="n">Hi-lo<small>free</small></div><div class="d">Root and fifth in turn, the old police siren.<span class="r">tap: 2 s, 4 swaps a second · held: 1 a second, the pair sliding to fifth and octave over 8 s and back</span></div></div>
+<div class="row"><div class="n">Laser drop<small>free</small></div><div class="d">A fall from two octaves up to the root, warbling.<span class="r">tap: one 1.5 s drop · held: 8 s falls, a breath on the root, again</span></div></div>
 </div>
 
 <div class="card">
@@ -212,7 +212,7 @@
 <h2>7 · Lock, and the lights</h2>
 <div class="row"><div class="n">Lock<small>SEL held</small></div><div class="d">Half a second, any page; again, off. Each phrase keeps the kick, the groove and the plan (the sections and chords move on). LOCK in red in the header; not saved.</div></div>
 <div class="row"><div class="n">Lit</div><div class="d">A key that does something; a part's while you hear it.</div></div>
-<div class="row"><div class="n">Dark</div><div class="d">A move, an effect or a throw while held; a part muted or soloed out; the gap, F#4 and G#4.</div></div>
+<div class="row"><div class="n">Dark</div><div class="d">A move, an effect or a throw while held; a siren while it sounds; a part muted or soloed out; the gap, F#4 and G#4.</div></div>
 <div class="row"><div class="n">Blinking</div><div class="d">A soloed black key.</div></div>
 </div>
 
@@ -220,7 +220,7 @@
 </div>
 
 <div class="foot">
-<div class="box"><h3>Leaving</h3>A page's button leaves (HOME: to Form): the keys are the scale again. The mutes and solos stay; the moves, throws and effects let go. SEL brings it back.</div>
+<div class="box"><h3>Leaving</h3>A page's button leaves (HOME: to Form): the keys are the scale again. The mutes and solos stay; the moves, throws, effects and a held siren let go. SEL brings it back.</div>
 <div class="box"><h3>The screen</h3>The desk's meters, a row a part and the master; the white notch its level. A muted row dark, soloed-out rows dimmed. A card says what each key did.</div>
 </div>
 </div>
