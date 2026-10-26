@@ -492,12 +492,12 @@ GLO held on, RESET (red); SEL held, LOCK.
     (11 kHz, right). Each band is a column of segments: teal, then brass, amber and red at the
     top. The columns jump up with the sound and fall back slowly. A white cap stays at each
     column's peak for a moment before it drops. The columns span nearly the screen's width.
-  - The **tape** draws two reels, the tape running from the left one to the right past
+  - The **tape** draws two reels at the screen's edges, the tape running from the left one to the right past
     three heads: the record head lit with the output, the play head with the echo coming back. The
     reels turn with the tempo, the smaller one faster. Through a song the tape winds from the left reel
     to the right one, so the reels show where the song is; in Endless it winds back and forth over 128
-    bars. Its counter shows what no other screen does: at the left, where the song is (INTRO, MAIN,
-    OUTRO, or ENDLESS) and the bars left of that part; at the right, the time since PLAY (minutes and
+    bars. Its counter, between the reels, shows what no other screen does: on its left, where the song is (INTRO, MAIN,
+    OUTRO, or ENDLESS) and the bars left of that part; on its right, the time since PLAY (minutes and
     seconds) and, in a song, its whole length at this tempo ("OF 7:20").
 - The levels in full and the duck are on the Arrangement page (SEL), on its meters; the other pages
   show a short meter at each lane's left (since 1.4.0; the duck meter is the Arrangement page's).

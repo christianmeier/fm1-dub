@@ -4249,7 +4249,7 @@ static void draw_tape(uint32_t now)
 {
     static float al, ar;
     static uint32_t t_last;
-    const int32_t lx = 76, rx = 164, cy = 50;
+    const int32_t lx = 33, rx = 207, cy = 50;   /* (zzr, the user's: the reels at the edges, the counter between) */
     const uint32_t dt = t_last ? (now - t_last > 100u ? 100u : now - t_last) : 0u;
     const float bars = (float)en_bars * (1.0f / 16.0f),
                 q = en_song_ph != EN_SG_OFF && en_song_be ? fm_minf(bars / (float)en_song_be, 1.0f)
@@ -4273,7 +4273,7 @@ static void draw_tape(uint32_t now)
     cv_rect(116, 86, 8, 4, lvl);
     cv_rect(129, 86, 8, 4, ec);
     {   /* (1.4.0, the user's) the tape's counter, seen nowhere else: at the left, where the song is (INTRO, MAIN,
-         * OUTRO; ENDLESS) and the bars left of it (BARS); at the right, the time since PLAY, and in a song its whole length */
+         * OUTRO; ENDLESS) and the bars left of it (BARS); at its right, the time since PLAY, and in a song its whole length */
         static uint32_t t0, shown, last_b;
         static uint8_t was;
         const uint32_t b = en_bars / 16u;
@@ -4285,14 +4285,14 @@ static void draw_tape(uint32_t now)
         was = en_playing, last_b = b;
         if (en_playing)
             shown = (now - t0) / 1000u;
-        text_c(25, 40, &FONT_XS, song ? (en_song_ph == EN_SG_INTRO ? "INTRO" : en_song_ph == EN_SG_MAIN ? "MAIN" : "OUTRO")
+        text_c(94, 42, &FONT_XS, song ? (en_song_ph == EN_SG_INTRO ? "INTRO" : en_song_ph == EN_SG_MAIN ? "MAIN" : "OUTRO")
                                       : en_song_ph == EN_SG_END ? "END" : "ENDLESS", song ? K_ACC : K_DIM);
         if (song) {
             const uint32_t end = en_song_ph == EN_SG_INTRO ? en_song_b0 : en_song_ph == EN_SG_MAIN ? en_song_bo : en_song_be;
             const uint32_t left = end > b ? end - b : 0u;
             itoa_u(left, t);
-            text_c(25, 52, &FONT_B, t, tc);
-            text_c(25, 72, &FONT_XS, left == 1u ? "BAR" : "BARS", K_DIM);
+            text_c(94, 53, &FONT_B, t, tc);
+            text_c(94, 70, &FONT_XS, left == 1u ? "BAR" : "BARS", K_DIM);
         }
         {
             uint32_t k = 0, m = shown / 60u, sec = shown % 60u;
@@ -4301,8 +4301,8 @@ static void draw_tape(uint32_t now)
             while (c[k])
                 k++;
             c[k++] = ':', c[k++] = (char)('0' + sec / 10u), c[k++] = (char)('0' + sec % 10u), c[k] = 0;
-            text_c(214, 52, &FONT_B, c, tc);
-            text_c(214, 40, &FONT_XS, "TIME", K_DIM);
+            text_c(146, 53, &FONT_B, c, tc);
+            text_c(146, 42, &FONT_XS, "TIME", K_DIM);
             if (song && proj.par[P_TEMPO] > 0) {  /* (the song's whole length, at this tempo) */
                 const uint32_t tot = en_song_be * 240u / (uint32_t)proj.par[P_TEMPO];
                 k = 0;
@@ -4311,7 +4311,7 @@ static void draw_tape(uint32_t now)
                 while (c[k])
                     k++;
                 c[k++] = ':', c[k++] = (char)('0' + tot % 60u / 10u), c[k++] = (char)('0' + tot % 10u), c[k] = 0;
-                text_c(214, 72, &FONT_XS, c, K_DIM);
+                text_c(146, 70, &FONT_XS, c, K_DIM);
             }
         }
     }

@@ -843,6 +843,7 @@ static float kick_lvl = 1.0f, kick_snd[2], hat_thr, png_thr, bas_thr, kick_thr; 
  * echo's feedback is pushed up to THR_FB (the repeats stack; the loop's soft clip keeps them in) and the strikes don't
  * duck the returns; thr_mx the most of the six, a block's */
 #define THR_FB 0.93f
+#define THR_HFB 0.025f                           /* (the hats' throw: the feedback a tad higher, 0.955) */
 #define THR_C 3.0f                               /* (each part's into the echo, against its own level: the chord, the */
 #define THR_P 4.0f                               /* pings, the bass, the hats (the shaker, the open hat, the rim, the */
 #define THR_B 6.0f                               /* clap), the kick) */
@@ -3168,7 +3169,8 @@ static inline void echoes(float in, float *el, float *er, float *xl, float *xr)
         } else {
             float g = fm_minf(echo_fb + 0.15f * st_throw + 0.12f * perf_echo + 0.1f * dub_up + mx_fb, fb_cap);   /* (Dub:
                                                   * past the knob) */
-            g += (fm_minf(THR_FB, fb_cap) - g) * thr_mx;   /* (a throw held: up towards THR_FB, the repeats stacking) */
+            g += (fm_minf(THR_FB + THR_HFB * hat_thr, fb_cap) - g) * thr_mx;   /* (a throw held: up towards THR_FB, the
+                                                  * repeats stacking; the hats' a little further: zzr, the user's) */
             tape_lp += tape_lpc * (f1 + fb_lean * st_throw * (f2 - f1) - tape_lp);   /* each time round: thinner, darker */
             tape_hp += tape_hpc * (tape_lp - tape_hp);
             fb = ec_fb(tape_lp - tape_hp);       /* (and more dissolved) */
