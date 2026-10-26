@@ -14,7 +14,7 @@
  *
  * Over it all, the ARRANGEMENT: eight-bar phrases, each Full, a Break (the kick and the bass out, the filter
  * building), a Groove (fewer stabs) or Thin (no bass, no shaker); MOTION sets how often it leaves Full. Before
- * the kick comes back, a fill. EVOLVE turns the patterns and throws a stab into the echo now and then.
+ * the kick comes back, a fill. VARY turns the patterns and throws a stab into the echo now and then.
  * Then a tape echo (to ~5.6 s, two heads, a band-pass in its feedback that the arrangement sweeps, a
  * saturating feedback that may pass 100%), a short Echoplex, a granular CLOUD (after JIANT's) blooming into
  * Dattorro's plate, and a bed of vinyl crackle.
@@ -45,7 +45,8 @@ extern const uint8_t EN_DRUM_N[EN_NDRUM];
 /* parameters: value ranges in en_param_info() */
 enum {
     P_CHORD, P_PINGS, P_BASS, P_DRUMS,                /* layer levels */
-    P_DENSITY, P_EVOLVE, P_DRIFT, P_HITS,             /* motion: the pings' notes, change, the chord's bars, the shaker */
+    P_DENSITY, P_VARY, P_DRIFT, P_HITS,               /* motion: the pings' notes, how much the loop varies (1.4.0, format
+                                                       * 29: Vary, Evolve's place), the chord's bars, the shaker */
     P_ECHO, P_ETIME, P_REVERB, P_FEEDBACK,            /* space */
     P_CUTOFF, P_DECAY, P_PTONE, P_MOTION,             /* the stab's filter and length, the pings' tone, the arrangement */
     P_TUNE, P_MIDI, P_TEMPO, P_ROOT, P_MODE, P_POCT,  /* setup, panel encoders, the pings' octave */
@@ -112,14 +113,15 @@ enum {
                                                        * wanders: the chord's filter, the noise's */
     /* (1.4.0, format 21, the user's: the Chord's pages) the chord's Vary, 0..100: how often its stabs' pattern turns,
      * Evolve over it (50: as Evolve alone turned it; 0: still, the stabs all played; 100: three times as often); and
-     * where its LFO and drift go (EN_CLDEST_NAME: Cutoff, Reso, Colour; ALGORITHM on the Chord LFO page) */
+     * where its LFO and drift go (EN_CLDEST_NAME: Cutoff, Reso, Colour; ALGORITHM on the Chord LFO page). (Format 29:
+     * Vary a trim on Form's Vary, -50..+50, -50 Hold: P_LOOSE's note) */
     P_CVARY, P_CLDEST,
     /* (1.4.0, format 22, the user's: the layers' pages) each layer's Vary, as the chord's: how often its part changes,
      * Evolve over it (50: as Evolve alone changed it; 0: still; 100: about three times as often): the pings' loops
      * (their notes moving, a pass sat out), the bass's plan (its phrase's figure, the octave note), the drums' (the
      * kick's shape, the shaker's steps, the clap), the noise's groove (the recipe's Change under it). And the chord's
      * Cutoff as a knob around the piece's own (-50..+50: 0 its recipe's, P_CUTOFF, now the base, on no knob; a step
-     * 0.055 octave, as P_CUTOFF's) */
+     * 0.055 octave, as P_CUTOFF's). (Format 29: the Varys trims on Form's Vary, as the chord's) */
     P_PVARY, P_BVARY, P_DVARY, P_NVARY, P_CCUT,
     /* (1.4.0, format 23, the user's: the Arrangement page's channel strips, a part's white key held) each part's Echo
      * send and Plate send, 0..100: the part's own sends times a fader's share (50: as the piece sent before, 0: none,
@@ -147,6 +149,11 @@ enum {
      * desk by itself, 0..100: 0 off (the music as it was, bit for bit); the parts' faders and sends, the chord's
      * filter and the echo's feedback moved slowly, off the phrase lines, around the knobs' values (never on them) */
     P_MIXER,
+    /* (1.4.0, format 29, the variety plan's step 1) how loose the playing is, 0..100: the stabs' own cutoffs, the hats'
+     * and the bass's late notes, the throws; each piece's own (its recipe's), on no knob (Evolve's before: 2.5 times it,
+     * to 100). (And P_VARY is Form's Vary, Evolve's place; P_CVARY, P_PVARY .. P_NVARY each layer's trim on it, -50..+50:
+     * the layer's amount Vary plus its trim, 0..100; 0 follows Vary; -50 Hold, that layer never turns) */
+    P_LOOSE,
     P_NPARAMS
 };
 typedef struct {

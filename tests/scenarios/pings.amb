@@ -1,5 +1,5 @@
-# the ping loops: at Evolve 0 they stay as they are, pass after pass; SAVE keeps them with the piece, so
-# they come back after a reboot and after going to another piece and back; at Evolve up they move again
+# the ping loops: at Vary 0 they stay as they are, pass after pass; SAVE keeps them with the piece, so
+# they come back after a reboot and after going to another piece and back; at Vary up they move again
 wait 3000
 spin K2 -100
 expect par5 0
@@ -30,7 +30,7 @@ expect pingsame 0
 pingmark
 wait 30000
 expect pingsame 1
-# Evolve up: they move again
+# Vary up: they move again
 tap HOME
 wait 200
 spin K2 80
@@ -47,7 +47,7 @@ wait 500
 store8
 reboot
 wait 1000
-expect format 28
+expect format 29
 expect piece 2
 turn PRESET -2
 wait 500

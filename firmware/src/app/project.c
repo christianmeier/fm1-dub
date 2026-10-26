@@ -336,6 +336,24 @@ typedef struct {
     slot26_t slot[NPIECES];
     uint8_t rsv[16];
 } project26_t;
+/* DUB-1 1.4.0's dub mixer and strips' Filter (formats 27 and 28): today's, without the piece's looseness (Evolve's then);
+ * their Vary Form's Evolve, the layers' Varys 0..100 over it */
+#define NPAR28 P_LOOSE
+_Static_assert(NPAR28 == 164, "formats 27 and 28 had 164 parameters");
+typedef struct {
+    int16_t par[NPAR28];
+    uint16_t pool;
+    uint8_t pings[EN_PINGS_N];
+    uint8_t pings_ok, screen;
+} slot28_t;
+typedef struct {
+    uint32_t magic, format;
+    int16_t par[NPAR28];
+    uint16_t pool;
+    uint8_t leds, piece, screen, rsv0;
+    slot28_t slot[NPIECES];
+    uint8_t rsv[16];
+} project28_t;
 _Static_assert(sizeof(project_t) <= 3840u, "the project must fit one storage sector's payload");
 
 static void take(const slot_t *s)                /* a piece's settings into play, the globals kept */
@@ -686,6 +704,44 @@ static void from26(const project26_t *o)        /* 1.4.0's song structure (26): 
         proj.slot[i].screen = o->slot[i].screen;
     }
 }
+static void from28(const project28_t *o)        /* 1.4.0's dub mixer and Filter (27, 28): everything kept */
+{
+    int i;
+    memset(&proj, 0, sizeof proj);
+    proj.magic = o->magic;
+    proj.format = PROJ_FORMAT;
+    memcpy(proj.par, o->par, sizeof o->par);
+    proj.pool = o->pool;
+    proj.leds = o->leds, proj.piece = o->piece, proj.screen = o->screen;
+    for (i = 0; i < NPIECES; i++) {
+        memcpy(proj.slot[i].par, o->slot[i].par, sizeof o->slot[i].par);
+        proj.slot[i].pool = o->slot[i].pool;
+        memcpy(proj.slot[i].pings, o->slot[i].pings, sizeof proj.slot[i].pings);
+        proj.slot[i].pings_ok = o->slot[i].pings_ok;
+        proj.slot[i].screen = o->slot[i].screen;
+    }
+}
+static int16_t trim28(int ev, int v)            /* before 29: a layer's Vary (0..100: Evolve times 0..1 to 50, to 3 at
+                                                  * 100) as today's trim on Form's Vary (Evolve's value, kept): the
+                                                  * amount it gave, Evolve x factor, as Vary + trim; 0 Hold */
+{
+    const float f = v <= 50 ? (float)v / 50.0f : 1.0f + (float)(v - 50) / 25.0f;
+    int t;
+    if (v <= 0)
+        return -50;
+    t = (int)((float)ev * (f - 1.0f) + 1000.5f) - 1000;   /* (rounded, half up: as the recipes were turned) */
+    return (int16_t)(t < -49 ? -49 : t > 50 ? 50 : t);
+}
+static void vary28(int16_t *par, int old)       /* before 29: Evolve is Form's Vary as it was; the Varys it had, trims */
+{
+    static const uint8_t VP[4] = {P_PVARY, P_BVARY, P_DVARY, P_NVARY};
+    int k;
+    if (old >= 21)
+        par[P_CVARY] = trim28(par[P_VARY], par[P_CVARY]);
+    if (old >= 22)
+        for (k = 0; k < 4; k++)
+            par[VP[k]] = trim28(par[P_VARY], par[VP[k]]);
+}
 static void lowcut27(int16_t *par)               /* (27's Low cut, 1..100: ~20 Hz .. ~600 Hz, 4.907 octaves over 99 steps;
                                                   * the Filter's high-pass, +1..+50: 20 Hz .. 2.5 kHz, 6.966 over 49) */
 {
@@ -914,17 +970,19 @@ int project_load(void)
             fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR26, o->slot[i].pool, i);
         }
         from26((const project26_t *)(const void *)&buf);
-    } else if (n >= 8 && buf.magic == PROJ_MAGIC && buf.format == 27u && n >= (int)sizeof(project_t)) {
-        old = 27;                                /* (27: today's layout; the strips' Low cut, now their Filter) */
-        for (i = 0; i < NPIECES; i++)
-            fresh[i] = (uint8_t)untouched_raw(buf.slot[i].par, P_NPARAMS, buf.slot[i].pool, i);
-        proj = buf;
-        proj.format = PROJ_FORMAT;
+    } else if (n >= 8 && buf.magic == PROJ_MAGIC && (buf.format == 27u || buf.format == 28u) &&
+               n >= (int)sizeof(project28_t)) {
+        old = (int)buf.format;                   /* (27, 28: as 28 laid out; 27's strips' Low cut, now their Filter) */
+        for (i = 0; i < NPIECES; i++) {
+            const project28_t *o = (const project28_t *)(const void *)&buf;
+            fresh[i] = (uint8_t)untouched_raw(o->slot[i].par, NPAR28, o->slot[i].pool, i);
+        }
+        from28((const project28_t *)(const void *)&buf);
     } else {
         proj = buf;
     }
-    if (old && old < 27)                                     /* (the new ones, from the recipes) */
-        newpar(old == 26 ? NPAR26 : old == 25 ? NPAR25 : old == 24 ? NPAR24 : old == 23 ? NPAR23 : old == 22 ? NPAR22 : old == 21 ? NPAR21 : old == 20 ? NPAR20 : old == 19 ? NPAR19 : old >= 17 ? NPAR18 : old == 16 ? NPAR16 : old == 15 ? NPAR15 : old == 14 ? NPAR14 : old == 13 ? NPAR13
+    if (old && old < 29)                                     /* (the new ones, from the recipes) */
+        newpar(old >= 27 ? NPAR28 : old == 26 ? NPAR26 : old == 25 ? NPAR25 : old == 24 ? NPAR24 : old == 23 ? NPAR23 : old == 22 ? NPAR22 : old == 21 ? NPAR21 : old == 20 ? NPAR20 : old == 19 ? NPAR19 : old >= 17 ? NPAR18 : old == 16 ? NPAR16 : old == 15 ? NPAR15 : old == 14 ? NPAR14 : old == 13 ? NPAR13
                                                                                                             : NPAR12);
     if (old == 19) {                             /* (19: Drift a rate; now its own knob) */
         walk19(proj.par);
@@ -979,6 +1037,12 @@ int project_load(void)
         lowcut27(proj.par);
         for (i = 0; i < NPIECES; i++)
             lowcut27(proj.slot[i].par);
+    }
+    if (old && old < 29) {                       /* (before 29: Evolve Form's Vary as it was, the layers' Varys trims on
+                                                  * it, as near as they sounded; the looseness the recipe's, above) */
+        vary28(proj.par, old);
+        for (i = 0; i < NPIECES; i++)
+            vary28(proj.slot[i].par, old);
     }
     if (n >= 8 && proj.magic == PROJ_MAGIC && proj.format == PROJ_FORMAT) {   /* (the ranges as they are now) */
         proj.screen = ui_screen_ok(proj.screen);   /* (1.4.0: the echo trail and the fifths gone: the ripples) */

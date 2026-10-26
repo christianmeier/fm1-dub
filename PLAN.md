@@ -907,7 +907,27 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
     calmer (Fog, Pressure, Haze, Chamber, Basic, Night Drive), the sound moving more (Drift, Depth, Mixer up), Change
     64 bars on Concrete and Haze (32 on Night Drive).
   - **Pending, for discussion:** the bigger proposal (Vary, Drift, Motion on the Form page; the layer Varys as trims;
-    the kick's short drop-outs).
+    the kick's short drop-outs). Decided: build/design/VARIETY-PLAN.md (decisions 1-11), built a step at a time.
+- **The variety plan, step 1: Vary and its trims** (VARIETY-PLAN.md decision 7; branch dub-1.4-vary, format 29;
+  build/design/REPORT-vary.md). **Built:**
+  - Form's KNOB 2 **Vary** in Evolve's place (P_VARY, Evolve's index and value kept: no sound change at the recipes),
+    continuous, 0 the loop held (the kick keeps its shape, the plan, the stabs, the loops, the noise's groove all
+    still; a section still draws its kick).
+  - The layers' Varys **trims** on it (P_CVARY, P_PVARY .. P_NVARY, -50..+50; the layer's amount Vary + trim, 0..100;
+    0 follows, -50 **Hold**: that layer never turns). A centred ring (the knob's notch at 0), Hold's place marked at
+    the ring's start and the word inside it. The recipes' turned into the trims that sound the same (Evolve times
+    the old factor: Chamber -17/-12/-15/-15, Steppers pings -14 drums -21, Fog chord and pings -16, Night Drive bass
+    and drums -16, Pressure four at -15, Haze four at -12).
+  - **Evolve's own nudges removed** (by hand, a layer's button held, as ever). The bass's **borrowed groove**
+    continuous: as the square of the bass's amount (100: 7 phrases in 400, as Evolve 100 had it; no threshold at 60).
+  - **The looseness the piece's own** (P_LOOSE, on no knob; Evolve's 2.5 times, to 100, before): Basic, Fog,
+    Concrete, Night Drive 100, Steppers 88, Pressure 75, Chamber 63, Haze 50. It sets each stab's cutoff, the hats'
+    rests and lean, the bass's late notes and the throws (Vary 0 no longer stops the throws: Looseness does).
+  - Format 29: 27 and 28 read (their layout), every older one as before; Evolve kept as Vary, each saved Vary the
+    trim of the same amount (0 Hold), the looseness the recipe's; the host's store28 (and store21-27 writing the old
+    Varys); the upgrade scenario a 28 project.
+  - **To judge:** Vary's 50 and 100 against the classics and Coldest Season (still Evolve's scale: step 5 sets the
+    recipes against their models); whether the drums' Hold should keep the kick through the sections too.
 - **The header, where we are** (the user, 2026-10-25: the top-left block "too small and reads badly, but at the same
   time it clutters"; option A; prototype on branch dub-1.4-header, to judge on the FM-1): the phrase in the header,
   beside the piece's tag (the section's word, or INTRO / OUTRO, and the eight bars as larger cells, the B bars

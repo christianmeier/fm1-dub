@@ -39,7 +39,7 @@ const char *const EN_SEC_NAME[EN_NSEC] = {"Full", "Break", "Groove", "Thin"};
 
 static const en_param_t PARAMS[P_NPARAMS] = {
     {"Chord", 0, 100, 70},    {"Pings", 0, 100, 35},    {"Bass", 0, 100, 60},     {"Drums", 0, 100, 65},
-    {"Density", 0, 100, 30},  {"Evolve", 0, 100, 40},   {"Drift", 0, 6, 4},       {"Hits", 0, 100, 50},
+    {"Density", 0, 100, 30},  {"Vary", 0, 100, 40},     {"Drift", 0, 6, 4},       {"Hits", 0, 100, 50},
     {"Echo", 0, 100, 55},     {"Echo time", 0, 5, 1},   {"Reverb", 0, 100, 35},   {"Feedback", 0, 100, 60},
     {"Cutoff", 0, 100, 45},   {"Decay", 0, 100, 35},    {"Ping tone", 0, 100, 40}, {"Motion", 0, 100, 50},
     {"Tune", -50, 50, 0},     {"MIDI out", 0, 1, 1},    {"Tempo", 40, 140, 122},  {"Root", 0, 11, 5},
@@ -80,8 +80,8 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     {"Chord rate", 0, EN_LFO_DRIFT - 1, 2}, {"Noise rate", 0, EN_LFO_DRIFT - 1, 2},
     {"Chord shape", 0, EN_NLSHAPE - 1, 0}, {"Noise shape", 0, EN_NLSHAPE - 1, 0},
     {"Chord drift", 0, 100, 0}, {"Noise wander", 0, 100, 0},
-    {"Chord vary", 0, 100, 50}, {"Chord LFO to", 0, EN_NCLDEST - 1, 0},
-    {"Pings vary", 0, 100, 50}, {"Bass vary", 0, 100, 50}, {"Drums vary", 0, 100, 50}, {"Noise vary", 0, 100, 50},
+    {"Chord vary", -50, 50, 0}, {"Chord LFO to", 0, EN_NCLDEST - 1, 0},
+    {"Pings vary", -50, 50, 0}, {"Bass vary", -50, 50, 0}, {"Drums vary", -50, 50, 0}, {"Noise vary", -50, 50, 0},
     {"Cutoff ofs", -50, 50, 0},
     {"Chord echo", 0, 100, 50}, {"Chord plate", 0, 100, 50}, {"Pings echo", 0, 100, 50}, {"Pings plate", 0, 100, 50},
     {"Bass echo", 0, 100, 0},   {"Bass plate", 0, 100, 50},  {"Hats echo", 0, 100, 50},  {"Hats plate", 0, 100, 50},
@@ -92,12 +92,13 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     {"Song mode", 0, EN_NSMODE - 1, 0}, {"Intro", 0, 16, 4}, {"Main", 4, 64, 20}, {"Outro", 0, 16, 4},
     {"Intro kind", 0, EN_NSKIND - 1, 0},
     {"Mixer", 0, 100, 0},
+    {"Looseness", 0, 100, 100},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
 
 /* the pieces: eight recipes for the whole machine (the FM-1's PRESETS, the web app's cards). Tune and
  * MIDI out are taken from here by neither: they belong to the player, not the piece */
-/*                  Cho Pin Bas Dru  Den Evo Dri Hit  Ech ET Rev Fdb  Cut Dec PTo Mot  Tun MI Tem Rt Md Oc
+/*                  Cho Pin Bas Dru  Den Var Dri Hit  Ech ET Rev Fdb  Cut Dec PTo Mot  Tun MI Tem Rt Md Oc
  *                  CV BO Grv Fif Swi Hat  Stb Crk Dck Siz  Clo PV BV Kit
  *                  then the sound pages' sixteen, all 0: the voices as they are; then the noise's five (its controls, its character);
  *                  then Throws, Ghost, Notes, Hats level (50, 50, 100, 50: the pieces as they were);
@@ -105,8 +106,8 @@ const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PAR
  *                  then the noise's Width, Plate and Echo, the hats' length; then the noise's LFO, the kick's rumble;
  *                  then the chord's and the noise's LFO rates, their waves (0 Sine), their drifts (the random walk);
  *                  then the chord's LFO's rate and the noise's (0..5: 1 2 4 8 16 32 bars, 6: Drift; 1.4.0);
- *                  then the chord's Vary (50: as Evolve alone turned its stabs), its LFO's destination (0: Cutoff);
- *                  then the pings', the bass's, the drums' and the noise's Vary (50: as Evolve alone), the chord's
+ *                  then the chord's Vary trim (0: as Form's Vary; -50 Hold), its LFO's destination (0: Cutoff);
+ *                  then the pings', the bass's, the drums' and the noise's Vary trims (0: as Form's Vary), the chord's
  *                  Cutoff knob (0: the piece's own, Cut above; 1.4.0);
  *                  then the channel strips' sends (the chord's, the pings', the bass's, the drums' Echo and Plate: 50 as
  *                  they sent before, the bass's echo 0, none before) and their Low cuts (0, off; 1.4.0);
@@ -115,7 +116,7 @@ const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PAR
  *                  then Song mode (0, Endless: the player's, as Tune), the song's Intro, Main and Outro in phrases (4,
  *                  20, 4: 32, 160 and 32 bars) and its intro's Kind (0 Ambient first, 1 Pulse first; 1.4.0);
  *                  then the dub mixer, how much it rides the desk (0 off; 1.4.0: the source's held loop, BCD and
- *                  M-Series, little; the US branch's played desk, Echospace and Intrusion, most)
+ *                  M-Series, little; the US branch's played desk, Echospace and Intrusion, most); then the piece's looseness (1.4.0, format 29: Evolve's 2.5 times, to 100, as it was)
  * (Dri: Drift, 2 4 8 16 32 64 bars or Hold; ET: Echo time, 1/8 1/8. 1/4 1/4. 1/2 1 bar; Grv: the knob's, Drone,
  *  Offbeat, Dotted, Sync, Roller (GROOVE_NAME); CV, PV, BV, Kit: the voices, EN_CV_NAME ...) */
 static const struct {
@@ -136,13 +137,13 @@ static const struct {
                     2, 2,
                     0, 0,
                     45, 20,
-                    50, 0,
-                    50, 50, 50, 50, 0,
+                    0, 0,
+                    0, 0, 0, 0, 0,
                     50, 50, 50, 50, 0, 50, 50, 50,
                     0, 0, 0, 0, 0,
                     50, 0, 0, 0,
                     0,
-                    0, 4, 20, 4, 1, 45}},
+                    0, 4, 20, 4, 1, 45, 100}},
     {"Chamber",    {55, 20, 62, 72, 20, 25, 6, 40, 70, 4, 45, 72, 50, 55, 30, 30, 0, 1, 128, 9, 5, 0,
                     2, 0, 0, 10, 0, 40, 5, 12, 45, 70, 45, 2, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -157,13 +158,13 @@ static const struct {
                     2, 3,
                     0, 0,
                     25, 25,
-                    50, 0,
-                    15, 25, 20, 20, 0,
+                    0, 0,
+                    -17, -12, -15, -15, 0,
                     50, 50, 50, 50, 0, 50, 50, 50,
                     0, 0, 0, 0, 0,
                     50, 0, 0, 0,
                     0,
-                    0, 4, 20, 4, 0, 55}},
+                    0, 4, 20, 4, 0, 55, 63}},
     {"Steppers",   {52, 35, 80, 82, 35, 35, 6, 45, 50, 1, 30, 50, 55, 25, 50, 25, 0, 1, 126, 2, 1, 0,
                     0, 0, 2, 35, 45, 60, 25, 5, 60, 50, 20, 1, 1, 2,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -178,13 +179,13 @@ static const struct {
                     1, 2,
                     0, 0,
                     35, 20,
-                    50, 0,
-                    30, 50, 20, 50, 0,
+                    0, 0,
+                    -14, 0, -21, 0, 0,
                     50, 50, 50, 50, 0, 50, 50, 50,
                     0, 0, 0, 0, 0,
                     50, 0, 0, 0,
                     0,
-                    0, 4, 20, 4, 1, 20}},
+                    0, 4, 20, 4, 1, 20, 88}},
     {"Fog",        {50, 34, 58, 62, 40, 40, 5, 42, 75, 2, 55, 72, 46, 80, 25, 72, 0, 1, 120, 7, 5, 0,
                     3, -1, 0, 15, 0, 30, 5, 30, 35, 80, 60, 0, 0, 3,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -199,13 +200,13 @@ static const struct {
                     5, 2,
                     0, 0,
                     90, 50,
-                    30, 0,
-                    30, 50, 50, 50, 0,
+                    -16, 0,
+                    -16, 0, 0, 0, 0,
                     50, 50, 50, 50, 0, 50, 50, 50,
                     0, 0, 0, 0, 0,
                     50, 0, 0, 0,
                     0,
-                    0, 4, 20, 4, 0, 90}},
+                    0, 4, 20, 4, 0, 90, 100}},
     {"Concrete",   {58, 45, 70, 85, 25, 50, 5, 55, 50, 1, 25, 62, 60, 20, 60, 35, 0, 1, 136, 0, 7, 0,
                     6, 0, 4, 30, 10, 75, 30, 5, 50, 45, 15, 2, 3, 2,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -220,13 +221,13 @@ static const struct {
                     2, 1,
                     0, 0,
                     75, 25,
-                    50, 0,
-                    50, 50, 50, 50, 0,
+                    0, 0,
+                    0, 0, 0, 0, 0,
                     50, 50, 50, 50, 0, 50, 50, 50,
                     0, 0, 0, 0, 0,
                     50, 0, 0, 0,
                     0,
-                    0, 4, 20, 4, 1, 90}},
+                    0, 4, 20, 4, 1, 90, 100}},
     {"Night Drive", {48, 45, 68, 78, 45, 40, 4, 35, 60, 3, 35, 65, 50, 40, 45, 45, 0, 1, 120, 10, 1, 0,
                     1, 0, 1, 25, 13, 55, 20, 15, 50, 60, 35, 4, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -241,13 +242,13 @@ static const struct {
                     3, 3,
                     0, 0,
                     55, 25,
-                    50, 0,
-                    50, 30, 30, 50, 0,
+                    0, 0,
+                    0, -16, -16, 0, 0,
                     50, 50, 50, 50, 0, 50, 50, 50,
                     0, 0, 0, 0, 0,
                     50, 0, 0, 0,
                     0,
-                    0, 4, 20, 4, 0, 45}},
+                    0, 4, 20, 4, 0, 45, 100}},
     {"Pressure",   {55, 20, 75, 92, 20, 30, 6, 38, 55, 1, 20, 55, 48, 30, 35, 25, 0, 1, 126, 4, 2, 0,
                     5, 0, 1, 10, 5, 65, 25, 30, 70, 40, 40, 3, 4, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -262,13 +263,13 @@ static const struct {
                     2, 2,
                     0, 0,
                     45, 20,
-                    25, 0,
-                    25, 25, 25, 50, 0,
+                    -15, 0,
+                    -15, -15, -15, 0, 0,
                     50, 50, 50, 50, 0, 50, 50, 50,
                     0, 0, 0, 0, 0,
                     50, 0, 0, 0,
                     0,
-                    0, 4, 20, 4, 1, 40}},
+                    0, 4, 20, 4, 1, 40, 75}},
     {"Haze",       {45, 42, 58, 55, 50, 20, 5, 35, 80, 3, 60, 70, 45, 80, 25, 35, 0, 1, 116, 3, 0, 1,
                     3, 0, 0, 20, 10, 35, 5, 20, 30, 85, 70, 2, 0, 4,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -283,13 +284,13 @@ static const struct {
                     2, 2,
                     0, 0,
                     55, 30,
-                    20, 0,
-                    20, 20, 50, 20, 0,
+                    -12, 0,
+                    -12, -12, 0, -12, 0,
                     50, 50, 50, 50, 0, 50, 50, 50,
                     0, 0, 0, 0, 0,
                     50, 0, 0, 0,
                     0,
-                    0, 4, 20, 4, 0, 60}},
+                    0, 4, 20, 4, 0, 60, 50}},
 };
 
 const char *en_piece_name(int i) { return PIECES[(unsigned)i < EN_NPIECES ? i : 0].name; }
@@ -447,6 +448,8 @@ EN_COLD void en_param_text(int i, int v, char *b)
         s = EN_SKIND_NAME[(unsigned)v < EN_NSKIND ? v : 0];
     else if ((i == P_SINTRO || i == P_SOUTRO) && !v)
         s = "None";
+    else if ((i == P_CVARY || (i >= P_PVARY && i <= P_NVARY)) && v <= -50)
+        s = "Hold";                              /* (1.4.0, format 29: a layer's Vary trim at its far left) */
     if (s) {
         int k = 0;
         while (s[k] && k < 9) {
@@ -1049,17 +1052,33 @@ static void mods_step(uint32_t n)
         mod[i].v += (mod[i].tgt - mod[i].v) * fm_minf(mod[i].rate, 1.0f);
     }
 }
-static float motion, evolve;                    /* 0..1: Motion, Evolve */
-/* (1.4.0, the user's: each layer's Vary, Evolve over it) how often its part changes, times Evolve's: 1 at 50 (as Evolve
- * alone had it: exactly), 0 at 0, 3 at 100. The pings' loops, the bass's plan, the drums' (the kick, the shaker, the
- * clap), the noise's groove; ev_of: Evolve as that layer feels it */
-enum { VY_PINGS, VY_BASS, VY_DRUMS, VY_NOISE, VY_N };
-static float vary_l[VY_N] = {1.0f, 1.0f, 1.0f, 1.0f};
-static float vary_of(int v) { return v <= 50 ? (float)v / 50.0f : 1.0f + (float)(v - 50) / 25.0f; }
-#define ev_of(k) (evolve * vary_l[k])
+static float motion, vary_m;                    /* 0..1: Motion, Form's Vary (1.4.0, format 29: Evolve's place) */
+/* (1.4.0, format 29, the variety plan's step 1) each layer's amount: Form's Vary plus the layer's trim (its page's
+ * Vary, -50..+50), 0..1; the trim's far left (-50) Hold, 0 whatever Vary says. How often its part changes: the pings'
+ * loops, the bass's plan, the drums' (the kick, the shaker, the clap), the noise's groove, the chord's stabs. (Before:
+ * Evolve times each layer's Vary, 1 at 50, 3 at 100: format 29's step turned each into the trim that sounds the same) */
+enum { VY_PINGS, VY_BASS, VY_DRUMS, VY_NOISE, VY_N, VY_CHORD = VY_N };
+static float lay_a[VY_N + 1];
+static void lay_set(void)
+{
+    static const uint8_t TP[VY_N + 1] = {P_PVARY, P_BVARY, P_DVARY, P_NVARY, P_CVARY};
+    int k;
+    for (k = 0; k <= VY_N; k++) {
+        const int t = par[TP[k]], a = par[P_VARY] + t;
+        lay_a[k] = t <= -50 ? 0.0f : (float)(a < 0 ? 0 : a > 100 ? 100 : a) * 0.01f;
+    }
+}
+#define ev_of(k) (lay_a[k])
+static float rel_of(int k)                       /* a layer's amount against Vary's: 1 when it follows (as the old
+                                                  * layer Vary's factor, for what scaled by it alone), to 3 */
+{
+    return lay_a[k] <= 0.0f ? 0.0f : vary_m > 0.005f ? fm_minf(lay_a[k] / vary_m, 3.0f) : 1.0f;
+}
 volatile uint32_t en_vary_turns[VY_N];           /* (for tests) each layer's changes so far: a loop's note moved, a new
                                                   * plan, the shaker's steps traded, a new noise groove */
-static float loose(void) { return fm_minf(evolve * 2.5f, 1.0f); }   /* (1.3.0: how loose the playing is; 0 at Evolve 0) */
+static float loose_v = 1.0f;                     /* (1.3.0: how loose the playing is; 1.4.0, format 29: each piece's
+                                                  * own, P_LOOSE, no longer Evolve's) */
+static float loose(void) { return loose_v; }
 static float arcm;                              /* the sweep, -1 dark .. +1 open, times its depth (sl_d) */
 static float sl_d, sl_ds;                       /* (1.4.0, the variety study) the slow movement's depth: the chord LFO's
                                                   * Drift and Depth (its knobs), not Motion's; and its eased value */
@@ -1202,7 +1221,7 @@ static uint32_t sixteenth, bar, chord_bars;    /* bars since the start, since th
 static uint8_t sec, sec_next, fill;
 static uint8_t lay_kick = 1, lay_hats = 1, lay_open = 1, lay_bass = 1, lay_stabs = 1;
 /* the kick's shape, a phrase at a time (1.3.0, REPORT2's proposal 2): none, the downbeat, 1 and 3, four with 2 and 4
- * ghosted (-10 dB), four on the floor. The Drums page's Density is where they centre; Evolve how far they wander */
+ * ghosted (-10 dB), four on the floor. The Drums page's Density is where they centre; Vary how far they wander */
 enum { KS_NONE, KS_ONE, KS_HALF, KS_GHOST, KS_FOUR, KS_N };
 static const uint16_t KSHAPE[KS_N] = {0x0000u, 0x0001u, 0x0101u, 0x1111u, 0x1111u};
 static uint8_t kick_shape = KS_FOUR;
@@ -1412,7 +1431,7 @@ static int prog_pos = -1;
  * and Free rarely step straight back to d2 (no ping-pong) */
 const char *const EN_WALK_NAME[EN_NWALK] = {"Home", "Wander", "Free"};
 #define PLAY_LOOP (par[P_PMODE] & EN_PLOOP)
-static int walk_shape;                          /* the walk's voicing, now and then the other (Evolve) */
+static int walk_shape;                          /* the walk's voicing, now and then the other (Vary) */
 static int walk_prev;                           /* the degree before the walk's last */
 EN_COLD static int walk_from(int d)
 {
@@ -1445,7 +1464,7 @@ EN_COLD static int walk_from(int d)
         if (i >= nsteps)
             i = nsteps > 1 ? 1 : 0;
     }
-    if (frand() < evolve * 0.1f)
+    if (frand() < vary_m * 0.1f)
         walk_shape ^= 1;                         /* now and then, the other voicing */
     return i;
 }
@@ -1536,7 +1555,7 @@ static int loop_target(void)                    /* 0..5 notes: Density, thinned 
     float d = (float)pe(P_DENSITY) * 0.05f * (1.0f + 0.5f * fm_minf(arcm, 0.35f));
     return (int)(fm_clampf(d, 0.0f, 5.0f) + frand());
 }
-static uint8_t loop_rest[EN_NLOOP];             /* this pass: silent (Evolve) */
+static uint8_t loop_rest[EN_NLOOP];             /* this pass: silent (Vary) */
 
 EN_COLD static void loop_add(int l)
 {
@@ -1613,7 +1632,7 @@ EN_COLD static void pings_take(void)
 EN_COLD static void loop_pass(int l)                    /* the end of a pass: grow, prune, evolve */
 {
     int c = loop_count(l), t = loop_target(), s;
-    if (ev_of(VY_PINGS) < 0.005f) {             /* Evolve 0 (or Vary): the loops as they are (Density changed: to it) */
+    if (ev_of(VY_PINGS) < 0.005f) {             /* the pings' amount 0 (Vary 0, or Hold): the loops as they are (Density changed: to it) */
         t = (int)(fm_clampf((float)pe(P_DENSITY) * 0.05f, 0.0f, 5.0f) + 0.5f);
         for (; c < t; c++)
             loop_add(l);
@@ -1627,7 +1646,7 @@ EN_COLD static void loop_pass(int l)                    /* the end of a pass: gr
         loop_add(l);
     for (; c > t && (s = loop_pick(l)) >= 0; c--)
         loop_note[l][s] = -1;
-    loop_rest[l] = frand() < evolve * fm_minf(vary_l[VY_PINGS], 1.0f) * 0.2f + 0.2f * fm_maxf(-arcm, 0.0f);   /* (a pass
+    loop_rest[l] = frand() < fm_minf(lay_a[VY_PINGS], vary_m) * 0.2f + 0.2f * fm_maxf(-arcm, 0.0f);   /* (a pass
                                                   * sat out: as often up to Vary 50, as the stabs' gaps) */
     if (frand() < ev_of(VY_PINGS) * 0.7f && (s = loop_pick(l)) >= 0) {
         en_vary_turns[VY_PINGS]++;
@@ -1724,10 +1743,9 @@ EN_COLD static void bell_ring(int l, int slot)
 /* ------------------------------------------------------------- the stabs --- */
 static int stab_k, stab_kb, stab_rot;
 static uint32_t stab_home;                      /* the pattern, before this bar's gaps */
-/* (1.4.0, the user's: Vary, the chord's own, Evolve over it) how often the pattern turns, times Evolve's (1 at 50: as
- * Evolve alone had it; 0 at 0; 3 at 100); and its gaps (a stab left out, a bar with none), as often up to 50, none at
- * 0: at Vary 0 the pattern still, every stab played */
-static float vary_t = 1.0f, vary_g = 1.0f;
+/* (1.4.0: the chord's amount, lay_a[VY_CHORD], Form's Vary and its trim) how often the pattern turns; and its gaps (a
+ * stab left out, a bar with none), as often up to Vary's own, none at 0: at 0 (or Hold) the pattern still, every stab
+ * played */
 volatile uint32_t en_stab_turns;
 
 EN_COLD static void stabs_home(void)                    /* Stabs: one a bar .. six, off the beat */
@@ -1766,12 +1784,12 @@ EN_COLD static void stabs_bar(void)                     /* this bar's stabs: the
     first = 1;
     for (i = 0; i < 16; i++)
         if (p >> i & 1u) {
-            if (first || frand() >= 0.3f * evolve * vary_g)
+            if (first || frand() >= 0.3f * fm_minf(lay_a[VY_CHORD], vary_m))
                 out |= 1u << i;
             first = 0;
         }
-    if (sec != SEC_BREAK && frand() < 0.5f * evolve * vary_g)   /* (1.3.0: now and then a bar with none: the echo
-                                                      * carries it; ~20% at Evolve 40, Vary 50) */
+    if (sec != SEC_BREAK && frand() < 0.5f * fm_minf(lay_a[VY_CHORD], vary_m))   /* (1.3.0: now and then a bar with none: the echo
+                                                      * carries it; ~20% at Vary 40) */
         out = 0;
     en_stab_pat = out;
 }
@@ -2435,9 +2453,9 @@ EN_COLD static int section_pick(void)
 
 /* (1.3.0) the drums' and the bass's phrase plan (the user: randomness by phrase and bar, not by note): a phrase is
  * A A A B A A A B. A is the main bar, repeated exactly; B, on bars 4 and 8, a variant: sparse (breathing) or busy (a
- * fill), drawn once a phrase. Which of the hats' and the bass's notes rest (Density, Evolve's looseness), the hats'
+ * fill), drawn once a phrase. Which of the hats' and the bass's notes rest (Density, the piece's looseness), the hats'
  * feel (each step's accent and lateness) and the bass's octave note are drawn once a phrase too, from its seed, and
- * the same every bar. A new phrase keeps the plan or draws another (more often as Evolve rises; never at 0) */
+ * the same every bar. A new phrase keeps the plan or draws another (more often as Vary rises; never at 0) */
 static float ph_u(void)
 {
     ph_rng = ph_rng * 1664525u + 1013904223u;
@@ -2590,13 +2608,15 @@ EN_COLD static void bar_start(void)
         if (song_ph != EN_SG_OFF && (bar + 1u < song_b0 || (song_bo_on && bar + 1u >= song_bo)))
             sec_next = SEC_FULL;                 /* (1.4.0: the song's intro and outro, Full: no sections) */
         /* (1.3.0) the next phrase's kick and plan, decided now, so the screen can say a change is coming */
-        /* (the classics pass: both held for a few phrases, 2 at Evolve 100 to 6 at 0; a change of section draws the
+        /* (the classics pass: both held for a few phrases, 2 at Vary 100 to 6 near 0, held at 0; a change of section draws the
          * kick anew) */
         {
-            /* (1.4.0: the kick's hold the drums' Vary's, the plan's the bass's: each Evolve as its layer feels it) */
+            /* (1.4.0: the kick's hold the drums' amount's, the plan's the bass's: Vary and each one's trim) */
             const float ed = fm_minf(ev_of(VY_DRUMS), 1.0f), eb = ev_of(VY_BASS);
             const int hold = 2 + (int)(4.0f * (1.0f - ed)), holdb = 2 + (int)(4.0f * (1.0f - fm_minf(eb, 1.0f)));
-            kick_next = lock ? kick_shape : (ph_age + 1 >= hold || sec_next != sec) ? (uint8_t)kick_draw(sec_next) : kick_shape;
+            kick_next = lock ? kick_shape : ((ph_age + 1 >= hold && ed > 0.0f) || sec_next != sec) ? (uint8_t)kick_draw(sec_next) : kick_shape;   /* (format 29:
+                                                  * the drums' amount 0, Vary 0 or Hold: the kick kept; a section
+                                                  * still draws its own) */
             ph_new_next = (uint8_t)(!lock && eb > 0.0f && ph_age + 1 >= holdb && ph_u() < 0.2f + 0.6f * eb);
             en_vary_turns[VY_BASS] += ph_new_next;
             ph_reset = (uint8_t)(kick_next != kick_shape || ph_new_next);
@@ -2609,8 +2629,8 @@ EN_COLD static void bar_start(void)
     }
     en_drift = db ? fm_clampf((float)chord_bars / (float)db, 0.0f, 1.0f) : 0.0f;
     chord_bars++;
-    if ((bar & 1u) == 0u && bar > 0 && frand() < evolve * 0.6f * vary_t)   /* (1.3.0: every two bars, was four;
-                                                  * 1.4.0: Vary's, the chord's own, Evolve over it) */
+    if ((bar & 1u) == 0u && bar > 0 && frand() < lay_a[VY_CHORD] * 0.6f)   /* (1.3.0: every two bars, was four;
+                                                  * 1.4.0: the chord's amount, Vary and its trim) */
         stabs_evolve();
     if (pb == 0 && !lock && frand() < ev_of(VY_DRUMS) * 0.8f)   /* (1.3.0: the shaker's steps trade places at a phrase's start, not
                                                   * any bar: the A bars the same) */
@@ -2626,7 +2646,7 @@ EN_COLD static void bar_start(void)
 }
 
 /* the kick's shape for the next phrase: around Density (0..100 as 0..4 on the ladder; 100: four, always, as before
- * 1.3.0), each shape's weight falling with its distance (less steeply as Evolve rises), none at half; a Thin phrase
+ * 1.3.0), each shape's weight falling with its distance (less steeply as Vary rises), none at half; a Thin phrase
  * a step sparser. A piece starts on four (its first two phrases), then wanders down to Density over the next six;
  * and after a Break the kick comes back whole (the user: start on four on the floor, then let it evolve) */
 EN_COLD static int kick_draw(int next)
@@ -2756,7 +2776,7 @@ EN_COLD static void tick(void)
             drum_hit(2, v2, 0);
         if (hats && lay_hats && dpat(3) >> st & 1u && dhit(3, st, &v3))
             drum_hit(3, v3, st & 1);
-        if (en_lane[4] >> st & 1u) {             /* the clap: rare (Auto: 3% + 5% x Evolve, ~5% at 40; Pattern: its Chance) */
+        if (en_lane[4] >> st & 1u) {             /* the clap: rare (Auto: 3% + 5% x the drums' amount, ~5% at 40; Pattern: its Chance) */
             float v4 = 0.8f + 0.2f * r;
             if (par[P_DMODE] ? dhit(4, st, &v4) : frand() < 0.03f + 0.05f * ev_of(VY_DRUMS))
                 drum_hit(4, v4, 0);
@@ -3475,14 +3495,9 @@ EN_COLD static void apply(int p, int v)
     case P_PTONE: case P_PTON: btone = fm_clampf((float)(par[P_PTONE] + par[P_PTON]), 0.0f, 100.0f) * 0.01f; break;
     case P_MOTION: motion = (float)v * 0.01f; break;
     case P_CLWALK: case P_CFDEC: sl_set(); break;   /* (and the chord's LFO, below) */
-    case P_EVOLVE: evolve = (float)v * 0.01f; break;
-    case P_CVARY:                                /* (1.4.0: 50 as before, exactly: 1) */
-        vary_t = vary_of(v);
-        vary_g = fm_minf(vary_t, 1.0f);
-        break;
-    case P_PVARY: case P_BVARY: case P_DVARY: case P_NVARY:   /* (1.4.0: the layers' own, as the chord's) */
-        vary_l[p - P_PVARY] = vary_of(v);
-        break;
+    case P_VARY: vary_m = (float)v * 0.01f; lay_set(); break;   /* (format 29: Form's Vary, and the layers' amounts on it) */
+    case P_CVARY: case P_PVARY: case P_BVARY: case P_DVARY: case P_NVARY: lay_set(); break;   /* (their trims) */
+    case P_LOOSE: loose_v = (float)v * 0.01f; break;
     case P_CECHO: case P_CPLATE: case P_PECHO: case P_PPLATE: case P_BECHO: case P_BPLATE: case P_DECHO: case P_DPLATE:
         sx[(p - P_CECHO) >> 1][(p - P_CECHO) & 1] = (float)v * 0.02f;   /* (1.4.0, the strips: the part's own sends times
                                                   * v / 50, as the noise's Echo and Plate were already: 50 exactly 1) */
@@ -4705,14 +4720,14 @@ EN_COLD int en_nz_dens18(int old, int character)         /* a value before 18 (-
     return (k * 100 + 8) / 16;
 }
 /* the phrase's groove: Density's hits (2..16 in two bars), Euclidean, turned, a couple nudged a step off; now and then
- * the last one kept (more often as Evolve falls): a motif that comes back */
+ * the last one kept (more often as Vary falls): a motif that comes back */
 EN_COLD static void noise_pattern(void)
 {
     int k = nctl.hits, i, m;
     uint32_t p;
-    if (nz_drawn && !nz_now && cr_u() > (0.35f + 0.5f * evolve + 0.3f * nctl.drift) * vary_l[VY_NOISE])   /* (Change:
-                                                  * more often new; 1.4.0: Vary over it, the recipe's Change and Evolve
-                                                  * its 50) */
+    if (nz_drawn && !nz_now && cr_u() > (0.35f + 0.5f * (vary_m > 0.005f ? vary_m : lay_a[VY_NOISE]) + 0.3f * nctl.drift) * rel_of(VY_NOISE))   /* (Change:
+                                                  * more often new; 1.4.0: the noise's amount, Vary and its trim, the
+                                                  * recipe's Change scaled as the trim scales it) */
         return;
     en_vary_turns[VY_NOISE] += nz_drawn && !nz_now;   /* (a new groove: Vary's, not a knob's) */
     nz_now = 0;

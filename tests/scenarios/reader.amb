@@ -72,7 +72,7 @@ wait 300
 said Dub page: Echo 0, Echo time 1 bar, Feedback 1.5 s, Reverb 0
 tap HOME
 wait 300
-said Form page: Energy 0, Evolve
+said Form page: Energy 0, Vary
 # (1.4.0, the user's) Energy, the Arrangement page's too: down, sparse and dry; it stops at the middle on the way back
 spin K1 -102
 wait 300
@@ -151,7 +151,7 @@ said_none RESTING
 # OCT- / OCT+ on a layer's page: its level (here the pings', on the Pings page)
 tap ARP
 wait 300
-said Pings page, voice Blip: Density 30, Vary 50
+said Pings page, voice Blip: Density 30, Vary 0
 tap OCT+
 said PINGS 35
 tap OCT-
@@ -308,7 +308,7 @@ said Tempo 42
 tap HOME
 wait 300
 said Form page
-# Change Hold (the Chord page's), and Evolve and Motion to known values
+# Change Hold (the Chord page's), and Vary and Motion to known values
 tap ENV
 wait 300
 spin K3 20
@@ -318,12 +318,12 @@ tap HOME
 wait 300
 spin K2 -100
 wait 300
-said Evolve 0
+said Vary 0
 spin K3 100
 wait 300
 said Motion 100
 # WHERE: everything again (the chord held now)
 where
-said Form page: Energy 0, Evolve 0, Motion 100. Piece Basic, F Dorian, tempo 42, resting
+said Form page: Energy 0, Vary 0, Motion 100. Piece Basic, F Dorian, tempo 42, resting
 where
 said , held. Section 

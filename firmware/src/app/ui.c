@@ -157,7 +157,7 @@ enum { K_LEDS = 200, K_CPU, K_NONE, K_SLOT, K_CQ, K_CX,    /* (the Chords page: 
 static const char *const LANE_NAME[EN_NDRUM] = {"Kick", "Shaker", "Open", "Rim", "Clap"};
 _Static_assert(P_NPARAMS <= K_LEDS, "the knobs' own codes must come after the parameters");
 static const uint16_t VIEW_KNOB[NVIEWS][4] = {
-    {K_ENERGY, P_EVOLVE, P_MOTION, K_NONE},      /* (1.4.0, the user's: Energy here alone (the Arrangement page's
+    {K_ENERGY, P_VARY, P_MOTION, K_NONE},      /* (1.4.0, the user's: Energy here alone (the Arrangement page's
                                                   * until its Width); the Filter on SELECT only; Drift the Chord page's
                                                   * Change; the fourth free) */
     {P_STABS, P_CTHROW, P_DRIFT, P_CVARY},       /* (1.4.0, the user's: the chord's part: Change, how long a chord lasts
@@ -238,7 +238,7 @@ static const char *view_name(int v)              /* a page's name (a strip's: it
     return v == V_STRIP ? SN[strip_part] : VIEW_NAME[v];
 }
 static const char *const KNOB_LABEL[NVIEWS][4] = {
-    {"Energy", "Evolve", "Motion", ""},
+    {"Energy", "Vary", "Motion", ""},
     {"Density", "Throws", "Change", "Vary"},
     {"Density", "Vary", "", ""},
     {"Groove", "Vary", "Density", "Fifth"},
@@ -272,14 +272,14 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
 /* what each knob does, a line: under the big ring in the middle while it's being turned (each fits 228 px: the
  * host's expect helpfit) */
 static const char *const KNOB_HELP[NVIEWS][4] = {
-    {"Sparse and dry, to busy and bright", "How restless: stabs come and go", "How often it leaves Full, and sweeps",
+    {"Sparse and dry, to busy and bright", "How much the loop changes: held to restless", "How often it leaves Full, and sweeps",
      ""},
     {"Stabs a bar, one to six", "How often a stab is thrown to the echo", "How long a chord lasts",
-     "How often the stabs' pattern turns"},
-    {"How many notes each loop holds", "How often the loops change", "", ""},
-    {"The pattern, from sparse to busy", "How often its phrase's figure changes", "How many of the groove's notes play",
+     "The stabs' turns, more or less; left: Hold"},
+    {"How many notes each loop holds", "The loops' changes, more or less; left: Hold", "", ""},
+    {"The pattern, from sparse to busy", "Its figure's changes, more or less; left: Hold", "How many of the groove's notes play",
      "How often the fifth, not the root"},
-    {"The kick's shape, Evolve its wander", "How busy the hats are", "How often the kick and the hats change", ""},
+    {"The kick's shape, Vary its wander", "How busy the hats are", "The kick's and hats' changes; left: Hold", ""},
     {"How much goes into the echo", "The tape loop's length, in beats", "How long the repeats go on",
      "How much goes into the plate"},
     {"Fine tuning, in cents", "Notes and clock out over MIDI", "The keys' and buttons' lights",
@@ -306,7 +306,7 @@ static const char *const KNOB_HELP[NVIEWS][4] = {
     {"The whole mix mono, to wide", "A hand on the faders and sends, by itself", "The whole music dry, or drowned",
      "How far each beat pushes the rest down"},
     {"Beats a minute", "The key's root note", "The scale: Minor, Dorian, ...", "Off sixteenths late: the whole groove"},
-    {"How many hits ring, in two bars", "How often its groove changes", "", ""},
+    {"How many hits ring, in two bars", "Its groove's changes, more or less; left: Hold", "", ""},
     {"Clean repeats, to a dissolving wash", "The repeats darker, or brighter", "How long the plate rings",
      "The reverb through the grain cloud"},
     {"The noise mono, to wide", "How much of it rings in the plate", "How much of it goes into the echo", ""},
@@ -944,7 +944,7 @@ static int perf_sounds(int i)                    /* part i (0..5) heard: not mut
 }
 static void set_view(int v);
 static void lock_toggle(void)                    /* SEL held: Lock, on or off: the phrases keep their kick, groove and plan,
-                                                  * Evolve's own moves rest (not saved; off at boot) */
+                                                  * the borrowed groove rests (not saved; off at boot) */
 {
     ui.lock = (uint8_t)!ui.lock;
     en_lock(ui.lock);
@@ -1542,8 +1542,8 @@ static void midi_in(void)
 /* NUDGE: a layer's button held (ENV the chord, ARP the pings, LFO the bass, SEQ the drums): its sound a small step
  * further, a few of its values each a few units, a walk pulled back to the piece's recipe (the further a value has
  * gone, the likelier it steps back), so nudges explore round the piece's sound and never wander off. The biggest
- * change said, and the layer's sound page shown, that knob lit. Evolve nudges by itself: now and then on a phrase's
- * first bar, one layer, a smaller step (nudge_tick) */
+ * change said, and the layer's sound page shown, that knob lit. (1.4.0, format 29, the variety plan: Evolve's own
+ * nudges, by themselves, gone: the sound moves by hand, by Drift's LFOs and the dub mixer; Vary is the patterns) */
 #define NUDGE_HOLD 500u
 #define SHAKE_HOLD 1500u                  /* held on: a shake (a new voice, every value a big step) */
 #define NNUDGE 6
@@ -1574,8 +1574,8 @@ static void groove_step(int recipe, int pull)
         d = g == 0 ? 1 : g == hi ? -1 : nrand(2) ? 1 : -1;
     knob_set(P_GROOVE, g + d);
 }
-enum { NUDGE_EVOLVE, NUDGE_HAND, NUDGE_SHAKE };
-/* how a nudge goes: EVOLVE (Evolve's, 1-2 values, half steps, nothing said), HAND (the button held: 3-4 values, steps
+enum { NUDGE_HAND, NUDGE_SHAKE };
+/* how a nudge goes: HAND (the button held: 3-4 values, steps
  * up to an eighth of the range), SHAKE (held on: a new voice or kit, and every value a big step). Each value walks
  * from where it is, pulled back to the recipe: back as likely as it is far from it, always back from a quarter of
  * the range away */
@@ -1631,16 +1631,14 @@ static void nudge(int layer, int how)
         if (!dup)
             pick[np++] = NUDGE_PAR[layer][j];
     }
-    n = how == NUDGE_SHAKE ? np : how == NUDGE_HAND ? 3 + nrand(2) : 1 + nrand(2);
+    n = how == NUDGE_SHAKE ? np : 3 + nrand(2);
     for (j = 0; j < n && np; j++) {
         int w = nrand(np), p = pick[w], lo = en_param_info(p)->lo, hi = en_param_info(p)->hi;
         int st = (hi - lo) / (p == P_DECAY || p == P_CCUT || p == P_FEEDBACK ? 16 : 8), v = proj.par[p], d;
         pick[w] = pick[--np];                    /* (not twice in one nudge) */
         if (p == P_KTUNE)
             st = 2;                              /* (the kick's tune: semitones) */
-        if (how == NUDGE_EVOLVE)
-            st = (st + 1) / 2;
-        else if (how == NUDGE_SHAKE)
+        if (how == NUDGE_SHAKE)
             st = st * 3 / 2;
         if (st < 1)
             st = 1;
@@ -1661,8 +1659,6 @@ static void nudge(int layer, int how)
     }
     if (layer == 1 && (how == NUDGE_SHAKE || nrand(2)))   /* the pings: now and then a note of one loop, another */
         en_ping_nudge();
-    if (how == NUDGE_EVOLVE)
-        return;
     {   /* said: "CHORD NUDGE  Colour +9", "CHORD SHAKE  Keys" */
         char t[24], head[16], v[8];
         const char *nm = how == NUDGE_SHAKE ? vn : best >= 0 ? en_param_info(best)->name : "";
@@ -1684,7 +1680,7 @@ static void nudge(int layer, int how)
         head[i] = 0;
         if (!nudge_quiet)
             say(head, t);
-        if (how != NUDGE_EVOLVE && !nudge_quiet) /* (yours, not Evolve's: a card in the middle too) */
+        if (!nudge_quiet)                        /* (a card in the middle too) */
             card_show(head, t, how == NUDGE_SHAKE ? K_FROST : K_PULSE, how == NUDGE_SHAKE);
     }
     if (!ui.perf && !nudge_quiet) {
@@ -1710,20 +1706,20 @@ static void nudge(int layer, int how)
             }
     }
 }
-static void nudge_tick(void)                     /* Evolve's nudges: on a phrase's first bar, now and then, one layer */
+static void groove_tick(void)                    /* (1.4.0, format 29) the bass's borrowed groove: on a phrase's first
+                                                  * bar, now and then, by the bass's amount (Vary and its trim) */
 {
     static uint8_t last_pb = 0xFF;
     uint8_t pb = en_phrase_bar;
-    int ev = proj.par[P_EVOLVE];
+    const int t = proj.par[P_BVARY], a0 = proj.par[P_VARY] + t, a = t <= -50 ? 0 : a0 < 0 ? 0 : a0 > 100 ? 100 : a0;
     if (pb == last_pb)
         return;
     last_pb = pb;
-    if (pb != 0 || !en_playing || en_frozen || ev <= 40 || ui.lock)   /* (Lock: they rest) */
+    if (pb != 0 || !en_playing || en_frozen || !a || ui.lock)   /* (Lock, or the bass held: it rests) */
         return;
-    if (nrand(100) < (ev - 40) * 2 / 3)          /* (Evolve 100: 40% of the phrases; 70: 20%; 40 and under: none) */
-        nudge(nrand(NNUDGE), NUDGE_EVOLVE);
-    if (ev > 60 && nrand(400) < (ev - 60) * 7 / 10) {   /* the bass's groove, rarely, to a neighbour and back (Evolve
-                                                  * 100: 7% of the phrases, every few minutes; 60 and under: never) */
+    if (nrand(4000000) < a * a * 7) {            /* the bass's groove, rarely, to a neighbour and back: as the square
+                                                  * of the amount, no threshold (100: 7 phrases in 400, every few
+                                                  * minutes, as Evolve 100 had it; 50: a quarter of that; 0 never) */
         int16_t rec[P_NPARAMS];
         uint16_t pool;
         en_piece(proj.piece, rec, &pool);
@@ -4563,10 +4559,11 @@ static int text_has_digit(const char *t)
  * judged by the knob's ends, not its value now (the Filter's "Off" at 0 stays a unit) */
 enum { KK_RING, KK_UNIT, KK_SEL };
 static void knob_text(int k, char *b);
+static int vary_trim(int k) { return k == P_CVARY || (k >= P_PVARY && k <= P_NVARY); }   /* (format 29) */
 static int knob_kind(int k, int lo, int hi)
 {
     char a[16], z[16];
-    if (k == K_CPU)
+    if (k == K_CPU || vary_trim(k))              /* (a layer's Vary trim: a centred ring, Hold its far left) */
         return KK_RING;
     if (hi - lo < 10)
         return KK_SEL;
@@ -4746,6 +4743,8 @@ static void draw_knobs(void)
                 const float c = (float)(v - lo) / (float)(hi - lo);
                 arc_span(cx, KNB_CY, KNB_R, c - rr, c + rr, c + nw, mix(fill, K_TEXT, 11), en_playing ? K_TEXT : mix(fill, K_TEXT, 11));
             }
+            if (vary_trim(k))                    /* (1.4.0, format 29: a Vary trim's far left, Hold, marked) */
+                arc_mark_th(cx, KNB_CY, KNB_R, KNB_TH, 0.0f, K_TEXT);
             if (k == P_MOTION) {                 /* (Motion's three regions: the loop held, variations, Breaks) */
                 arc_mark_th(cx, KNB_CY, KNB_R, KNB_TH, 0.4f, K_TEXT);
                 arc_mark_th(cx, KNB_CY, KNB_R, KNB_TH, 0.7f, K_TEXT);
@@ -4753,7 +4752,7 @@ static void draw_knobs(void)
             {   /* (1.4.0, the user's) inside the ring: a unit's value always, small ("LP 2.6k", "32 bars"); a number only
                  * a moment as the page opens (or always, Setup's Values), as big as fits */
                 const int32_t in = 2 * (KNB_R - (int32_t)KNB_TH) - 2;
-                const int f = kind == KK_UNIT ? 16 : peek;
+                const int f = kind == KK_UNIT || (vary_trim(k) && v <= lo) ? 16 : peek;   /* (Hold: said always) */
                 if (f > 0) {
                     const felucca_font_t *fn = kind == KK_UNIT ? &FONT_XS : knob_font(t, in);
                     if (kind == KK_UNIT && text_w(&FONT_XS, t) > in + 6) {   /* (too wide: the unit's word dropped, the
@@ -5324,7 +5323,7 @@ static void set_tick(void)
 void ui_frame(void)
 {
     prog_take();
-    nudge_tick();
+    groove_tick();
     input();
     set_tick();
     autosave();

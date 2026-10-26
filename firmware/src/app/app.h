@@ -13,7 +13,11 @@
 #define EN_VERSION "DEV"
 #endif
 #define PROJ_MAGIC 0x31425544u           /* "DUB1": AMB-1's projects ("ENO1") give the recipes */
-#define PROJ_FORMAT 28u                  /* 28: Robert's: each strip's Low cut a centred Filter (P_CLOW .. P_NLOW,
+#define PROJ_FORMAT 29u                  /* 29: the variety plan's step 1: Evolve is Form's Vary (P_VARY, its
+                                         * value kept), the layers' Varys trims on it (P_CVARY .. P_NVARY, -50..+50:
+                                         * the old factor's amount as Vary + trim, 0 Hold), the piece's looseness
+                                         * its own (P_LOOSE, from the recipes; Evolve's before); 8-28 read;
+                                         * 28: Robert's: each strip's Low cut a centred Filter (P_CLOW .. P_NLOW,
                                          * P_KLOW, -50..+50: left a low-pass, right a high-pass; 27's 0..100
                                          * converted to the high-pass's same cutoff), five Japanese scales (P_MODE's
                                          * range), the tempo from 40 BPM; 27 read;
