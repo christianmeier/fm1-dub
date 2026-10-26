@@ -5358,10 +5358,10 @@ static void sir_ctl(uint32_t n)
         f = 1.0f - sv_x;
         st = 24.0f * f * f + 0.6f * fm_minf(f * 6.0f, 1.0f) * sine(sv_wb);
         if (sv_x == 0.0f && sv_again)
-            glide = 0.002f;                      /* (back up at once, under the fade) */
+            glide = 0.0f;                        /* (back up at once, under the fade) */
     }
     sv_amp += ((sv_gate ? 1.0f : 0.0f) - sv_amp) * fm_minf(t / (sv_gate ? 0.02f : 0.06f), 1.0f);
-    if (sv_fresh)
+    if (sv_fresh || glide <= 0.0f)
         sv_st = st;
     else
         sv_st += (st - sv_st) * fm_minf(t / glide, 1.0f);
