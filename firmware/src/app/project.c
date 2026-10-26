@@ -893,7 +893,7 @@ static void shape30(int16_t *par)                /* (format 30, step 2's test bu
 int project_load(void)
 {
     project_t *const pbuf = &app_scratch.load;   /* (the boot's buffer, lent by the scratch: app.h) */
-    int n, old = 0, i, old30 = 0;
+    int n, old = 0, i, old30 = 0, old31 = 0;
     uint8_t fresh[NPIECES];                      /* (a piece never changed: today's recipe) */
     memset(fresh, 0, sizeof fresh);
     memset(pbuf, 0, sizeof *pbuf);
@@ -1038,6 +1038,14 @@ int project_load(void)
                 fresh[i] = (uint8_t)untouched_now(&proj.slot[i], i);
             proj.format = PROJ_FORMAT;
         }
+        if (n >= 8 && proj.magic == PROJ_MAGIC && proj.format == 31u) {   /* (31: today's layout; the knobs with dead
+                                                  * steps as 32's below, the pieces never changed known first, by their
+                                                  * recipes then) */
+            old31 = 1;
+            for (i = 0; i < NPIECES; i++)
+                fresh[i] = (uint8_t)untouched_now(&proj.slot[i], i);
+            proj.format = PROJ_FORMAT;
+        }
         if (old30 && proj.rsv[0] != PROJ_WAVE_MARK) {
             /* (a step 2 test build's, zzo's or zzp's: the LFOs' Shape in the Wave's slots; the Shape Wander, the
              * wander alone, Wave 0, the waves half each, 50; a piece never changed, known by that build's recipe,
@@ -1128,6 +1136,19 @@ int project_load(void)
         en_motion30(proj.par);
         for (i = 0; i < NPIECES; i++)
             en_motion30(proj.slot[i].par);
+    }
+    if (old || old30 || old31) {                 /* (before 32: the knobs whose steps did nothing rescaled, as near as
+                                                  * they sounded; the pieces never changed take today's recipe below) */
+        const int sv = !old ? P_NPARAMS : old >= 30 ? P_NPARAMS : old == 29 ? NPAR29 : old >= 27 ? NPAR28 : old == 26 ? NPAR26
+                     : old == 25 ? NPAR25 : old == 24 ? NPAR24 : old == 23 ? NPAR23 : old == 22 ? NPAR22 : old == 21 ? NPAR21
+                     : old == 20 ? NPAR20 : old == 19 ? NPAR19 : old >= 17 ? NPAR18 : old == 16 ? NPAR16 : old == 15 ? NPAR15
+                     : old == 14 ? NPAR14 : old == 13 ? NPAR13 : old >= 11 ? NPAR12 : NPAR10;   /* (what the save had; the
+                                                  * rest from today's recipes, newpar's and noise10's, left be) */
+        for (i = 0; i < NPIECES; i++)            /* (a piece as a recipe before 32 had it, all of it: never changed) */
+            fresh[i] = (uint8_t)(fresh[i] || untouched_now(&proj.slot[i], i));
+        en_zones31(proj.par, sv);
+        for (i = 0; i < NPIECES; i++)
+            en_zones31(proj.slot[i].par, sv);
     }
     if (n >= 8 && proj.magic == PROJ_MAGIC && proj.format == PROJ_FORMAT) {   /* (the ranges as they are now) */
         proj.screen = ui_screen_ok(proj.screen);   /* (1.4.0: the echo trail and the fifths gone: the ripples) */

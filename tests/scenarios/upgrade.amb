@@ -4,10 +4,10 @@
 storefile tests/host/proj-1.2.0.bin
 reboot
 wait 500
-expect format 31
+expect format 32
 expect piece 0
-# Basic as 1.3.0 has it (Stabs 30, Feedback 62; 1.2.0's were 30 and 60), its noise Vinyl
-expect par28 30
+# Basic as today has it (Stabs 3, a count since format 32: 1.2.0's 30; Feedback 62, 1.2.0's 60), its noise Vinyl
+expect par28 3
 expect par11 62
 expect par4 30
 turn PRESET 3
@@ -20,8 +20,8 @@ turn PRESET -3
 storefile tests/host/proj-1.2.0-basic-changed.bin
 reboot
 wait 500
-# Basic changed by hand: kept as it was (its Stabs 77, its Feedback still 1.2.0's 60); Fog, untouched, today's
-expect par28 77
+# Basic changed by hand: kept as it was (its Stabs 77, five stabs a bar: 5 now; its Feedback still 1.2.0's 60); Fog, untouched, today's
+expect par28 5
 expect par11 60
 turn PRESET 3
 wait 300
@@ -31,7 +31,7 @@ expect par0 50
 storefile tests/host/proj-1.3.0-test14.bin
 reboot
 wait 500
-expect format 31
+expect format 32
 expect par11 62
 expect par29 8
 storefile tests/host/proj-1.3.0-test14-resaved15.bin
@@ -45,7 +45,7 @@ expect par29 8
 storefile tests/host/proj-1.4.0-test18.bin
 reboot
 wait 500
-expect format 31
+expect format 32
 expect piece 0
 expect par125 25
 expect par127 2
@@ -69,7 +69,7 @@ expect par6 3
 store20
 reboot
 wait 500
-expect format 31
+expect format 32
 expect piece 3
 expect par6 3
 expect par133 -16
@@ -95,7 +95,7 @@ expect par139 8
 store21
 reboot
 wait 500
-expect format 31
+expect format 32
 expect piece 3
 expect par6 3
 expect par12 46
@@ -127,7 +127,7 @@ expect par157 2
 store24
 reboot
 wait 500
-expect format 31
+expect format 32
 expect piece 3
 expect par6 3
 expect par157 0
@@ -162,7 +162,7 @@ expect par161 7
 store25
 reboot
 wait 500
-expect format 31
+expect format 32
 expect piece 3
 expect par6 3
 expect par157 2
@@ -187,7 +187,7 @@ expect par161 3
 store26
 reboot
 wait 500
-expect format 31
+expect format 32
 expect piece 0
 expect par161 3
 # (the variety study: Basic's Mixer 45, Fog's 90)
@@ -220,7 +220,7 @@ wait 300
 store27
 reboot
 wait 1000
-expect format 31
+expect format 32
 expect par148 28
 expect par149 0
 # (1.4.0, format 29, the variety plan's step 1) a Filter project (format 28): Evolve Form's Vary, as it was; each
@@ -247,7 +247,7 @@ expect par135 -50
 store28
 reboot
 wait 1000
-expect format 31
+expect format 32
 expect piece 0
 expect par5 60
 expect par133 -18
@@ -259,7 +259,7 @@ expect par164 100
 store29
 reboot
 wait 1000
-expect format 31
+expect format 32
 expect piece 0
 expect par5 60
 expect par133 -18
@@ -288,7 +288,7 @@ expect piece 0
 store30s
 reboot
 wait 1000
-expect format 31
+expect format 32
 expect piece 0
 expect par5 60
 expect par165 41
@@ -329,7 +329,7 @@ expect par15 30
 store30 60
 reboot
 wait 1000
-expect format 31
+expect format 32
 expect piece 0
 expect par15 24
 expect par163 60
@@ -348,3 +348,53 @@ reboot
 wait 1000
 expect piece 0
 expect par15 58
+# (format 32, the variety plan's step 4) a step 3 project (format 31): the knobs whose steps did nothing rescaled, as
+# near as they sounded. Basic changed: its Hits 45 (then five shaker steps, rounded, with four open hats) 41 now (up
+# to five, the fifth at 92%); its bass's Density 60 (then three of Offbeat's four notes) 67 now (the first and two
+# more); its pings' Tone +30 (76 of the tone's 100: 31 saved it as +36, 40 + 36) +30 again (six tenths of the room
+# above its 40); Stabs 3 (31's 30); Fog (its walk's slots moved by playing: changed) as its recipe has it now (Hits
+# 41 from 42, its noise's Tone -13 from Tape's -10, Stabs 1 from 5)
+tap SEQ
+wait 300
+expect view 4
+spin K2 37
+wait 300
+expect par7 45
+tap LFO
+wait 300
+spin K3 -40
+wait 300
+expect par113 60
+tap ARP
+wait 300
+tap ARP
+wait 300
+expect view 9
+expect par40 0
+spin K2 32
+wait 300
+expect par40 30
+tap HOME
+wait 300
+turn PRESET 3
+wait 300
+expect par106 -13
+turn PRESET -3
+wait 300
+store31
+reboot
+wait 1000
+expect format 32
+expect piece 0
+expect par7 41
+expect par113 67
+expect par40 30
+expect par28 3
+turn PRESET 3
+wait 300
+expect piece 3
+expect par7 41
+expect par106 -13
+expect par28 1
+turn PRESET -3
+wait 300

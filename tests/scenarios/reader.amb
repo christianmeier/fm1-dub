@@ -12,7 +12,7 @@ said % of the way. Section Full, bar 1. Scale F, G, Ab, Bb, C, D, Eb
 # a page settles before it is said
 tap ENV
 wait 300
-said Chord page, voice Saws: Density 30, Throws 
+said Chord page, voice Saws: Density 3, Throws 
 tap GLO
 wait 300
 said Setup page: Tune 0, MIDI out On, Lights On

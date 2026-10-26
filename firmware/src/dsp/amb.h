@@ -380,6 +380,12 @@ float en_filter_hz(int v);                       /* a strip's Filter (-50..+50):
 int en_nlfo18(int old);                          /* (format 19) a Noise LFO before 19 as 19's (its depth kept) */
 void en_motion30(int16_t *par);                  /* (format 31) a piece before 31 as 31's: its Motion and Mixer as
                                                   * Motion, the arrangement only */
+float en_tone_at(int base, int t);               /* (format 32) a sound page's Tone (-50..50) around the piece's own
+                                                  * (0..100): the room either side */
+void en_zones31(int16_t *par, int saved);        /* (format 32) a piece before 32 as 32's: the knobs with dead steps
+                                                  * rescaled (Stabs a count; Density, Hits and the noise's faded in;
+                                                  * the Tones the room either side; the Echo's Tone), as near as they
+                                                  * sounded; saved: the parameters the save had (the rest today's) */
 void en_move29(int16_t *par);                    /* (format 30) a piece before 30 as 30's: its LFOs' Depth and Drift and
                                                   * its Mixer as Drift and the LFOs' Trims (and a Shape Drift where the
                                                   * wave was off), as near as they sounded */

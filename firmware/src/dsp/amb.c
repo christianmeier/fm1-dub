@@ -46,7 +46,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     {"Mode", 0, EN_NMODES - 1, MODE_DORIAN}, {"Ping oct", -2, 2, 0}, {"Chord voice", 0, EN_NCV - 1, 0},
     {"Bass oct", -1, 1, 0},   {"Groove", 0, 4, 1},      {"Fifth", 0, 100, 20},
     {"Swing", 0, 100, 10},    {"Hats", 0, 100, 50},
-    {"Stabs", 0, 100, 30},    {"Crackle", 0, 100, 35},  {"Duck", 0, 100, 50},     {"Size", 0, 100, 55},
+    {"Stabs", 1, 6, 3},       {"Crackle", 0, 100, 35},  {"Duck", 0, 100, 50},     {"Size", 0, 100, 55},
     {"Cloud", 0, 100, 30},
     {"Ping voice", 0, EN_NPV - 1, 0}, {"Bass voice", 0, EN_NBV - 1, 0}, {"Kit", 0, EN_NKIT - 1, 0},
     {"Attack", 0, 100, 0},   {"Colour", -50, 50, 0},   {"Resonance", -50, 50, 0}, {"Env amount", -50, 50, 0},
@@ -127,14 +127,14 @@ static const struct {
     const char *name;
     int16_t v[P_NPARAMS];
 } PIECES[EN_NPIECES] = {
-    {"Basic",      {52, 30, 68, 80, 30, 45, 5, 10, 55, 1, 35, 62, 40, 25, 40, 12, 0, 1, 122, 5, 1, 0,
-                    0, 0, 1, 20, 5, 50, 30, 8, 50, 55, 30, 0, 0, 0,
+    {"Basic",      {52, 30, 68, 80, 30, 45, 5, 8, 55, 1, 35, 62, 40, 25, 40, 12, 0, 1, 122, 5, 1, 0,
+                    0, 0, 1, 20, 5, 50, 3, 8, 50, 55, 30, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 30, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
                     0, 56, 66, 0, 0,
-                    70, 70, 90, 40,
+                    70, 70, 100, 40,
                     45, 100, 25, 50, 40, 50,
                     50, 50, 50, 0,
                     25, 21,
@@ -149,13 +149,13 @@ static const struct {
                     0,
                     0, 4, 20, 4, 1, 45, 100,
                     41, -2, 5, 45}},
-    {"Chamber",    {55, 20, 62, 72, 20, 25, 6, 40, 70, 4, 45, 72, 50, 55, 30, 8, 0, 1, 128, 9, 5, 0,
-                    2, 0, 0, 10, 0, 40, 5, 12, 45, 70, 45, 2, 0, 1,
+    {"Chamber",    {55, 20, 62, 72, 20, 25, 6, 41, 70, 4, 45, 72, 50, 55, 30, 8, 0, 1, 128, 9, 5, 0,
+                    2, 0, 0, 10, 0, 40, 1, 12, 45, 70, 45, 2, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
-                    -5, 44, 78, 0, 3,
+                    -7, 43, 78, 0, 3,
                     70, 60, 100, 55,
                     35, 75, 50, 50, 60, 50,
                     50, 50, 50, 0,
@@ -171,14 +171,14 @@ static const struct {
                     0,
                     0, 4, 20, 4, 0, 55, 63,
                     27, -25, 50, 25}},
-    {"Steppers",   {52, 35, 80, 82, 35, 35, 6, 45, 50, 1, 30, 50, 55, 25, 50, 10, 0, 1, 126, 2, 1, 0,
-                    0, 0, 2, 35, 45, 60, 25, 5, 60, 50, 20, 1, 1, 2,
+    {"Steppers",   {52, 35, 80, 82, 35, 35, 6, 41, 50, 1, 30, 50, 55, 25, 50, 10, 0, 1, 126, 2, 1, 0,
+                    0, 0, 2, 35, 45, 60, 2, 5, 60, 50, 20, 1, 1, 2,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 35, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
-                    5, 63, 61, 0, 0,
-                    70, 70, 90, 60,
+                    5, 62, 61, 0, 0,
+                    70, 70, 100, 60,
                     50, 100, 30, 50, 45, 50,
                     50, 50, 50, 0,
                     30, 14,
@@ -193,13 +193,13 @@ static const struct {
                     0,
                     0, 4, 20, 4, 1, 20, 88,
                     35, 11, 21, 35}},
-    {"Fog",        {50, 34, 58, 62, 40, 40, 5, 42, 75, 2, 55, 72, 46, 80, 25, 42, 0, 1, 120, 7, 5, 0,
-                    3, -1, 0, 15, 0, 30, 5, 30, 35, 80, 60, 0, 0, 3,
+    {"Fog",        {50, 34, 58, 62, 40, 40, 5, 41, 75, 2, 55, 72, 46, 80, 25, 42, 0, 1, 120, 7, 5, 0,
+                    3, -1, 0, 15, 0, 30, 1, 30, 35, 80, 60, 0, 0, 3,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 35, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
-                    -10, 44, 75, 10, 1,
+                    -13, 43, 75, 10, 1,
                     70, 65, 100, 50,
                     55, 75, 50, 50, 85, 50,
                     85, 50, 50, 0,
@@ -215,14 +215,14 @@ static const struct {
                     0,
                     0, 4, 20, 4, 0, 90, 100,
                     72, -12, -15, 24}},
-    {"Concrete",   {58, 45, 70, 85, 25, 50, 5, 55, 50, 1, 25, 62, 60, 20, 60, 20, 0, 1, 136, 0, 7, 0,
-                    6, 0, 4, 30, 10, 75, 30, 5, 50, 45, 15, 2, 3, 2,
+    {"Concrete",   {58, 45, 70, 85, 25, 50, 5, 58, 50, 1, 25, 62, 60, 20, 60, 20, 0, 1, 136, 0, 7, 0,
+                    6, 0, 4, 30, 10, 75, 3, 5, 50, 45, 15, 2, 3, 2,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 75, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
                     0, 56, 66, 10, 0,
-                    70, 65, 85, 65,
+                    70, 65, 80, 65,
                     50, 100, 20, 50, 55, 50,
                     50, 50, 50, 0,
                     45, 56,
@@ -237,14 +237,14 @@ static const struct {
                     0,
                     0, 4, 20, 4, 1, 90, 100,
                     80, 50, -6, 50}},
-    {"Night Drive", {48, 45, 68, 78, 45, 40, 4, 35, 60, 3, 35, 65, 50, 40, 45, 38, 0, 1, 120, 10, 1, 0,
-                    1, 0, 1, 25, 13, 55, 20, 15, 50, 60, 35, 4, 0, 0,
+    {"Night Drive", {48, 45, 68, 78, 45, 40, 4, 33, 60, 3, 35, 65, 50, 40, 45, 38, 0, 1, 120, 10, 1, 0,
+                    1, 0, 1, 25, 13, 55, 2, 15, 50, 60, 35, 4, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 45, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
-                    0, 38, 58, 0, 1,
-                    80, 75, 90, 58,
+                    0, 37, 58, 0, 1,
+                    80, 75, 100, 58,
                     55, 100, 50, 50, 85, 50,
                     50, 50, 50, 0,
                     40, 49,
@@ -259,14 +259,14 @@ static const struct {
                     0,
                     0, 4, 20, 4, 0, 45, 100,
                     50, 12, 15, 40}},
-    {"Pressure",   {55, 20, 75, 92, 20, 30, 6, 38, 55, 1, 20, 55, 48, 30, 35, 8, 0, 1, 126, 4, 2, 0,
-                    5, 0, 1, 10, 5, 65, 25, 30, 70, 40, 40, 3, 4, 1,
+    {"Pressure",   {55, 20, 75, 92, 20, 30, 6, 39, 55, 1, 20, 55, 48, 30, 35, 8, 0, 1, 126, 4, 2, 0,
+                    5, 0, 1, 10, 5, 65, 2, 30, 70, 40, 40, 3, 4, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 35, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
-                    -10, 19, 69, -10, 1,
-                    70, 70, 90, 55,
+                    -13, 18, 69, -10, 1,
+                    70, 70, 100, 55,
                     60, 100, 50, 50, 75, 50,
                     85, 50, 50, 0,
                     20, 42,
@@ -281,13 +281,13 @@ static const struct {
                     0,
                     0, 4, 20, 4, 1, 40, 75,
                     43, 3, -3, 15}},
-    {"Haze",       {45, 42, 58, 55, 50, 20, 5, 35, 80, 3, 60, 70, 45, 80, 25, 10, 0, 1, 116, 3, 0, 1,
-                    3, 0, 0, 20, 10, 35, 5, 20, 30, 85, 70, 2, 0, 4,
+    {"Haze",       {45, 42, 58, 55, 50, 20, 5, 33, 80, 3, 60, 70, 45, 80, 25, 10, 0, 1, 116, 3, 0, 1,
+                    3, 0, 0, 20, 10, 35, 1, 20, 30, 85, 70, 2, 0, 4,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 100, 100, 100, 100, 5, 50, 0,
-                    5, 69, 72, 15, 2,
+                    7, 68, 72, 15, 2,
                     70, 70, 100, 50,
                     50, 50, 50, 50, 70, 50,
                     50, 50, 50, 0,
@@ -340,6 +340,16 @@ static const uint16_t GROOVE[5] = {0x0001u, 0x4444u, 0x0909u, 0x4949u, 0x0481u};
 static const float GROOVE_GATE[5] = {15.0f, 3.25f, 2.2f, 1.8f, 2.6f};
 static const float GROOVE_LVL[5] = {1.0f, 0.7f, 1.0f, 0.9f, 1.0f};   /* (the longer ones lower: Offbeat's held more
                                                                       * than twice as long, and under the kick) */
+/* (format 32, the variety plan's step 4: no dead steps) Gate's right: up to twice the groove's length, or (Drone, a bar
+ * already) up to the bar's 15.8 sixteenths (before, x2 for all, Drone's at the bar from +4, +4..+50 alike) */
+static const float GROOVE_GSPAN[5] = {0.0750f, 1.0f, 1.0f, 1.0f, 1.0f};
+static float rel(int p);
+static int gpat(void);
+static float bass_gate(void)                     /* a note's gate, in sixteenths */
+{
+    const float r = rel(P_BLEN);
+    return fm_minf(GROOVE_GATE[gpat()] * fm_exp2f(r > 0.0f ? r * GROOVE_GSPAN[gpat()] : r), 15.8f);
+}
 static const uint8_t DRIFT_BARS[7] = {2, 4, 8, 16, 32, 64, 0};
 
 uint32_t en_groove(int g) { return GROOVE[(unsigned)g < 5u ? g : 0]; }
@@ -351,6 +361,15 @@ EN_COLD float en_filter_hz(int v)                       /* (1.4.0, format 28) a 
     return v > 0 ? 20.0f * fm_exp2f((float)(v - 1) * (6.966f / 49.0f))      /* (the high-pass: 20 Hz .. 2.5 kHz) */
          : v < 0 ? 18000.0f * fm_exp2f((float)(-v - 1) * (-6.492f / 49.0f))  /* (the low-pass: 18 kHz .. 200 Hz) */
          : 0.0f;
+}
+
+/* (format 32, the variety plan's step 4) a sound page's Tone (-50..+50) around the piece's own (base, 0..100): the room
+ * left either side, so its ends are the range's ends: +50 at 100, -50 at 0, 0 the piece's own, every step moving
+ * (before, base + Tone, clamped: a piece at 75 had +25..+50 alike). The hats' and the pings' */
+EN_COLD float en_tone_at(int base, int t)
+{
+    const int b = base < 0 ? 0 : base > 100 ? 100 : base;
+    return (float)b + (float)t * (1.0f / 50.0f) * (float)(t > 0 ? 100 - b : b);
 }
 
 static char *itoa_s(int v, char *b)
@@ -1161,6 +1180,10 @@ static const struct {
                                                           * strike, a rotary speaker turning (left against right) */
     {0.05f, 0.6f, 2.6f, 0.0f, 0.0f, 0.0f, 3.6f},         /* Noise: noise and a little saw, the filter's pitch */
 };
+/* (format 32, the variety plan's step 4: no dead steps) how far Attack slows each voice's strike at 100, in octaves of
+ * its smoothing: 9 (to ~1/500), or as far as the slowest (0.00004) allows: the Pad, already slow, 1.6 (before, its 9
+ * reached the floor by 18, 18..100 alike) */
+static const float CV_ATT_SPAN[EN_NCV] = {9.0f, 9.0f, 8.966f, 1.585f, 9.0f, 9.0f, 9.0f};
 static int cvoice;                              /* the chord's voice now */
 static fmvoice_t cfm[EN_NPAD];                  /* its FM voices' operators */
 static const fmpatch_t *cv_patch(int cv) { return cv == 1 ? &FM_KEYS : cv == 4 ? &FM_BELL : 0; }
@@ -1171,7 +1194,12 @@ static struct {
     float ph, note, target, env;
     int32_t gate;                               /* samples left of the note */
     uint8_t midi_note;
-} bass;
+    float vel;                                  /* (format 32) the note's level: 1, or Density's faded note's */
+} bass = {0.0f, 0.0f, 0.0f, 0.0f, 0, 0, 1.0f};
+/* (format 32, the variety plan's step 4: no dead steps) Density the groove's notes from its first alone (0) to all of
+ * them (100), 1 + (n - 1) x Density of its n; the last one drawn fades in, its level the count's fraction */
+static uint32_t bass_part;                      /* (this bar's faded note: its bit, 0 none) */
+static float bass_pv = 1.0f;                    /* (its level) */
 static float bass_vol;
 /* the bass's voices: Sub (a sine and a little of its octave, softly clipped), Round (its third harmonic
  * too, rounder), Growl (FM at 1, a bite that opens with each note and closes), Pulse (a sine clipped hard
@@ -1218,6 +1246,13 @@ static const float HAT_INC[4] = {304.4f / EN_SR, 369.6f / EN_SR, 522.7f / EN_SR,
 static uint8_t hat_order[12];
 static const uint8_t HAT_ORDER[12] = {3, 11, 7, 15, 1, 9, 5, 13, 0, 8, 4, 12};
 static int hat_k, hat_kb;
+/* (format 32, the variety plan's step 4: no dead steps) Hits a count of shaker steps, 0.12 a step (12 at 100): the
+ * last of them (the base's, hat_kb's) fades in as Hits rises, its velocity the count's fraction (1 on a whole count:
+ * as before) */
+static float hat_pv = 1.0f;
+static uint32_t sh_part;                         /* (that step, if it's faded: its bit) */
+static uint32_t sh_fade;                         /* (this bar's faded shaker step: in the A bars the last the rests
+                                                  * kept, so it's always heard; in a busy B bar, sh_part) */
 static float duck_x, duck_d, duck_depth, duck_rel;
 static float duck_xb, duck_db, duck_relb;       /* the bass's duck: deeper, and slower to let go (it pumps) */
 /* the kits: the kick (its pitch at the strike, times its note; how quickly it falls; its length; its click;
@@ -1778,7 +1813,8 @@ volatile uint32_t en_stab_turns;
 
 EN_COLD static void stabs_home(void)                    /* Stabs: one a bar .. six, off the beat */
 {
-    stab_kb = stab_k = 1 + (pe(P_STABS) * 5 + 50) / 100;
+    stab_kb = stab_k = pe(P_STABS);              /* (format 32, the variety plan's step 4: the count itself, 1..6; it was
+                                                  * 0..100, a stab every twenty steps, the steps between alike) */
     stab_rot = 2;
     stab_home = en_euclid(stab_k, 16, stab_rot);
 }
@@ -1864,6 +1900,7 @@ EN_COLD static void hats_publish(void)
     int i, k = pe(P_HITS), ko = k < 15 ? 0 : k < 40 ? 2 : 4;
     for (i = 0; i < hat_k && i < 12; i++)
         c |= 1u << hat_order[i];
+    sh_part = hat_pv < 1.0f && hat_kb >= 1 && hat_kb <= hat_k && hat_kb <= 12 ? 1u << hat_order[hat_kb - 1] : 0u;
     if (ko >= 2)
         o |= 1u << 2 | 1u << 10;
     if (ko >= 4)
@@ -1885,7 +1922,11 @@ EN_COLD static void hats_home(void)                     /* Hits: the shaker's co
     int i;
     for (i = 0; i < 12; i++)
         hat_order[i] = HAT_ORDER[i];
-    hat_kb = hat_k = (pe(P_HITS) * 12 + 50) / 100;
+    {   /* (format 32) the count, up to the next whole one; the last step at the fraction (whole: 1) */
+        const int h = pe(P_HITS) * 12;
+        hat_kb = hat_k = (h + 99) / 100;
+        hat_pv = hat_kb ? (float)(h - (hat_kb - 1) * 100) * 0.01f : 1.0f;
+    }
     hats_publish();
 }
 
@@ -2007,7 +2048,8 @@ EN_COLD static void bass_hit(int first, int up, int st)
     bass.target = (float)n;
     if (bass.gate > 0 || bass.midi_note)
         midi(0x82, bass.midi_note, 0);
-    bass.gate = (int32_t)(fm_minf(GROOVE_GATE[gpat()] * fm_exp2f(rel(P_BLEN)), 15.8f) * step_len);
+    bass.gate = (int32_t)(bass_gate() * step_len);
+    bass.vel = bass_part >> st & 1u ? bass_pv : 1.0f;   /* (format 32: Density's faded note) */
     bass_bite = 1.0f;
     {
         int bv = (unsigned)par[P_BVOICE] < EN_NBV ? par[P_BVOICE] : 0;
@@ -2522,9 +2564,11 @@ static uint32_t ph_hash(uint32_t a)
     return a;
 }
 /* of a pattern's steps (but those always kept), keep the first `keep` in an order drawn from the phrase's seed */
+static uint32_t ph_last;                        /* (ph_thin's last pick: its bit, 0 none) */
 static uint32_t ph_thin(uint32_t pat, int keep, uint32_t always, uint32_t salt)
 {
     uint32_t out = pat & always, rest = pat & ~always;
+    ph_last = 0u;
     while (keep-- > 0 && rest) {
         uint32_t best = 0, bh = 0;
         int i;
@@ -2534,7 +2578,7 @@ static uint32_t ph_thin(uint32_t pat, int keep, uint32_t always, uint32_t salt)
                 if (!best || h < bh)
                     best = 1u << i, bh = h;
             }
-        out |= best, rest &= ~best;
+        out |= best, rest &= ~best, ph_last = best;
     }
     return out;
 }
@@ -2561,11 +2605,21 @@ EN_COLD static void ph_bar(int pb)
     const float d = fm_clampf(e < 0.0f ? d0 * (1.0f + 0.6f * e) : d0 + (1.0f - d0) * e, 0.0f, 1.0f);
     uint32_t g = en_groove(gpat()), f = g & (0u - g);   /* (the groove; its first note, always kept) */
     uint32_t k = drum_pat[0], sh = drum_pat[1], op = drum_pat[2];
-    bar_bass = ph_thin(g, (int)((float)pcount(g) * d + 0.5f) - (f ? 1 : 0), f, 3u);   /* Density: the same notes out */
-    if (b && ph.busy && d >= 0.3f)               /* (B, busy: the whole groove and a pickup into the next bar) */
+    {   /* Density: the same notes out. (Format 32: from the first alone to all, 1 + (n - 1) x Density, the last drawn
+         * faded in by the fraction; before, n x Density rounded, the steps between alike) */
+        const float t = 1.0f + (float)(pcount(g) > 1 ? pcount(g) - 1 : 0) * d;
+        const int cnt = (int)t + (t > (float)(int)t + 0.004f ? 1 : 0);
+        bar_bass = ph_thin(g, cnt - (f ? 1 : 0), f, 3u);
+        bass_pv = cnt > 1 ? fm_minf(t - (float)(cnt - 1), 1.0f) : 1.0f;
+        bass_part = bass_pv < 0.996f ? ph_last : 0u;
+    }
+    if (b && ph.busy && d >= 0.3f) {             /* (B, busy: the whole groove and a pickup into the next bar) */
         bar_bass = g | 1u << 14;
-    else if (b)                                   /* (B, sparse: every other of A's, the first kept) */
+        bass_part = 0u;
+    } else if (b) {                               /* (B, sparse: every other of A's, the first kept) */
         bar_bass = ph_thin(bar_bass, pcount(bar_bass) / 2 - (f ? 1 : 0), f, 4u);
+        bass_part &= bar_bass;
+    }
     {   /* (1.4.0) the bass's fifths, drawn from the phrase's seed (Fifth: how many), the same each A bar; each groove
          * step's note against the root's, for the screen */
         const uint32_t fst = bar_bass & (0u - bar_bass);
@@ -2592,6 +2646,7 @@ EN_COLD static void ph_bar(int pb)
         return;
     }
     bar_sh = ph_thin(sh, pcount(sh) - (int)(0.45f * lo * (float)pcount(sh) + 0.5f), 0u, 1u);
+    sh_fade = sh_part ? ph_last : 0u;            /* (format 32: Hits' fraction on the last step heard) */
     bar_op = ph_thin(op, pcount(op) - (int)(0.6f * lo * (float)pcount(op) + 0.5f), 0u, 2u);
     bar_k = k;
     if (b && ph.busy) {                          /* (B, busy: a ghost kick before the next bar, the hats all in) */
@@ -2599,11 +2654,13 @@ EN_COLD static void ph_bar(int pb)
             bar_k = k | 1u << 14;
         bar_sh = sh | 1u << 15;
         bar_op = op;
+        sh_fade = sh_part;
     } else if (b) {                              /* (B, sparse: the kick's downbeat, the shaker on the eighths) */
         if (pe(P_KDENS) < 100)
             bar_k = k & 1u;
         bar_sh &= 0x5555u;
         bar_op = 0;
+        sh_fade &= bar_sh;
     }
 }
 
@@ -2712,6 +2769,7 @@ EN_COLD static void bar_start(void)
     ph_bar(pb);                                  /* (this bar's drums and bass, from the plan) */
     if (song_hits < 1.0f) {                      /* (1.4.0: the song's intro, the hats coming in: few, growing) */
         bar_sh = ph_thin(bar_sh, (int)((float)pcount(bar_sh) * song_hits + 0.5f), 0u, 5u);
+        sh_fade &= bar_sh;
         if (song_hits < 0.7f)
             bar_op = 0u;
     }
@@ -2770,14 +2828,14 @@ EN_COLD static void lanes(void)
     en_lane[3] = (uint16_t)(hats && lay_hats ? dpat(3) : 0u);
     en_lane[4] = (uint16_t)(hats && (sec == SEC_FULL || sec == SEC_GROOVE || par[P_DMODE]) ? dpat(4) : 0u);
     en_lane[5] = (uint16_t)(lay_bass && !(mu & EN_M_BASS) && !(perf & EN_PF_KICKDROP) && par[P_BASS] > 0 ? bar_bass : 0u);
-    en_bass_gate = fm_minf(GROOVE_GATE[gpat()] * fm_exp2f(rel(P_BLEN)), 15.8f);   /* (the bass's page: its notes' length) */
+    en_bass_gate = bass_gate();   /* (the bass's page: its notes' length) */
     en_bass_octn = (int8_t)(ph.oct >= 0 ? ph.oct % (pcount(bar_bass) > 1 ? pcount(bar_bass) : 1) : -1);
     en_lane_sh = (uint16_t)(hats && lay_hats ? bar_sh : 0u);   /* (the Drums page: the hats apart, and how loud) */
     en_lane_op = (uint16_t)(hats && (lay_open || fill) ? bar_op : 0u);
     {
         int i;
         for (i = 0; i < 16; i++) {
-            float kv = 1.0f, hv = par[P_DMODE] ? 0.8f : (float)ph.vel[i] * (1.0f / 255.0f);
+            float kv = 1.0f, hv = par[P_DMODE] ? 0.8f : (float)ph.vel[i] * (1.0f / 255.0f) * (sh_fade >> i & 1u ? hat_pv : 1.0f);
             if (bar_k >> i & 1u && i == 14 && !(KSHAPE[kick_shape] >> 14 & 1u))
                 kv = 0.45f;
             if (!par[P_DMODE] && kick_shape == KS_GHOST && (i == 4 || i == 12))
@@ -2843,6 +2901,8 @@ EN_COLD static void tick(void)
             duck_x = fm_maxf(duck_x, gd);
             duck_xb = fm_maxf(duck_xb, gd);
         }
+        if (!par[P_DMODE] && sh_fade >> st & 1u)   /* (format 32: Hits' last step, faded in) */
+            v1 *= hat_pv;
         if (hats && lay_hats && bar_sh >> st & 1u && dhit(1, st, &v1))
             drum_hit(1, v1, st & 1);
         if (hats && (lay_open || fill) && bar_op >> st & 1u && dhit(2, st, &v2))
@@ -3368,7 +3428,7 @@ void en_env_shape(int layer, float *lvl, float *aux, int n, float *secs)
     switch (layer) {
     case 0: {                                   /* the chord: the strike (or swell), the decay; the filter's envelope */
         float xa = (float)par[P_CATT] * 0.01f;   /* (1.3.0: 0 the voice's strike, 100 a swell) */
-        a = fm_clampf(CV[cvoice].att * fm_exp2f(-(xa > 0.0f ? 9.0f : 3.0f) * xa), 0.00004f, 0.3f);
+        a = fm_clampf(CV[cvoice].att * fm_exp2f(-(xa > 0.0f ? CV_ATT_SPAN[cvoice] : 3.0f) * xa), 0.00004f, 0.3f);
         t60 = st_t60;
         ft = 0.25f * st_t60 + 0.02f;
         fe = fm_clampf(CV[cvoice].fenv * fm_maxf(1.0f + rel(P_CENV), 0.0f) / 3.4f, 0.0f, 1.0f);
@@ -3385,7 +3445,7 @@ void en_env_shape(int layer, float *lvl, float *aux, int n, float *secs)
         break;
     }
     case 2: {                                   /* the bass: in, held for its gate, out */
-        hold = fm_minf(GROOVE_GATE[gpat()] * fm_exp2f(rel(P_BLEN)), 15.8f) * step_len / EN_SR;
+        hold = bass_gate() * step_len / EN_SR;
         a = 0.02f;
         T = fm_clampf(hold * 1.5f + 0.1f, 0.25f, 4.0f);
         break;
@@ -3624,6 +3684,7 @@ static uint32_t ext_age;
 
 static void tempo_set(void) { step_len = EN_SR * 60.0f / ((float)par[P_TEMPO] * 4.0f); }
 
+static void macro(int i, int v);
 EN_COLD static void apply(int p, int v)
 {
     const en_param_t *pi = &PARAMS[p];
@@ -3632,6 +3693,7 @@ EN_COLD static void apply(int p, int v)
     if (v > pi->hi)
         v = pi->hi;
     par[p] = (int16_t)v;
+    macro(-1 - p, 0);                            /* (format 32: a master action's offset on it, from its room now) */
     v = pe(p);                                   /* (as the master actions move it) */
     switch (p) {
     case P_CHORD: chord_vol = (float)(v * v) * 0.0001f; lanes(); break;
@@ -3643,7 +3705,7 @@ EN_COLD static void apply(int p, int v)
     case P_STABS: stabs_home(); break;
     case P_SWING: swing = (float)v * 0.004f; break;      /* the off sixteenths up to 0.4 of a step late */
     case P_HATS: case P_HTONE: {                 /* the piece's colour, moved by the sound page's Hats */
-        float h = fm_clampf((float)(pe(P_HATS) + par[P_HTONE]), 0.0f, 100.0f);
+        float h = en_tone_at(pe(P_HATS), par[P_HTONE]);   /* (format 32: the room either side, no dead end) */
         hat_f = 0.25f + 0.0045f * h;                      /* the high-pass: ~1.8 kHz dark .. ~5 kHz bright */
         hat_open = 0.4f - 0.0025f * h;                    /* the open hat: long and soft .. short and crisp */
         break;
@@ -3663,7 +3725,8 @@ EN_COLD static void apply(int p, int v)
         st_dec = fm_expf(-6.9f / (st_t60 * EN_SR));
         st_fdec = fm_expf(-6.9f * 32.0f / ((0.25f * st_t60 + 0.02f) * EN_SR));   /* (1.3.0: a shorter strike) */
         break;
-    case P_PTONE: case P_PTON: btone = fm_clampf((float)(par[P_PTONE] + par[P_PTON]), 0.0f, 100.0f) * 0.01f; break;
+    case P_PTONE: case P_PTON: btone = en_tone_at(par[P_PTONE], par[P_PTON]) * 0.01f; break;   /* (format 32: as the
+                                                  * hats' Tone, the room either side) */
     case P_MOTION: motion = (float)v * 0.01f; mixer_set(); break;   /* (format 31: the arrangement only; its Breathes
                                                   * the dub mixer's moves, the Mixer's before) */
     case P_VARY: vary_m = (float)v * 0.01f; lay_set(); break;   /* (format 29: Form's Vary, and the layers' amounts on it) */
@@ -3795,8 +3858,12 @@ EN_COLD static void apply(int p, int v)
     case P_EBLUR:                                /* the diffusers' gain: 0.15 (clean copies) .. 0.6 (50) .. 0.75 */
         ec_g = v <= 50 ? 0.15f + 0.009f * (float)v : 0.6f + 0.003f * (float)(v - 50);
         break;
-    case P_ETONE:                                /* what enters the tape: a low-pass ~2 kHz at 50, an octave a quarter */
-        ec_lpc = 1.0f - fm_expf(-2.0f * FM_PI * fm_clampf(2000.0f * fm_exp2f((float)(v - 50) * 0.04f), 400.0f, 5000.0f) / TAPE_SR);
+    case P_ETONE:                                /* what enters the tape: a low-pass ~2 kHz at 50, an octave a quarter
+                                                  * down to 500 Hz at 0; (format 32: no dead top) up to 5 kHz at 100,
+                                                  * 1.32 octaves over the half (before, the same octave a quarter, at
+                                                  * 5 kHz by 83, 83-100 alike) */
+        ec_lpc = 1.0f - fm_expf(-2.0f * FM_PI * fm_clampf(2000.0f * fm_exp2f((float)(v - 50) * (v > 50 ? 0.026439f : 0.04f)),
+                                                         400.0f, 5000.0f) / TAPE_SR);
         break;
     case P_EWIDTH: ec_wide = (float)v * 0.02f; break;   /* the heads' spread: 0 mono, 1 (50), 2 wide */
     case P_POCT:                                 /* let it be heard now: a ping from the first loop */
@@ -4035,21 +4102,35 @@ static void macro(int i, int v)
         {P_CGHOST, 50}, {P_PGHOST, 50}, {P_ECHO, 30},  /* (1.3.0) Wet: the whole music dry, or drowned in the echo (the
                                                           * chord's and the pings' Wet, the echo's send; the noise too:
                                                           * render_crackle) */
-        {P_DENSITY, 85}, {P_HITS, 85}, {P_STABS, 85},    /* Energy: the notes and hits, */
+        {P_DENSITY, 100}, {P_HITS, 100}, {P_STABS, 5},   /* Energy: the notes and hits (format 32: all the way, the
+                                                          * end at +-50: below), */
         {P_PINGS, 40}, {P_HATS, 45}, {P_DECAY, 30}, {P_KDENS, 30},   /* the pings' level, the hats' colour, the stabs' length, the kick
                                                           * (and the hats' level, the phrases: render_drums, bar_start) */
     };
     static const uint8_t OF[] = {EN_MAC_DUB, EN_MAC_DUB, EN_MAC_DUB, EN_MAC_ENERGY, EN_MAC_ENERGY, EN_MAC_ENERGY,
                                  EN_MAC_ENERGY, EN_MAC_ENERGY, EN_MAC_ENERGY, EN_MAC_ENERGY};
     unsigned k;
+    /* (format 32, the variety plan's step 4: no dead steps) at most the room the parameter has that way: its end
+     * reached at +-50, not before (Energy +25 had Density, Hits and Stabs at their top on most pieces, the steps past
+     * it alike) */
+#define MAC_OFS(k, v) ((v) * (MOVE[k].at50 < ((v) > 0 ? PARAMS[MOVE[k].p].hi - par[MOVE[k].p] : par[MOVE[k].p] - PARAMS[MOVE[k].p].lo) \
+                              ? MOVE[k].at50 : (v) > 0 ? PARAMS[MOVE[k].p].hi - par[MOVE[k].p] : par[MOVE[k].p] - PARAMS[MOVE[k].p].lo) / 50)
+    if (i < 0) {                                 /* (parameter -1 - i turned: its offset again, from its new value; apply
+                                                  * hears it) */
+        for (k = 0; k < sizeof OF; k++)
+            if (MOVE[k].p == -1 - i)
+                pofs[MOVE[k].p] = (int8_t)MAC_OFS(k, mac[OF[k]]);
+        return;
+    }
     mac[i] = (int8_t)v;
     for (k = 0; k < sizeof OF; k++)
         if (OF[k] == i) {
-            int o = MOVE[k].at50 * v / 50, before = pe(MOVE[k].p);
+            int o = MAC_OFS(k, v), before = pe(MOVE[k].p);
             pofs[MOVE[k].p] = (int8_t)o;
             if (pe(MOVE[k].p) != before)
                 apply(MOVE[k].p, par[MOVE[k].p]);
         }
+#undef MAC_OFS
 }
 
 /* (1.4.0, the FM-1's peaks: a piece change was every parameter and the regrow in one block, the peak to 100%) the
@@ -4364,7 +4445,7 @@ static void render_stabs(uint32_t n)
     en_lfo_at[EN_CLD_CUTOFF] = lco;              /* (for tests: what the LFO puts on each, now) */
     en_lfo_at[EN_CLD_RESO] = xr - rel(P_CRES);
     en_lfo_at[EN_CLD_COLOUR] = xc - rel(P_CCOL);
-    const float att = fm_clampf(CV[cv].att * fm_exp2f(-(xa > 0.0f ? 9.0f : 3.0f) * xa), 0.00004f, 0.3f),
+    const float att = fm_clampf(CV[cv].att * fm_exp2f(-(xa > 0.0f ? CV_ATT_SPAN[cv] : 3.0f) * xa), 0.00004f, 0.3f),
                 fe = CV[cv].fenv * fm_maxf(1.0f + rel(P_CENV), 0.0f);
     float pc = 0.0f, ck = click;
     const float dk = st_dec + (gate_dec - st_dec) * fx_gate;   /* (the grid's Gate: the chord rings on, to be chopped) */
@@ -4546,7 +4627,7 @@ static void render_bass(uint32_t n)
     if (BV_PATCH[bv])                            /* the FM voices follow the slide */
         fm_tune(&bfm, BV_PATCH[bv], mtof(bass.note), 1.0f, fm_q(P_BFRAT));
     for (j = 0; j < n; j++) {
-        float x, tgt = gate > 0 ? 1.0f : 0.0f;
+        float x, tgt = gate > 0 ? bass.vel : 0.0f;
         if (gate > 0 && --gate == 0)
             midi(0x82, bass.midi_note, 0);
         if (perf & EN_PF_KICKDROP && gate > 0) {   /* PERFORM's Drop: the bass let go at once (~20 ms) */
@@ -4881,6 +4962,7 @@ static int nz_w, nz_ph;
 static float nz_D[3] = {200.0f, 160.0f, 133.0f}, nz_lp[3], nz_acc, nz_b[4], nz_p[2], nz_c[2];
 static uint32_t nz_pat;                         /* this phrase's hits, 32 sixteenths (two bars) */
 static uint8_t nz_vel[32];
+static float nz_pv = 1.0f;                      /* (format 32) Density's last hit, faded in: its level (1: whole) */
 static float nz_ex, nz_exd = 0.99f, nz_click;   /* a hit: its burst's level and fall, its click */
 /* (a hit struck early: the combs speak a period after the burst and swell after, so the next step's hit is struck
  * that much before its tick, its ring heard on it; REPORT6 9.1) */
@@ -4899,8 +4981,107 @@ static unsigned nz_char(void) { return nctl.character < EN_NNCHAR ? nctl.charact
 static void nz_dens(void)
 {
     const int v = par[P_NGRAIN] < 0 ? 0 : par[P_NGRAIN] > 100 ? 100 : par[P_NGRAIN];
-    nctl.hits = (uint8_t)((v * 16 + 50) / 100);
+    nctl.hits = (uint8_t)((v * 16 + 99) / 100);   /* (format 32: up to the next whole hit, the last faded in by the
+                                                  * fraction (nz_pv); before, rounded, the steps between alike) */
+    nz_pv = nctl.hits ? (float)(v * 16 - (nctl.hits - 1) * 100) * 0.01f : 1.0f;
     nctl.grain = fm_clampf(((float)v * 0.16f - 9.0f) * (1.0f / 7.0f) - 0.5f * NCHAR[nz_char()].dens, -1.0f, 1.0f);
+}
+/* (format 32, the variety plan's step 4: no dead ends) the noise's Tone (-1..1, the knob's and its LFO's) on the
+ * character's lean, the room either side: +1 the brightest, -1 the darkest, 0 the character's own (before, the two
+ * added and clamped: Room's -0.3 had -35..-50 alike); its Decay (0..100) on the character's, 0..50 as before, the top
+ * half over the room left, 1 at 100 (before, Tape's +0.18 had 82..100 alike) */
+static float nz_tone(float ta, unsigned c)
+{
+    const float o = NCHAR[c < EN_NNCHAR ? c : 0].tone;
+    return fm_clampf(o + ta * (ta > 0.0f ? 1.0f - o : 1.0f + o), -1.0f, 1.0f);
+}
+static float nz_dec(int v, unsigned c)
+{
+    const float o = 0.3f * NCHAR[c < EN_NNCHAR ? c : 0].dec, x = (float)(v < 0 ? 0 : v > 100 ? 100 : v) * 0.01f;
+    return x <= 0.5f ? o + x : o + 0.5f + (x - 0.5f) * (1.0f - 2.0f * o);
+}
+/* (format 32, the variety plan's step 4) a piece before 32 as 32's, as near as it sounded: the knobs whose steps did
+ * nothing, rescaled */
+static int zn_clamp(int v, int lo, int hi) { return v < lo ? lo : v > hi ? hi : v; }
+static int zn_round(float x) { return (int)(x >= 0.0f ? x + 0.501f : x - 0.501f); }   /* (to the nearest, a half away
+                                                  * from 0, a float's last bit aside) */
+static int zn_hits_zone(int h) { return h < 15 ? 0 : h < 40 ? 1 : h < 70 ? 2 : 3; }
+EN_COLD void en_zones31(int16_t *p, int saved)  /* (saved: the parameters the save had; those after it, today's from
+                                                  * the recipe, left be. The bass's Density always: an older save's
+                                                  * from its groove's ladder, as it was) */
+{
+    int v, i;
+    /* Stabs: the count it gave (1 + its fifth, rounded), 1..6 */
+    v = zn_clamp(p[P_STABS], 0, 100);
+    p[P_STABS] = (int16_t)(1 + (v * 5 + 50) / 100);
+    /* Hits: the shaker's count it gave (rounded), now up to it with the last faded in: the highest value giving that
+     * count in the same zone (its open hats and rim as they were), the last step as loud as it can be */
+    v = zn_clamp(p[P_HITS], 0, 100);
+    {
+        const int c = (v * 12 + 50) / 100, z = zn_hits_zone(v);
+        int best = -1, h;
+        for (h = 100; h >= 0 && best < 0; h--)
+            if ((h * 12 + 99) / 100 == c && zn_hits_zone(h) == z)
+                best = h;
+        for (h = 0; best < 0 && h <= 100; h++)   /* (none in its zone gives it: the nearest count there) */
+            if (zn_hits_zone(h) == z && (h * 12 + 99) / 100 >= c)
+                best = h;
+        p[P_HITS] = (int16_t)(best < 0 ? v : best);
+    }
+    /* the bass's Density: the notes it gave of its groove's n (n x Density rounded, at least the first), now from the
+     * first alone (0) to all (100); Drone's one note as it was */
+    {
+        const int n = pcount(en_groove(GROOVE_PAT[(unsigned)p[P_GROOVE] < NGROOVE ? p[P_GROOVE] : 0]));
+        v = zn_clamp(p[P_BNOTES], 0, 100);
+        if (n > 1) {
+            int c = (n * v + 50) / 100;
+            c = c < 1 ? 1 : c;
+            p[P_BNOTES] = (int16_t)(((c - 1) * 100 + (n - 1) / 2) / (n - 1));
+        }
+        v = zn_clamp(p[P_BLEN], -50, 50);        /* (and Drone's Gate right: the same gate, to the bar at +50) */
+        if (n == 1 && v > 0) {
+            const float r = fm_minf((float)v * 0.02f, GROOVE_GSPAN[0]) / GROOVE_GSPAN[0];
+            p[P_BLEN] = (int16_t)zn_clamp(zn_round(r * 50.0f), 0, 50);
+        }
+    }
+    /* the noise's Density: the hits it gave (rounded), now up to the next with the last faded in: kept where that's
+     * the same, else the highest value giving them */
+    v = zn_clamp(p[P_NGRAIN], 0, 100);
+    if (saved > P_NGRAIN) {
+        const int k = (v * 16 + 50) / 100;
+        if ((v * 16 + 99) / 100 != k)
+            p[P_NGRAIN] = (int16_t)(k * 100 / 16);
+    }
+    /* the hats' and the pings' Tone: the same colour, the room either side */
+    for (i = 0; i < 2; i++) {
+        const int tp = i ? P_PTON : P_HTONE, b = zn_clamp(p[i ? P_PTONE : P_HATS], 0, 100), t = zn_clamp(p[tp], -50, 50),
+                  h = zn_clamp(b + t, 0, 100), room = h > b ? 100 - b : b;
+        p[tp] = (int16_t)(room ? zn_clamp(zn_round((float)(h - b) * 50.0f / (float)room), -50, 50) : 0);
+    }
+    /* the echo's Tone: the same cutoff above 50 (1.32 octaves the half now, not 2) */
+    v = zn_clamp(p[P_ETONE], 0, 100);
+    if (v > 50 && saved > P_ETONE)
+        p[P_ETONE] = (int16_t)zn_clamp(50 + zn_round((float)(v - 50) * (0.04f / 0.026439f)), 0, 100);
+    /* the noise's Tone and Decay, on its character: the same, the room either side */
+    {
+        const unsigned c = (unsigned)p[P_NCHAR] < EN_NNCHAR ? (unsigned)p[P_NCHAR] : 0u;
+        const float o = NCHAR[c].tone, nc = fm_clampf((float)zn_clamp(p[P_NCOL], -50, 50) * 0.02f + o, -1.0f, 1.0f),
+                    ta = nc > o ? (nc - o) / (1.0f - o) : nc < o ? (nc - o) / (1.0f + o) : 0.0f,
+                    od = 0.3f * NCHAR[c].dec;
+        if (saved > P_NCOL)
+            p[P_NCOL] = (int16_t)zn_clamp(zn_round(ta * 50.0f), -50, 50);
+        v = zn_clamp(p[P_NTUNE], 0, 100);
+        if (v > 50 && od > 0.0f && saved > P_NTUNE) {
+            const float d = fm_minf((float)v * 0.01f + od, 1.0f), x = 0.5f + (d - od - 0.5f) / (1.0f - 2.0f * od);
+            p[P_NTUNE] = (int16_t)zn_clamp(zn_round(x * 100.0f), 0, 100);
+        }
+    }
+    /* the chord's Attack: the same strike (the Pad's 0..18 now its 0..100) */
+    {
+        const unsigned cv = (unsigned)p[P_CVOICE] < EN_NCV ? (unsigned)p[P_CVOICE] : 0u;
+        v = zn_clamp(p[P_CATT], 0, 100);
+        p[P_CATT] = (int16_t)zn_clamp(zn_round((float)v * 9.0f / CV_ATT_SPAN[cv]), 0, 100);
+    }
 }
 EN_COLD int en_nz_air18(int old, int character)          /* an Air before 18 (-50..50, the character's lean on it) as 0..100 */
 {
@@ -4939,6 +5120,10 @@ EN_COLD static void noise_pattern(void)
     nz_pat = p;
     for (i = 0; i < 32; i++)
         nz_vel[i] = (uint8_t)(cr_u() < 0.15f ? 64 : 180 + (int)(cr_u() * 75.0f));   /* (a ghost now and then) */
+    if (p && nz_pv < 0.996f) {                   /* (format 32: the last hit faded in, Density's fraction) */
+        const int t = 31 - __builtin_clz(p);
+        nz_vel[t] = (uint8_t)((float)nz_vel[t] * nz_pv + 0.5f);
+    }
     en_nz_pat = p;                               /* (the Noise page's lane) */
     for (i = 0; i < 32; i++)
         en_nz_vel[i] = nz_vel[i];
@@ -5022,7 +5207,7 @@ static void render_crackle(uint32_t n)
         en_nlfo_at[EN_NLD_FILTER] = nld == EN_NLD_FILTER ? lfo_n : 0.0f;   /* (for tests: what it puts on each, now) */
         en_nlfo_at[EN_NLD_TONE] = ta - nctl.colour;
         en_nlfo_at[EN_NLD_AIR] = nld == EN_NLD_AIR ? aa - (float)par[P_NROOM] * 0.01f : 0.0f;
-        nc = fm_clampf(ta + NCHAR[c].tone, -1.0f, 1.0f);   /* Tone */
+        nc = nz_tone(ta, c);                     /* Tone (format 32: the room either side of the character's) */
         room = nld == EN_NLD_AIR ? 2.3f * aa * aa : nctl.room;   /* (as P_NROOM's curve) */
     }
     ng = fm_clampf(nctl.grain, -1.0f, 1.0f);                     /* Density (the clicks with it) */
@@ -5041,8 +5226,7 @@ static void render_crackle(uint32_t n)
     sg = cr_sg;                                  /* (Break and Thin: the combs ring longer, the noise carries it) */
     {   /* Decay: the combs' gain, 0.75 .. 0.97 (-60 dB in ~70 ms .. ~1.2 s); Tone: the band-pass ~250 Hz-2 kHz, the
          * damping with it; both moved by the drifts and Motion's arc */
-        float dec = fm_clampf((float)par[P_NTUNE] * 0.01f + 0.3f * NCHAR[c].dec + 0.15f * sg +
-                              0.3f * (cr_dv[3] - 1.0f), 0.0f, 1.0f), t;
+        float dec = fm_clampf(nz_dec(par[P_NTUNE], c) + 0.15f * sg + 0.3f * (cr_dv[3] - 1.0f), 0.0f, 1.0f), t;
         cg = 0.8f + 0.18f * dec;
         en_nz_t60 = NCHAR[c].res > 0.0f ? 0.07f * fm_exp2f(4.1f * dec) : 0.02f;   /* (the Noise page: ~70 ms .. ~1.2 s;
                                                   * Dust's dry bursts short) */

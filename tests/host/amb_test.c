@@ -262,6 +262,63 @@ static void rumble_ab(int v)
 }
 static int chord_root_pc(void) { return en_chord_root % 12; }
 
+/* (format 32, the variety plan's step 4) a knob's dead steps: piece pc, from the same seed, each value of p from lo to hi
+ * (mac: a master action instead, EN_MAC_*) for secs, the output hashed in a child of its own; the steps v -> v + 1
+ * that changed nothing at all (bit for bit), and the first of them in *first (-999: none) */
+static void fresh(void);
+static int dead_steps(int pc, int p, int mac, int lo, int hi, float secs, int *first)
+{
+    int16_t pp[P_NPARAMS];
+    uint16_t pl;
+    uint32_t h[128];
+    int v, k, n = 0;
+    *first = -999;
+    for (v = lo; v <= hi && v - lo < 128; v++) {
+        int fd[2];
+        pid_t pid;
+        fflush(stdout);
+        if (pipe(fd))
+            return -1;
+        pid = fork();
+        if (pid == 0) {
+            uint32_t hh = 2166136261u;
+            int b, j;
+            fresh();
+            en_piece(pc, pp, &pl);
+            for (k = 0; k < P_NPARAMS; k++)
+                if (k != P_TUNE && k != P_MIDI)
+                    en_set(k, pp[k]);
+            en_pool(pl);
+            if (mac >= 0)
+                en_macro(mac, v);
+            else
+                en_set(p, v);
+            en_seed(1);
+            en_regrow();
+            en_play(1);
+            for (b = 0; b < (int)(secs * 44100.0f / 256.0f); b++) {
+                en_render(buf, 256, 2048);
+                for (j = 0; j < 512; j++)
+                    hh = (hh ^ (uint32_t)(buf[j] >> 6)) * 16777619u;
+            }
+            if (write(fd[1], &hh, sizeof hh) != (ssize_t)sizeof hh)
+                _exit(1);
+            _exit(0);
+        }
+        if (read(fd[0], &h[v - lo], sizeof h[0]) != (ssize_t)sizeof h[0])
+            h[v - lo] = (uint32_t)v;
+        waitpid(pid, 0, 0);
+        close(fd[0]);
+        close(fd[1]);
+        if (v > lo && h[v - lo] == h[v - lo - 1]) {
+            if (*first == -999)
+                *first = v - 1;
+            n++;
+        }
+    }
+    return n;
+}
+
 static void fresh(void)
 {
     en_play(0);
@@ -560,7 +617,7 @@ int main(void)
                 en_seed((uint32_t)sd);
                 en_set(P_VARY, 100);
                 en_set(P_MOTION, 0);
-                en_set(P_STABS, 100);
+                en_set(P_STABS, 6);
                 en_set(P_CTHROW, TV[k]);
                 en_regrow();
                 en_play(1);
@@ -1073,6 +1130,66 @@ int main(void)
                 printf("  (Motion %d, Mixer %d: %d, not %d)\n", IN[i][0], IN[i][1], pp[P_MOTION], OUT[i]), ok = 0;
         }
         CHECK(ok, "the format 31 upgrade's Motion");
+    }
+    /* (format 32, the variety plan's step 4) the knobs whose steps did nothing: every step now moves something (four
+     * seconds of each value from one seed, bit for bit against the next): Stabs a count; Hits, the bass's and the noise's
+     * Density each its last step faded in; the hats' and the pings' Tone the room either side (Concrete's hats at 75,
+     * its pings at 60; Fog's pings at 25); the noise's Tone and Decay on Tape (Fog) and Dust (Haze); the echo's Tone to
+     * 5 kHz at 100; the Pad's Attack and Drone's Gate (Fog); Energy to its ends */
+    {
+        static const struct { int pc, p, mac, lo, hi; const char *nm; } DZ[] = {
+            {0, P_STABS, -1, 1, 6, "Stabs (Basic)"},          {0, P_HITS, -1, 0, 100, "Hits (Basic)"},
+            {3, P_HITS, -1, 0, 100, "Hits (Fog)"},            {0, P_BNOTES, -1, 0, 100, "the bass's Density (Basic)"},
+            {4, P_BNOTES, -1, 0, 100, "the bass's Density (Concrete)"}, {0, P_NGRAIN, -1, 0, 100, "the noise's Density (Basic)"},
+            {3, P_NGRAIN, -1, 0, 100, "the noise's Density (Fog)"}, {4, P_HTONE, -1, -50, 50, "the hats' Tone (Concrete)"},
+            {3, P_HTONE, -1, -50, 50, "the hats' Tone (Fog)"}, {3, P_PTON, -1, -50, 50, "the pings' Tone (Fog)"},
+            {4, P_PTON, -1, -50, 50, "the pings' Tone (Concrete)"}, {3, P_NCOL, -1, -50, 50, "the noise's Tone (Fog)"},
+            {7, P_NCOL, -1, -50, 50, "the noise's Tone (Haze)"}, {3, P_NTUNE, -1, 0, 100, "the noise's Decay (Fog)"},
+            {0, P_ETONE, -1, 0, 100, "the echo's Tone (Basic)"}, {3, P_CATT, -1, 0, 100, "the Pad's Attack (Fog)"},
+            {3, P_BLEN, -1, -50, 50, "Drone's Gate (Fog)"},    {0, 0, EN_MAC_ENERGY, -50, 50, "Energy (Basic)"},
+            {4, 0, EN_MAC_ENERGY, -50, 50, "Energy (Concrete)"},
+        };
+        unsigned z;
+        for (z = 0; z < sizeof DZ / sizeof DZ[0]; z++) {
+            int f, n = dead_steps(DZ[z].pc, DZ[z].p, DZ[z].mac, DZ[z].lo, DZ[z].hi, 4.0f, &f);
+            if (n)
+                printf("  %s: %d steps alike, the first %d -> %d\n", DZ[z].nm, n, f, f + 1);
+            CHECK(n == 0, "%s: %d steps change nothing", DZ[z].nm, n);
+        }
+    }
+    /* (format 32) a save before 32: the rescaled knobs as near as they sounded (en_zones31) */
+    {
+        static const struct { int p, v, ctx, cv, want; } ZC[] = {
+            {P_STABS, 30, -1, 0, 3}, {P_STABS, 77, -1, 0, 5}, {P_STABS, 0, -1, 0, 1}, {P_STABS, 100, -1, 0, 6},
+            {P_HITS, 10, -1, 0, 8}, {P_HITS, 45, -1, 0, 41}, {P_HITS, 38, -1, 0, 39}, {P_HITS, 0, -1, 0, 0},
+            {P_HITS, 100, -1, 0, 100},
+            {P_BNOTES, 90, P_GROOVE, 1, 100}, {P_BNOTES, 50, P_GROOVE, 1, 33}, {P_BNOTES, 30, P_GROOVE, 0, 30},
+            {P_BNOTES, 85, P_GROOVE, 4, 80},
+            {P_NGRAIN, 44, -1, 0, 43}, {P_NGRAIN, 56, -1, 0, 56}, {P_NGRAIN, 0, -1, 0, 0},
+            {P_NCOL, -10, P_NCHAR, 1, -13}, {P_NCOL, 5, P_NCHAR, 2, 7}, {P_NCOL, 20, P_NCHAR, 0, 20},
+            {P_ETONE, 70, -1, 0, 80}, {P_ETONE, 100, -1, 0, 100}, {P_ETONE, 30, -1, 0, 30},
+            {P_NTUNE, 70, P_NCHAR, 1, 81}, {P_NTUNE, 95, P_NCHAR, 1, 100}, {P_NTUNE, 30, P_NCHAR, 1, 30},
+            {P_CATT, 10, P_CVOICE, 3, 57}, {P_CATT, 50, P_CVOICE, 0, 50},
+            {P_BLEN, 2, P_GROOVE, 0, 27}, {P_BLEN, 50, P_GROOVE, 0, 50}, {P_BLEN, 20, P_GROOVE, 1, 20},
+            {P_HTONE, 20, P_HATS, 75, 40}, {P_HTONE, -20, P_HATS, 30, -33}, {P_PTON, 30, P_PTONE, 50, 30},
+        };
+        int16_t pp[P_NPARAMS];
+        unsigned i;
+        int ok = 1;
+        for (i = 0; i < sizeof ZC / sizeof ZC[0]; i++) {
+            int16_t rec[P_NPARAMS];
+            uint16_t pl;
+            en_piece(0, rec, &pl);
+            memcpy(pp, rec, sizeof pp);
+            pp[P_NCHAR] = 0, pp[P_CVOICE] = 0, pp[P_GROOVE] = 1, pp[P_HATS] = 50, pp[P_PTONE] = 40;
+            if (ZC[i].ctx >= 0)
+                pp[ZC[i].ctx] = (int16_t)ZC[i].cv;
+            pp[ZC[i].p] = (int16_t)ZC[i].v;
+            en_zones31(pp, P_NPARAMS);
+            if (pp[ZC[i].p] != ZC[i].want)
+                printf("  (%s %d: %d, not %d)\n", en_param_info(ZC[i].p)->name, ZC[i].v, pp[ZC[i].p], ZC[i].want), ok = 0;
+        }
+        CHECK(ok, "the format 32 upgrade's rescaled knobs");
     }
 
     /* throws: with the piece's looseness up, stabs go into the echo (format 29: the looseness the piece's own, P_LOOSE,
