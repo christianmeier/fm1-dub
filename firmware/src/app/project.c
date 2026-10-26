@@ -200,7 +200,7 @@ typedef struct {
     uint8_t rsv[16];
 } project18_t;
 /* DUB-1 1.4.0's test builds (format 19): today's, without the LFOs' waves */
-#define NPAR19 P_CLSHAPE
+#define NPAR19 P_CLWAVE
 _Static_assert(NPAR19 == 129, "format 19 had 129 parameters");
 typedef struct {
     int16_t par[NPAR19];
@@ -401,6 +401,7 @@ void project_defaults(void)
     memset(&proj, 0, sizeof proj);
     proj.magic = PROJ_MAGIC;
     proj.format = PROJ_FORMAT;
+    proj.rsv[0] = PROJ_WAVE_MARK;
     for (i = 0; i < NPIECES; i++)
         recipe(i, &proj.slot[i]);
     for (i = 0; i < P_NPARAMS; i++)
@@ -882,6 +883,12 @@ static void gaps9(int16_t *par)                  /* before 10: an empty slot is 
     par[P_PMODE] = par[P_PMODE] ? EN_PLOOP | EN_WALK_WANDER : EN_WALK_WANDER;   /* Prog: Loop; Random: the walk, now Wander */
 }
 
+static void shape30(int16_t *par)                /* (format 30, step 2's test builds) a Shape as a Wave */
+{
+    par[P_CLWAVE] = (int16_t)(par[P_CLWAVE] == 4 ? 0 : 50);
+    par[P_NLWAVE] = (int16_t)(par[P_NLWAVE] == 4 ? 0 : 50);
+}
+
 int project_load(void)
 {
     static project_t buf;
@@ -1022,6 +1029,17 @@ int project_load(void)
         from29((const project29_t *)(const void *)&buf);
     } else {
         proj = buf;
+        if (n >= 8 && proj.magic == PROJ_MAGIC && proj.format == PROJ_FORMAT && proj.rsv[0] != PROJ_WAVE_MARK) {
+            /* (a step 2 test build's, zzo's or zzp's: the LFOs' Shape in the Wave's slots; the Shape Wander, the
+             * wander alone, Wave 0, the waves half each, 50; a piece never changed, known by that build's recipe,
+             * takes today's below) */
+            for (i = 0; i < NPIECES; i++)
+                fresh[i] = (uint8_t)untouched_raw(proj.slot[i].par, P_NPARAMS, proj.slot[i].pool, i);
+            shape30(proj.par);
+            for (i = 0; i < NPIECES; i++)
+                shape30(proj.slot[i].par);
+            proj.rsv[0] = PROJ_WAVE_MARK;
+        }
     }
     if (old && old < 30)                                     /* (the new ones, from the recipes) */
         newpar(old == 29 ? NPAR29 : old >= 27 ? NPAR28 : old == 26 ? NPAR26 : old == 25 ? NPAR25 : old == 24 ? NPAR24 : old == 23 ? NPAR23 : old == 22 ? NPAR22 : old == 21 ? NPAR21 : old == 20 ? NPAR20 : old == 19 ? NPAR19 : old >= 17 ? NPAR18 : old == 16 ? NPAR16 : old == 15 ? NPAR15 : old == 14 ? NPAR14 : old == 13 ? NPAR13
@@ -1118,6 +1136,7 @@ int project_load(void)
 int project_save(void)
 {
     keep();
+    proj.rsv[0] = PROJ_WAVE_MARK;
     return plat_store_save(OBJ_PROJ, &proj, sizeof proj);
 }
 

@@ -13,12 +13,18 @@
 #define EN_VERSION "DEV"
 #endif
 #define PROJ_MAGIC 0x31425544u           /* "DUB1": AMB-1's projects ("ENO1") give the recipes */
+#define PROJ_WAVE_MARK 0xB1u           /* (format 30, the LFO pages' layout B) proj.rsv[0] in a save whose LFOs
+                                         * have a Wave (P_CLWAVE, P_NLWAVE: 0..100); a format 30 save without it is
+                                         * the step 2 test builds' (zzo, zzp), those slots their Shape (0..4) */
 #define PROJ_FORMAT 30u                  /* 30: the variety plan's step 2: Drift, Form's KNOB 4 (P_MOVE: the LFOs,
                                          * the slow arc, the echo's slow moves, the mixer's rides), each LFO's Trim
-                                         * on it (P_CLTRIM, P_NLTRIM; their Depth and Drift unread), a Shape Drift;
+                                         * on it (P_CLTRIM, P_NLTRIM; their Depth and Drift unread); (layout B) each
+                                         * LFO's Wave, the wave's share against the wander, in its Shape's slots
+                                         * (P_CLWAVE, P_NLWAVE, 0..100; the wave a sine);
                                          * the throws on the chord's Vary (P_TVARY: the amount they're set at); the
                                          * Mixer its moves alone, on no knob; from the old knobs as they sounded
-                                         * (en_move29); 8-29 read;
+                                         * (en_move29); 8-29 read, and step 2's test builds' 30 (no PROJ_WAVE_MARK: their
+                                         * Shape a Wave, Wander 0, the others 50);
                                          * 29: the variety plan's step 1: Evolve is Form's Vary (P_VARY, its
                                          * value kept), the layers' Varys trims on it (P_CVARY .. P_NVARY, -50..+50:
                                          * the old factor's amount as Vary + trim, 0 Hold), the piece's looseness
@@ -45,7 +51,7 @@
                                          * Varys from the recipes, a Cutoff you'd set its offset from the recipe's);
                                          * 21: the Chord's pages: its Vary, its LFO's Destination (P_CVARY,
                                          * P_CLDEST; 8-20 read, they from the recipes);
-                                         * 20: the LFOs' waves (P_CLSHAPE, P_NLSHAPE; 8-19 read, they Sine);
+                                         * 20: the LFOs' waves (their Shape, now P_CLWAVE, P_NLWAVE; 8-19 read, they Sine);
                                          * 19: the chord's and the noise's LFO rates (P_CLRATE, P_NLRATE; 8-18 read,
                                          * they from the recipes, the noise's LFO depth converted: its scale shallower);
                                          * 18: the noise's Density and Air 0..100, 0 none (8-17 read, converted);

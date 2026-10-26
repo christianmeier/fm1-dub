@@ -1111,8 +1111,8 @@ int main(void)
         fresh();
         en_seed(11);
         en_set(P_TEMPO, 140);
-        en_set(P_CLSHAPE, EN_LSH_DRIFT);        /* (format 30: the Shape Drift, the wander alone; at its full reach) */
-        en_set(P_NLSHAPE, EN_LSH_DRIFT);
+        en_set(P_CLWAVE, 0);                    /* (format 30, layout B: Wave 0, the wander alone; at its full reach) */
+        en_set(P_NLWAVE, 0);
         en_set(P_MOVE, 100);
         en_set(P_CLTRIM, 50);
         en_set(P_NLTRIM, 50);
@@ -1150,7 +1150,7 @@ int main(void)
         fresh();
         en_seed(11);
         en_set(P_TEMPO, 140);
-        en_set(P_CLSHAPE, EN_LSH_DRIFT);
+        en_set(P_CLWAVE, 0);
         en_set(P_MOVE, 50);
         en_play(1);
         lfo_rec(600);
@@ -1158,7 +1158,7 @@ int main(void)
         fresh();
         en_seed(11);
         en_set(P_TEMPO, 140);
-        en_set(P_CLSHAPE, EN_LSH_DRIFT);
+        en_set(P_CLWAVE, 0);
         en_set(P_MOVE, 50);
         en_play(1);
         lfo_rec(600);
@@ -1167,12 +1167,36 @@ int main(void)
         fresh();
         en_seed(12);
         en_set(P_TEMPO, 140);
-        en_set(P_CLSHAPE, EN_LSH_DRIFT);
+        en_set(P_CLWAVE, 0);
         en_set(P_MOVE, 50);
         en_play(1);
         lfo_rec(600);
         other = memcmp(a, lfo_v[0], sizeof a) != 0;
         CHECK(same && other, "Drift: the same seed the same path (%d), another seed another (%d)", same, other);
+    }
+
+    /* (format 30, layout B, the user's) the LFO's Wave: its wave's share against the wander; 100 the wave alone (a bar's
+     * sine, back as it was each bar), 0 the wander alone (never so), 50 between; the reach the same */
+    {
+        int w, k, i, off[3];
+        for (k = 0; k < 3; k++) {
+            w = k == 0 ? 100 : k == 1 ? 50 : 0;
+            fresh();
+            en_seed(11);
+            en_set(P_TEMPO, 140);
+            en_set(P_CLRATE, 0);                 /* (1 bar) */
+            en_set(P_CLWAVE, w);
+            en_set(P_MOVE, 100);
+            en_set(P_CLTRIM, 50);
+            en_play(1);
+            lfo_rec(LFO_REC);
+            for (off[k] = 0, i = 64; i < LFO_REC - 16; i++)
+                off[k] += abs(lfo_v[0][i] - lfo_v[0][i + 16]);
+            off[k] /= LFO_REC - 80;
+        }
+        printf("  Wave 100, 50, 0: away from itself a bar later by %d, %d, %d (of +-127)\n", off[0], off[1], off[2]);
+        CHECK(off[0] <= 2, "Wave 100: the wave alone, a bar later %d away", off[0]);
+        CHECK(off[2] > off[0] + 2 && off[1] > off[0], "Wave: 50 %d and 0 %d no closer than 100's %d", off[1], off[2], off[0]);
     }
 
     /* the bass's and the pings' LFO gone: their old knobs (P_BFDEC, P_PFDEC) change nothing; (format 30) nor do the

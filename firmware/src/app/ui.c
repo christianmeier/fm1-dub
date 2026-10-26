@@ -194,10 +194,10 @@ static const uint16_t VIEW_KNOB[NVIEWS][4] = {
                                                   * layers'; its Drift the recipes') */
     {P_EBLUR, P_ETONE, P_SIZE, P_CLOUD},         /* (1.4.0, the user's: the space together; Width to the Form page) */
     {P_NWIDTH, P_NPLATE, P_NECHO, K_NONE},       /* (the Noise page's third: SAVE again; its Change the recipes') */
-    {P_CLTRIM, P_CLRATE, P_CLSHAPE, P_CLDEST},   /* (1.4.0) the LFO pages: (format 30, the variety plan's step 2) its
-                                                  * Trim on Form's Drift, its rate, its shape (the last, Drift, the
-                                                  * random wander alone), where it goes (ALGORITHM's too) */
-    {P_NLTRIM, P_NLRATE, P_NLSHAPE, P_NLDEST},
+    {P_CLTRIM, P_CLWAVE, P_CLRATE, P_CLDEST},   /* (1.4.0) the LFO pages: (format 30, the variety plan's step 2) its
+                                                  * Drift on Form's Drift; (layout B, the user's) its Wave, the wave's
+                                                  * share against the wander; its rate; where it goes (ALGORITHM's too) */
+    {P_NLTRIM, P_NLWAVE, P_NLRATE, P_NLDEST},
     {P_HATSLVL, P_HTONE, P_HLEN, K_NONE},        /* (1.4.0) the Hats page: SEQ a third time, the Pattern after it */
     {P_NROOM, P_NCOL, P_NTUNE, P_NWIDTH},        /* (1.4.0) the Noise voice: SAVE again; its Width from the Noise space
                                                   * page (gone: its sends the noise's channel strip) */
@@ -262,8 +262,8 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Density", "Vary", "", ""},
     {"Blur", "Tone", "Size", "Cloud"},
     {"Width", "Plate", "Echo", ""},
-    {"Drift", "Rate", "Shape", "Target"},
-    {"Drift", "Rate", "Shape", "Target"},
+    {"Drift", "Wave", "Rate", "Target"},
+    {"Drift", "Wave", "Rate", "Target"},
     {"Level", "Tone", "Length", ""},
     {"Air", "Tone", "Decay", "Width"},
     {"Level", "Echo", "Plate", "Filter"},   /* (1.4.0, format 28, Robert's: the Low cut a centred filter) */
@@ -312,9 +312,9 @@ static const char *const KNOB_HELP[NVIEWS][4] = {
     {"Clean repeats, to a dissolving wash", "The repeats darker, or brighter", "How long the plate rings",
      "The reverb through the grain cloud"},
     {"The noise mono, to wide", "How much of it rings in the plate", "How much of it goes into the echo", ""},
-    {"More or less than Drift; left: still", "How long the wave: 1 to 32 bars", "The wave; Wander: the wander alone",
+    {"More or less than Drift; left: still", "Wander to wave: 0 wander, 100 wave", "How long the wave: 1 to 32 bars",
      "What it moves: Cutoff, Reso, Colour"},
-    {"More or less than Drift; left: still", "How long the wave: 1 to 32 bars", "The wave; Wander: the wander alone",
+    {"More or less than Drift; left: still", "Wander to wave: 0 wander, 100 wave", "How long the wave: 1 to 32 bars",
      "What it moves: Filter, Tone, Air"},
     {"The hats' level against the kick", "The hats, dark to bright", "How long the hats ring", ""},
     {"The hiss under it, softer or more", "The rings darker, or brighter", "How long each hit rings on the chord",
@@ -3416,34 +3416,83 @@ static void draw_noise_lane(void)
     }
 }
 
-/* (1.4.0) an LFO page: the modulation's path, as heard, the last 16 bars (en_lfo_tr), in the layer's colour, older
- * fainter, the present at the right with a dot; a faint line at the middle (the knob's own value), its reach dotted
- * above and below; the bars ticked on the middle line; the rate over it. (Format 30: the path at one scale, the most
- * Drift and the Trim reach, so the wave shrinks to flat with them, or grows) */
+/* (1.4.0, the user's: the LFO pages' picture across the screen, VARIETY-PLAN.md) an LFO page: its past, now and
+ * future, the full width; now (a dot on what's heard) in the middle. Left, what it did: what's heard (the wave and the
+ * wander together, en_lfo_tr) bold in the layer's colour, older fainter; the wave's part alone a thin line, the
+ * wander's dotted. Right, where the wave goes (dim; the wander can't be known, not drawn ahead). At one scale, the
+ * most Drift and the page's Drift reach, so it shrinks to flat with them, or grows; its reach dotted. Under it the
+ * bars, the wave's cycles (or, on the wander alone, the phrases) taller. The span each side: 4 bars for a 1- or 2-bar
+ * wave, 8 for 4, else 16 (two cycles where they fit). Its reach in its Target's units at the edges: the chord's cutoff
+ * in Hz around its knobs' own (before each stab's envelope), Reso's and Colour's and the noise's Tone and Air as
+ * their knobs show them, the noise's Filter in Hz. The rate and the Target over it */
+static void lfo_hz(float f, char *b)             /* (570 Hz, 2.3 kHz, 20 kHz) */
+{
+    const int hz = (int)(f + 0.5f);
+    char t[12];
+    int j = 0, k;
+    if (hz >= 10000) {
+        itoa_u((uint32_t)((hz + 500) / 1000), t);
+    } else if (hz >= 1000) {
+        const int h = (hz + 50) / 100;
+        itoa_u((uint32_t)(h / 10), t);
+        for (k = 0; t[k]; k++)
+            ;
+        t[k++] = '.', t[k++] = (char)('0' + h % 10), t[k] = 0;
+    } else {
+        itoa_u((uint32_t)(hz >= 100 ? (hz + 5) / 10 * 10 : hz), t);
+    }
+    for (k = 0; t[k]; k++)
+        b[j++] = t[k];
+    b[j++] = ' ';
+    if (hz >= 1000)
+        b[j++] = 'k';
+    b[j++] = 'H', b[j++] = 'z', b[j] = 0;
+}
+static void lfo_units(int k, float re, char *hi, char *lo)   /* (its reach's ends in its Target's units) */
+{
+    const int dst = proj.par[k ? P_NLDEST : P_CLDEST];
+    if (!k && dst == EN_CLD_CUTOFF) {
+        const float b = en_chord_cut(), e = fm_exp2f(re);
+        lfo_hz(fm_clampf(b * e, 90.0f, 12000.0f), hi);
+        lfo_hz(fm_clampf(b / e, 90.0f, 12000.0f), lo);
+    } else if (k && dst == EN_NLD_FILTER) {
+        lfo_hz(20000.0f, hi);
+        lfo_hz(20000.0f * fm_exp2f(-1.9f * fm_minf(2.0f * re, 2.0f)), lo);
+    } else {                                     /* (a knob's: as far along it, within its ends) */
+        const int p = k ? (dst == EN_NLD_TONE ? P_NCOL : P_NROOM) : dst == EN_CLD_RESO ? P_CRES : P_CCOL,
+                  lo0 = p == P_NROOM ? 0 : -50, hi0 = p == P_NROOM ? 100 : 50,
+                  dl = (int)((k ? 25.0f * re : 50.0f * (2.0f / 5.5f) * re) + 0.5f), v = proj.par[p];
+        en_param_text(p, v + dl > hi0 ? hi0 : v + dl, hi);
+        en_param_text(p, v - dl < lo0 ? lo0 : v - dl, lo);
+    }
+}
 static void draw_lfo(int k)
 {
-    const int32_t x0 = 60, w = 124, yc = 60, rr = 28;   /* (between the meters and the duck, under the page's name,
-                                                  * over the lane; 127: rr pixels) */
-    const uint16_t col = k ? K_NOISE : K_PAD;
-    const uint32_t wn = en_lfo_w, n = wn < EN_LFO_N ? wn : EN_LFO_N, b16 = en_bars ? en_bars - 1u : 0u;
-    const float am = (float)proj.par[P_MOVE] * (float)(proj.par[k ? P_NLTRIM : P_CLTRIM] + 50) * 0.0002f,
-                re = k ? am * (1.0f / 2.0f) : am * (2.3f - 0.6f * am) * (1.0f / 2.2f);   /* (as the engine's: 0..1 of
-                                                  * the most it reaches) */
-    const int dw = re > 0.0f, d = dw && proj.par[k ? P_NLSHAPE : P_CLSHAPE] != EN_LSH_DRIFT,
-              reach = (int)(re * (float)rr + 0.5f);   /* (the wave's and the wander's together) */
-    int32_t x, y0 = yc, yy;
+    const int32_t xl = 4, xn = 120, xr = 236, half = xn - xl, yc = 48, rr = 26;   /* (the picture's rows: the lanes
+                                                  * below kept clear; 127: rr pixels) */
+    const uint16_t col = k ? K_NOISE : K_PAD, cw = mix(K_BG, K_TEXT, 11), cf = mix(K_BG, K_TEXT, 6),
+                   cd = mix(K_BG, K_TEXT, 9);
+    const uint32_t wn = en_lfo_w, n = wn < EN_LFO_N ? wn : EN_LFO_N, cur = en_bars ? en_bars - 1u : 0u;
+    const float mx = k ? 2.0f : 2.2f, re = en_lfo_reach_of(k);   /* (the scale: the most either reaches, LFO_CR_MAX,
+                                                  * LFO_NR_MAX; its reach now) */
+    const int rate = proj.par[k ? P_NLRATE : P_CLRATE], bars = en_lfo_bars(rate),
+              dw = re > 0.0f, d = dw && proj.par[k ? P_NLWAVE : P_CLWAVE] > 0, wd = dw && proj.par[k ? P_NLWAVE : P_CLWAVE] < 100,
+              reach = (int)(re / mx * (float)rr + 0.5f),
+              hb = !d || !bars ? 16 : bars <= 2 ? 4 : bars == 4 ? 8 : 16;
+    const uint32_t span = (uint32_t)hb * 16u;   /* (sixteenths each side) */
+    int32_t x, y0 = yc, yy, lw = 0;
     char t[32], tt[32];
     if (d > 0) {                                 /* (what moves it: "4 BARS", "4 BARS + WANDER", "WANDER") */
         int j = 0;
-        en_param_text(k ? P_NLRATE : P_CLRATE, proj.par[k ? P_NLRATE : P_CLRATE], t);
+        en_param_text(k ? P_NLRATE : P_CLRATE, rate, t);
         while (t[j])
             j++;
-        if (dw > 0)
+        if (wd)
             t[j++] = ' ', t[j++] = '+', t[j++] = ' ', t[j++] = 'W', t[j++] = 'a', t[j++] = 'n', t[j++] = 'd', t[j++] = 'e', t[j++] = 'r';
         t[j] = 0;
     } else {
         t[0] = 0;
-        if (dw > 0)
+        if (wd)
             t[0] = 'W', t[1] = 'a', t[2] = 'n', t[3] = 'd', t[4] = 'e', t[5] = 'r', t[6] = 0;
     }
     if (t[0]) {                                  /* (1.4.0: where it goes, "4 BARS + WANDER ON RESO", "... ON AIR") */
@@ -3458,32 +3507,85 @@ static void draw_lfo(int k)
     }
     caps(tt, t, sizeof tt);
     text_c(120, MAIN_SHIFT - 1, &FONT_XS, tt, K_DIM);   /* (where it was on the screen: the canvas's top, 1.4.0) */
-    cv_rect(x0, yc, w, 1, mix(K_BG, K_LINE, 10));
-    for (x = 0; x < w; x += 4)                   /* (its reach, at the depth) */
-        if (reach > 0) {
-            cv_rect(x0 + x, yc - reach, 1, 1, K_LINE);
-            cv_rect(x0 + x, yc + reach, 1, 1, K_LINE);
-        }
-    for (x = 0; x < w; x++) {                    /* (the bars, on the middle line: the oldest at the left) */
-        const uint32_t age = (uint32_t)(w - 1 - x) * EN_LFO_N / (uint32_t)w, age2 = (uint32_t)(w - x) * EN_LFO_N / (uint32_t)w;
-        if (age2 <= b16 && ((b16 - age) >> 4) != ((b16 - age2) >> 4))
-            cv_rect(x0 + x, yc - 1, 1, 3, K_LINE);
+    if (dw) {                                    /* (its reach's ends, in its Target's units, at the left edge) */
+        char hi[12], lo[12];
+        lfo_units(k, re, hi, lo);
+        cv_text(xl, yc - reach - 15, &FONT_XS, hi, K_DIM);
+        cv_text(xl, yc + reach + 1, &FONT_XS, lo, K_DIM);
+        lw = text_w(&FONT_XS, lo) + 4;
     }
-    for (x = 0; x < w; x++) {
-        const uint32_t age = (uint32_t)(w - 1 - x) * EN_LFO_N / (uint32_t)w;
+    cv_rect(xl, yc, xr - xl, 1, mix(K_BG, K_LINE, 10));
+    for (x = xl; x < xr; x += 4)                 /* (its reach) */
+        if (reach > 0) {
+            cv_rect(x, yc - reach, 1, 1, K_LINE);
+            cv_rect(x, yc + reach, 1, 1, K_LINE);
+        }
+    for (yy = yc - rr; yy <= yc + rr; yy += 3)   /* (now) */
+        cv_rect(xn, yy, 1, 1, K_LINE);
+    {   /* (the bars under it: each a tick, the wave's cycles taller, or the phrases on the wander alone) */
+        const int32_t yt = yc + rr + 4;
+        const uint32_t cb = cur >> 4;
+        int64_t sp = -1;
+        for (x = xl; x < xr; x++) {
+            const int64_t s = x <= xn ? (int64_t)cur - (int64_t)((uint32_t)(xn - x) * span / (uint32_t)half)
+                                      : (int64_t)cur + (int64_t)((uint32_t)(x - xn) * span / (uint32_t)half);
+            if (x > xl && s >= 0 && (s >> 4) != (sp >> 4) && x >= xl + lw) {
+                const uint32_t b = (uint32_t)(s >> 4);
+                const int tall = d && bars ? b % (uint32_t)bars == 0u
+                                           : ((b + 8u - cb % 8u + en_phrase_bar) & 7u) == 0u;
+                cv_rect(x, tall ? yt - 1 : yt + 1, 1, tall ? 5 : 2, tall ? K_DIM : K_LINE);
+            }
+            sp = s;
+        }
+    }
+    if (d)                                       /* (the wave ahead, dim, as it will go) */
+        for (x = xn + 1; x < xr; x++) {
+            const uint32_t s = cur + (uint32_t)(x - xn) * span / (uint32_t)half;
+            const float wp = en_lfo_wave_part(k, s) / mx * (float)rr;
+            int32_t a0, a1;
+            yy = yc - (int32_t)(wp + (wp < 0.0f ? -0.5f : 0.5f));
+            if (x == xn + 1) {
+                const float w0 = en_lfo_wave_part(k, cur) / mx * (float)rr;
+                y0 = yc - (int32_t)(w0 + (w0 < 0.0f ? -0.5f : 0.5f));
+            }
+            a0 = y0 < yy ? y0 : yy, a1 = y0 > yy ? y0 : yy;
+            cv_rect(x, a0, 1, a1 - a0 + 1, cf);
+            y0 = yy;
+        }
+    for (x = xl; x <= xn; x++) {                 /* (what was heard, bold, the oldest at the left, fainter) */
+        const uint32_t age = (uint32_t)(xn - x) * span / (uint32_t)half;
         int32_t a0, a1;
         if (age >= n)                            /* (not played yet so far back) */
             continue;
         yy = yc - (int32_t)en_lfo_tr[k][(wn - 1u - age) % EN_LFO_N] * rr / 127;
-        if (x == 0 || age + 1u >= n)
+        if (x == xl || age + 1u >= n)
             y0 = yy;
         a0 = y0 < yy ? y0 : yy, a1 = y0 > yy ? y0 : yy;
-        cv_rect(x0 + x, a0 - 1, 1, a1 - a0 + 3, mix(K_BG, col, 5 + (int)(11u - age * 11u / EN_LFO_N)));   /* (the
-                                                  * user's: a tad bolder, 3 px) */
+        cv_rect(x, a0 - 1, 1, a1 - a0 + 3, mix(K_BG, col, 6 + (int)(10u - age * 10u / span)));
         y0 = yy;
     }
-    if (n)                                       /* (now: a dot at the right) */
-        cv_disc(x0 + w - 1, yc - (int32_t)en_lfo_tr[k][(wn - 1u) % EN_LFO_N] * rr / 127, 4, en_playing ? K_TEXT : col);
+    if (d)                                       /* (the wave's part, a thin line over it) */
+        for (x = xl; x <= xn; x++) {
+            const uint32_t age = (uint32_t)(xn - x) * span / (uint32_t)half;
+            int32_t a0, a1;
+            if (age >= n)
+                continue;
+            yy = yc - (int32_t)en_lfo_wv[k][(wn - 1u - age) % EN_LFO_N] * rr / 127;
+            if (x == xl || age + 1u >= n)
+                y0 = yy;
+            a0 = y0 < yy ? y0 : yy, a1 = y0 > yy ? y0 : yy;
+            cv_rect(x, a0, 1, a1 - a0 + 1, cw);
+            y0 = yy;
+        }
+    if (wd)                                      /* (the wander's part, dotted) */
+        for (x = xl; x <= xn; x += 2) {
+            const uint32_t age = (uint32_t)(xn - x) * span / (uint32_t)half;
+            if (age >= n)
+                continue;
+            cv_rect(x, yc - (int32_t)en_lfo_wd[k][(wn - 1u - age) % EN_LFO_N] * rr / 127, 1, 1, cd);
+        }
+    if (n)                                       /* (now: a dot on what's heard, in the middle) */
+        cv_disc(xn, yc - (int32_t)en_lfo_tr[k][(wn - 1u) % EN_LFO_N] * rr / 127, 4, en_playing ? K_TEXT : col);
 }
 
 /* (1.4.0, the user's: song structure) the Song pages' picture, in the lanes' place: the song as set, its intro,

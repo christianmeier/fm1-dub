@@ -1,6 +1,6 @@
 # the FM pages: a third press on an FM voice; the algorithm overridden, kept by the piece; a non-FM voice: greyed.
-# (1.4.0) The chord's fourth press: its LFO page (format 30: Trim on Form's Drift, Rate: 1 to 32 bars, Shape, the
-# last Drift, the wander alone; Destination, ALGORITHM's too); then back. The pings' and the
+# (1.4.0) The chord's fourth press: its LFO page (format 30, layout B: Drift on Form's Drift, Wave: the wave's share
+# against the wander, Rate: 1 to 32 bars, Target, ALGORITHM's too); then back. The pings' and the
 # bass's FM pages: their fourth knob none now (their LFO gone). (1.4.0, the user's) The Chord FM page for every voice,
 # its fourth knob Colour (on a voice not FM the only one); ALGORITHM on the Chord LFO page its Destination (Cutoff,
 # Reso, Colour), the big ring naming it, the moving knob on its page. (1.4.0, the user's: the layers' pages) the Pings FM
@@ -30,8 +30,8 @@ expect peak_db_max -0.5
 tap ENV
 wait 400
 expect view 22
-said Chord LFO page, destination Cutoff: Drift -2, Rate 4 bars, Shape Sine, Target Cutoff
-# (format 30: Basic's Depth 30 and Drift 45 as Drift 41 and the Trim -2)
+said Chord LFO page, destination Cutoff: Drift -2, Wave 51, Rate 4 bars, Target Cutoff
+# (format 30: Basic's Depth 30 and Drift 45 as Drift 41, the page's Drift -2 and Wave 51: the wave's share they gave)
 # ALGORITHM: the Destination, round (Cutoff, Reso, Colour), the voice left be
 turn ALGO 1
 wait 300
@@ -47,25 +47,25 @@ turn ALGO 1
 wait 300
 expect par134 0
 said DESTINATION Cutoff
-spin K2 1
+spin K3 1
 wait 300
 expect par127 3
 said Rate 8 bars
-spin K2 9
+spin K3 9
 wait 300
 expect par127 5
 said Rate 32 bars
-spin K2 -3
+spin K3 -3
 wait 300
 expect par127 2
 spin K1 10
 wait 300
 expect par166 0
 said Drift 0
-spin K3 1
+spin K2 9
 wait 300
-expect par129 1
-said Shape Triangle
+expect par129 60
+said Wave 60
 spin K4 1
 wait 300
 expect par134 1

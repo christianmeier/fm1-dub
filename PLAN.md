@@ -959,6 +959,20 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   - **To judge:** the fixed half-and-half share of wave and wander (Concrete's wave smaller, its wander bigger);
     the rides now on Drift (Fog and Concrete ride less than at Mixer 90, Chamber much less than at 55: the arc's
     depth chose their Drift); "Target" for Destination.
+  - **Then (the user, 2026-10-26):** the Trim named **Drift** (as the layers' Vary on Form's Vary), the Shape Drift
+    **Wander** (ceab43b); and **layout B** (dub-1.4-lfovis, still format 30; build/design/REPORT-lfovis.md):
+    **Drift, Wave, Rate, Target**. Wave (P_CLWAVE, P_NLWAVE, in the Shape's slots): the wave's share against the
+    wander, 0 the wander alone, 50 half each, 100 the wave alone, continuous; the wave always a sine (the other
+    shapes unused in dub; the balance matters more). The recipes' Wave the share their old Depth and Drift gave the
+    wave: Basic 51/56, Chamber 0/55, Steppers 59/60, Fog 48/0, Concrete 76/64 (its bigger wave back), Night Drive
+    63/62, Pressure 56/50, Haze 0/0 (chord/noise); the same rule for old projects (en_move29); a format 30 save from
+    zzo/zzp (no PROJ_WAVE_MARK in rsv[0]) its Shape a Wave, Wander 0, the others 50 (host: store30s).
+  - **The LFO pages' picture across the screen** (VARIETY-PLAN.md, the user's 1 + 2 + 3; dub-1.4-lfovis): the
+    past at the left (what's heard bold, the wave's part thin, the wander's dotted: en_lfo_wv, en_lfo_wd recorded
+    a sixteenth at a time), now a dot in the middle, the wave ahead at the right (dim: en_lfo_wave_part); 4, 8 or
+    16 bars each side by the Rate; the bars ticked under it, the cycles (or the phrases) taller; the reach in its
+    Target's units at the left edge (the chord's cutoff in Hz around its knobs', en_chord_cut; Reso, Colour, Tone,
+    Air as their knobs; the noise's Filter in Hz). Host: ~8.1 us a draw (7.1 before), once a sixteenth.
 - **The header, where we are** (the user, 2026-10-25: the top-left block "too small and reads badly, but at the same
   time it clutters"; option A; prototype on branch dub-1.4-header, to judge on the FM-1): the phrase in the header,
   beside the piece's tag (the section's word, or INTRO / OUTRO, and the eight bars as larger cells, the B bars

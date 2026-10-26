@@ -267,6 +267,9 @@ expect par165 41
 expect par166 -2
 expect par167 5
 expect par168 42
+# (layout B) each LFO's Wave the share its Depth and Drift gave (Basic's chord 51, its noise 56)
+expect par129 51
+expect par130 56
 turn PRESET 3
 wait 300
 expect piece 3
@@ -274,4 +277,43 @@ expect par165 72
 expect par166 -12
 expect par167 -15
 expect par168 24
-expect par130 4
+expect par129 48
+expect par130 0
+# (format 30, layout B) a step 2 test build's project (zzo, zzp: the LFOs' Shape in the Wave's slots, no mark): a
+# Shape Sine Wave 50, Wander 0, on a piece changed (Basic: Vary 60; Fog: played, its walk's chords written); a piece
+# never changed (Night Drive) today's recipe (its chord's Wave 63, its noise's 62)
+turn PRESET -3
+wait 300
+expect piece 0
+store30s
+reboot
+wait 1000
+expect format 30
+expect piece 0
+expect par5 60
+expect par165 41
+expect par129 50
+expect par130 50
+turn PRESET 3
+wait 300
+expect piece 3
+expect par129 50
+expect par130 0
+turn PRESET 2
+wait 300
+expect piece 5
+expect par129 63
+expect par130 62
+# and saved again, as layout B: kept as it is (Basic's 50, not taken for a Shape)
+turn PRESET -5
+wait 300
+expect piece 0
+press GLO
+wait 600
+release GLO
+wait 300
+reboot
+wait 1000
+expect piece 0
+expect par129 50
+expect par130 50

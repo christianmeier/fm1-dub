@@ -27,6 +27,8 @@
  *   store8                       save the project as DUB-1 1.0.0 did (format 8): reboot then reads it
  *   store10                      save it as 1.2.0 did (format 10, without the noise's five)
  *   storefile PATH               a saved project from a file (tests/host/proj-*.bin)
+ *   store30s                     save it as step 2's test builds did (zzo, zzp: format 30, the LFOs' Shape, Sine
+ *                                or Wander, in the Wave's slots, no layout B mark)
  *   store29                      save it as the variety plan's step 1 did (format 29: no Drift, no LFO Trims, no
  *                                throws' amount: the LFOs' Depth and Drift and the Mixer as they are)
  *   store28                      save it as 1.4.0's Filter did (format 28: no looseness, the Varys 0..100 on Evolve)
@@ -919,6 +921,19 @@ int main(int argc, char **argv)
                 memcpy(o.slot[i].pings, proj.slot[i].pings, sizeof o.slot[i].pings);
                 o.slot[i].pings_ok = proj.slot[i].pings_ok;
                 o.slot[i].screen = proj.slot[i].screen;
+            }
+            plat_store_save(OBJ_PROJ, &o, sizeof o);
+        } else if (!strcmp(cmd, "store30s")) {   /* the project as step 2's test builds saved it (zzo, zzp: format 30,
+                                                  * the LFOs' Shape in the Wave's slots, Wander 4 or Sine 0, no mark) */
+            static project_t o;
+            int i;
+            keep();
+            o = proj;
+            o.rsv[0] = 0;
+            o.par[P_CLWAVE] = (int16_t)(o.par[P_CLWAVE] ? 0 : 4), o.par[P_NLWAVE] = (int16_t)(o.par[P_NLWAVE] ? 0 : 4);
+            for (i = 0; i < NPIECES; i++) {
+                o.slot[i].par[P_CLWAVE] = (int16_t)(o.slot[i].par[P_CLWAVE] ? 0 : 4);
+                o.slot[i].par[P_NLWAVE] = (int16_t)(o.slot[i].par[P_NLWAVE] ? 0 : 4);
             }
             plat_store_save(OBJ_PROJ, &o, sizeof o);
         } else if (!strcmp(cmd, "store29")) {    /* the project as the variety plan's step 1 saved it (29) */

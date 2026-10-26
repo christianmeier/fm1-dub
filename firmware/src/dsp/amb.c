@@ -78,7 +78,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     {"Noise width", 0, 100, 50}, {"Noise plate", 0, 100, 50}, {"Noise echo", 0, 100, 50}, {"Hat len", -50, 50, 0},
     {"Noise depth", 0, 100, 0}, {"Rumble", 0, 100, 0},
     {"Chord rate", 0, EN_LFO_DRIFT - 1, 2}, {"Noise rate", 0, EN_LFO_DRIFT - 1, 2},
-    {"Chord shape", 0, EN_NLSHAPE - 1, 0}, {"Noise shape", 0, EN_NLSHAPE - 1, 0},
+    {"Chord wave", 0, 100, 50}, {"Noise wave", 0, 100, 50},
     {"Chord drift", 0, 100, 0}, {"Noise wander", 0, 100, 0},
     {"Chord vary", -50, 50, 0}, {"Chord LFO to", 0, EN_NCLDEST - 1, 0},
     {"Pings vary", -50, 50, 0}, {"Bass vary", -50, 50, 0}, {"Drums vary", -50, 50, 0}, {"Noise vary", -50, 50, 0},
@@ -106,7 +106,7 @@ const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PAR
  *                  then Throws, Ghost, Notes, Hats level (50, 50, 100, 50: the pieces as they were);
  *                  then the chord's Ghost, the kick's density, the echo's Blur, Tone and Width, the noise's Decay;
  *                  then the noise's Width, Plate and Echo, the hats' length; then the noise's LFO, the kick's rumble;
- *                  then the chord's and the noise's LFO rates, their waves (0 Sine), their drifts (the random walk);
+ *                  then the chord's and the noise's LFO rates, their Wave (layout B: the wave's share against the wander, 0..100, from each piece's old Depth and Drift; the wave a sine), their drifts (the random walk);
  *                  then the chord's LFO's rate and the noise's (0..5: 1 2 4 8 16 32 bars, 6: Drift; 1.4.0);
  *                  then the chord's Vary trim (0: as Form's Vary; -50 Hold), its LFO's destination (0: Cutoff);
  *                  then the pings', the bass's, the drums' and the noise's Vary trims (0: as Form's Vary), the chord's
@@ -139,7 +139,7 @@ static const struct {
                     50, 50, 50, 0,
                     25, 21,
                     2, 2,
-                    0, 0,
+                    51, 56,
                     45, 20,
                     0, 0,
                     0, 0, 0, 0, 0,
@@ -161,7 +161,7 @@ static const struct {
                     50, 50, 50, 0,
                     30, 35,
                     2, 3,
-                    4, 0,
+                    0, 55,
                     25, 25,
                     0, 0,
                     -17, -12, -15, -15, 0,
@@ -183,7 +183,7 @@ static const struct {
                     50, 50, 50, 0,
                     30, 14,
                     1, 2,
-                    0, 0,
+                    59, 60,
                     35, 20,
                     0, 0,
                     -14, 0, -21, 0, 0,
@@ -205,7 +205,7 @@ static const struct {
                     85, 50, 50, 0,
                     0, 62,
                     5, 2,
-                    0, 4,
+                    48, 0,
                     90, 50,
                     -16, 0,
                     -16, 0, 0, 0, 0,
@@ -227,7 +227,7 @@ static const struct {
                     50, 50, 50, 0,
                     45, 56,
                     2, 1,
-                    0, 0,
+                    76, 64,
                     75, 25,
                     0, 0,
                     0, 0, 0, 0, 0,
@@ -249,7 +249,7 @@ static const struct {
                     50, 50, 50, 0,
                     40, 49,
                     3, 3,
-                    0, 0,
+                    63, 62,
                     55, 25,
                     0, 0,
                     0, -16, -16, 0, 0,
@@ -271,7 +271,7 @@ static const struct {
                     85, 50, 50, 0,
                     20, 42,
                     2, 2,
-                    0, 0,
+                    56, 50,
                     45, 20,
                     -15, 0,
                     -15, -15, -15, 0, 0,
@@ -293,7 +293,7 @@ static const struct {
                     50, 50, 50, 0,
                     0, 28,
                     2, 2,
-                    4, 4,
+                    0, 0,
                     55, 30,
                     -12, 0,
                     -12, -12, 0, -12, 0,
@@ -316,7 +316,6 @@ EN_COLD void en_piece(int i, int16_t *par, uint16_t *pool)
 }
 
 const char *const EN_CV_NAME[EN_NCV] = {"Saws", "Keys", "Organ", "Pad", "Bell", "Tonewheel", "Noise"};
-const char *const EN_LFO_SHAPE[EN_NLSHAPE] = {"Sine", "Triangle", "Ramp up", "Ramp down", "Wander"};
 const char *const EN_CLDEST_NAME[EN_NCLDEST] = {"Cutoff", "Reso", "Colour"};
 const char *const EN_NLDEST_NAME[EN_NNLDEST] = {"Filter", "Tone", "Air"};
 const char *const EN_SMODE_NAME[EN_NSMODE] = {"Endless", "Song", "Set"};
@@ -448,8 +447,6 @@ EN_COLD void en_param_text(int i, int v, char *b)
         s = "Wander";                            /* (1.4.0: the LFOs' rates, the last a wander) */
     else if ((i == P_CLRATE || i == P_NLRATE) && en_lfo_bars(v) == 1)
         s = "1 bar";
-    else if (i == P_CLSHAPE || i == P_NLSHAPE)
-        s = EN_LFO_SHAPE[(unsigned)v < EN_NLSHAPE ? v : 0];
     else if (i == P_CLDEST)
         s = EN_CLDEST_NAME[(unsigned)v < EN_NCLDEST ? v : 0];   /* (1.4.0: where the chord's LFO goes) */
     else if (i == P_NLDEST)
@@ -3382,8 +3379,8 @@ static float cc_col(void)
     return par[P_CLDEST] == EN_CLD_COLOUR ? fm_clampf(rel(P_CCOL) + LFO_KNOB * lfo_ch, -1.0f, 1.0f) : rel(P_CCOL);
 }
 /* (format 30, the variety plan's step 2) each LFO's amount: Form's Drift times its Trim (x1 at 0, none at -50, x2 at
- * +50), 0..2; its reach either way, the wave's and the wander's together, half each (the Shape Drift: the wander
- * alone): the chord's in octaves, 1 at Drift 50, 1.7 at 100, 2.2 at most (a (2.3 - 0.6 a)); the noise's 0..2 (a) */
+ * +50), 0..2; its reach either way, the wave's and the wander's together, shared by its Wave (layout B: 0 the
+ * wander alone, 50 half each, 100 the wave alone): the chord's in octaves, 1 at Drift 50, 1.7 at 100, 2.2 at most (a (2.3 - 0.6 a)); the noise's 0..2 (a) */
 #define LFO_CR_MAX 2.2f                          /* (the traces' scale: the most either reaches) */
 #define LFO_NR_MAX 2.0f
 static float lfo_amt(int trim) { return mv_d * (float)(trim + 50) * 0.02f; }
@@ -3396,6 +3393,8 @@ static struct {
                                                   * choices left be) */
 } lfo_dr[2];
 volatile int8_t en_lfo_tr[2][EN_LFO_N] EN_POOL;   /* (in the pool: read only as far as written) */
+volatile int8_t en_lfo_wv[2][EN_LFO_N] EN_POOL, en_lfo_wd[2][EN_LFO_N] EN_POOL;   /* (the LFO pages' picture: the
+                                                  * wave's part and the wander's, the trace's scale; read only) */
 volatile uint32_t en_lfo_w, en_lfo_picks[2];
 volatile float en_lfo_at[EN_NCLDEST];
 volatile float en_lfo_now, en_lfo_reach;
@@ -3450,6 +3449,15 @@ EN_COLD static void lfo_tick(void)
                                                   * most it can reach, so the Trim and Drift are seen) */
         en_lfo_tr[0][en_lfo_w % EN_LFO_N] = (int8_t)fm_clampf(c + (c < 0.0f ? -0.5f : 0.5f), -127.0f, 127.0f);
         en_lfo_tr[1][en_lfo_w % EN_LFO_N] = (int8_t)fm_clampf(nn + (nn < 0.0f ? -0.5f : 0.5f), -127.0f, 127.0f);
+        for (k = 0; k < 2; k++) {                /* (the picture's: the wave's part and the wander's, apart; nothing
+                                                  * heard reads them) */
+            const float a = lfo_amt(par[k ? P_NLTRIM : P_CLTRIM]), re = k ? a : lfo_creach(a),
+                        sw = (en_lfo_solo ? 1.0f : (float)par[k ? P_NLWAVE : P_CLWAVE] / 100.0f) * re,
+                        u = 127.0f / (k ? LFO_NR_MAX : LFO_CR_MAX),
+                        wv = u * en_lfo_wave_part(k, sixteenth - 1u), wd = u * (re - sw) * dr_at(k, lfo_dr[k].t);
+            en_lfo_wv[k][en_lfo_w % EN_LFO_N] = (int8_t)fm_clampf(wv + (wv < 0.0f ? -0.5f : 0.5f), -127.0f, 127.0f);
+            en_lfo_wd[k][en_lfo_w % EN_LFO_N] = (int8_t)fm_clampf(wd + (wd < 0.0f ? -0.5f : 0.5f), -127.0f, 127.0f);
+        }
         en_lfo_w++;
     }
 }
@@ -3461,8 +3469,12 @@ int en_nlfo18(int old)                           /* (format 19) a Noise LFO befo
 /* (format 30) a piece before 30 as 30's, as near as it sounded: Drift from the slow arc's depth the chord LFO's Depth
  * and Drift gave (0.015 a point of the Drift, 0.005 of the Depth, to 1: Drift half of it, 1 at 50), or, where that was
  * full, from the Mixer's rides (0.8 of it, at least 50); each LFO's Trim the amount that gives its old reach on that
- * Drift (the chord's 2.5 d sqrt(d) + 0.6 sqrt(w) octaves; the noise's d + w), its Shape Drift where its wave was off;
+ * Drift (the chord's 2.5 d sqrt(d) + 0.6 sqrt(w) octaves; the noise's d + w), its Wave the share of the two (layout B; 0 where its wave was off);
  * the throws' amount the chord's now (they sound as they did there) */
+static int wave29(float sine, float wander)     /* (layout B) the wave's share of the two, 0..100 (50 with neither) */
+{
+    return sine + wander > 0.0f ? (int)(100.0f * sine / (sine + wander) + 0.5f) : 50;
+}
 static int trim29(float a, int d)                /* (an amount on Drift d, 0..100, as its Trim: x1 0, none -50, x2 +50) */
 {
     const int t = d > 0 ? (int)(50.0f * (a * 100.0f / (float)d - 1.0f) + 1000.5f) - 1000 : a > 0.0f ? 50 : -50;
@@ -3482,44 +3494,54 @@ EN_COLD void en_move29(int16_t *p)
     p[P_MOVE] = (int16_t)dv;
     p[P_CLTRIM] = (int16_t)(rch > 0.0f ? trim29(ac, dv) : -50);
     p[P_NLTRIM] = (int16_t)(rn > 0.0f ? trim29(rn, dv) : -50);
-    if (p[P_CFDEC] <= 0 && p[P_CLWALK] > 0)
-        p[P_CLSHAPE] = EN_LSH_DRIFT;
-    if (p[P_NLFO] <= 0 && p[P_NLWALK] > 0)
-        p[P_NLSHAPE] = EN_LSH_DRIFT;
+    p[P_CLWAVE] = (int16_t)wave29(2.5f * dc * fm_sqrtf(dc), 0.6f * fm_sqrtf(wc));   /* (layout B: the wave's share
+                                                  * the old Depth and Drift gave; 0 the wander alone) */
+    p[P_NLWAVE] = (int16_t)wave29(dn, wn);
     a = p[P_CVARY] <= -50 ? 0 : p[P_VARY] + p[P_CVARY];
     p[P_TVARY] = (int16_t)(a < 1 ? 1 : a > 100 ? 100 : a);
 }
-static float lfo_wave(int rate, float fr, int shape)   /* the wave's place now, -1..1, from the grid's (its shape:
-                                                  * Sine, Triangle, Ramp up, Ramp down; the sine's and the triangle's
-                                                  * crest a quarter in) */
+static float lfo_wave(int rate, float fr)       /* the wave's place now, -1..1, from the grid's: a sine, its crest a
+                                                  * quarter in (layout B, the user's: the other shapes, unused in dub,
+                                                  * gone) */
 {
-    {
-        const uint32_t n = 16u << (rate < 0 ? 0 : rate);   /* (the cycle, in sixteenths) */
-        const float ph = ((float)((sixteenth - 1u) & (n - 1u)) + fr) / (float)n;   /* (0..1) */
-        switch (shape) {
-        case 1: return ph < 0.25f ? 4.0f * ph : ph < 0.75f ? 2.0f - 4.0f * ph : 4.0f * ph - 4.0f;
-        case 2: return 2.0f * ph - 1.0f;
-        case 3: return 1.0f - 2.0f * ph;
-        default: return fm_sinf(6.2831853f * ph);
-        }
-    }
+    const uint32_t n = 16u << (rate < 0 ? 0 : rate);   /* (the cycle, in sixteenths) */
+    const float ph = ((float)((sixteenth - 1u) & (n - 1u)) + fr) / (float)n;   /* (0..1) */
+    return fm_sinf(6.2831853f * ph);
 }
+/* (the LFO pages' picture) the wave's part of LFO k at step s (sixteenths since the start, the grid's), in its reach's
+ * units (the chord's octaves, the noise's 0..2): at the step's start, as lfo_step's, its Wave's share of the reach;
+ * read from the UI, nothing heard calls it */
+EN_COLD float en_lfo_wave_part(int k, uint32_t s)
+{
+    const int rate = par[k ? P_NLRATE : P_CLRATE];
+    const float a = lfo_amt(par[k ? P_NLTRIM : P_CLTRIM]), re = k ? a : lfo_creach(a),
+                sh = en_lfo_solo ? 1.0f : (float)par[k ? P_NLWAVE : P_CLWAVE] / 100.0f;
+    const uint32_t n = 16u << (rate < 0 ? 0 : rate);
+    if (sh <= 0.0f || re <= 0.0f)
+        return 0.0f;
+    return sh * re * fm_sinf(6.2831853f * (float)(s & (n - 1u)) / (float)n);
+}
+EN_COLD float en_lfo_reach_of(int k)             /* (the picture's) LFO k's reach either way now, as lfo_step's */
+{
+    const float a = lfo_amt(par[k ? P_NLTRIM : P_CLTRIM]);
+    return k ? a : lfo_creach(a);
+}
+EN_COLD float en_chord_cut(void) { return cut_base; }   /* (the picture's) the chord's cutoff from its knobs, Hz */
 static void lfo_step(void)
 {
     /* (where the grid is: the step playing and how far into it, smooth across the tick) */
     const float fr = (float)(pulse ? pulse - 1 : 5) * (1.0f / 6.0f);
-    /* (format 30: the amount Form's Drift's, times the LFO's Trim; the wave and the wander half each, the Shape Drift
-     * the wander alone) */
+    /* (format 30: the amount Form's Drift's, times the LFO page's Drift; the wave's share its Wave, the wander the rest:
+     * 0 the wander alone, 50 half each, 100 the wave alone) */
     const float ac = lfo_amt(par[P_CLTRIM]), rch = lfo_creach(ac), an = lfo_amt(par[P_NLTRIM]),
-                sh = en_lfo_solo ? 1.0f : 0.5f,
-                sc = par[P_CLSHAPE] == EN_LSH_DRIFT ? 0.0f : sh * rch, rc = rch - sc,
-                dn = par[P_NLSHAPE] == EN_LSH_DRIFT ? 0.0f : sh * an, wn = an - dn;
+                sc = (en_lfo_solo ? 1.0f : (float)par[P_CLWAVE] / 100.0f) * rch, rc = rch - sc,
+                dn = (en_lfo_solo ? 1.0f : (float)par[P_NLWAVE] / 100.0f) * an, wn = an - dn;
     lfo_nreach = an;
-    lfo_ch += ((sc > 0.0f ? sc * lfo_wave(par[P_CLRATE], fr, par[P_CLSHAPE]) : 0.0f) + rc * dr_at(0, lfo_dr[0].t + fr) -
+    lfo_ch += ((sc > 0.0f ? sc * lfo_wave(par[P_CLRATE], fr) : 0.0f) + rc * dr_at(0, lfo_dr[0].t + fr) -
                lfo_ch) * 0.2f;
     en_lfo_now = lfo_ch;
     en_lfo_reach = rch;
-    lfo_n += ((dn > 0.0f ? dn * lfo_wave(par[P_NLRATE], fr, par[P_NLSHAPE]) : 0.0f) + wn * dr_at(1, lfo_dr[1].t + fr) -
+    lfo_n += ((dn > 0.0f ? dn * lfo_wave(par[P_NLRATE], fr) : 0.0f) + wn * dr_at(1, lfo_dr[1].t + fr) -
               lfo_n) * 0.2f;
     en_nlfo_now = lfo_n;
     en_nlfo_reach = dn + wn;

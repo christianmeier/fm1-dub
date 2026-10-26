@@ -51,12 +51,12 @@ expect peak_db_max -0.5
 tap SAVE
 wait 400
 expect view 23
-said Noise LFO page, destination Filter: Drift 5, Rate 4 bars, Shape Sine, Target Filter
-spin K2 9
+said Noise LFO page, destination Filter: Drift 5, Wave 56, Rate 4 bars, Target Filter
+spin K3 9
 wait 300
 expect par128 5
 said Rate 32 bars
-spin K2 -3
+spin K3 -3
 wait 300
 expect par128 2
 # (1.4.0, the user's) ALGORITHM here: the LFO's Destination (Filter, Tone, Air), round; the character left be
@@ -192,13 +192,13 @@ expect par126 62
 # (from 16: the noise's LFO as it was, Fog's 0)
 expect par125 0
 # a 1.4.0 test build's project (format 18): kept, the LFOs' rates from the recipe (Fog's: 32 bars since the variety study, its drifts its own),
-# the noise's LFO as it was (format 30: its Depth 0 and Drift 50 on Drift 72 the Trim -15, the Shape Drift)
+# the noise's LFO as it was (format 30: its Depth 0 and Drift 50 on Drift 72 the page's Drift -15, its Wave 0: the wander alone)
 tap SAVE
 tap SAVE
 tap SAVE
 wait 300
 expect view 23
-spin K2 -3
+spin K3 -3
 wait 300
 expect par167 -15
 expect par128 0
@@ -209,6 +209,6 @@ expect format 30
 expect par121 95
 expect par125 0
 expect par167 -15
-expect par130 4
+expect par130 0
 expect par127 5
 expect par128 2

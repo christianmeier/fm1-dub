@@ -106,8 +106,10 @@ enum {
      * slow random wander, a new place every 8-32 bars, glided to); their depth the Chord LFO and Noise LFO knobs.
      * (The pings' and the bass's LFO gone: P_PFDEC and P_BFDEC kept in the format, the engine leaves them be) */
     P_CLRATE, P_NLRATE,
-    P_CLSHAPE, P_NLSHAPE,                             /* (1.4.0, format 20, the user's) their wave: Sine, Triangle, Ramp
-                                                       * up, Ramp down */
+    P_CLWAVE, P_NLWAVE,                               /* (1.4.0, format 20, the user's: their wave's shape; format 30,
+                                                       * the LFO pages' layout B, the user's: the slots of the Shape,
+                                                       * now Wave, the wave's share against the wander, 0..100: 0 the
+                                                       * wander alone, 50 half each, 100 the wave alone; the wave a sine) */
     P_CLWALK, P_NLWALK,                               /* (1.4.0, format 20, the user's: REPORT10's drift its own knob,
                                                        * always on, the LFO's wave over it) how far the slow random walk
                                                        * wanders: the chord's filter, the noise's */
@@ -335,13 +337,14 @@ int en_nz_dens18(int old, int character);         /* (format 18) the noise's Den
  * each -127..127 of its depth's reach (its knob: 127 at 100, a sine or a drift alike); en_lfo_w the sixteenths
  * written so far (the next goes at en_lfo_w % EN_LFO_N) */
 #define EN_LFO_N 256
-#define EN_NLSHAPE 5                             /* (the LFOs' waves: EN_LFO_SHAPE; format 30: the last, Drift, the random
-                                                  * wander alone, no wave) */
-#define EN_LSH_DRIFT 4
-extern const char *const EN_LFO_SHAPE[EN_NLSHAPE];
 #define EN_LFO_DRIFT 6                           /* (before 20, a rate: Drift; then its own knob, P_CLWALK; format 30,
                                                   * a Shape) */
 extern volatile int8_t en_lfo_tr[2][EN_LFO_N];
+extern volatile int8_t en_lfo_wv[2][EN_LFO_N], en_lfo_wd[2][EN_LFO_N];   /* (the LFO pages' picture) the wave's
+                                                  * part and the wander's, apart, as en_lfo_tr (its sum, as heard) */
+float en_lfo_wave_part(int k, uint32_t s);       /* the wave's part of LFO k (0 the chord's) at step s, its reach's units */
+float en_lfo_reach_of(int k);                    /* LFO k's reach either way now (the chord's octaves, the noise's 0..2) */
+float en_chord_cut(void);                        /* the chord's cutoff from its knobs, Hz (before its envelope) */
 extern volatile uint8_t en_lfo_solo;             /* (for tests) 1: an LFO's wave alone, no wander (format 30) */
 extern volatile uint32_t en_lfo_w;
 extern volatile float en_lfo_now, en_lfo_reach;   /* (1.4.0, the user's) the chord's LFO and drift now, and how far
