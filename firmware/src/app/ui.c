@@ -2405,20 +2405,20 @@ static const uint16_t SONG_HUE[3] = {K_ACC, K_TEXT, K_PULSE};   /* a song's part
 static void hdr_song_line(void)                  /* a song: a line along the bottom, its parts, how far it has gone */
 {
     /* (1.4.0, the user's: the parts in their own hues: the intro teal, the main a light neutral, the outro coral; each
-     * dim ahead and bright where already played, a dark pixel between parts, the place where it is white; 2 px high:
-     * one read badly) */
+     * dim ahead and bright where already played, a dark pixel between parts, the place where it is white; 3 px high:
+     * one read badly, two thin still: the user's, zzy) */
     const float k = 224.0f / (float)en_song_be, at = fm_minf((float)en_bars * (1.0f / 16.0f), (float)en_song_be);
     const int32_t xi = 8 + (int32_t)((float)en_song_b0 * k + 0.5f), xo = 8 + (int32_t)((float)en_song_bo * k + 0.5f),
-                  xd = 8 + (int32_t)(at * k + 0.5f), y = HDR_H - 2;
+                  xd = 8 + (int32_t)(at * k + 0.5f), y = HDR_H - 3;
     int32_t x;
     for (x = 8; x < 232; x++) {
         const int part = x < xi ? 0 : x < xo ? 1 : 2, done = x < xd;
         if ((x == xi && xi > 8) || (x == xo && xo < 232))
             continue;                            /* (a gap where one part ends and the next begins) */
-        cv_rect(x, y, 1, 2, mix(K_BG, SONG_HUE[part], done ? (part == 1 ? 11 : 14) : (part == 1 ? 4 : 6)));
+        cv_rect(x, y, 1, 3, mix(K_BG, SONG_HUE[part], done ? (part == 1 ? 11 : 14) : (part == 1 ? 4 : 6)));
     }
     if (en_song_ph != EN_SG_END)
-        cv_rect(xd - 1 < 8 ? 8 : xd - 1, y - 1, 3, 3, K_TEXT);   /* (where it is) */
+        cv_rect(xd - 1 < 8 ? 8 : xd - 1, y - 1, 3, 4, K_TEXT);   /* (where it is: a row over the line) */
 }
 static void draw_header(void)
 {
