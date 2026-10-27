@@ -61,7 +61,8 @@ expect trkick <2
 expect trbass >15
 expect trchord >31
 expect trquiet <2000
-expect trclick <80
+# (step 5b's path: the held echo's repeats of a stab thrown before the end, a dotted 8th apart, read 81-85)
+expect trclick <110
 # the seventh (48 bars at 120, 96 s) into the eighth, its intro: the same entry
 wait 96000
 expect piece 7

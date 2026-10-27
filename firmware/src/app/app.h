@@ -16,7 +16,12 @@
 #define PROJ_WAVE_MARK 0xB1u           /* (format 30, the LFO pages' layout B) proj.rsv[0] in a save whose LFOs
                                          * have a Wave (P_CLWAVE, P_NLWAVE: 0..100); a format 30 save without it is
                                          * the step 2 test builds' (zzo, zzp), those slots their Shape (0..4) */
-#define PROJ_FORMAT 34u                  /* 34: the dub sirens' knobs, each siren's Pitch, Rate, Depth and Echo
+#define PROJ_FORMAT 35u                  /* 35: the variety plan's step 5b: Vary on a scale fitted to the records
+                                         * (en_vary_amount: the classics' median at 50; 34's and older, their
+                                         * Vary and trims as near as they sounded, en_vary34) and the filter's
+                                         * slow sweep slower (P_SWEEP, a parameter more: 34's layout read, a piece
+                                         * changed in it keeps the sweep's old pace, 0);
+                                         * 34: the dub sirens' knobs, each siren's Pitch, Rate, Depth and Echo
                                          * (proj.sir, global; older saves: the defaults, en_sir_def: the sirens as
                                          * they were, Whoop's new), and a Set's Transition (proj.trans, the last
                                          * byte of the room before them; 0 in older saves: LP); 33 (the Transition's

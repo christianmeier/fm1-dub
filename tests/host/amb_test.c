@@ -1208,8 +1208,10 @@ int main(void)
         unsigned z;
         for (z = 0; z < sizeof DZ / sizeof DZ[0]; z++) {
             int f, n = dead_steps(DZ[z].pc, DZ[z].p, DZ[z].mac, DZ[z].lo, DZ[z].hi, 4.0f, &f);
-            for (dz_seed = 2; n && dz_seed <= 4; dz_seed++) {   /* (step 5's recipes: a seed whose four seconds
-                                                  * hide a part; a step that does nothing does nothing on any seed) */
+            for (dz_seed = 2; n && dz_seed <= 4; dz_seed++) {   /* (a seed stirs the streams as the tests before left
+                                                  * them, en_seed's: four seconds of one can hide a part, a ride-out, a
+                                                  * kick or a hat that sits out; a step that does nothing does nothing
+                                                  * on any seed) */
                 int f2, n2 = dead_steps(DZ[z].pc, DZ[z].p, DZ[z].mac, DZ[z].lo, DZ[z].hi, 4.0f, &f2);
                 if (n2 < n)
                     n = n2, f = f2;
@@ -1290,7 +1292,7 @@ int main(void)
                 en_set(P_LOOSE, 100);
                 en_set(P_MOTION, 0);
                 en_set(P_TVARY, 40);
-                en_set(P_VARY, k ? 100 : 40);
+                en_set(P_VARY, k ? 100 : 82);   /* (format 35: the amount 0.4, the old 40) */
                 en_set(P_CVARY, k == 2 ? -50 : 0);
                 en_play(1);
                 t0 = en_throws, s0 = en_stabs;
@@ -1541,7 +1543,7 @@ int main(void)
             en_seed(5);
             en_set(P_TEMPO, 140);
             en_set(P_MOTION, 65);
-            en_set(P_VARY, 50);
+            en_set(P_VARY, 86);                 /* (format 35: the amount 0.5, the old 50) */
             en_macro(EN_MAC_ENERGY, e ? 50 : -50);
             en_play(1);
             while (en_bars < 16u * 241u) {
@@ -1603,7 +1605,7 @@ int main(void)
             fresh();
             en_seed((uint32_t)s * 7u);
             en_set(P_TEMPO, 140);
-            en_set(P_VARY, 40);
+            en_set(P_VARY, 82);             /* (format 35: the amount 0.4, the old 40) */
             en_play(1);
             b = en_bars / 16u, last = en_stab_pat;
             for (k = 0; k < 300;) {
@@ -1623,7 +1625,7 @@ int main(void)
             fresh();
             en_seed(9);
             en_set(P_TEMPO, 140);
-            en_set(P_VARY, 40);
+            en_set(P_VARY, 82);
             en_set(P_CVARY, k * 50 - 50);
             en_play(1);
             run(1.0f);
@@ -1638,7 +1640,7 @@ int main(void)
             fresh();
             en_seed(13);
             en_set(P_TEMPO, 140);
-            en_set(P_VARY, s == 2 ? 0 : s ? 100 : 40);
+            en_set(P_VARY, s == 2 ? 0 : s ? 100 : 82);
             en_set(P_MOTION, 0);
             en_set(P_CVARY, s == 2 ? 0 : -50);
             en_play(1);
@@ -1680,7 +1682,7 @@ int main(void)
                 fresh();
                 en_seed(17);
                 en_set(P_TEMPO, 140);
-                en_set(P_VARY, 40);
+                en_set(P_VARY, 82);         /* (format 35: the amount 0.4, the old 40) */
                 en_set(P_MOTION, 0);
                 en_set(VP[l], k * 50 - 50);
                 en_play(1);
@@ -1716,7 +1718,7 @@ int main(void)
                   "the %s trim: %d %d %d, held %d", VN[l], turns[l][0], turns[l][1], turns[l][2], still[l]);
             en_set(VP[l], 0);
         }
-        en_set(P_VARY, 40);
+        en_set(P_VARY, 82);
         en_set(P_MOTION, 50);
         en_set(P_TEMPO, 122);
     }
