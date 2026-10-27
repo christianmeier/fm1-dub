@@ -71,10 +71,9 @@ wait 300
 spin K1 2
 wait 300
 spin K2 2
-wait 1800
+wait 1498
 shot screen-song-mode.png
 spin K2 -2
-wait 300
 spin K1 -2
 wait 300
 tap FX
