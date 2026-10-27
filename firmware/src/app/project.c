@@ -373,6 +373,26 @@ typedef struct {
     slot29_t slot[NPIECES];
     uint8_t rsv[16];
 } project29_t;
+/* DUB-1 1.4.0's formats 30 to 34 (the variety plan's steps 2-5, the Transition, the sirens' knobs): today's, without
+ * the sweep's pace */
+#define NPAR34 P_SWEEP
+_Static_assert(NPAR34 == 169, "formats 30-34 had 169 parameters");
+typedef struct {
+    int16_t par[NPAR34];
+    uint16_t pool;
+    uint8_t pings[EN_PINGS_N];
+    uint8_t pings_ok, screen;
+} slot34_t;
+typedef struct {
+    uint32_t magic, format;
+    int16_t par[NPAR34];
+    uint16_t pool;
+    uint8_t leds, piece, screen, values;
+    slot34_t slot[NPIECES];
+    uint8_t rsv[15];
+    uint8_t trans;
+    int8_t sir[EN_NSIR][EN_NSK];
+} project34_t;
 _Static_assert(sizeof(project_t) <= 3840u, "the project must fit one storage sector's payload");
 
 static void take(const slot_t *s)                /* a piece's settings into play, the globals kept */
@@ -777,6 +797,27 @@ static void from29(const project29_t *o)        /* the variety plan's step 1 (29
         proj.slot[i].screen = o->slot[i].screen;
     }
 }
+static void from34(const project34_t *o)        /* (30 to 34) everything kept, the format too (read on below as it
+                                                  * is); the sweep's pace from the recipes (newpar) */
+{
+    int i;
+    memset(&proj, 0, sizeof proj);
+    proj.magic = o->magic;
+    proj.format = o->format;
+    memcpy(proj.par, o->par, sizeof o->par);
+    proj.pool = o->pool;
+    proj.leds = o->leds, proj.piece = o->piece, proj.screen = o->screen, proj.values = o->values;
+    for (i = 0; i < NPIECES; i++) {
+        memcpy(proj.slot[i].par, o->slot[i].par, sizeof o->slot[i].par);
+        proj.slot[i].pool = o->slot[i].pool;
+        memcpy(proj.slot[i].pings, o->slot[i].pings, sizeof proj.slot[i].pings);
+        proj.slot[i].pings_ok = o->slot[i].pings_ok;
+        proj.slot[i].screen = o->slot[i].screen;
+    }
+    memcpy(proj.rsv, o->rsv, sizeof proj.rsv);
+    proj.trans = o->trans;
+    memcpy(proj.sir, o->sir, sizeof proj.sir);
+}
 static int16_t trim28(int ev, int v)            /* before 29: a layer's Vary (0..100: Evolve times 0..1 to 50, to 3 at
                                                   * 100) as today's trim on Form's Vary (Evolve's value, kept): the
                                                   * amount it gave, Evolve x factor, as Vary + trim; 0 Hold */
@@ -788,19 +829,15 @@ static int16_t trim28(int ev, int v)            /* before 29: a layer's Vary (0.
     t = (int)((float)ev * (f - 1.0f) + 1000.5f) - 1000;   /* (rounded, half up: as the recipes were turned) */
     return (int16_t)(t < -49 ? -49 : t > 50 ? 50 : t);
 }
-static void vary28(int16_t *par, int old, int piece)   /* before 29: Evolve is Form's Vary as it was; the Varys it
-                                                  * had, trims; those it hadn't (before 21, 22) the trims the recipes had
-                                                  * till step 5 (newpar gave them; step 5's recipes moved them) */
+static void vary28(int16_t *par, int old)       /* before 29: Evolve is Form's Vary as it was; the Varys it had, trims;
+                                                  * those it hadn't (before 21, 22) 0, as Evolve alone turned the layers
+                                                  * then (step 5b; step 5 had the recipes' trims of the time) */
 {
     static const uint8_t VP[4] = {P_PVARY, P_BVARY, P_DVARY, P_NVARY};
-    static const int8_t TR4[NPIECES][5] = {{0, 0, 0, 0, 0},     {0, -17, -12, -15, -15}, {0, -14, 0, -21, 0},
-                                           {-16, -16, 0, 0, 0}, {0, 0, 0, 0, 0},         {0, 0, -16, -16, 0},
-                                           {-15, -15, -15, -15, 0}, {-12, -12, -12, 0, -12}};   /* (chord, pings, bass,
-                                                  * drums, noise) */
     int k;
-    par[P_CVARY] = (int16_t)(old >= 21 ? trim28(par[P_VARY], par[P_CVARY]) : TR4[piece][0]);
+    par[P_CVARY] = (int16_t)(old >= 21 ? trim28(par[P_VARY], par[P_CVARY]) : 0);
     for (k = 0; k < 4; k++)
-        par[VP[k]] = (int16_t)(old >= 22 ? trim28(par[P_VARY], par[VP[k]]) : TR4[piece][k + 1]);
+        par[VP[k]] = (int16_t)(old >= 22 ? trim28(par[P_VARY], par[VP[k]]) : 0);
 }
 static void lowcut27(int16_t *par)               /* (27's Low cut, 1..100: ~20 Hz .. ~600 Hz, 4.907 octaves over 99 steps;
                                                   * the Filter's high-pass, +1..+50: 20 Hz .. 2.5 kHz, 6.966 over 49) */
@@ -1054,7 +1091,16 @@ int project_load(void)
         }
         from29((const project29_t *)(const void *)pbuf);
     } else {
-        proj = *pbuf;
+        if (n >= 8 && pbuf->magic == PROJ_MAGIC && pbuf->format >= 30u && pbuf->format <= 34u) {   /* (30 to 34:
+                                                  * 34's layout, a parameter less: the sweep's pace from the recipes,
+                                                  * then as it was for a piece changed, below) */
+            from34((const project34_t *)(const void *)pbuf);
+            newpar(NPAR34);
+            if (proj.format == 34u)
+                proj.format = PROJ_FORMAT;
+        } else {
+            proj = *pbuf;
+        }
         if (n >= 8 && proj.magic == PROJ_MAGIC && proj.format == 30u) {   /* (30: today's layout; its Motion and Mixer
                                                   * as 31's below, the pieces never changed known first, by their
                                                   * recipes then) */
@@ -1088,7 +1134,7 @@ int project_load(void)
              * wander alone, Wave 0, the waves half each, 50; a piece never changed, known by that build's recipe,
              * takes today's below) */
             for (i = 0; i < NPIECES; i++)
-                fresh[i] = (uint8_t)untouched_raw(proj.slot[i].par, P_NPARAMS, proj.slot[i].pool, i);
+                fresh[i] = (uint8_t)untouched_raw(proj.slot[i].par, NPAR34, proj.slot[i].pool, i);
             shape30(proj.par);
             for (i = 0; i < NPIECES; i++)
                 shape30(proj.slot[i].par);
@@ -1154,9 +1200,9 @@ int project_load(void)
     }
     if (old && old < 29) {                       /* (before 29: Evolve Form's Vary as it was, the layers' Varys trims on
                                                   * it, as near as they sounded; the looseness the recipe's, above) */
-        vary28(proj.par, old, proj.piece < NPIECES ? proj.piece : 0);
+        vary28(proj.par, old);
         for (i = 0; i < NPIECES; i++)
-            vary28(proj.slot[i].par, old, i);
+            vary28(proj.slot[i].par, old);
     }
     if (old && old < 30) {                       /* (before 30: the LFOs' Depth and Drift and the Mixer's rides as Drift
                                                   * and the LFOs' Trims, as near as they sounded; the throws' amount the
@@ -1186,6 +1232,18 @@ int project_load(void)
         en_zones31(proj.par, sv);
         for (i = 0; i < NPIECES; i++)
             en_zones31(proj.slot[i].par, sv);
+    }
+    if (fmt_in >= 8u && fmt_in < 35u) {          /* (before 35: Vary and its trims on the new scale, as near as they
+                                                  * sounded; a piece changed keeps the sweep's old pace; the pieces
+                                                  * never changed known first, by their recipes then: today's below) */
+        for (i = 0; i < NPIECES; i++)
+            fresh[i] = (uint8_t)(fresh[i] || untouched_now(&proj.slot[i], i));
+        en_vary34(proj.par);
+        proj.par[P_SWEEP] = 0;
+        for (i = 0; i < NPIECES; i++) {
+            en_vary34(proj.slot[i].par);
+            proj.slot[i].par[P_SWEEP] = 0;
+        }
     }
     if (n >= 8 && proj.magic == PROJ_MAGIC && proj.format == PROJ_FORMAT) {   /* (the ranges as they are now) */
         if (proj.trans >= EN_NTRANS || old || old30 || old31)

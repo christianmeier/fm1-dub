@@ -27,8 +27,11 @@
  *   store8                       save the project as DUB-1 1.0.0 did (format 8): reboot then reads it
  *   store10                      save it as 1.2.0 did (format 10, without the noise's five)
  *   storefile PATH               a saved project from a file (tests/host/proj-*.bin)
+ *   recipe N                     piece N back to its recipe, unplayed (a piece never changed, as on a device)
  *   store30s                     save it as step 2's test builds did (zzo, zzp: format 30, the LFOs' Shape, Sine
  *                                or Wander, in the Wave's slots, no layout B mark)
+ *   store34                      save it as the variety plan's step 5 did (format 34: Vary on its old scale, no
+ *                                sweep's pace)
  *   store32                      save it as the variety plan's step 4 did (format 32: today's layout without the
  *                                sirens' knobs, proj.sir: its bytes not written)
  *   store31                      save it as the variety plan's step 3 did (format 31: Stabs 0..100, Hits, the
@@ -878,7 +881,8 @@ static void lc_fold(int16_t *par, int n)        /* (before 28: the strips' Low c
 }
 /* (the variety plan's step 5) the recipes' Vary, its trims, Motion, Drift and the LFOs' Trims before it (step 4's,
  * as 1.4.0's test builds had them): every older format's store writes them where a piece has today's (a piece never
- * changed then known by its old recipe on the upgrade, as on a device) */
+ * changed then known by its old recipe on the upgrade, as on a device); (format 35) a Vary and its trims changed, on
+ * the old scale (the knob the amount itself), as near as they sound now (en_vary34 the way back) */
 static void models_before5(void)
 {
     static const uint8_t MP[10] = {P_VARY, P_CVARY, P_PVARY, P_BVARY, P_DVARY, P_NVARY, P_MOTION, P_MOVE, P_CLTRIM,
@@ -892,13 +896,46 @@ static void models_before5(void)
     uint16_t pool;
     int i, k;
     for (i = 0; i < NPIECES; i++) {
+        int16_t *p = proj.slot[i].par;
+        int v, uv, vo;
         en_piece(i, rec, &pool);
-        for (k = 0; k < 10; k++)
-            if (proj.slot[i].par[MP[k]] == rec[MP[k]])
-                proj.slot[i].par[MP[k]] = OLD[i][k];
+        v = p[P_VARY], uv = v == rec[P_VARY];
+        vo = uv ? OLD[i][0] : (int)(100.0f * en_vary_amount(v) + 0.5f);
+        for (k = 1; k < 6; k++) {
+            const int t = p[MP[k]];
+            if (uv && t == rec[MP[k]]) {
+                p[MP[k]] = OLD[i][k];
+            } else if (t > -50) {
+                const int a = (int)(100.0f * en_vary_amount(v + t) + 0.5f), o = a - vo;
+                p[MP[k]] = (int16_t)(!a && vo > 49 ? -50 : o < -49 ? -49 : o > 50 ? 50 : o);
+            }
+        }
+        p[P_VARY] = (int16_t)vo;
+        for (k = 6; k < 10; k++)
+            if (p[MP[k]] == rec[MP[k]])
+                p[MP[k]] = OLD[i][k];
     }
     for (k = 0; k < 10; k++)
         proj.par[MP[k]] = proj.slot[proj.piece].par[MP[k]];
+}
+/* (format 35) the project in 34's layout (a parameter less: no sweep's pace), for the stores of 30 to 34 */
+static void as34(project34_t *o)
+{
+    int i;
+    memset(o, 0, sizeof *o);
+    o->magic = proj.magic, o->format = proj.format;
+    memcpy(o->par, proj.par, sizeof o->par);
+    o->pool = proj.pool, o->leds = proj.leds, o->piece = proj.piece, o->screen = proj.screen, o->values = proj.values;
+    for (i = 0; i < NPIECES; i++) {
+        memcpy(o->slot[i].par, proj.slot[i].par, sizeof o->slot[i].par);
+        o->slot[i].pool = proj.slot[i].pool;
+        memcpy(o->slot[i].pings, proj.slot[i].pings, sizeof o->slot[i].pings);
+        o->slot[i].pings_ok = proj.slot[i].pings_ok;
+        o->slot[i].screen = proj.slot[i].screen;
+    }
+    memcpy(o->rsv, proj.rsv, sizeof o->rsv);
+    o->trans = proj.trans;
+    memcpy(o->sir, proj.sir, sizeof o->sir);
 }
 /* (format 31, the variety plan's step 3) the recipes' Motion before 31 (its old meaning: Full only to 40, the Mixer
  * the moves): an older format's store writes it where a piece has step 3's (models_before5's, first), as that build's
@@ -1016,8 +1053,9 @@ int main(int argc, char **argv)
         if (line[0] == '#' || sscanf(line, "%31s %255s %63s %63s", cmd, a, b, c) < 1)
             continue;
         st_old = !strncmp(cmd, "store", 5) && strcmp(cmd, "storefile") && strcmp(cmd, "storescreen") &&
-                 strcmp(cmd, "store32");         /* (32: today's meanings, its layout; no Transition) */
-        st_pre5 = st_old || !strcmp(cmd, "store32");
+                 strcmp(cmd, "store32") && strcmp(cmd, "store34");   /* (32, 34: today's meanings, but Vary's
+                                                  * and the sweep's; no Transition in 32) */
+        st_pre5 = st_old || !strcmp(cmd, "store32") || !strcmp(cmd, "store34");
         if (st_pre5) {                           /* (step 5) every older format's store: the recipes before it */
             keep();
             st_keep = proj;
@@ -1225,6 +1263,16 @@ int main(int argc, char **argv)
                 o.slot[i].screen = proj.slot[i].screen;
             }
             plat_store_save(OBJ_PROJ, &o, sizeof o);
+        } else if (!strcmp(cmd, "recipe")) {     /* (step 5b) recipe N: piece N back to its recipe, unplayed, as the
+                                                  * device's never-changed piece (the older stores can't write every
+                                                  * old build's recipe: a piece they leave changed, made new again) */
+            const int i = atoi(a);
+            keep();
+            if (i >= 0 && i < NPIECES) {
+                recipe(i, &proj.slot[i]);
+                if (i == proj.piece)
+                    take(&proj.slot[i]);
+            }
         } else if (!strcmp(cmd, "storefile")) {  /* a saved project from a file, as it would be in the flash */
             static uint8_t fb[PLAT_STORE_MAX];
             FILE *f = fopen(a, "rb");
@@ -1271,10 +1319,10 @@ int main(int argc, char **argv)
             plat_store_save(OBJ_PROJ, &o, sizeof o);
         } else if (!strcmp(cmd, "store30s")) {   /* the project as step 2's test builds saved it (zzo, zzp: format 30,
                                                   * the LFOs' Shape in the Wave's slots, Wander 4 or Sine 0, no mark) */
-            static project_t o;
+            static project34_t o;
             int i;
             keep();
-            o = proj;
+            as34(&o);
             o.format = 30u;                      /* (format 31: the same layout) */
             o.rsv[0] = 0;
             o.par[P_CLWAVE] = (int16_t)(o.par[P_CLWAVE] ? 0 : 4), o.par[P_NLWAVE] = (int16_t)(o.par[P_NLWAVE] ? 0 : 4);
@@ -1283,30 +1331,38 @@ int main(int argc, char **argv)
                 o.slot[i].par[P_NLWAVE] = (int16_t)(o.slot[i].par[P_NLWAVE] ? 0 : 4);
             }
             plat_store_save(OBJ_PROJ, &o, sizeof o);
+        } else if (!strcmp(cmd, "store34")) {    /* (format 35) the project as step 5 saved it (34: 34's layout,
+                                                  * Vary on its old scale, no sweep's pace) */
+            static project34_t o;
+            keep();
+            as34(&o);
+            o.format = 34u;
+            o.rsv[0] = PROJ_WAVE_MARK;
+            plat_store_save(OBJ_PROJ, &o, sizeof o);
         } else if (!strcmp(cmd, "store32")) {    /* (format 34) the project as step 4 saved it (32: today's layout
                                                   * without the sirens' knobs at its end, its last byte room: the
                                                   * Transition's place set to Mix, to show it read as LP) */
-            static project_t o;
+            static project34_t o;
             keep();
-            o = proj;
+            as34(&o);
             o.format = 32u;
             o.rsv[0] = PROJ_WAVE_MARK;
             o.trans = EN_TR_MIX;
             plat_store_save(OBJ_PROJ, &o, sizeof o - sizeof o.sir);
         } else if (!strcmp(cmd, "store31")) {    /* the project as the variety plan's step 3 saved it (31: today's
                                                   * layout, the knobs with dead steps in their old meaning) */
-            static project_t o;
+            static project34_t o;
             keep();
-            o = proj;
+            as34(&o);
             o.format = 31u;
             o.rsv[0] = PROJ_WAVE_MARK;
             plat_store_save(OBJ_PROJ, &o, sizeof o);
         } else if (!strcmp(cmd, "store30")) {    /* store30 [MIXER]: the project as the variety plan's step 2 saved it
                                                   * (30: today's layout, Motion's old meaning, the Mixer read; MIXER the
                                                   * playing piece's Mixer, else as it is) */
-            static project_t o;
+            static project34_t o;
             keep();
-            o = proj;
+            as34(&o);
             o.format = 30u;
             o.rsv[0] = PROJ_WAVE_MARK;
             if (a[0]) {

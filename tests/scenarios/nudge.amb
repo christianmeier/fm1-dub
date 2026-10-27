@@ -73,7 +73,7 @@ said_none NUDGE
 tap HOME
 wait 300
 expect view 0
-spin K2 32
+spin K2 -10
 wait 200
 expect par5 40
 press GLO

@@ -1848,13 +1848,15 @@ static void groove_tick(void)                    /* (1.4.0, format 29) the bass'
 {
     static uint8_t last_pb = 0xFF;
     uint8_t pb = en_phrase_bar;
-    const int t = proj.par[P_BVARY], a0 = proj.par[P_VARY] + t, a = t <= -50 ? 0 : a0 < 0 ? 0 : a0 > 100 ? 100 : a0;
+    const int t = proj.par[P_BVARY];
+    const float a = t <= -50 ? 0.0f : 100.0f * en_vary_amount(proj.par[P_VARY] + t);   /* (format 35: the amount, on
+                                                  * the knob's new scale) */
     if (pb == last_pb)
         return;
     last_pb = pb;
-    if (pb != 0 || !en_playing || en_frozen || !a || ui.lock)   /* (Lock, or the bass held: it rests) */
+    if (pb != 0 || !en_playing || en_frozen || a <= 0.0f || ui.lock)   /* (Lock, or the bass held: it rests) */
         return;
-    if (nrand(4000000) < a * a * 7) {            /* the bass's groove, rarely, to a neighbour and back: as the square
+    if ((float)nrand(4000000) < a * a * 7.0f) {   /* the bass's groove, rarely, to a neighbour and back: as the square
                                                   * of the amount, no threshold (100: 7 phrases in 400, every few
                                                   * minutes, as Evolve 100 had it; 50: a quarter of that; 0 never) */
         int16_t rec[P_NPARAMS];

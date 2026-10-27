@@ -39,7 +39,7 @@ const char *const EN_SEC_NAME[EN_NSEC] = {"Full", "Break", "Groove", "Thin"};
 
 static const en_param_t PARAMS[P_NPARAMS] = {
     {"Chord", 0, 100, 70},    {"Pings", 0, 100, 35},    {"Bass", 0, 100, 60},     {"Drums", 0, 100, 65},
-    {"Density", 0, 100, 30},  {"Vary", 0, 100, 40},     {"Change", 0, 6, 4},      {"Hits", 0, 100, 50},
+    {"Density", 0, 100, 30},  {"Vary", 0, 100, 82},     {"Change", 0, 6, 4},      {"Hits", 0, 100, 50},
     {"Echo", 0, 100, 55},     {"Echo time", 0, 5, 1},   {"Reverb", 0, 100, 35},   {"Feedback", 0, 100, 60},
     {"Cutoff", 0, 100, 45},   {"Decay", 0, 100, 35},    {"Ping tone", 0, 100, 40}, {"Motion", 0, 100, 50},
     {"Tune", -50, 50, 0},     {"MIDI out", 0, 1, 1},    {"Tempo", 40, 140, 122},  {"Root", 0, 11, 5},
@@ -94,7 +94,7 @@ static const en_param_t PARAMS[P_NPARAMS] = {
     {"Mixer", 0, 100, 0},
     {"Looseness", 0, 100, 100},
     {"Drift", 0, 100, 0}, {"Chord LFO", -50, 50, 0}, {"Noise LFO", -50, 50, 0},
-    {"Throws at", 1, 100, 40},
+    {"Throws at", 1, 100, 40}, {"Sweep pace", 0, 1, 1},
 };
 const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PARAMS[i] : &PARAMS[0]; }
 
@@ -123,14 +123,16 @@ const en_param_t *en_param_info(int i) { return (i >= 0 && i < P_NPARAMS) ? &PAR
  *                  Drift, -50 still, +50 twice), the chord's amount the throws are set at (its Vary and trim's; the
  *                  variety plan's step 5 left it, so a calmer chord throws fewer);
  *                  (step 5: Form's Vary, the trims, Motion, Drift and the LFOs' Drifts from each piece's record,
- *                  measured as the suite measures it: build/design/REPORT-models.txt)
+ *                  measured as the suite measures it: build/design/REPORT-models.txt; step 5b, format 35: Vary on its
+ *                  new scale, the classics' median at 50, build/design/REPORT-models2.txt);
+ *                  then the filter's slow sweep's pace (format 35: 1, a new place every 6-20 bars)
  * (Dri: Drift, 2 4 8 16 32 64 bars or Hold; ET: Echo time, 1/8 1/8. 1/4 1/4. 1/2 1 bar; Grv: the knob's, Drone,
  *  Offbeat, Dotted, Sync, Roller (GROOVE_NAME); CV, PV, BV, Kit: the voices, EN_CV_NAME ...) */
 static const struct {
     const char *name;
     int16_t v[P_NPARAMS];
 } PIECES[EN_NPIECES] = {
-    {"Basic",      {52, 30, 68, 80, 30, 8, 5, 8, 55, 1, 35, 62, 40, 25, 40, 12, 0, 1, 122, 5, 1, 0,
+    {"Basic",      {52, 30, 68, 80, 30, 50, 5, 8, 55, 1, 35, 62, 40, 25, 40, 12, 0, 1, 122, 5, 1, 0,
                     0, 0, 1, 20, 5, 50, 3, 8, 50, 55, 30, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 30, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -151,8 +153,8 @@ static const struct {
                     50, 0, 0, 0,
                     0,
                     0, 4, 20, 4, 1, 45, 100,
-                    45, -2, 5, 45}},
-    {"Chamber",    {55, 20, 62, 72, 20, 5, 6, 41, 70, 4, 45, 72, 50, 55, 30, 12, 0, 1, 128, 9, 5, 0,
+                    50, -2, 5, 45, 1}},
+    {"Chamber",    {55, 20, 62, 72, 20, 31, 6, 41, 70, 4, 45, 72, 50, 55, 30, 12, 0, 1, 128, 9, 5, 0,
                     2, 0, 0, 10, 0, 40, 1, 12, 45, 70, 45, 2, 0, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -167,14 +169,14 @@ static const struct {
                     0, 55,
                     25, 25,
                     0, 0,
-                    0, 0, -5, -5, 0,
+                    0, 0, -31, -31, 0,
                     50, 50, 50, 50, 0, 50, 50, 50,
                     0, 0, 0, 0, 0,
                     50, 0, 0, 0,
                     0,
                     0, 4, 20, 4, 0, 55, 63,
-                    30, -25, 50, 25}},
-    {"Steppers",   {52, 35, 80, 82, 35, 12, 6, 41, 50, 1, 30, 50, 55, 25, 50, 8, 0, 1, 126, 2, 1, 0,
+                    30, -25, 50, 25, 1}},
+    {"Steppers",   {52, 35, 80, 82, 35, 58, 6, 41, 50, 1, 30, 50, 55, 25, 50, 8, 0, 1, 126, 2, 1, 0,
                     0, 0, 2, 35, 45, 60, 2, 5, 60, 50, 20, 1, 1, 2,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 35, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -189,14 +191,14 @@ static const struct {
                     59, 60,
                     35, 20,
                     0, 0,
-                    0, 0, -8, 0, 0,
+                    0, 0, -33, 0, 0,
                     50, 50, 50, 50, 0, 50, 50, 50,
                     0, 0, 0, 0, 0,
                     50, 0, 0, 0,
                     0,
                     0, 4, 20, 4, 1, 20, 88,
-                    35, 11, 21, 35}},
-    {"Fog",        {50, 34, 58, 62, 40, 40, 5, 41, 75, 2, 55, 72, 46, 80, 25, 42, 0, 1, 120, 7, 5, 0,
+                    35, 11, 21, 35, 1}},
+    {"Fog",        {50, 34, 58, 62, 40, 82, 5, 41, 75, 2, 55, 72, 46, 80, 25, 42, 0, 1, 120, 7, 5, 0,
                     3, -1, 0, 15, 0, 30, 1, 30, 35, 80, 60, 0, 0, 3,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 35, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -210,15 +212,15 @@ static const struct {
                     5, 2,
                     48, 0,
                     90, 50,
-                    -30, 0,
-                    -30, 20, 20, 20, 0,
+                    -28, 0,
+                    -28, 8, 8, -20, 0,
                     50, 50, 50, 50, 0, 50, 50, 50,
                     0, 0, 0, 0, 0,
                     50, 0, 0, 0,
                     0,
                     0, 4, 20, 4, 0, 90, 100,
-                    80, -12, -15, 24}},
-    {"Concrete",   {58, 45, 70, 85, 25, 50, 5, 58, 50, 1, 25, 62, 60, 20, 60, 16, 0, 1, 136, 0, 7, 0,
+                    100, -12, -15, 24, 1}},
+    {"Concrete",   {58, 45, 70, 85, 25, 86, 5, 58, 50, 1, 25, 62, 60, 20, 60, 16, 0, 1, 136, 0, 7, 0,
                     6, 0, 4, 30, 10, 75, 3, 5, 50, 45, 15, 2, 3, 2,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 75, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -232,15 +234,15 @@ static const struct {
                     2, 1,
                     76, 64,
                     75, 25,
-                    -5, 0,
-                    0, 0, 0, 10, 0,
+                    -2, 0,
+                    0, 0, 0, 4, 0,
                     50, 50, 50, 50, 0, 50, 50, 50,
                     0, 0, 0, 0, 0,
                     50, 0, 0, 0,
                     0,
                     0, 4, 20, 4, 1, 90, 100,
-                    90, 50, -6, 50}},
-    {"Night Drive", {48, 45, 68, 78, 45, 40, 4, 33, 60, 3, 35, 65, 50, 40, 45, 28, 0, 1, 120, 10, 1, 0,
+                    90, 50, -6, 50, 1}},
+    {"Night Drive", {48, 45, 68, 78, 45, 82, 4, 33, 60, 3, 35, 65, 50, 40, 45, 28, 0, 1, 120, 10, 1, 0,
                     1, 0, 1, 25, 13, 55, 2, 15, 50, 60, 35, 4, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 45, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -254,15 +256,15 @@ static const struct {
                     3, 3,
                     63, 62,
                     55, 25,
-                    -15, 0,
-                    -15, -16, -16, 0, 0,
+                    -9, 0,
+                    -9, -10, -10, -10, 0,
                     50, 50, 50, 50, 0, 50, 50, 50,
                     0, 0, 0, 0, 0,
                     50, 0, 0, 0,
                     0,
                     0, 4, 20, 4, 0, 45, 100,
-                    85, 25, 30, 40}},
-    {"Pressure",   {55, 20, 75, 92, 20, 30, 6, 39, 55, 1, 20, 55, 48, 30, 35, 8, 0, 1, 126, 4, 2, 0,
+                    85, 25, 30, 40, 1}},
+    {"Pressure",   {55, 20, 75, 92, 20, 76, 6, 39, 55, 1, 20, 55, 48, 30, 35, 8, 0, 1, 126, 4, 2, 0,
                     5, 0, 1, 10, 5, 65, 2, 30, 70, 40, 40, 3, 4, 1,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 35, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -276,15 +278,15 @@ static const struct {
                     2, 2,
                     56, 50,
                     45, 20,
-                    -25, 0,
-                    -25, -5, -25, -15, 0,
+                    -45, 0,
+                    -45, -3, -45, -14, 0,
                     50, 50, 50, 50, 0, 50, 50, 50,
                     0, 0, 0, 0, 0,
                     50, 0, 0, 0,
                     0,
                     0, 4, 20, 4, 1, 40, 75,
-                    43, 3, -3, 15}},
-    {"Haze",       {45, 42, 58, 55, 50, 10, 5, 33, 80, 3, 60, 70, 45, 80, 25, 4, 0, 1, 116, 3, 0, 1,
+                    50, 3, -3, 15, 1}},
+    {"Haze",       {45, 42, 58, 55, 50, 40, 5, 33, 80, 3, 60, 70, 45, 80, 25, 4, 0, 1, 116, 3, 0, 1,
                     3, 0, 0, 20, 10, 35, 1, 20, 30, 85, 70, 2, 0, 4,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -298,14 +300,14 @@ static const struct {
                     2, 2,
                     0, 0,
                     55, 30,
-                    -5, 0,
-                    -5, 0, -5, -5, 0,
+                    -15, 0,
+                    -15, 0, -15, -15, 0,
                     50, 50, 50, 50, 0, 50, 50, 50,
                     0, 0, 0, 0, 0,
                     50, 0, 0, 0,
                     0,
                     0, 4, 20, 4, 0, 60, 50,
-                    45, -25, -13, 8}},
+                    55, -25, -13, 8, 1}},
 };
 
 const char *en_piece_name(int i) { return PIECES[(unsigned)i < EN_NPIECES ? i : 0].name; }
@@ -1109,15 +1111,22 @@ static float motion, vary_m;                    /* 0..1: Motion, Form's Vary (1.
  * Evolve times each layer's Vary, 1 at 50, 3 at 100: format 29's step turned each into the trim that sounds the same) */
 enum { VY_PINGS, VY_BASS, VY_DRUMS, VY_NOISE, VY_N, VY_CHORD = VY_N };
 static float lay_a[VY_N + 1];
-static int16_t lay_n[VY_N + 1];                  /* (the same, 0..100: format 30's throws, exact at the piece's own) */
+/* (format 35, the variety plan's step 5b) the knob's scale, fitted to the records: its 50 the classics' median (the
+ * amount 0.08, the knob's 8 before 35), 0..50 the held loops up to it in a straight line, 50..100 on to the old 100
+ * in a geometric one (each step a share more: 12.5 times over the half), every step heard (before 35 the knob was the
+ * amount itself, 15..50 sounding alike) */
+EN_COLD float en_vary_amount(int v)
+{
+    const float x = (float)(v < 0 ? 0 : v > 100 ? 100 : v);
+    return x <= 50.0f ? 0.0016f * x : 0.08f * fm_exp2f((x - 50.0f) * (3.6438562f / 50.0f));   /* (log2 12.5) */
+}
 static void lay_set(void)
 {
     static const uint8_t TP[VY_N + 1] = {P_PVARY, P_BVARY, P_DVARY, P_NVARY, P_CVARY};
     int k;
     for (k = 0; k <= VY_N; k++) {
-        const int t = par[TP[k]], a = par[P_VARY] + t;
-        lay_n[k] = (int16_t)(t <= -50 ? 0 : a < 0 ? 0 : a > 100 ? 100 : a);
-        lay_a[k] = (float)lay_n[k] * 0.01f;
+        const int t = par[TP[k]];
+        lay_a[k] = t <= -50 ? 0.0f : en_vary_amount(par[P_VARY] + t);
     }
 }
 #define ev_of(k) (lay_a[k])
@@ -1316,6 +1325,9 @@ static int cr_dbars;                            /* bars till the drifts' next ta
 static void noise_step(int s);
 static uint8_t nz_drawn;
 static float arc, arc_tgt, arc_tau = 1.0f;     /* the sweep, its target, its time (samples) */
+static uint32_t arc_left;                       /* (a Full's sweep: a new place every 6-20 bars, glided to over 3-7.5,
+                                                  * off the phrase's line; Sweep pace 0, as before 35, every 4-14 over
+                                                  * 2-5; a section's own, as it starts, set by section_set) */
 static uint8_t change_pending;
 
 /* -------------------------------------------------------------- harmony --- */
@@ -3084,7 +3096,7 @@ EN_COLD static void tick(void)
          * none at 0 or Hold; as the looseness had them at the piece's own (P_TVARY), more or fewer either side */
         int last = !later, thr = (fill && last) ||
                                  frand() < fm_minf(0.12f * loose() * (sec == SEC_BREAK ? 1.5f : 1.0f) * throw_mul *
-                                                   fm_minf((float)lay_n[VY_CHORD] / (float)par[P_TVARY], 3.0f), 0.6f);
+                                                   fm_minf(100.0f * lay_a[VY_CHORD] / (float)par[P_TVARY], 3.0f), 0.6f);
         float vel = st == (int)__builtin_ctz(en_stab_pat) ? 0.9f + 0.1f * frand() : 0.65f + 0.25f * frand();
         if (!(mutes & EN_M_CHORD))
             stab_fire(vel, thr || (perf & EN_PF_THROW) || (fxm >> EN_FX_THROW & 1u) || song_thr);
@@ -3780,6 +3792,35 @@ EN_COLD void en_move29(int16_t *p)
     a = p[P_CVARY] <= -50 ? 0 : p[P_VARY] + p[P_CVARY];
     p[P_TVARY] = (int16_t)(a < 1 ? 1 : a > 100 ? 100 : a);
 }
+/* (format 35) a piece before 35 as 35's, as near as it sounded: its Vary the knob that gives the amount it was (the
+ * knob was the amount then), each trim the one that gives its layer's amount on it (a layer at 0 kept at 0, by Hold
+ * where the trim can't reach it; a trim's range is the knob's: an amount past it as near as it goes). The throws' amount
+ * (P_TVARY) is the engine's, and stays */
+EN_COLD static int vary_knob(int a)              /* (the knob nearest an amount, 0..100) */
+{
+    const float x = a <= 8 ? 6.25f * (float)a : 50.0f + (50.0f / 3.6438562f) * fm_log2f((float)a * 0.125f);
+    int k = (int)(x + 0.5f), b = k, d;
+    for (d = -1; d <= 1; d++)
+        if (k + d >= 0 && k + d <= 100 &&
+            fm_fabsf(100.0f * en_vary_amount(k + d) - (float)a) < fm_fabsf(100.0f * en_vary_amount(b) - (float)a))
+            b = k + d;
+    return b;
+}
+EN_COLD void en_vary34(int16_t *p)
+{
+    static const uint8_t TP[VY_N + 1] = {P_PVARY, P_BVARY, P_DVARY, P_NVARY, P_CVARY};
+    const int v = p[P_VARY] < 0 ? 0 : p[P_VARY] > 100 ? 100 : p[P_VARY], nv = vary_knob(v);
+    int k;
+    for (k = 0; k <= VY_N; k++) {
+        const int t = p[TP[k]], a = v + t < 0 ? 0 : v + t > 100 ? 100 : v + t;
+        int nt;
+        if (t <= -50)
+            continue;                            /* (Hold) */
+        nt = a ? vary_knob(a) - nv : -nv;
+        p[TP[k]] = (int16_t)(nt < -49 ? (a ? -49 : -50) : nt > 50 ? 50 : nt);
+    }
+    p[P_VARY] = (int16_t)nv;
+}
 /* (format 31) a piece before 31 as 31's, as near as it sounded: Motion the arrangement only, the Mixer's moves folded
  * in. Up to 40 (40 too: a float's rounding kept it Full) the arrangement was Full only, the Mixer's moves one a minute
  * at 100: Motion 0.4 of the Mixer (its moves as often: Breathes' one a minute at 40), under 40. 41-70: the Sections
@@ -3899,7 +3940,7 @@ EN_COLD static void apply(int p, int v)
                                                   * hats' Tone, the room either side) */
     case P_MOTION: motion = (float)v * 0.01f; mixer_set(); break;   /* (format 31: the arrangement only; its Breathes
                                                   * the dub mixer's moves, the Mixer's before) */
-    case P_VARY: vary_m = (float)v * 0.01f; lay_set(); break;   /* (format 29: Form's Vary, and the layers' amounts on it) */
+    case P_VARY: vary_m = en_vary_amount(v); lay_set(); break;   /* (format 29: Form's Vary, and the layers' amounts on it) */
     case P_CVARY: case P_PVARY: case P_BVARY: case P_DVARY: case P_NVARY: lay_set(); break;   /* (their trims) */
     case P_LOOSE: loose_v = (float)v * 0.01f; break;
     case P_CECHO: case P_CPLATE: case P_PECHO: case P_PPLATE: case P_BECHO: case P_BPLATE: case P_DECHO: case P_DPLATE:
@@ -4365,6 +4406,8 @@ EN_COLD void en_init(void)
     bite_dec = fm_expf(-1.0f / (0.07f * EN_SR));
     gate_dec = fm_expf(-6.9f / (1.5f * EN_SR));
     arcm = arc = sl_ds = 0.0f;
+    arc_tgt = 0.0f, arc_tau = 1.0f, arc_left = 0u;   /* (the sweep's place and timer as at boot: a test's engine,
+                                                  * started again, as the device's) */
     lfo_reset();
     mixer_reset();
     for (i = 0; i < P_NPARAMS; i++)
@@ -6341,14 +6384,12 @@ static void control(uint32_t n)                 /* once a chunk: the slow things
     fx_ctl(n);
     heads_step(n);
     if (en_playing) {
-        static uint32_t arc_left;                /* (a Full's sweep: a new place every 4-14 bars, off the phrase's line;
-                                                  * a section's own, as it starts, set by section_set) */
         const float bl = 16.0f * step_len;
         arc += (arc_tgt - arc) * fm_minf((float)n / arc_tau, 1.0f);
         if (sec == SEC_FULL && arc_left <= n) {
             arc_tgt = -0.6f + 1.6f * frand();
-            arc_tau = (2.0f + 3.0f * frand()) * bl;
-            arc_left = (uint32_t)((4.0f + 10.0f * frand()) * bl);
+            arc_tau = (par[P_SWEEP] ? 3.0f + 4.5f * frand() : 2.0f + 3.0f * frand()) * bl;
+            arc_left = (uint32_t)((par[P_SWEEP] ? 6.0f + 14.0f * frand() : 4.0f + 10.0f * frand()) * bl);
         } else {
             arc_left = arc_left > n ? arc_left - n : 0u;
         }

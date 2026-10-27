@@ -167,8 +167,14 @@ enum {
     P_MOVE, P_CLTRIM, P_NLTRIM,
     /* (format 30, the user's: Vary 0 no variation at all) the stabs' throws scale with the chord's amount (Form's Vary
      * plus its trim: none at 0 or Hold): as often as the looseness and Throws had them where the chord's amount is
-     * this, 1..100 (each piece's own, its recipe's amount; on no knob) */
+     * this, 1..100 (each piece's own, its recipe's amount; on no knob; format 35: the amount itself, x 100, not the
+     * knob's: en_vary_amount's, so its value stays across the new scale) */
     P_TVARY,
+    /* (format 35, the variety plan's step 5b) the filter's slow sweep in Full, its pace: 1 a new place every 6-20 bars,
+     * glided to over 3-7.5 (the records drift slower than the 8-bar loop; 8-32 left the still pieces' changes on the
+     * phrase's line); 0 every 4-14, over 2-5, as before 35 (an older save's piece you changed keeps it). Each piece's
+     * own, on no knob */
+    P_SWEEP,
     P_NPARAMS
 };
 typedef struct {
@@ -427,6 +433,11 @@ void en_zones31(int16_t *par, int saved);        /* (format 32) a piece before 3
                                                   * rescaled (Stabs a count; Density, Hits and the noise's faded in;
                                                   * the Tones the room either side; the Echo's Tone), as near as they
                                                   * sounded; saved: the parameters the save had (the rest today's) */
+float en_vary_amount(int v);                     /* (format 35) Form's Vary, or a layer's amount (Vary plus its trim),
+                                                  * 0..100 on the knob: how much it turns, 0..1 (the classics' median
+                                                  * at 50: 0.08) */
+void en_vary34(int16_t *par);                    /* (format 35) a piece before 35 as 35's: its Vary and the trims on it
+                                                  * on the new scale, each layer's amount as near as it was */
 void en_move29(int16_t *par);                    /* (format 30) a piece before 30 as 30's: its LFOs' Depth and Drift and
                                                   * its Mixer as Drift and the LFOs' Trims (and a Shape Drift where the
                                                   * wave was off), as near as they sounded */
