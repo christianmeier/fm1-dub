@@ -16,7 +16,8 @@
 # Each `bar` prints the film's time there: the cue sheet (build/film/channel/long_videos/set2/cues.txt). In a Set the
 # bar count starts again at 0 on each song's downbeat: each song's first cue waits for the last bar of the one before
 # (`bar LAST`), then a bar and a little more (`wait`), so it lands just past the next downbeat (checked: `expect piece`).
-# Too long for tools/make_film.sh (an hour of film): rendered in two passes by tools/make_set.sh.
+# Too long for tools/make_film.sh (an hour of film): rendered in two passes by tools/make_set.sh. The song's state every
+# 50 ms (the tempo heard, the place, the faders) goes to 21-set-tlog.txt, for the tempo across each Mix.
 # Keys on the Arrangement page (host names): w0-w5 the parts (tap: mute), b0-b4 solo (tap) / throw (held) of the chord,
 # pings, bass, hats, kick; w8 Open, w9 Shut, w10 Drop, w11 Echo; w12 Time x2, w13 Freeze, w14 Tape stop, w15 Stutter;
 # b7 Wail, b8 Whoop, b9 Hi-lo, b10 Laser. On the Chords page a key is the slot's root (key 0 = F3).
@@ -604,10 +605,12 @@ wait 300
 tap ENV
 wait 300
 expect view 1
-# Chord: ALGORITHM Pad -> Keys; Density 1 -> 2 stabs a bar; Change 64 -> 32 bars
+# Chord: ALGORITHM Pad -> Keys; Density 1 -> 2 stabs a bar; Throws 70 -> 40 (fewer pushes of the echo: the keys'
+# strikes are the song's peaks); Change 64 -> 32 bars
 turn ALGO -2
 wait 300
 spin K1 1
+spin K2 -30
 spin K3 -1
 wait 300
 tap ENV
@@ -675,9 +678,13 @@ wait 300
 tap LFO
 wait 300
 expect view 3
-# Bass: Drone -> Offbeat; Fifth 20 -> 0 (Bcn Dub's bass on F, 83% of the time)
+# Bass: Drone -> Offbeat; Fifth 20 -> 0 (Bcn Dub's bass on F, 83% of the time); its level 58 -> 73 (Liumin's low
+# end is its weight: 11 dB over the mids)
 spin K1 1
 spin K4 -20
+tap OCT+
+tap OCT+
+tap OCT+
 wait 300
 tap SEQ
 wait 300
@@ -699,9 +706,21 @@ wait 300
 tap SEL
 wait 300
 expect view 17
-# Arrangement: Duck 30 -> 50
-spin K4 20
+# Arrangement: Duck 30 -> 40; the Kick strip (white 4 held): its Level 50 -> 62 (about 3 dB up: Liumin's kick
+# never stops, and Haze's was a sparse one)
+spin K4 10
 wait 300
+key w3 down
+wait 500
+spin K1 12
+wait 300
+key w3 up
+wait 300
+expect mutes 0
+expect par153 62
+expect par0 45
+expect par2 73
+expect par111 40
 expect par5 35
 expect par15 20
 expect par165 50
@@ -733,7 +752,7 @@ expect par35 0
 expect par116 100
 expect par7 60
 expect par114 60
-expect par30 50
+expect par30 40
 # ------------------------------------------- the set: Song mode Set, Transition Mix; back to slot 4, resting ---
 tap GLO
 wait 300
@@ -759,6 +778,7 @@ expect screen 0
 splash 0
 wav 21-set.wav
 film 21-set.film
+tlog 21-set-tlog.txt
 bar 0 1 HOARFROST: the launch screen; the set starts with it, the first intro
 splashrun
 expect view 0
@@ -1018,3 +1038,4 @@ at 3478.0 END: Freeze let go
 key w13 up
 filmstop
 wavstop
+tlogstop
