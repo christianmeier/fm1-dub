@@ -424,6 +424,8 @@ static struct {
     uint16_t big_col;                  /* its colour: the layer's, or the accent */
     float oct_v;                       /* the ring's arc, gliding to the level */
     uint32_t prog_gen;                 /* the engine's slots, as last taken (en_prog_gen) */
+    uint32_t prog_from;                /* (1.4.0) and taken only from this command on (en_queue_w after a piece's regrow):
+                                        * PRESET spun fast handed a piece the slots of the one passed through */
     uint8_t lane;                      /* the Pattern page: the lane edited */
     uint8_t grid_said;
     uint32_t btn, keys, btn_used;
@@ -957,6 +959,7 @@ static void set_piece(int i)                    /* the piece playing kept as it 
     project_apply();
     en_seed(plat_ms());
     en_regrow();
+    ui.prog_from = en_queue_w();
     say_as("PIECE", piece_name(proj.piece), 0);
     sp_piece();                                  /* a screen reader: the piece with its key and tempo */
     mark_dirty();
@@ -1325,8 +1328,8 @@ static int slot_notes(int i, int *nt, int *held)
 static void prog_take(void)                      /* the engine's slots (the walk writes them, Endless moves them) */
 {
     int i;
-    if (en_prog_gen == ui.prog_gen)
-        return;
+    if (en_prog_gen == ui.prog_gen || (int32_t)(en_prog_q - ui.prog_from) < 0)
+        return;                                  /* (none new, or the piece's own still on its way) */
     ui.prog_gen = en_prog_gen;
     for (i = 0; i < EN_NPROG; i++) {
         proj.par[P_CR0 + i] = en_prog_slot[i][0];
@@ -2052,6 +2055,7 @@ static void input(void)
         project_piece_reset();
         project_apply();
         en_regrow();
+        ui.prog_from = en_queue_w();
         say("RESET", piece_name(proj.piece));
         card_show("RESET", piece_name(proj.piece), K_FROST, 1);
         mark_dirty();

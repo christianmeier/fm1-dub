@@ -194,6 +194,7 @@ void en_freeze(int on);
 void en_seed(uint32_t s);                      /* stir some entropy into the generators */
 void en_panic(void);                           /* everything quiet, now */
 void en_regrow(void);                          /* a new piece: fresh loops and patterns, the home chord */
+uint32_t en_queue_w(void);                     /* (1.4.0) the commands posted so far (en_prog_q's count) */
 uint32_t en_queue_left(void);                  /* (1.4.0) the commands still waiting (a piece's, spread over ~7 blocks) */
 /* the ping loops, packed a byte a step (EN_PINGS_N: every loop's steps, in turn): the note offset in the low
  * nibble (15: a rest), the velocity in the high one (50 + 3 x v). A piece keeps them; en_pings gives them back
@@ -477,6 +478,8 @@ extern volatile int8_t en_prog_pos;            /* the slot the progression is on
  * a count that changes when they do (the UI takes them into the project) */
 extern volatile int8_t en_prog_slot[EN_NPROG][3];
 extern volatile uint32_t en_prog_gen;
+extern volatile uint32_t en_prog_q;            /* (1.4.0) the commands read when they were (en_queue_w's count): a
+                                               * piece's, spread over blocks, publishes them half its, half the last's */
 /* a walk slot's chord as written (to edit it): its root (absolute), kind and type, from the scale's degree */
 void en_walk_chord(uint32_t pool, int root, int deg, int *r, int *q, int *x);
 void en_ping_nudge(void);                      /* a nudge (ARP held): one note of one ping loop, another */

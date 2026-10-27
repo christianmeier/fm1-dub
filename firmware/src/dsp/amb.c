@@ -743,6 +743,7 @@ void en_seed(uint32_t s) { post(C_SEED, 0, (int)(s & 0xFFFFu)); }
 void en_panic(void) { post(C_PANIC, 0, 0); }
 void en_clock(int msg) { post(C_CLOCK, msg, 0); }
 void en_regrow(void) { post(C_REGROW, 0, 0); }
+uint32_t en_queue_w(void) { return q_w; }
 uint32_t en_queue_left(void) { return q_w - q_r; }   /* (1.4.0: the commands still waiting: a piece's, spread) */
 void en_mute(uint32_t m) { post(C_MUTE, (int)(m & 0xFFu), 0); }
 void en_perf(uint32_t f) { post(C_PERF, 0, (int)(f & 0xFFFFu)); }   /* (1.4.0: the throws past 8 bits: in the 16-bit field) */
@@ -1401,7 +1402,7 @@ static int bass_note(int pc)                    /* E1..Eb2, an octave up or down
  * scale's notes around it: nearest in the pool, the lower on a tie) */
 volatile int8_t en_prog_pos = -1, en_chord_slot = -1;
 volatile int8_t en_prog_slot[EN_NPROG][3];
-volatile uint32_t en_prog_gen;
+volatile uint32_t en_prog_gen, en_prog_q;
 static int slot_gap(int i) { return !par[P_CQ0 + i] && !par[P_CR0 + i]; }
 static int slot_walk(int i) { return !par[P_CQ0 + i] && par[P_CR0 + i]; }
 EN_COLD static int prog_len(void)                       /* Loop: to the last slot that isn't a gap (0: none) */
@@ -1420,6 +1421,8 @@ static void prog_publish(void)                  /* the slots, for the UI to take
         en_prog_slot[i][1] = (int8_t)par[P_CQ0 + i];
         en_prog_slot[i][2] = (int8_t)par[P_CX0 + i];
     }
+    en_prog_q = q_r;
+    BARRIER();
     en_prog_gen++;
 }
 EN_COLD void en_chord_iv(int q, int x, int *iv)
