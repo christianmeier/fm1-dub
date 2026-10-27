@@ -65,6 +65,8 @@
  *                                a header (FILM_HDR words: ms, buttons held, keys held, buttons lit, keys lit,
  *                                master, the detents each encoder turned since the frame before) and the
  *                                screen (240 x 240 RGB565, big-endian). tools/film.py makes it a video.
+ *   stems DIR [NAME,NAME..|all]  (before film) while the film records, each of the screen's pictures alone, its own
+ *                                video, frame for frame with it: DIR/NAME.mp4 (host/stems.c: the names, the framing)
  *   listen                       a screen reader starts listening (HELLO, again every 2 s): each SAY is printed
  *                                ("said: ..."; "said!:" cuts off what was being said)
  *   where                        the reader asks for everything on the screen
@@ -72,6 +74,7 @@
  *   said_none TEXT               no SAY since the last check has TEXT in it: else a failure
  *   speakdump                    every page, knob value, help card, chord and message as the reader gets them
  * AMB_SAID_LOG=FILE: a reader listens from boot, quietly, and every SAY is appended to FILE (the audit).
+ * AMB_STEMS="DIR [NAMES]": stems from the start, DIR as given (the film's scripts untouched: tools/make_set.sh STEMS=1).
  */
 #define EN_HOST 1
 #include <stdio.h>
@@ -473,6 +476,32 @@ static double film_due;
 static uint32_t film_t0;
 static int32_t film_enc[NE];
 static int ui_off;                       /* (splashrun: the launch screen owns the screen) */
+/* the stems (host/stems.c: the UI a second time, compiled apart, so its pictures' state is its own): armed by
+ * `stems`, recording with the film, fed the audio, ticked after each of the screen's frames */
+#ifndef EN_WEB
+int stems_arm(const char *dir, const char *names);
+void stems_open(void);
+void stems_close(void);
+void stems_frame(void);
+void stems_audio(const int32_t *blk, uint32_t n);
+void stems_tick(void);
+void stems_main(void *u, size_t nu, void *m, size_t nm, void *e, size_t ne, uint8_t *ew);
+void stems_main(void *u, size_t nu, void *m, size_t nm, void *e, size_t ne, uint8_t *ew)   /* (what the screen took) */
+{
+    if (nu != sizeof ui || nm != sizeof mt || ne != sizeof epk) {
+        fprintf(stderr, "stems: the UI's state not the screen's\n");
+        exit(2);
+    }
+    memcpy(u, &ui, nu);
+    memcpy(m, &mt, nm);
+    memcpy(e, epk, ne);
+    *ew = epk_w;
+}
+#else
+#define stems_frame()
+#define stems_audio(blk, n)
+#define stems_tick()
+#endif
 static void film_frame(void)
 {
     uint32_t h[FILM_HDR], i;
@@ -483,6 +512,7 @@ static void film_frame(void)
     }
     fwrite(h, 4, FILM_HDR, film);
     fwrite(fb, 2, 240 * 240, film);
+    stems_frame();
 }
 
 /* --------------------------------------------------------- the device --- */
@@ -516,6 +546,7 @@ static void run_ms(uint32_t ms)
 #ifdef EN_WEB
             web_audio(blk, 256);
 #endif
+            stems_audio(blk, 256);
             dt = now_ns() - t0;
             render_ns_total += dt;
             render_budget_ns_total += 256.0 * 1e9 / 44100.0;
@@ -556,6 +587,7 @@ static void run_ms(uint32_t ms)
         } else if (now_ms >= ui_due) {
             ui_due = now_ms + 16;
             ui_frame();
+            stems_tick();
         } else {
             ui_input_only();
         }
@@ -946,6 +978,11 @@ int main(int argc, char **argv)
         sim_listen = 1;
         said_print = 0;
     }
+    if (getenv("AMB_STEMS")) {                           /* stems with the script's film: "DIR [NAMES]" */
+        char sd[400] = {0}, sn[256] = {0};
+        if (sscanf(getenv("AMB_STEMS"), "%399s %255s", sd, sn) < 1 || stems_arm(sd, sn) < 0)
+            return 2;
+    }
     boot();
     if (sim_listen) {
         static const uint8_t HELLO[] = {ANN_H0, ANN_H1, ANN_H2, ANN_HELLO, ANN_VER};
@@ -1079,10 +1116,18 @@ int main(int argc, char **argv)
             film = fopen(out, "wb");
             film_due = (double)now_ms;
             film_t0 = now_ms;
+            stems_open();
         } else if (!strcmp(cmd, "filmstop")) {
             if (film)
                 fclose(film);
             film = 0;
+            stems_close();
+        } else if (!strcmp(cmd, "stems")) {     /* stems DIR [NAMES]: the pictures alone, with the next film */
+            char nm[256] = {0};
+            sscanf(line, "%*s %*s %255s", nm);   /* (the names: longer than b) */
+            snprintf(out, sizeof out, "%s/%s", dir, a);
+            if (stems_arm(out, nm) < 0)
+                return 2;
         } else if (!strcmp(cmd, "at") || !strcmp(cmd, "bar")) {
             const char *lab = strstr(line, a) + strlen(a);
             uint32_t t;
@@ -1535,6 +1580,7 @@ int main(int argc, char **argv)
             proj = st_keep;
     }
     wav_close();
+    stems_close();                               /* (a film not stopped: its stems ended) */
     if (midi_log)
         fclose(midi_log);
     printf("host: %u ms simulated, %u blits, render %.1f%% of real time (host CPU)%s\n", now_ms, blits,

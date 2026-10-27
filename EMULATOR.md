@@ -98,6 +98,35 @@ the film, and print the film's time there (a cue sheet).
 `tools/film.py FILM WAV OUT.mp4` draws that as the FM-1's panel and encodes it with the audio (ffmpeg);
 `tools/make_film.sh` makes the video's clips from `tests/film/*.amb` into `build/film/`.
 
+`stems DIR [NAME,NAME,..]` (before `film`) records, with the film, each of the screen's pictures alone as its
+own video, `DIR/NAME.mp4`: to lay full-screen under the film in an edit. Every stem has the film's frames
+(30 a second of the film's time, from its first frame to `filmstop`), so it lines up with no offset. A stem is
+the picture as its page draws it, all the time whatever page the film shows: no header, no knobs, no words, on
+the screen's ground; 240 x 135 of the screen (16:9) blown up 8x, nearest, to 1920 x 1080, H.264. The names
+(all of them without a list, or `all`):
+
+| Stem | The picture |
+|---|---|
+| `ripples` | HOME's ripples: the stabs' rings and their echoes, the bass's rings, the noise's specks, the ping loops (whole rings: the screen cuts them at the lanes) |
+| `ripples-chord` `ripples-pings` `ripples-bass` `ripples-drums` | a layer's page's ripples: its notes alone, in its colour |
+| `specks` | the Noise pages': the noise's specks alone |
+| `scope` `spectrum` `tape` | HOME's other views (the scope and the spectrum the whole output, not a page's layer; the tape without its counter) |
+| `lfo` `lfo-noise` | the chord's and the noise's LFO pages' traces |
+| `walk` | the Walk page's circle of fifths, the root's journey round it |
+| `meters` | the Arrangement page's meters |
+| `lanes` | the overview's seven rows (the bar's notes, the meters at the left) |
+| `lane-chord` `lane-pings` `lane-bass` `lane-drums` `lane-noise` | a layer's page's lane, alone, large |
+| `song` | the Song page's song: its parts, the rows coming in and leaving, where it is |
+| `pattern` | the Pattern page's steps |
+
+The stems draw from a second copy of the UI (`host/stems.c`, compiled on its own), so the film and the WAV are
+the same, byte for byte, with stems or without. `AMB_STEMS="DIR [NAMES]"` turns them on for a script without
+editing it, `AMB_STEMS_FF` sets ffmpeg's options (default `-vf scale=1920:1080:flags=neighbor -c:v libx264
+-preset veryfast -crf 18 -pix_fmt yuv420p`). For the hour videos, `STEMS=1 tools/make_set.sh` (or
+`STEMS=ripples,scope tools/make_night.sh`) adds a third pass that makes them into `$OUT/stems/`;
+`STEMS_ONLY=1` skips the picture's pass. All 21 for an hour: about 3 GB, and about two hours on a 16-core Mac
+(x264 at 1080p is the work: the drawing is a few seconds).
+
 ### Listening to changes
 
 Keep our own listening scripts apart from the test scenarios, e.g. in `tests/listen/` (scripts)
