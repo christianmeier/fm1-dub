@@ -22,7 +22,7 @@ for name in "$@"; do
     [ -f "$html" ] || { echo "make_cheatsheets: no $html"; exit 1; }
     # (the fonts come from Google Fonts: the virtual time lets them load before the print)
     "$CHROME" --headless --disable-gpu --no-pdf-header-footer --virtual-time-budget=10000 \
-        --print-to-pdf="$pdf" "file://$html" 2>/dev/null
+        --print-to-pdf="$pdf" "file://$html" 2>/dev/null || true   # (its teardown can end non-zero after the PDF is written: the checks below judge)
     pages=$(pdfinfo "$pdf" | awk '/^Pages:/ {print $2}')
     fonts=$(pdffonts "$pdf" | awk 'NR > 2 {print $1}' | sed 's/^[A-Z]*+//' | sort -u | tr '\n' ' ')
     echo "$pdf: $pages page(s); $fonts"
