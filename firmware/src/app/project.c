@@ -788,15 +788,19 @@ static int16_t trim28(int ev, int v)            /* before 29: a layer's Vary (0.
     t = (int)((float)ev * (f - 1.0f) + 1000.5f) - 1000;   /* (rounded, half up: as the recipes were turned) */
     return (int16_t)(t < -49 ? -49 : t > 50 ? 50 : t);
 }
-static void vary28(int16_t *par, int old)       /* before 29: Evolve is Form's Vary as it was; the Varys it had, trims */
+static void vary28(int16_t *par, int old, int piece)   /* before 29: Evolve is Form's Vary as it was; the Varys it
+                                                  * had, trims; those it hadn't (before 21, 22) the trims the recipes had
+                                                  * till step 5 (newpar gave them; step 5's recipes moved them) */
 {
     static const uint8_t VP[4] = {P_PVARY, P_BVARY, P_DVARY, P_NVARY};
+    static const int8_t TR4[NPIECES][5] = {{0, 0, 0, 0, 0},     {0, -17, -12, -15, -15}, {0, -14, 0, -21, 0},
+                                           {-16, -16, 0, 0, 0}, {0, 0, 0, 0, 0},         {0, 0, -16, -16, 0},
+                                           {-15, -15, -15, -15, 0}, {-12, -12, -12, 0, -12}};   /* (chord, pings, bass,
+                                                  * drums, noise) */
     int k;
-    if (old >= 21)
-        par[P_CVARY] = trim28(par[P_VARY], par[P_CVARY]);
-    if (old >= 22)
-        for (k = 0; k < 4; k++)
-            par[VP[k]] = trim28(par[P_VARY], par[VP[k]]);
+    par[P_CVARY] = (int16_t)(old >= 21 ? trim28(par[P_VARY], par[P_CVARY]) : TR4[piece][0]);
+    for (k = 0; k < 4; k++)
+        par[VP[k]] = (int16_t)(old >= 22 ? trim28(par[P_VARY], par[VP[k]]) : TR4[piece][k + 1]);
 }
 static void lowcut27(int16_t *par)               /* (27's Low cut, 1..100: ~20 Hz .. ~600 Hz, 4.907 octaves over 99 steps;
                                                   * the Filter's high-pass, +1..+50: 20 Hz .. 2.5 kHz, 6.966 over 49) */
@@ -1150,9 +1154,9 @@ int project_load(void)
     }
     if (old && old < 29) {                       /* (before 29: Evolve Form's Vary as it was, the layers' Varys trims on
                                                   * it, as near as they sounded; the looseness the recipe's, above) */
-        vary28(proj.par, old);
+        vary28(proj.par, old, proj.piece < NPIECES ? proj.piece : 0);
         for (i = 0; i < NPIECES; i++)
-            vary28(proj.slot[i].par, old);
+            vary28(proj.slot[i].par, old, i);
     }
     if (old && old < 30) {                       /* (before 30: the LFOs' Depth and Drift and the Mixer's rides as Drift
                                                   * and the LFOs' Trims, as near as they sounded; the throws' amount the
