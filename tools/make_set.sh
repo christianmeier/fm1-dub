@@ -21,6 +21,7 @@ SCRIPT="${SCRIPT:-tests/film/$N.amb}"
 OUT="${OUT:-build/film/channel/long_videos/set2}"
 WORK="${WORK:-build/film/set2-work}"
 TARGET="${TARGET:--16}"
+DIP="${DIP:-5}"                  # (dB: the held echo at each change ridden down)
 # the limiter's ceiling (linear; 0.84, -1.5 dBTP), oversampled at 192 kHz as the night's
 LIMIT="${LIMIT:-0.84}"
 B=DUB-1-set2-1h
@@ -38,11 +39,11 @@ grep '^@' "$WORK/cues.log" > "$OUT/cues.txt"
 
 # the songs (the cues "N NAME: ..." at each downbeat, 0.6 s after it) and the end ("THE END:"): each song's raw
 # loudness, its gain, the envelope; the captions and the chapters
-"$PY" - "$OUT/cues.txt" "$WORK" "$WORK/p1/$N.wav" "$OUT/chapters.txt" "$TARGET" $GAINS <<'EOF'
+"$PY" - "$OUT/cues.txt" "$WORK" "$WORK/p1/$N.wav" "$OUT/chapters.txt" "$TARGET" "$DIP" $GAINS <<'EOF'
 import re, subprocess, sys
-cues, work, wav, chap, target = sys.argv[1:6]
-target = float(target)
-hand = [float(g) for g in sys.argv[6:]]
+cues, work, wav, chap, target, DIP = sys.argv[1:7]
+target, DIP = float(target), float(DIP)
+hand = [float(g) for g in sys.argv[7:]]
 S, end = [], None
 for line in open(cues, encoding="utf-8"):
     m = re.match(r"@ (\d+):(\d+\.\d)\s+bar \d+\s+(\d) ([A-Z][A-Z ]+?):", line)
@@ -70,7 +71,7 @@ open(work + "/songs.txt", "w").write("\n".join(rows) + "\n")
 print("\n".join(rows))
 with open(work + "/captions.tsv", "w", encoding="utf-8") as f:   # (each name a few seconds in: past the launch
     for i, (t, k, name) in enumerate(S):                           # screen; past the held echo's bar)
-        f.write("%.1f\t%d \u00b7 %s\n" % (3.0 if i == 0 else t + 4.5, k, name))
+        f.write("%.1f\t%d of %d \u00b7 %s\n" % (3.0 if i == 0 else t + 4.5, k, 5, name))
 with open(chap, "w", encoding="utf-8") as f:
     for t, k, name in S:
         s = int(t)
@@ -81,7 +82,10 @@ def env(i):
         return "%.2f" % G[i]
     a, b = X[i] + 0.5, X[i] + 0.5 + 2 * R          # (after the downbeat: the held echo keeps the old song's gain)
     return "if(lt(t,%.2f),%.2f,if(lt(t,%.2f),%.2f+(%.2f)*(t-%.2f)/%.1f,%s))" % (a, G[i], b, G[i], G[i + 1] - G[i], a, 2 * R, env(i + 1))
-open(work + "/gain.txt", "w").write("pow(10,(%s)/20)\n%.1f\n%s\n" % (env(0), end, " ".join("%.2f" % s[0] for s in S)))
+# the Mix's held echo (pushed +6 dB, from 2 bars before each downbeat into the next song's first bar) stands about 5 dB over
+# the music: ridden down DIP dB as a DJ's fader would, from 7.5 s before the downbeat to 3 s after (the thrown stabs and the hold), over 1.5 s each way
+dip = "".join("-%.1f*max(0,min(min(1,(t-%.2f)/1.5),(%.2f-t)/1.5))" % (DIP, x - 7.5, x + 3.0) for x in X)
+open(work + "/gain.txt", "w").write("pow(10,(%s%s)/20)\n%.1f\n%s\n" % (env(0), dip, end, " ".join("%.2f" % s[0] for s in S)))
 EOF
 cat "$OUT/chapters.txt"
 E=$(sed -n 1p "$WORK/gain.txt")

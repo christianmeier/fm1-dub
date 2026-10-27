@@ -773,6 +773,13 @@ tap HOME
 wait 300
 expect view 0
 expect screen 0
+# saved (GLO held half a second): no unsaved-changes disk in the header on film
+press GLO
+wait 700
+release GLO
+wait 1500
+expect dirty 0
+expect view 0
 #
 # ===================================================================================== the film ===
 splash 0
