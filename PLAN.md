@@ -1127,6 +1127,15 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
 - [ ] Publish (the user's go): merge dub-1.4 into main, push, tag v1.4.0, `gh release create v1.4.0` with dub-1.4.0.fwsc
 - [ ] After: the Winter Set video (build/film/channel/long_videos/set2), a release video; the SMK branch; the wiki
 
+## 1.5.0: sets, sound sets, the web (the user, 2026-10-27)
+1. **Writing and loading sets**, of fewer than eight pieces too (Set mode ends at the set's last; the other slots as
+   they were): build/design/SETFILES.md, pieces 1-4 and 6.
+2. **Loading sound sets:** other drum, bass, chord and ping instruments, maybe other noise sources
+   (SETFILES.md, "Sound sets").
+3. **Managing songs and sounds from the web:** a page (WebMIDI, beside the installer) to back up, edit, download and
+   send sets and sound sets; the web emulator to hear them first (SETFILES.md piece 5).
+Later (not 1.5.0): the cues (moves at set bars in a song), then recording them on the device.
+
 ## Now: two lines in parallel (the user, 2026-10-23)
 
 After 1.3.0's release (the docs done, e20d31b..e10ddf4; a release video being made in build/film/release-1.3.0/):
