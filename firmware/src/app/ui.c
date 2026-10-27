@@ -1337,9 +1337,10 @@ static void slot_key(uint32_t key)               /* the Chords page: a key, the 
 {
     char nm[16];
     slot_write(ui.slot);                         /* (the walk's: its kind and type kept, the root yours) */
+    if (!proj.par[P_CQ0 + ui.slot])              /* (a gap: a Minor, its kind first: a root alone reads as the walk's
+                                                  * degree, and K_CQ would write that degree's chord over it) */
+        knob_set(P_CQ0 + ui.slot, EN_CQ_MINOR);
     knob_set(P_CR0 + ui.slot, (int)((5u + key) % 12u));
-    if (!proj.par[P_CQ0 + ui.slot])
-        knob_set(K_CQ, EN_CQ_MINOR);
     say(slot_label(ui.slot, nm), 0);
 }
 static uint8_t edit_new;                         /* EDIT held on: the new progression made this hold */
