@@ -75,6 +75,8 @@ static int fm_knob_off(int v, int i)             /* a knob there doing nothing: 
                                                   * Ratio (the pings' Upper) on a two-operator algorithm (1.4.0: the LFO
                                                   * its own page) */
 {
+    if (v == V_SMODE)                            /* (the user's: Transition, Set mode alone) */
+        return i == 1 && proj.par[P_SMODE] != 2;
     if (v < V_CFM || v > V_BFM || ((v == V_CFM || v == V_BFM) && i == 3))
         return 0;                                /* (1.4.0, the user's: the chord's Colour, the bass's Bite: every voice's) */
     if (!en_voice_fm(v - V_CFM))
@@ -157,9 +159,11 @@ enum { K_LEDS = 200, K_CPU, K_NONE, K_SLOT, K_CQ, K_CX,    /* (the Chords page: 
        K_SAVE,                                               /* (Setup: a turn saves; it shows whether it's saved) */
        K_VALUES,                                             /* (1.4.0, the user's: the knobs' numbers, Peek or Always:
                                                               * proj.values, global) */
-       K_SPITCH, K_SRATE, K_SDEPTH, K_SECHO };               /* (format 34, the user's) the siren page's: the siren held's
+       K_SPITCH, K_SRATE, K_SDEPTH, K_SECHO,                /* (format 34, the user's) the siren page's: the siren held's
                                                               * (sir_page) Pitch, Rate, Depth, Echo (EN_SK_*'s order;
                                                               * proj.sir, global) */
+       K_TRANS };                                            /* (1.4.0, the user's: a Set's Transition, LP, Segue, Mix:
+                                                              * proj.trans, global; Set mode alone) */
 static const char *const LANE_NAME[EN_NDRUM] = {"Kick", "Shaker", "Open", "Rim", "Clap"};
 _Static_assert(P_NPARAMS <= K_LEDS, "the knobs' own codes must come after the parameters");
 static const uint16_t VIEW_KNOB[NVIEWS][4] = {
@@ -210,8 +214,9 @@ static const uint16_t VIEW_KNOB[NVIEWS][4] = {
     {P_CHORD, P_CECHO, P_CPLATE, P_CLOW},        /* (1.4.0) a strip: the chord's here; vknob() the part's (STRIP_PAR) */
     {P_SINTRO, P_SMAIN, P_SOUTRO, P_SKIND},      /* (1.4.0, the user's) the Song page: the song's lengths in its order,
                                                   * in bars (a phrase a click), and which parts come first */
-    {P_SMODE, K_VALUES, K_NONE, K_NONE},         /* (the Song mode page: GLO again; the player's, global; 1.4.0, the
-                                                  * knobs' numbers, Values) */
+    {P_SMODE, K_TRANS, K_NONE, K_VALUES},        /* (the Song mode page: GLO again; the player's, global; 1.4.0, the
+                                                  * knobs' numbers, Values; the user's: KNOB 2 a Set's Transition,
+                                                  * Set mode alone, Values on KNOB 4, KNOB 3 free) */
     {K_WALK, P_DRIFT, K_NONE, K_NONE},           /* (1.4.0, the user's) the Walk page: EDIT again; the walk's character
                                                   * (also on ALGORITHM, as ever) and Change, the Chord page's too */
     {K_SPITCH, K_SRATE, K_SDEPTH, K_SECHO},      /* (format 34, the user's) a siren's page: its key held */
@@ -277,7 +282,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Air", "Tone", "Decay", "Width"},
     {"Level", "Echo", "Plate", "Filter"},   /* (1.4.0, format 28, Robert's: the Low cut a centred filter) */
     {"Intro", "Main", "Outro", "Kind"},
-    {"Mode", "Values", "", ""},
+    {"Mode", "Transition", "", "Values"},
     {"Walk", "Change", "", ""},
     {"Pitch", "Rate", "Depth", "Echo"},
 };
@@ -333,7 +338,8 @@ static const char *const KNOB_HELP[NVIEWS][4] = {
      "Left darker, right thinner, before the sends"},
     {"The parts coming in, a phrase a click", "The piece itself, before the outro", "The parts leaving, then silence",
      "Ambient first, or the kick and the bass"},
-    {"Endless, a song, or a set of the pieces", "The knobs' numbers: shown a moment, or always", "", ""},
+    {"Endless, a song, or a set of the pieces", "A set's hand-over: LP, Segue or Mix", "",
+     "The knobs' numbers: shown a moment, or always"},
     {"Home, Wander or Free: how far it roams", "How long a chord lasts", "", ""},
     {"Up or down an octave", "How fast it goes round", "How far its pitch swings", "Into the echo; past half, repeats stack"},
 };
@@ -348,6 +354,12 @@ static const char *const SIR_HELP[EN_NSIR][4] = {
     {"Where it lands, on the key's notes", "The warble, a second (6)", "How far it falls (two octaves)",
      "Into the echo; past half, repeats stack"},
 };
+/* (the user's) Transition's help, a line a choice (each fits 228 px in FONT_XS: the host's expect helpfit); and while
+ * Song mode isn't Set */
+static const char *const TRANS_HELP[EN_NTRANS] = {"Each song ends; a pause, then the next",
+                                                  "The next song from the bar after the outro",
+                                                  "Tempos glide; the next pulse under the echo"};
+static const char *const TRANS_OFF = "Only in Set mode";
 
 /* the screen's colours: a dark room, as a dub techno sleeve (grey on black, a cold blue). The chord and
  * the scale in teal, the pings in a paler blue, the bass in brass, the drums in amber; dub hold in red.
@@ -629,6 +641,8 @@ static int knob_get(int k)
         return proj.values ? 1 : 0;
     if (k >= K_SPITCH && k <= K_SECHO)          /* (format 34: as it plays: the tuned ones on the key's notes) */
         return en_sir_eff(sir_page, k - K_SPITCH, proj.sir[sir_page % EN_NSIR][k - K_SPITCH]);
+    if (k == K_TRANS)
+        return proj.trans < EN_NTRANS ? proj.trans : 0;
     return 0;
 }
 static void knob_range(int k, int *lo, int *hi)
@@ -643,7 +657,7 @@ static void knob_range(int k, int *lo, int *hi)
         *hi = 50;
     } else {
         *lo = 0;
-        *hi = k == K_PLAY || k == K_VALUES ? 1 : k == K_WALK ? EN_NWALK - 1 : k == K_KSHAPE ? 3 : k == K_MODE ? EN_NMODES - 1 : k == K_LEDS ? 2 : k == K_CPU ? 100 : k == K_SLOT ? EN_NPROG - 1 : k == K_CQ ? EN_NCQ - 1 : k == K_CX ? EN_NCX - 1
+        *hi = k == K_PLAY || k == K_VALUES ? 1 : k == K_TRANS ? EN_NTRANS - 1 : k == K_WALK ? EN_NWALK - 1 : k == K_KSHAPE ? 3 : k == K_MODE ? EN_NMODES - 1 : k == K_LEDS ? 2 : k == K_CPU ? 100 : k == K_SLOT ? EN_NPROG - 1 : k == K_CQ ? EN_NCQ - 1 : k == K_CX ? EN_NCX - 1
             : k == K_LANE ? EN_NDRUM - 1 : k == K_LCH ? 100 : 0;
     }
 }
@@ -654,7 +668,7 @@ static const char *knob_name(int k)
     return k == K_LEDS ? "Lights" : k == K_CPU ? "CPU" : k == K_SLOT ? "Slot" : k == K_CQ ? "Chord" : k == K_CX ? "Type"
          : k == K_LANE ? "Lane" : k == K_LCH ? "Chance" : k == K_FILTER ? "Filter" : k == K_DUB ? "Wet"
          : k == K_ENERGY ? "Energy" : k == K_SPACE ? "Duck" : k == K_MODE ? "Mode" : k == K_KSHAPE ? "Kick" : k == K_PLAY ? "Play" : k == K_WALK ? "Walk" : k == K_SAVE ? "Save" : k == K_VALUES ? "Values"
-         : k == K_SPITCH ? "Pitch" : k == K_SRATE ? "Rate" : k == K_SDEPTH ? "Depth" : k == K_SECHO ? "Echo" : "";
+         : k == K_SPITCH ? "Pitch" : k == K_SRATE ? "Rate" : k == K_SDEPTH ? "Depth" : k == K_SECHO ? "Echo" : k == K_TRANS ? "Transition" : "";
 }
 static void knob_text(int k, char *b)
 {
@@ -727,6 +741,10 @@ static void knob_text(int k, char *b)
             ;
     } else if (k >= K_SPITCH && k <= K_SECHO) {   /* (format 34: "+3", "1/8", "2.5 Hz", "12 st", "70") */
         en_sir_text(sir_page, k - K_SPITCH, v, b);
+    } else if (k == K_TRANS) {
+        const char *n = EN_TRANS_NAME[(unsigned)v < EN_NTRANS ? v : 0];
+        while ((*b++ = *n++))
+            ;
     } else {
         b[0] = 0;
     }
@@ -776,6 +794,8 @@ static void knob_set(int k, int v)
         }
         proj.sir[sir_page % EN_NSIR][sk] = (int8_t)n;
         en_sir_set(sir_page, sk, n);
+    } else if (k == K_TRANS) {
+        proj.trans = (uint8_t)v;                 /* (the engine told by set_tick) */
     } else if (k == K_SLOT) {
         ui.slot = (uint8_t)v;
         return;                                  /* (only where the page looks: nothing saved) */
@@ -2040,6 +2060,14 @@ static void input(void)
                 strip_open();                    /* (a part's key down and a knob turned: its strip at once) */
             if (ui.view == V_STRIP)
                 ui.strip_used = 1;
+            if (fm_knob_off(ui.view, (int)i) && vknob(ui.view, i) == K_TRANS) {
+                big_show_help(K_TRANS, KNOB_LABEL[ui.view][i], K_DIM, TRANS_OFF);   /* (the user's: Set mode alone;
+                                                  * the turn says so, the value kept) */
+                ui.touched = (int8_t)i;
+                ui.touch_until = plat_ms() + 1200u;
+                ui.act_t = ui.turn_t = plat_ms();
+                continue;
+            }
             if (fm_knob_off(ui.view, (int)i) || vknob(ui.view, i) == K_NONE)
                 continue;                        /* (an FM page on a voice that isn't FM: the knobs rest, greyed; a
                                                   * knob of none, 1.4.0, rests too) */
@@ -2068,7 +2096,7 @@ static void input(void)
                         sn[a] = 0;
                         nm = sn;
                     }
-                    big_show_help(k, nm, l >= 0 ? LC[l] : K_ACC, KNOB_HELP[ui.view][i]);
+                    big_show_help(k, nm, l >= 0 ? LC[l] : K_ACC, k == K_TRANS ? TRANS_HELP[knob_get(k)] : KNOB_HELP[ui.view][i]);
                 }
             }
         shown:
@@ -5348,11 +5376,14 @@ static void sp_page(int all)
     {
         int first = 1;
         for (i = 0; i < 4; i++) {
-            if (vknob(ui.view, i) == K_NONE || fm_knob_off(ui.view, i))
+            const int toff = vknob(ui.view, i) == K_TRANS && fm_knob_off(ui.view, i);
+            if (vknob(ui.view, i) == K_NONE || (fm_knob_off(ui.view, i) && !toff))
                 continue;
             sp_cat(first ? ": " : ", ");
             first = 0;
             sp_knob(ui.view, i);
+            if (toff)
+                sp_cat(", only in Set mode");
         }
     }
     if (!all)
@@ -5578,6 +5609,10 @@ static void speak_dump(void)
                     ui.lane = (uint8_t)x;
                 else if (k == K_LCH)
                     proj.par[P_DCH0 + ui.lane] = (int16_t)x;
+                else if (k == K_VALUES)
+                    proj.values = (uint8_t)x;
+                else if (k == K_TRANS)
+                    proj.trans = (uint8_t)x;
                 else
                     proj.leds = (uint8_t)x;
                 sp_n = 0;
@@ -5699,15 +5734,46 @@ void ui_init(void)
 }
 
 /* (1.4.0, the user's) Set: a song over, the next piece from its intro as the tails die (6 s on); after the last
- * piece, it rests */
+ * piece, it rests. Transition (the Song mode page's KNOB 2): LP that; Segue and Mix the engine's, told the next
+ * piece's tempo and echo time; at its cue (the outro's last bar, the old parts gone) the next piece set, and the go:
+ * it starts on the next downbeat, without a stop */
 static void set_tick(void)
 {
     static uint32_t end_t;
+    static uint8_t cued, end_p, by_hand;
+    static int16_t sent = -1;
     const uint32_t now = plat_ms();
+    {
+        const int nx = proj.piece + 1 < NPIECES && proj.par[P_SMODE] == 2 && proj.trans < EN_NTRANS && proj.trans;
+        const int m = nx ? proj.trans : 0, tp = nx ? proj.slot[proj.piece + 1].par[P_TEMPO] : 0,
+                  et = nx ? proj.slot[proj.piece + 1].par[P_ETIME] : 0, sig = m | tp << 2 | et << 10;
+        if (!en_tr_cue) {
+            cued = 0;
+            if (sig != sent) {                   /* (the engine told, as it changes) */
+                sent = (int16_t)sig;
+                en_trans(m, tp, et);
+            }
+        } else if (!cued) {                      /* (the cue: the next piece now, under the old one's last bar) */
+            cued = 1;
+            sent = -1;                           /* (told again once it has started: the piece after) */
+            if (nx && en_playing) {
+                set_piece(proj.piece + 1);
+                en_trans_go();
+                sp_tp.play_t = now;
+                card_show("SET", piece_name(proj.piece), K_ACC, 0);
+            }
+        }
+    }
     if (proj.par[P_SMODE] != 2 || en_song_ph != EN_SG_END || en_playing) {
         end_t = 0;
+        end_p = proj.piece, by_hand = 0;
         return;
     }
+    if (proj.piece != end_p)                     /* (a piece chosen by hand, resting after a song: the set left
+                                                  * there, till PLAY) */
+        by_hand = 1;
+    if (by_hand)
+        return;
     if (!end_t) {
         end_t = now | 1u;
     } else if (now - end_t >= 6000u && proj.piece + 1 < NPIECES) {

@@ -1059,6 +1059,11 @@ int project_load(void)
                 fresh[i] = (uint8_t)untouched_now(&proj.slot[i], i);
             proj.format = PROJ_FORMAT;
         }
+        if (n >= 8 && proj.magic == PROJ_MAGIC && proj.format == 32u) {   /* (32: today's layout, without the
+                                                  * Transition: LP) */
+            proj.trans = 0;
+            proj.format = PROJ_FORMAT;
+        }
         if (n >= 8 && proj.magic == PROJ_MAGIC && proj.format == 31u) {   /* (31: today's layout; the knobs with dead
                                                   * steps as 32's below, the pieces never changed known first, by their
                                                   * recipes then) */
@@ -1069,6 +1074,10 @@ int project_load(void)
         }
         if (n >= 8 && proj.magic == PROJ_MAGIC && proj.format == 32u)   /* (32: today's layout, the sirens' knobs
                                                   * after it unsaved: their defaults, below) */
+            proj.format = PROJ_FORMAT;
+        if (n >= 8 && proj.magic == PROJ_MAGIC && proj.format == 33u)   /* (33: the Transition's test build: today's
+                                                  * layout, its Transition kept, the sirens' knobs after it unsaved:
+                                                  * their defaults, below) */
             proj.format = PROJ_FORMAT;
         if (old30 && proj.rsv[0] != PROJ_WAVE_MARK) {
             /* (a step 2 test build's, zzo's or zzp's: the LFOs' Shape in the Wave's slots; the Shape Wander, the
@@ -1175,6 +1184,8 @@ int project_load(void)
             en_zones31(proj.slot[i].par, sv);
     }
     if (n >= 8 && proj.magic == PROJ_MAGIC && proj.format == PROJ_FORMAT) {   /* (the ranges as they are now) */
+        if (proj.trans >= EN_NTRANS || old || old30 || old31)
+            proj.trans = 0;                      /* (before 33: LP, as they played) */
         proj.screen = ui_screen_ok(proj.screen);   /* (1.4.0: the echo trail and the fifths gone: the ripples) */
         for (i = 0; i < NPIECES; i++)
             proj.slot[i].screen = ui_screen_ok(proj.slot[i].screen);

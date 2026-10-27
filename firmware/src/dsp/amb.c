@@ -320,6 +320,7 @@ const char *const EN_CLDEST_NAME[EN_NCLDEST] = {"Cutoff", "Reso", "Colour"};
 const char *const EN_NLDEST_NAME[EN_NNLDEST] = {"Filter", "Tone", "Air"};
 const char *const EN_SMODE_NAME[EN_NSMODE] = {"Endless", "Song", "Set"};
 const char *const EN_SKIND_NAME[EN_NSKIND] = {"Ambient", "Pulse"};
+const char *const EN_TRANS_NAME[EN_NTRANS] = {"LP", "Segue", "Mix"};
 const char *const EN_PV_NAME[EN_NPV] = {"Blip", "Marimba", "Glass", "Wood", "Drop"};
 const char *const EN_BV_NAME[EN_NBV] = {"Sub", "Punch", "Rubber", "Pluck", "Growl"};
 const char *const EN_KIT_NAME[EN_NKIT] = {"Tight", "Deep", "Punch", "Soft", "Dusty"};
@@ -714,7 +715,7 @@ volatile uint32_t en_prof[EN_PROF_N];
 #endif
 
 /* ------------------------------------------------------------ commands --- */
-enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_MUTE, C_PERF, C_FX, C_PINGS, C_MACRO, C_PROT, C_REWALK, C_PNUDGE, C_LOCK, C_OUTRO, C_SIREN, C_SIRSET };
+enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGROW, C_MUTE, C_PERF, C_FX, C_PINGS, C_MACRO, C_PROT, C_REWALK, C_PNUDGE, C_LOCK, C_OUTRO, C_SIREN, C_SIRSET, C_TRANS };
 #define QN 512u                                 /* (a piece is every parameter at once: room for twice over and more) */
 _Static_assert(QN >= 2u * (P_NPARAMS + 8), "the command queue can't hold a piece's parameters twice over");
 static uint32_t q[QN];
@@ -745,6 +746,8 @@ void en_macro(int i, int v) { post(C_MACRO, i, v + 50); }   /* (sent as 0..100) 
 void en_lock(int on) { post(C_LOCK, on != 0, 0); }
 void en_outro(void) { post(C_OUTRO, 0, 0); }
 void en_siren(int s, int act) { post(C_SIREN, s, act); }
+void en_trans(int m, int t, int e) { post(C_TRANS, m, (t & 0xFF) | (e & 7) << 8); }   /* (the next piece's tempo, echo time) */
+void en_trans_go(void) { post(C_TRANS, 0xFF, 0); }
 void en_prog_rotate(void) { post(C_PROT, 0, 0); }
 void en_prog_rewalk(void) { post(C_REWALK, 0, 0); }
 void en_ping_nudge(void) { post(C_PNUDGE, 0, 0); }
@@ -870,7 +873,7 @@ static float kick_lvl = 1.0f, kick_snd[2], hat_thr, png_thr, bas_thr, kick_thr; 
 #define THR_H 30.0f
 #define THR_K 8.0f
 static float ch_thr, thr_mx;
-static float ec_g = 0.6f, ec_lpc = 0.68f, ec_wide = 1.0f;   /* the echo's Blur, Tone, Width (and the chord's and the
+static float ec_g = 0.6f, ec_lpc = 0.68f, ec_wide = 1.0f, ec_wd = 1.0f;   /* the echo's Blur, Tone, Width (and the chord's and the
                                                              * pings': widen) */
 static int gpat(void) { return GROOVE_PAT[(unsigned)par[P_GROOVE] < NGROOVE ? par[P_GROOVE] : 0]; }   /* the pattern */
 static int8_t mac[EN_NMAC];                     /* the master actions, -50..50 */
@@ -1860,6 +1863,10 @@ EN_COLD static void stabs_bar(void)                     /* this bar's stabs: the
 }
 
 static float cc_col(void);
+static uint8_t tr_frz;                           /* (Transition: the echo's loop held, as REC's dub hold has it, the tape alone) */
+static uint8_t tr_arm;                           /* (Transition: the echo's hold armed, the next stab's, an echo's time
+                                                  * on; samples to it, 0 none waiting) */
+static int32_t tr_fwait;
 EN_COLD static void stab_fire(float vel, int throw_it)
 {
     int i;
@@ -1888,10 +1895,12 @@ EN_COLD static void stab_fire(float vel, int throw_it)
     en_stabs++;
     hit(0, vel);
     st_midi_left = (int32_t)(fm_maxf(st_t60 * 0.5f, 0.06f) * EN_SR);
-    if (throw_it) {
+    if (throw_it && !tr_frz) {                  /* (the echo held: no throw, its second head left out) */
         st_throw = 1.0f;
         en_throws++;
     }
+    if (tr_arm)                                  /* (Transition: the echo held once the last stab is in its loop) */
+        tr_fwait = (int32_t)(echo_len * 4.0f) + 64;   /* (the tape a quarter of the rate) */
 }
 
 /* ---------------------------------------------------------------- drums --- */
@@ -2080,14 +2089,21 @@ static float fd_pos[EN_NPART] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f}, fd_tgt[EN_
              fd_g[EN_NPART] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
 static uint32_t fd_quiet;                        /* (the parts out, EN_M_* bits: the lanes hide them, as a mute) */
 volatile float en_fader[EN_NPART] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
+static float tr_dry = 1.0f, tr_dry_s = 1.0f;   /* (Transition's, below: the chord's dry, wanted, as heard) */
+static uint8_t tr_cut;                           /* (and its send cut quickly, the outro's last bar) */
+static float pl_decay_t;                         /* (the plate's, below) */
 static void fader_step(uint32_t n)
 {
     const float mx = (float)n / (32.0f * step_len);
     int i;
+    if (tr_dry_s != tr_dry)                      /* (a Mix's chord, its dry: eased as a fader) */
+        tr_dry_s += fm_clampf(tr_dry - tr_dry_s, -mx, mx);
     for (i = 0; i < EN_NPART; i++) {
         const float d = fd_tgt[i] - fd_pos[i];
         if (d != 0.0f) {
-            fd_pos[i] += fm_clampf(d, -mx, mx);
+            const float m = i == 0 && tr_cut ? (float)n * (1.0f / (0.05f * EN_SR)) : mx;   /* (a hand-over's last
+                                                  * bar: the chord's send out at once) */
+            fd_pos[i] += fm_clampf(d, -m, m);
             fd_g[i] = fd_pos[i] * fd_pos[i];
             en_fader[i] = fd_g[i];
         }
@@ -2111,6 +2127,22 @@ static float song_co, song_wet = 1.0f, song_hits = 1.0f, song_nthr;   /* the cho
 static uint8_t song_thr;                         /* the outro's last bars: every stab thrown */
 volatile uint8_t en_song_ph;
 volatile uint32_t en_song_b0, en_song_bo, en_song_be;
+/* (1.4.0, the user's) Transition, a Set's hand-over (amb.h): its mode and the next piece's tempo and echo time (tempo
+ * 0: none next, it rests); the app's next piece asked (tr_go: set, the cue answered); waiting past the outro for it;
+ * a Mix's glide under way (its tempo and echo time from, the echo's beats now: 0 the knob's); a Mix's new piece, its
+ * first bars (the pulse first); the echo's time slewed (a tape's glide, not a jump); the echo's tail held to two bars
+ * (s, 0: Feedback's) while the old harmony fades. All 0 in LP: the music as it was, bit for bit */
+static uint8_t tr_mode, tr_go, tr_wait, tr_glide, tr_in, tr_slew, tr_after;
+static int tr_tempo, tr_etime;
+static float bpm_now, tr_bpm0, tr_beats0, tr_beats, tr_pl;
+volatile uint8_t en_tr_cue;
+volatile float en_bpm;
+#define TR_SLEW 0.05f                            /* (the echo's time, a tape sample at most: 5%, under a semitone) */
+#define TR_PLATE 0.9f                            /* (a Segue's plate, held as long) */
+#define TR_WET 2.0f                              /* (the echo's send pushed as the chord's dry leaves: +6 dB) */
+EN_COLD static int tr_on(void) { return tr_mode != EN_TR_LP && tr_tempo > 0 && song_mode == 2; }
+EN_COLD static void tempo_set(void);
+EN_COLD static void echo_time(void);
 /* each part's entry into the intro (a share of it) and its exit from the outro (where it starts, how long it takes,
  * shares of it): Ambient first (Fog, Haze, Chamber, Night Drive) and Pulse first (Steppers, Pressure, Concrete, Basic) */
 static const float SONG_IN[2][EN_NPART] = {{0.06f, 0.60f, 0.45f, 0.30f, 0.78f, 0.0f},
@@ -2164,6 +2196,13 @@ EN_COLD static void song_start(void)                     /* PLAY from the top: E
         fd_pos[i] = fd_tgt[i] = fd_g[i] = en_fader[i] = song_b0 ? 0.0f : 1.0f;
     }
     fd_quiet = song_b0 ? 0x3Fu : 0u;
+    if (tr_in && song_b0) {                      /* (a Mix: the kick from the downbeat, whole; the noise with it, faded
+                                                  * in; the rest no sooner than song_tick lets them, as the Kind has) */
+        song_ent[3] = 0.0f, song_fd[3] = 1.0f;
+        song_ent[5] = 0.0f, song_fd[5] = 2.0f;
+        fd_pos[3] = fd_tgt[3] = fd_g[3] = en_fader[3] = 1.0f;
+        fd_quiet &= ~(uint32_t)EN_M_KICK;
+    }
     song_publish();
 }
 /* the kick's shape the song gives this bar (-1: the piece's own): the intro's One, Half, Four; the outro's thinning */
@@ -2213,9 +2252,18 @@ EN_COLD static void song_tick(void)                      /* each sixteenth: the 
     } else if (song_ph == EN_SG_MAIN) {
         song_back();
     } else if (song_ph == EN_SG_OUTRO) {
-        const float o = song_be > song_bo ? (t - (float)song_bo) / (float)(song_be - song_bo) : 1.0f;
+        /* (Transition, Segue or Mix: the parts gone a bar early, the outro's last bar the echo's alone: the next
+         * piece set under it, unheard) */
+        const float sp = (float)(song_be - song_bo) - (tr_on() && song_be > song_bo + 1u ? 1.0f : 0.0f),
+                    o = song_be > song_bo ? (t - (float)song_bo) / sp : 1.0f;
         for (i = 0; i < EN_NPART; i++)
             fd_tgt[i] = fm_minf(song_cap[i], 1.0f - fm_clampf((o - SONG_OUT[i][0]) / SONG_OUT[i][1], 0.0f, 1.0f));
+        if (tr_on()) {                           /* (Segue, Mix: the chord on, every stab thrown, its dry out from 7 bars
+                                                  * before the end to 3 (tr_dry): the echo alone has it, fed to the
+                                                  * last bar; there its send out in 50 ms (tr_cut), the echo's bar) */
+            fd_tgt[0] = t < (float)song_be - 1.0f ? song_cap[0] : 0.0f;
+            tr_cut = (uint8_t)(t >= (float)song_be - 1.0f);
+        }
         song_co = 0.0f, song_wet = 1.0f, song_hits = 1.0f;
         song_thr = (uint8_t)(o >= 0.6f);         /* (the last bars: the chord thrown, the noise into the echo) */
         song_nthr = fm_clampf((o - 0.6f) * 5.0f, 0.0f, 1.0f);
@@ -2223,15 +2271,98 @@ EN_COLD static void song_tick(void)                      /* each sixteenth: the 
         for (i = 0; i < EN_NPART; i++)
             fd_tgt[i] = 0.0f;
     }
+    if (tr_in) {                                 /* (a Mix's new piece: the kick at once, the noise from the downbeat,
+                                                  * the bass a bar on, the chord, the pings and the hats two, as the
+                                                  * old tails fade; then the intro as its Kind has it) */
+        static const float AT[EN_NPART] = {2.0f, 2.0f, 1.0f, -1.0f, 2.0f, 0.0f};
+        if (t >= 8.0f || (song_ph != EN_SG_INTRO && song_ph != EN_SG_MAIN)) {
+            tr_in = 0;
+        } else {
+            for (i = 0; i < EN_NPART; i++)
+                fd_tgt[i] = AT[i] < 0.0f ? 1.0f : fm_minf(fd_tgt[i], fm_clampf((t - AT[i]) * 0.5f, 0.0f, 1.0f));
+        }
+    }
     for (i = 0; i < EN_NPART; i++)
         if (fd_tgt[i] <= 0.0f && fd_pos[i] < 0.001f)
             q |= 1u << i;
     fd_quiet = q;
+    if (tr_slew && song_ph != EN_SG_OUTRO && song_ph != EN_SG_END && t >= 8.0f && echo_len_t * fx_em - echo_len < 1.0f &&
+        echo_len - echo_len_t * fx_em < 1.0f)
+        tr_slew = 0;                             /* (the new piece's echo time reached: the knob's glide again) */
+    if (tr_on() && song_bo_on && !tr_go && (song_ph == EN_SG_MAIN || song_ph == EN_SG_OUTRO || song_ph == EN_SG_END)) {
+        const float be = (float)song_be;
+        if (tr_mode == EN_TR_MIX && !en_ext && t > be - 9.0f) {   /* (Mix: the last phrase, the tempo and the echo's
+                                                  * beats eased to the next piece's, done as the last bar starts) */
+            const float x = fm_minf((t - (be - 9.0f)) * 0.125f, 1.0f), e = x * x * (3.0f - 2.0f * x);
+            if (!tr_glide)
+                tr_glide = 1, tr_bpm0 = bpm_now, tr_beats0 = ETIME_BEATS[(unsigned)par[P_ETIME] < 6u ? par[P_ETIME] : 0];
+            bpm_now = tr_bpm0 + ((float)tr_tempo - tr_bpm0) * e;
+            tr_beats = tr_beats0 + (ETIME_BEATS[(unsigned)tr_etime < 6u ? tr_etime : 0] - tr_beats0) * e;
+            step_len = EN_SR * 60.0f / (bpm_now * 4.0f);
+            en_bpm = bpm_now;
+            echo_time();
+        } else if (tr_glide && !en_tr_cue) {     /* (the outro called back to the main, HOME held + PLAY: the
+                                                  * piece's own tempo again) */
+            tr_glide = 0, tr_beats = 0.0f;
+            tempo_set();
+            echo_time();
+        }
+        if (!en_tr_cue && song_ph != EN_SG_MAIN && t >= be - 1.0f && ((fd_quiet & 0x3Fu) == 0x3Fu || t >= be)) {
+            en_tr_cue = 1;                       /* (the old parts gone: the app sets the next piece now) */
+            tr_slew = 1;
+        }
+    }
+    {   /* the tails over the hand-over, as the film's changes by hand (Shut, REC's dub hold, the next piece on the
+         * downbeat): the chord's dry out over 4 bars (a Mix's from 7 bars before the end, a Segue's from 5), its echo
+         * send kept and pushed, every stab thrown: the old harmony the echo's alone; from the cue (the outro's last
+         * bar, the send cut) the echo's loop held as it is (tr_frz: REC's hold, the tape alone), a Segue's plate
+         * held too; past the downbeat a Segue's held 2 bars (its plate let go over 2 more), a Mix's 1: then the
+         * repeats die as the loop has them, the new piece in the echo again; a Mix's chord no sooner than bar 2 */
+        float pl = 0.0f, dry = 1.0f;
+        uint8_t fz = 0;
+        const float plh = fm_maxf(pl_decay_t, TR_PLATE);
+        if (tr_on() && song_bo_on && (song_ph == EN_SG_OUTRO || song_ph == EN_SG_END)) {
+            const float be = (float)song_be;
+            if (tr_mode == EN_TR_SEGUE && t > be - 4.0f)
+                pl = pl_decay_t + (plh - pl_decay_t) * fm_minf(t - (be - 4.0f), 1.0f);
+            dry = 1.0f - fm_clampf((t - (be - (tr_mode == EN_TR_MIX ? 7.0f : 5.0f))) * 0.25f, 0.0f, 1.0f);
+            tr_arm = (uint8_t)(!tr_frz && t >= be - 2.0f);   /* (the hold: on the stab thrown on the downbeat two
+                                                  * bars before the end (bar_start), once its repeat is in the loop
+                                                  * (stab_fire); at the cue at the latest) */
+            fz = (uint8_t)(tr_frz || en_tr_cue);
+        } else if (tr_after && t < 4.0f && (song_ph == EN_SG_INTRO || song_ph == EN_SG_MAIN)) {
+            fz = (uint8_t)(tr_frz && t < 1.0f);
+            if (tr_after == EN_TR_SEGUE)
+                pl = plh + (pl_decay_t - plh) * (t < 2.0f ? 0.0f : (t - 2.0f) * 0.5f);
+        } else {
+            tr_after = 0;
+        }
+        tr_frz = fz, tr_pl = pl, tr_dry = dry;
+        if (fz)
+            tr_arm = 0, tr_fwait = 0;
+        if (dry < 1.0f)
+            song_wet = 1.0f + (TR_WET - 1.0f) * (1.0f - dry);   /* (and the echo's send pushed as the dry leaves: a
+                                                  * throw, the harmony held there) */
+    }
+}
+static void notes_off(void);
+EN_COLD static void tr_reset(void)               /* (stopped, or a new start: no hand-over under way) */
+{
+    tr_go = tr_wait = tr_in = tr_slew = tr_after = 0;
+    tr_pl = 0.0f;
+    tr_frz = tr_arm = 0, tr_fwait = 0;
+    tr_dry = tr_dry_s = 1.0f, tr_cut = 0;
+    en_tr_cue = 0;
+    if (tr_glide || tr_beats > 0.0f) {
+        tr_glide = 0, tr_beats = 0.0f;
+        tempo_set();
+        echo_time();
+    }
 }
 EN_COLD static void song_outro(void)                     /* HOME held + PLAY: the outro from the next phrase; again: the main */
 {
     const uint32_t nb = (bar + 7u) & ~7u;        /* (the next phrase's first bar: the next to start, if it's one) */
-    if (!en_playing || song_ph == EN_SG_END)
+    if (!en_playing || song_ph == EN_SG_END || en_tr_cue)   /* (a Transition's cue: the next piece already set) */
         return;
     if (song_ph == EN_SG_OUTRO || song_ask) {      /* (in it, or asked: back) */
         song_ask = 0;
@@ -2769,7 +2900,10 @@ EN_COLD static void bar_start(void)
                                                   * any bar: the A bars the same) */
         hats_evolve();
     stabs_bar();
-    ph_bar(pb);                                  /* (this bar's drums and bass, from the plan) */
+    if (tr_on() && song_bo_on && bar + 2u == song_be && song_ph == EN_SG_OUTRO)
+        en_stab_pat |= 1u;                       /* (a hand-over: the chord struck on this downbeat, two bars before
+                                                  * the end, whatever the bar has: thrown, the echo held on it) */
+    ph_bar(pb);                                 /* (this bar's drums and bass, from the plan) */
     if (song_hits < 1.0f) {                      /* (1.4.0: the song's intro, the hats coming in: few, growing) */
         bar_sh = ph_thin(bar_sh, (int)((float)pcount(bar_sh) * song_hits + 0.5f), 0u, 5u);
         sh_fade &= bar_sh;
@@ -2867,6 +3001,7 @@ static int dhit(int d, int st, float *vel)
 
 static void lfo_tick(void);
 static void play_stop(void);
+static void tr_restart(void);
 /* the grid: one call a sixteenth (MIDI clock: 6 ticks) */
 EN_COLD static void tick(void)
 {
@@ -2874,14 +3009,22 @@ EN_COLD static void tick(void)
     float r = frand();
     gate_ctr = 0;
     if (st == 0) {
+        if (tr_go && song_bo_on && bar >= song_be && (song_ph == EN_SG_OUTRO || song_ph == EN_SG_END))
+            tr_restart();                        /* (Transition: the next piece, set, from its top on this downbeat) */
         bar_start();
         en_stab_thr = 0;                         /* (the chord's page: a new bar's stabs) */
         for (l = 0; l < 16; l++)
             en_stab_v[l] = 0;
-        if (song_end_now) {                      /* (1.4.0: the song's end: the grid stops, the tails ring on) */
+        if (song_end_now || (tr_wait && song_ph == EN_SG_END)) {   /* (1.4.0: the song's end: the grid stops, the
+                                                  * tails ring on; a Segue's or a Mix's: on, waiting for the next
+                                                  * piece, a few bars at most) */
             song_end_now = 0;
-            play_stop();
-            return;
+            if (!tr_on() || bar > song_be + 3u) {
+                play_stop();
+                tr_reset();
+                return;
+            }
+            tr_wait = 1;
         }
     }
     song_tick();
@@ -3143,14 +3286,14 @@ static int etime_cap_ds(int v)
     const float t = par[P_TEMPO] > 0 ? ETIME_BEATS[(unsigned)v < 6u ? v : 0] * 60.0f / (float)par[P_TEMPO] : 0.0f;
     return t * TAPE_SR > (float)(TAPE_N - 8) ? (int)((float)(TAPE_N - 8) / TAPE_SR * 10.0f) : 0;
 }
-static void echo_time(void)
+EN_COLD static void echo_time(void)
 {
     int i = par[P_ETIME];
     float beat, t;
-    if (par[P_TEMPO] <= 0)
+    if (bpm_now <= 0.0f)
         return;                                  /* not yet (en_init applies in order) */
-    beat = 60.0f / (float)par[P_TEMPO];
-    t = ETIME_BEATS[i] * beat;
+    beat = 60.0f / bpm_now;                      /* (the tempo heard: Tempo's, or a Mix's glide) */
+    t = (tr_beats > 0.0f ? tr_beats : ETIME_BEATS[i]) * beat;
     if (t * TAPE_SR > (float)(TAPE_N - 8))
         t = (float)(TAPE_N - 8) / TAPE_SR;
     echo_len_t = t * TAPE_SR;
@@ -3167,11 +3310,15 @@ static void heads_step(uint32_t n)
     int i;
     /* (1.3.0) the loop's gain from the tail's length: whatever the echo's time, the repeats are gone (-60 dB) in
      * Feedback's seconds; long delays vanish as quickly as short ones (Dub and the throws still push past it) */
-    echo_fb = fm_exp2f(-9.966f * (echo_len_t * (1.0f / TAPE_SR)) / echo_t60);
+    echo_fb = fm_exp2f(-9.966f * ((tr_slew ? echo_len : echo_len_t) * (1.0f / TAPE_SR)) / echo_t60);   /* (a
+                                                  * Transition's time slewing: the tail as the repeats come now) */
+    ec_wd = tr_slew ? ec_wd + (ec_wide - ec_wd) * fm_minf((float)n * (1.0f / (0.5f * EN_SR)), 1.0f) : ec_wide;   /* (the
+                                                  * heads' Width; a Transition's new piece's eased in, the held loop's
+                                                  * heads moving, not jumping) */
     for (i = 0; i < 2; i++) {
         /* (1.3.0: the first head near the middle, drifting with Motion; the second, on throws, to the right; Width
          * spreads them: 0 mono, 2 as wide as before) */
-        p = fm_clampf(ec_wide * ((i ? 0.4f : 0.0f) + (i ? 0.2f : 0.25f) * (0.4f + 0.6f * mv_e) * mod[6 + i].v), -1.0f, 1.0f);
+        p = fm_clampf(ec_wd * ((i ? 0.4f : 0.0f) + (i ? 0.2f : 0.25f) * (0.4f + 0.6f * mv_e) * mod[6 + i].v), -1.0f, 1.0f);
         p = (p + 1.0f) * (FM_PI / 4.0f);
         hg[2 * i] = fm_cosf(p);
         hg[2 * i + 1] = fm_sinf(p);
@@ -3245,7 +3392,12 @@ static inline void echoes(float in, float *el, float *er, float *xl, float *xr)
     if (++tape_ph >= 4) {                        /* the tape, a quarter of the time */
         float d, h1, h2, h3, f1, f2, fb, w;
         tape_ph = 0;
-        echo_len += (echo_len_t * fx_em - echo_len) * fx_ek;   /* (the grid: the time doubled, the tape slowing) */
+        {   /* (the grid: the time doubled, the tape slowing; a Transition's new time, slewed: a tape's glide) */
+            float dl = (echo_len_t * fx_em - echo_len) * fx_ek;
+            if (tr_slew)                         /* (held: the loop's length kept) */
+                dl = tr_frz ? 0.0f : fm_clampf(dl, -TR_SLEW, TR_SLEW);
+            echo_len += dl;
+        }
         if (echo_len > (float)(TAPE_N - 8))      /* (Tape stop slows a long echo past the tape: it stops at its end;
                                                   * the hold below reads echo_len itself. Reported by genkigenki) */
             echo_len = (float)(TAPE_N - 8);
@@ -3254,7 +3406,7 @@ static inline void echoes(float in, float *el, float *er, float *xl, float *xr)
         if (d > (float)(TAPE_N - 4))
             d = (float)(TAPE_N - 4);
         h1 = tape_read(d);                       /* (the heads: what comes out, on its time) */
-        h3 = tape_read(fm_minf(d + 88.0f * fm_minf(ec_wide, 2.0f), (float)(TAPE_N - 4)));   /* (the classics pass: the
+        h3 = tape_read(fm_minf(d + 88.0f * fm_minf(ec_wd, 2.0f), (float)(TAPE_N - 4)));   /* (the classics pass: the
                                                   * right's 8 ms later at Width 50, 16 at 100: the repeats wide) */
         f1 = tape_read(fm_maxf(d - (float)EAP_FB, 2.0f));   /* (and what goes round, the diffusers' delay earlier) */
         if (st_throw > 1e-4f) {                  /* (the second head: only while a throw rings) */
@@ -3263,7 +3415,7 @@ static inline void echoes(float in, float *el, float *er, float *xl, float *xr)
         } else {
             h2 = f2 = 0.0f;
         }
-        if (en_frozen) {                         /* dub hold: the loop, as it is */
+        if (en_frozen || tr_frz) {               /* dub hold: the loop, as it is (a Transition's too) */
             int k = (int)echo_len, i0 = tape_w - k;
             int16_t s = tape[i0 < 0 ? i0 + TAPE_N : i0];
             if (++tape_w >= TAPE_N)
@@ -3295,7 +3447,7 @@ static inline void echoes(float in, float *el, float *er, float *xl, float *xr)
         float h1 = tape_p1 + (tape_c1 - tape_p1) * f, h2 = tape_p2 + (tape_c2 - tape_p2) * f;
         float h3 = tape_p3 + (tape_c3 - tape_p3) * f;
         *el = hg[0] * h1 + hg[2] * h2 * st_throw;   /* (the second head: only while a throw rings) */
-        *er = hg[1] * (h1 + fm_minf(0.6f * ec_wide, 1.0f) * (h3 - h1)) + hg[3] * h2 * st_throw;   /* (the later head
+        *er = hg[1] * (h1 + fm_minf(0.6f * ec_wd, 1.0f) * (h3 - h1)) + hg[3] * h2 * st_throw;   /* (the later head
                                                   * blended in: 60% at Width 50, all from 84) */
     }
 }
@@ -3685,7 +3837,12 @@ static void lfo_step(void)
 }
 static uint32_t ext_age;
 
-static void tempo_set(void) { step_len = EN_SR * 60.0f / ((float)par[P_TEMPO] * 4.0f); }
+EN_COLD static void tempo_set(void)
+{
+    bpm_now = (float)par[P_TEMPO];
+    en_bpm = bpm_now;
+    step_len = EN_SR * 60.0f / (bpm_now * 4.0f);
+}
 
 static void macro(int i, int v);
 EN_COLD static void apply(int p, int v)
@@ -3832,8 +3989,16 @@ EN_COLD static void apply(int p, int v)
             song_publish();
         }
         break;
-    case P_SMAIN: song_plan(); song_publish(); break;   /* (the main's length as it goes: the outro moved) */
+    case P_SMAIN:                                /* (the main's length as it goes: the outro moved) */
+        if (en_tr_cue)                           /* (a Transition's next piece set under the old one's last bar: its end
+                                                  * kept) */
+            break;
+        song_plan();
+        song_publish();
+        break;
     case P_SOUTRO:
+        if (en_tr_cue)
+            break;
         if (song_ph == EN_SG_OUTRO || song_fixed) {
             song_be = song_bo + 8u * (uint32_t)v;
             if (song_ph == EN_SG_OUTRO && song_be < bar)
@@ -4223,6 +4388,7 @@ EN_COLD static void play_start(int from_top)
 {
     int i;
     if (from_top) {
+        tr_reset();
         pulse = 0;
         sixteenth = 0;
         en_bars = 0;
@@ -4258,6 +4424,41 @@ EN_COLD static void play_stop(void)
     if (!en_ext)
         midi(0xFC, 0, 0);
     notes_off();
+}
+
+/* (1.4.0, the user's: Transition) the next piece, its song from the top, on this downbeat, without a stop: the
+ * transport's place from 0 as PLAY's, the echo, the plate and the cloud left ringing (nothing here clears them); a
+ * MIDI note still held let go. The tempo the new piece's (a Mix's glide ends there: the same) */
+EN_COLD static void tr_restart(void)
+{
+    int i;
+    const int mix = tr_mode == EN_TR_MIX;
+    tr_go = tr_wait = 0;
+    en_tr_cue = 0;
+    tr_glide = 0, tr_beats = 0.0f;
+    tempo_set();
+    echo_time();
+    notes_off();
+    for (i = 0; i < EN_NDRUM; i++)
+        drum[i].wait = 0;
+    tr_in = (uint8_t)mix;                        /* (song_start reads it) */
+    tr_after = tr_mode;                          /* (the tails: song_tick, from here) */
+    tr_dry = tr_dry_s = 1.0f, tr_cut = 0;
+    sixteenth = 0;
+    en_bars = 0;
+    bar = 0;
+    song_start();
+    for (i = 0; i < EN_NLOOP; i++)
+        loop_pos[i] = 0;
+    section_set(SEC_FULL);
+    sec_next = SEC_FULL;
+    kick_hand = kick_now = 0;
+    kick_shape = kick_next = (uint8_t)kick_draw(SEC_FULL);
+    hats_publish();
+    nz_drawn = 0;
+    noise_pattern();
+    phrase_plan(1);
+    en_change_next = 0;
 }
 
 /* a master action turned: the parameters it moves, applied again as heard (Filter: read by render_chunk) */
@@ -4333,8 +4534,10 @@ EN_COLD static void drain(void)
             if (a && !en_playing) {
                 play_start(1);
             } else if (!a && en_playing) {
+                const int waiting = tr_wait;     /* (a Segue's or a Mix's wait: the set stopped by hand too) */
                 play_stop();
-                if (song_ph != EN_SG_END)        /* (stopped by hand: no song now; the next PLAY a new one) */
+                tr_reset();
+                if (song_ph != EN_SG_END || waiting)   /* (stopped by hand: no song now; the next PLAY a new one) */
                     song_ph = EN_SG_OFF, song_bo_on = 0, song_ask = 0, song_publish();
             }
             break;
@@ -4406,6 +4609,20 @@ EN_COLD static void drain(void)
             if ((unsigned)a < EN_NSIR * EN_NSK) {
                 sv_set[a / EN_NSK][a % EN_NSK] = (int8_t)(int16_t)(b & 0xFFFF);
                 sv_tkey = 0xFFFFFFFFu;
+            }
+            break;
+        case C_TRANS:
+            if (a == 0xFF) {                     /* (the app: the next piece set; from the next downbeat past the outro) */
+                if (en_tr_cue && en_playing)
+                    tr_go = 1;
+            } else {
+                tr_mode = (uint8_t)((unsigned)a < EN_NTRANS ? a : 0);
+                tr_tempo = b & 0xFF, tr_etime = b >> 8 & 7;
+                if (!tr_on() && !tr_go && tr_glide) {   /* (turned to LP, or no next piece: the glide let go) */
+                    tr_glide = 0, tr_beats = 0.0f;
+                    tempo_set();
+                    echo_time();
+                }
             }
             break;
         case C_PNUDGE: {                         /* a nudge on the pings: one note of one loop, another */
@@ -4629,7 +4846,8 @@ static void render_stabs(uint32_t n)
     float hl = st_h[0], hr = st_h[1], ll = st_lc[0], lr = st_lc[1], l2l = st_lc2[0], l2r = st_lc2[1];
     const int flp = LPF_MODE(0);
     const float lc = lcut[0], ce = 0.8f * sx[0][0] * mx_e[0], cp = 0.35f * sx[0][1] * mx_p[0],   /* (the strip: its Filter, its sends) */
-                tc = THR_C * ch_thr;             /* (PERFORM's throw, its bus) */
+                tc = THR_C * ch_thr,             /* (PERFORM's throw, its bus) */
+                cdry = chord_dry * tr_dry_s;     /* (a Mix's last bars: the dry out, the echo's send kept) */
     if (st_midi_left > 0 && (st_midi_left -= (int32_t)n) <= 0)
         for (i = 0; i < EN_NPAD; i++)
             midi(0x80, stab[i].midi_note, 0);
@@ -4746,8 +4964,8 @@ static void render_stabs(uint32_t n)
             yl *= gg;
             yr *= gg;
         }
-        mixl[j] += yl * chord_dry * (1.0f - 0.5f * thr);   /* (Ghost: the dry against the sends; a throw's, -6 dB) */
-        mixr[j] += yr * chord_dry * (1.0f - 0.5f * thr);
+        mixl[j] += yl * cdry * (1.0f - 0.5f * thr);   /* (Ghost: the dry against the sends; a throw's, -6 dB) */
+        mixr[j] += yr * cdry * (1.0f - 0.5f * thr);
         esend[j] += (yl + yr) * (ce + 2.5f * thr) * chord_snd;   /* (a throw whatever the strip's send) */
         tsend[j] += (yl + yr) * tc;              /* (PERFORM's: slammed in) */
         rsend[j] += (yl + yr) * cp;
@@ -6132,10 +6350,12 @@ static void control(uint32_t n)                 /* once a chunk: the slow things
     }
     arcm = arc * sl_ds;
     en_arc = arcm;
-    pl_decay += ((en_frozen ? 0.9995f : pl_decay_t) - pl_decay) * 0.002f;
+    pl_decay += ((en_frozen ? 0.9995f : tr_pl > 0.0f ? tr_pl : pl_decay_t) - pl_decay) * 0.002f;   /* (a Segue's: held) */
     pl_dd2 = fm_clampf(pl_decay + 0.15f, 0.25f, 0.5f);
     rev_in_gain += ((en_frozen ? 0.0f : 1.0f) - rev_in_gain) * 0.01f;
-    ein_gain += ((en_frozen ? 0.0f : 1.0f) - ein_gain) * 0.05f;
+    if (tr_fwait > 0 && (tr_fwait -= (int32_t)n) <= 0)
+        tr_frz = 1, tr_arm = 0, tr_fwait = 0;    /* (a Transition's hold: the stab's repeat in the loop) */
+    ein_gain += ((en_frozen || tr_frz ? 0.0f : 1.0f) - ein_gain) * 0.05f;
     fb_cap += ((en_playing ? 2.0f : 0.9f) - fb_cap) * fm_minf((float)n / (2.0f * EN_SR), 1.0f);
     {   /* the performance's pushes, eased in and out (the filter swept over ~400 ms, three octaves; the echo ~40 ms) */
         /* (the Filter knob: the same sweep, quicker to follow a hand; the keys on top of it, to the same ends) */
@@ -6169,7 +6389,7 @@ static void control(uint32_t n)                 /* once a chunk: the slow things
     }
     if (echo_len > 0.0f)                        /* for the screen's ripples */
         en_echo_ms = echo_len * (1000.0f / TAPE_SR);
-    en_echo_g = en_frozen ? 1.0f : fm_minf(echo_fb + 0.12f * perf_echo, fb_cap) * 0.82f;
+    en_echo_g = en_frozen || tr_frz ? 1.0f : fm_minf(echo_fb + 0.12f * perf_echo, fb_cap) * 0.82f;
     en_echo_in = echo_send + (1.0f - echo_send) * perf_echo;
     en_duck = duck_d * (duck_depth > 0.0f ? 1.0f : 0.0f);
     cl_dens = cloud_amt > 0.0f ? fm_clampf(0.25f + 0.5f * cloud_amt + 0.3f * arcm, 0.05f, 1.0f) : 0.0f;
