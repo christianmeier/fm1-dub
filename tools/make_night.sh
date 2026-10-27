@@ -8,7 +8,12 @@
 #      a true-peak limiter); the captions and the chapters from the cues
 #   2. the film into a named pipe, tools/film.py reading it as it comes and encoding the picture alone;
 #      its WAV compared with the first (the proof the two runs are the same); then the mastered audio muxed in
+#   3. (STEMS) the stems: the film again, to /dev/null, each of the screen's pictures alone a video of its own
+#      (host/stems.c: 1920x1080, frame for frame with the film, to lay under it in the edit) in $OUT/stems/; its WAV
+#      and its cues compared with the first's
 #   tools/make_night.sh            (after host/build_host.sh; WORK=dir for the temporary files)
+#   STEMS=1 | STEMS=name,name      pass 3 after the rest: every stem, or those named (host/stems.c's list)
+#   STEMS_ONLY=1                   the stems without pass 2 (the picture, the mux)
 set -e
 cd "$(dirname "$0")/.."
 ROOT=$PWD
@@ -67,6 +72,20 @@ echo "== mastering (fade-in 10 s, fade-out 20 s from $FADE s, the levels $GAINS 
 ffmpeg -nostats -loglevel error -y -i "$WORK/p1/$N.wav" -af "volume='$E':eval=frame,afade=t=in:st=0:d=10,afade=t=out:st=$FADE:d=20,aresample=192000,alimiter=limit=0.80:attack=5:release=300:level=disabled,aresample=48000" -c:a pcm_s24le "$OUT/DUB-1-night-1h-master.wav"
 ffmpeg -nostats -i "$OUT/DUB-1-night-1h-master.wav" -af ebur128=peak=true -f null - 2>&1 | grep -A14 Summary | grep -E ' I:| LRA:| Peak:'
 
+stems() {
+    echo "== pass 3: the stems (${STEMS:-all}), into $OUT/stems"
+    mkdir -p "$OUT/stems" "$WORK/p3"
+    ln -sf /dev/null "$WORK/p3/$N.film"
+    S=$STEMS
+    [ "$S" = 1 ] || [ -z "$S" ] && S=all
+    AMB_STEMS="$OUT/stems $S" build/host/amb_host "$SCRIPT" "$WORK/p3" > "$WORK/cues3.log"
+    cmp "$WORK/p1/$N.wav" "$WORK/p3/$N.wav"
+    grep '^@' "$WORK/cues3.log" | cmp - "$OUT/cues.txt"
+    echo "  the same run, sample for sample"
+    ls -la "$OUT/stems"
+}
+[ -n "$STEMS_ONLY" ] && { stems; exit 0; }
+
 echo "== pass 2: the picture, through a pipe"
 rm -f "$WORK/p2/$N.film"
 mkfifo "$WORK/p2/$N.film"
@@ -83,4 +102,5 @@ echo "  the two runs are the same, sample for sample"
 echo "== mux"
 ffmpeg -nostats -loglevel error -y -i "$WORK/video.mp4" -i "$OUT/DUB-1-night-1h-master.wav" -map 0:v -map 1:a \
     -c:v copy -c:a aac -b:a 320k -movflags +faststart "$OUT/DUB-1-night-1h.mp4"
+[ -n "$STEMS" ] && stems
 ls -la "$OUT"

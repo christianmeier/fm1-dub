@@ -43,6 +43,9 @@ else
 fi
 run recipe-prints sh -c "\${PYTHON:-python3} tools/gen_recipe_prints.py | cmp - firmware/src/app/recipe_prints.h"   # (the pieces' past recipes: regenerate after changing one)
 run host-build sh host/build_host.sh
+if command -v ffmpeg >/dev/null 2>&1; then   # (the film's stems: the film the same with them, host/stems.c)
+    run stems sh tests/host/stems_test.sh
+fi
 if command -v emcc >/dev/null 2>&1; then
     run emu sh -c "sh web/emu/build.sh >/dev/null && node tests/host/emu_test.mjs build/emu/amb.wasm"
     run app sh -c "sh web/app/build.sh >/dev/null && node tests/host/app_test.mjs build/app/amb.wasm"

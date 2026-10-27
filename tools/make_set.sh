@@ -9,10 +9,15 @@
 #      the captions and the chapters from the cues
 #   2. the film into a named pipe, tools/film.py reading it as it comes and encoding the picture alone; its WAV
 #      compared with the first (the two runs the same, sample for sample); the mastered audio muxed in; a thumbnail
+#   3. (STEMS) the stems: the film again, to /dev/null, each of the screen's pictures alone a video of its own
+#      (host/stems.c: 1920x1080, frame for frame with the film, to lay under it in the edit) in $OUT/stems/; its WAV
+#      and its cues compared with the first's
 #   tools/make_set.sh            (after host/build_host.sh; WORK=dir for the temporary files)
 #   SCRIPT=file OUT=dir          the same pipeline on a short test take (its wav and film named as here)
 #   GAINS="g1 .. g5"             the songs' gains (dB) by hand, in place of the measured ones
 #   PASS1=1                      stop after the master (no picture)
+#   STEMS=1 | STEMS=name,name    pass 3 after the rest: every stem, or those named (host/stems.c's list)
+#   STEMS_ONLY=1                 the stems without pass 2 (the picture, the mux, the thumbnail)
 set -e
 cd "$(dirname "$0")/.."
 PY="${PYTHON:-.venv/bin/python3}"
@@ -171,6 +176,20 @@ print("\n".join(out))
 EOF
 [ -n "$PASS1" ] && exit 0
 
+stems() {
+    echo "== pass 3: the stems (${STEMS:-all}), into $OUT/stems"
+    mkdir -p "$OUT/stems" "$WORK/p3"
+    ln -sf /dev/null "$WORK/p3/$N.film"
+    S=$STEMS
+    [ "$S" = 1 ] || [ -z "$S" ] && S=all
+    AMB_STEMS="$OUT/stems $S" build/host/amb_host "$SCRIPT" "$WORK/p3" > "$WORK/cues3.log" || true
+    cmp "$WORK/p1/$N.wav" "$WORK/p3/$N.wav"
+    grep '^@' "$WORK/cues3.log" | cmp - "$OUT/cues.txt"
+    echo "  the same run, sample for sample"
+    ls -la "$OUT/stems"
+}
+[ -n "$STEMS_ONLY" ] && { stems; exit 0; }
+
 echo "== pass 2: the picture, through a pipe"
 rm -f "$WORK/p2/$N.film"
 mkfifo "$WORK/p2/$N.film"
@@ -218,4 +237,5 @@ d.text((74, 446), "1 HOUR", font=f, fill=(16, 20, 26))
 d.text((60, 600), "generative dub techno", font=ImageFont.truetype(F + "SemiBold.ttf", 40), fill=(92, 196, 204))
 bg.save(dst, quality=92)
 EOF
+[ -n "$STEMS" ] && stems
 ls -la "$OUT"
