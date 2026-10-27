@@ -15,11 +15,15 @@ Pent min	pentatonic minor
 ECHO, ECHO TIME	echo amount, echo time
 Lights Keys	lights on the keys only
 # the echo times (the dotted ones first: the longer text wins)
+1/16	sixteenth
 1/8.	dotted eighth
 1/8	eighth
 1/4.	dotted quarter
 1/4	quarter
+1/2.	dotted half
 1/2	half
+# (format 34) the sirens' Depth
+# st	# semitones
 5 S	5 seconds
 NOT SAVED FLASH ERROR	not saved: flash error
 THE ROOT STAYS (SETUP)	not removed: the root stays. Change it on the setup page

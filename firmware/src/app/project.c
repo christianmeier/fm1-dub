@@ -3,7 +3,7 @@
  * defaults. Part of the unity build, after app.h.
  *
  * The pieces (their recipes are the engine's, en_piece): each keeps its own settings as you leave it;
- * Tune, MIDI out and Song mode are global. */
+ * Tune, MIDI out and Song mode are global; so are the dub sirens' knobs (format 34). */
 project_t proj;
 app_scratch_t app_scratch;
 
@@ -396,6 +396,24 @@ static void keep(void)                           /* the piece playing, into its 
     proj.slot[proj.piece].pings_ok = 1;
 }
 
+static void sir_defaults(void)                   /* (format 34) the sirens' knobs as the sirens were before them */
+{
+    int s, k;
+    for (s = 0; s < EN_NSIR; s++)
+        for (k = 0; k < EN_NSK; k++)
+            proj.sir[s][k] = (int8_t)en_sir_def(s, k);
+}
+static void sir_clamp(void)                      /* (a value past its range: to its end) */
+{
+    int s, k, lo, hi;
+    for (s = 0; s < EN_NSIR; s++)
+        for (k = 0; k < EN_NSK; k++) {
+            en_sir_range(s, k, &lo, &hi);
+            if (proj.sir[s][k] < lo || proj.sir[s][k] > hi)
+                proj.sir[s][k] = (int8_t)(proj.sir[s][k] < lo ? lo : hi);
+        }
+}
+
 void project_defaults(void)
 {
     int i;
@@ -409,6 +427,7 @@ void project_defaults(void)
         proj.par[i] = en_param_info(i)->def;
     take(&proj.slot[0]);
     proj.leds = 1;
+    sir_defaults();
 }
 
 static int pool_ok(uint32_t p)                   /* the root and at least two more notes */
@@ -894,10 +913,12 @@ int project_load(void)
 {
     project_t *const pbuf = &app_scratch.load;   /* (the boot's buffer, lent by the scratch: app.h) */
     int n, old = 0, i, old30 = 0, old31 = 0;
+    uint32_t fmt_in;                             /* (format 34: the save's own format, for the sirens' knobs) */
     uint8_t fresh[NPIECES];                      /* (a piece never changed: today's recipe) */
     memset(fresh, 0, sizeof fresh);
     memset(pbuf, 0, sizeof *pbuf);
     n = plat_store_load(OBJ_PROJ, pbuf, sizeof *pbuf);
+    fmt_in = n >= 8 && pbuf->magic == PROJ_MAGIC ? pbuf->format : 0u;
     if (n >= 8 && pbuf->magic == PROJ_MAGIC && pbuf->format == 8u && n >= (int)sizeof(project8_t)) {
         for (i = 0; i < NPIECES; i++) {
             const project8_t *o = (const project8_t *)(const void *)pbuf;
@@ -1046,6 +1067,9 @@ int project_load(void)
                 fresh[i] = (uint8_t)untouched_now(&proj.slot[i], i);
             proj.format = PROJ_FORMAT;
         }
+        if (n >= 8 && proj.magic == PROJ_MAGIC && proj.format == 32u)   /* (32: today's layout, the sirens' knobs
+                                                  * after it unsaved: their defaults, below) */
+            proj.format = PROJ_FORMAT;
         if (old30 && proj.rsv[0] != PROJ_WAVE_MARK) {
             /* (a step 2 test build's, zzo's or zzp's: the LFOs' Shape in the Wave's slots; the Shape Wander, the
              * wander alone, Wave 0, the waves half each, 50; a piece never changed, known by that build's recipe,
@@ -1166,6 +1190,10 @@ int project_load(void)
                     take(&proj.slot[i]);
             }
     }
+    if (fmt_in < 34u)                            /* (before 34: no sirens' knobs saved, whatever the layout: theirs as
+                                                  * the sirens were) */
+        sir_defaults();
+    sir_clamp();
     if (n >= 8 && project_valid())
         return 0;
     project_defaults();
@@ -1201,6 +1229,8 @@ void project_apply(void)                         /* (then en_regrow keeps the pi
     const slot_t *s = &proj.slot[proj.piece];
     for (i = 0; i < P_NPARAMS; i++)
         en_set(i, proj.par[i]);
+    for (i = 0; i < EN_NSIR * EN_NSK; i++)       /* (format 34: the sirens' knobs, global) */
+        en_sir_set(i / EN_NSK, i % EN_NSK, proj.sir[i / EN_NSK][i % EN_NSK]);
     en_pool(proj.pool);
     en_pings(s->pings_ok ? s->pings : 0);
 }

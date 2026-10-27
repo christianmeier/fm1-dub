@@ -12,7 +12,7 @@
  *   SEL            the ARRANGEMENT page (PERFORM's that was): the keys mute (white 1-6; held, a part's channel
  *                  strip), solo (black 1-5: the chord, pings, bass, hats, kick; held, that part thrown into the
  *                  echo) and, held, make the dub moves (white 9-12) and four effects (white 13-16; white 7-8 the gap);
- *                  black 8-11 the dub sirens (a tap a short one, held a slow one); the knobs Width, Wet, Duck; the
+ *                  black 8-11 the dub sirens (a tap a short one, held a slow one, its knobs on the knobs); the knobs Width, Wet, Duck; the
  *                  screen the parts' meters
  *   SELECT         the DJ filter, on every page (1.4.0; with HOME held: the tempo)   ALGORITHM the voice, the walk
  *                  (Chords), the noise's character, else the screen   PRESETS the piece
@@ -29,12 +29,13 @@
  * pages, the layer's button pressed again) */
 enum { V_DUB, V_CHORD, V_TEXTURE, V_BASS, V_DRUMS, V_SPACE, V_SETUP, NPAGES, V_MIX = NPAGES, V_CSND, V_PSND, V_BSND,
        V_DSND, V_CFM, V_PFM, V_BFM, V_CHORDS, V_PAT, V_PERF, V_KEY, V_NSND, V_ESND, V_NSND2, V_CLFO, V_NLFO, V_HATS, V_NVOX,
-       V_STRIP, V_SONG, V_SMODE, V_WALK, NVIEWS };
+       V_STRIP, V_SONG, V_SMODE, V_WALK, V_SIREN, NVIEWS };
 /* (V_PERF: PERFORM's knobs, the Arrangement page; V_STRIP a part's white key held (V_MIX, white 6 held, gone).
  * V_SONG (1.4.0, the user's: song structure): HOME again, the piece's song (its Intro, Main, Outro, Kind), HOME's
  * second; V_SMODE: GLO again, Song mode (Endless, Song, Set), the Setup page's second (the player's, as Tune).
  * V_WALK (1.4.0, the user's): EDIT again, the Chords page's second: the circle of fifths, the walk's character and
- * Change. V_KEY: HOME again, the key and the tempo, the Form page's second. V_CLFO, V_NLFO (1.4.0): the chord's LFO, ENV a fourth time (after its FM page), and
+ * Change. V_SIREN (format 34, the user's): a siren's key held in the Arrangement page, that siren's knobs (sir_page),
+ * till it's let go. V_KEY: HOME again, the key and the tempo, the Form page's second. V_CLFO, V_NLFO (1.4.0): the chord's LFO, ENV a fourth time (after its FM page), and
  * the noise's, SAVE a third time; for now, till the big redesign) */
 /* (1.4.0, the user's: the names; the identifiers kept: V_DUB the Form page, HOME's; V_SPACE the Dub page, FX's, the echo
  * and the plate; V_PERF the Arrangement page, SEL's, PERFORM's that was. The layers' pages: each its part, then its
@@ -43,11 +44,11 @@ static const char *const VIEW_NAME[NVIEWS] = {"Form", "Chord", "Pings", "Bass", 
                                               "Chord voice", "Pings voice", "Bass voice", "Kick",
                                               "Chord FM", "Pings FM", "Bass FM", "Chords", "Pattern", "Arrangement", "Key", "Noise",
                                               "Echo", "Noise space", "Chord LFO", "Noise LFO", "Hats", "Noise voice",
-                                              "Strip", "Song", "Song mode", "Walk"};
+                                              "Strip", "Song", "Song mode", "Walk", "Siren"};
 #define B_NONE 0xFFu
 static const uint8_t VIEW_BTN[NVIEWS] = {B_HOME, B_ENV, B_ARP, B_LFO, B_SEQ, B_FX, B_GLO, B_NONE, B_NONE, B_NONE, B_NONE,
                                          B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_SAVE, B_NONE, B_NONE,
-                                         B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE};
+                                         B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE, B_NONE};
 /* HOME's screen views (the stored numbers; 3 and 4 gone, 1.4.0): ui_screen_ok */
 enum { SCR_RIPPLES = 0, SCR_SCOPE = 1, SCR_SPEC = 2, SCR_TAPE = 5 };
 #define SCR_N 4
@@ -65,6 +66,7 @@ static int noise_page(int v) { return v == V_NSND || v == V_NVOX || v == V_NSND2
  * the rim and the clap), the noise: white 1-6, the meters' rows; the user's: the kick and the hats apart, the noise its
  * own key) */
 static uint8_t strip_part;
+static uint8_t sir_page;                         /* (format 34) the siren its page shows (EN_SIR_*) */
 #define NSTRIP 6
 static const char *const STRIP_NAME[NSTRIP] = {"Chord", "Pings", "Bass", "Kick", "Hats", "Noise"};
 static int layer_of(int v) { v = parent_of(v) >= 0 ? parent_of(v) : v; return v == V_CHORD ? 0 : v == V_TEXTURE ? 1 : v == V_BASS ? 2 : 3; }
@@ -153,8 +155,11 @@ enum { K_LEDS = 200, K_CPU, K_NONE, K_SLOT, K_CQ, K_CX,    /* (the Chords page: 
        K_WALK,                                               /* (1.4.0, the Walk page: the walk's character, P_PMODE's
                                                               * bits 0-1: Home, Wander, Free) */
        K_SAVE,                                               /* (Setup: a turn saves; it shows whether it's saved) */
-       K_VALUES };                                           /* (1.4.0, the user's: the knobs' numbers, Peek or Always:
+       K_VALUES,                                             /* (1.4.0, the user's: the knobs' numbers, Peek or Always:
                                                               * proj.values, global) */
+       K_SPITCH, K_SRATE, K_SDEPTH, K_SECHO };               /* (format 34, the user's) the siren page's: the siren held's
+                                                              * (sir_page) Pitch, Rate, Depth, Echo (EN_SK_*'s order;
+                                                              * proj.sir, global) */
 static const char *const LANE_NAME[EN_NDRUM] = {"Kick", "Shaker", "Open", "Rim", "Clap"};
 _Static_assert(P_NPARAMS <= K_LEDS, "the knobs' own codes must come after the parameters");
 static const uint16_t VIEW_KNOB[NVIEWS][4] = {
@@ -209,6 +214,7 @@ static const uint16_t VIEW_KNOB[NVIEWS][4] = {
                                                   * knobs' numbers, Values) */
     {K_WALK, P_DRIFT, K_NONE, K_NONE},           /* (1.4.0, the user's) the Walk page: EDIT again; the walk's character
                                                   * (also on ALGORITHM, as ever) and Change, the Chord page's too */
+    {K_SPITCH, K_SRATE, K_SDEPTH, K_SECHO},      /* (format 34, the user's) a siren's page: its key held */
 };
 static const uint16_t STRIP_PAR[NSTRIP][4] = {
     {P_CHORD, P_CECHO, P_CPLATE, P_CLOW}, {P_PINGS, P_PECHO, P_PPLATE, P_PLOW}, {P_BASS, P_BECHO, P_BPLATE, P_BLOW},
@@ -234,11 +240,13 @@ static void page_pos(int v, int *n, int *m)     /* (1.4.0, the user's) a page's 
             }
     *n = *m = 1;
 }
-static const char *view_name(int v)              /* a page's name (a strip's: its part's, "Chord strip") */
+static const char *view_name(int v)              /* a page's name (a strip's: its part's, "Chord strip"; a siren's, "Wail
+                                                  * siren") */
 {
     static const char *const SN[NSTRIP] = {"Chord strip", "Pings strip", "Bass strip", "Kick strip", "Hats strip",
                                            "Noise strip"};
-    return v == V_STRIP ? SN[strip_part] : VIEW_NAME[v];
+    static const char *const RN[EN_NSIR] = {"Wail siren", "Whoop siren", "Hi-lo siren", "Laser siren"};
+    return v == V_STRIP ? SN[strip_part] : v == V_SIREN ? RN[sir_page % EN_NSIR] : VIEW_NAME[v];
 }
 static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Energy", "Vary", "Motion", "Drift"},
@@ -271,6 +279,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Intro", "Main", "Outro", "Kind"},
     {"Mode", "Values", "", ""},
     {"Walk", "Change", "", ""},
+    {"Pitch", "Rate", "Depth", "Echo"},
 };
 /* what each knob does, a line: under the big ring in the middle while it's being turned (each fits 228 px: the
  * host's expect helpfit) */
@@ -326,6 +335,18 @@ static const char *const KNOB_HELP[NVIEWS][4] = {
      "Ambient first, or the kick and the bass"},
     {"Endless, a song, or a set of the pieces", "The knobs' numbers: shown a moment, or always", "", ""},
     {"Home, Wander or Free: how far it roams", "How long a chord lasts", "", ""},
+    {"Up or down an octave", "How fast it goes round", "How far its pitch swings", "Into the echo; past half, repeats stack"},
+};
+/* (format 34) the siren page's help, each siren its own (the big ring's, as KNOB_HELP's) */
+static const char *const SIR_HELP[EN_NSIR][4] = {
+    {"Up or down an octave, on the key's notes", "One wail held, a note value (4 bars)",
+     "Its top, on the key's notes (an octave)", "Into the echo; past half, repeats stack"},
+    {"Up or down an octave, free: tune it by ear", "Whoops a second (a box's: 2.5)",
+     "How far each whoop rises (an octave)", "Into the echo; past half, repeats stack"},
+    {"Up or down an octave, on the key's notes", "One swap held, a note value (a quarter)",
+     "Its other note, on the key's notes (the fifth)", "Into the echo; past half, repeats stack"},
+    {"Where it lands, on the key's notes", "The warble, a second (6)", "How far it falls (two octaves)",
+     "Into the echo; past half, repeats stack"},
 };
 
 /* the screen's colours: a dark room, as a dub techno sleeve (grey on black, a cold blue). The chord and
@@ -606,11 +627,15 @@ static int knob_get(int k)
         return ui.dirty ? 1 : 0;
     if (k == K_VALUES)
         return proj.values ? 1 : 0;
+    if (k >= K_SPITCH && k <= K_SECHO)          /* (format 34: as it plays: the tuned ones on the key's notes) */
+        return en_sir_eff(sir_page, k - K_SPITCH, proj.sir[sir_page % EN_NSIR][k - K_SPITCH]);
     return 0;
 }
 static void knob_range(int k, int *lo, int *hi)
 {
-    if (k < P_NPARAMS) {
+    if (k >= K_SPITCH && k <= K_SECHO) {
+        en_sir_range(sir_page, k - K_SPITCH, lo, hi);
+    } else if (k < P_NPARAMS) {
         *lo = en_param_info(k)->lo;
         *hi = en_param_info(k)->hi;
     } else if (k >= K_FILTER && k <= K_SPACE) {
@@ -628,7 +653,8 @@ static const char *knob_name(int k)
         return en_param_info(k)->name;
     return k == K_LEDS ? "Lights" : k == K_CPU ? "CPU" : k == K_SLOT ? "Slot" : k == K_CQ ? "Chord" : k == K_CX ? "Type"
          : k == K_LANE ? "Lane" : k == K_LCH ? "Chance" : k == K_FILTER ? "Filter" : k == K_DUB ? "Wet"
-         : k == K_ENERGY ? "Energy" : k == K_SPACE ? "Duck" : k == K_MODE ? "Mode" : k == K_KSHAPE ? "Kick" : k == K_PLAY ? "Play" : k == K_WALK ? "Walk" : k == K_SAVE ? "Save" : k == K_VALUES ? "Values" : "";
+         : k == K_ENERGY ? "Energy" : k == K_SPACE ? "Duck" : k == K_MODE ? "Mode" : k == K_KSHAPE ? "Kick" : k == K_PLAY ? "Play" : k == K_WALK ? "Walk" : k == K_SAVE ? "Save" : k == K_VALUES ? "Values"
+         : k == K_SPITCH ? "Pitch" : k == K_SRATE ? "Rate" : k == K_SDEPTH ? "Depth" : k == K_SECHO ? "Echo" : "";
 }
 static void knob_text(int k, char *b)
 {
@@ -699,6 +725,8 @@ static void knob_text(int k, char *b)
         const char *n = v ? "Always" : "Peek";
         while ((*b++ = *n++))
             ;
+    } else if (k >= K_SPITCH && k <= K_SECHO) {   /* (format 34: "+3", "1/8", "2.5 Hz", "12 st", "70") */
+        en_sir_text(sir_page, k - K_SPITCH, v, b);
     } else {
         b[0] = 0;
     }
@@ -733,6 +761,21 @@ static void knob_set(int k, int v)
         proj.leds = (uint8_t)v;
     } else if (k == K_VALUES) {
         proj.values = (uint8_t)v;
+    } else if (k >= K_SPITCH && k <= K_SECHO) {   /* (format 34) the siren held's: kept for its next tap or hold, saved;
+                                                  * the tuned ones' Pitch and Depth a note of the key a click (not past
+                                                  * 0: the notch) */
+        const int sk = k - K_SPITCH, was = knob_get(k);
+        int d = v - was, n = was;
+        while (d) {
+            const int m = en_sir_step(sir_page, sk, n, d > 0 ? 1 : -1);
+            if ((was > 0 && m < 0) || (was < 0 && m > 0) || m == n) {
+                n = (was > 0 && m < 0) || (was < 0 && m > 0) ? 0 : n;
+                break;
+            }
+            n = m, d += d > 0 ? -1 : 1;
+        }
+        proj.sir[sir_page % EN_NSIR][sk] = (int8_t)n;
+        en_sir_set(sir_page, sk, n);
     } else if (k == K_SLOT) {
         ui.slot = (uint8_t)v;
         return;                                  /* (only where the page looks: nothing saved) */
@@ -919,7 +962,9 @@ static void set_piece(int i)                    /* the piece playing kept as it 
  *   black 8-11   (the user's) the dub sirens, one voice (a new one takes over), tuned to the key, into the echo:
  *                Wail (A#4), Whoop (C#5), Hi-lo (D#5), Laser (F#5). A tap: a short one, about a bar, played to its
  *                end; held past a third of a second: the slow one, from where it is, looping till let go (then it
- *                fades, the echo ringing on). Wail and Whoop follow the tempo, Hi-lo and Laser don't
+ *                fades, the echo ringing on). Wail and Hi-lo follow the tempo, Whoop and the Laser don't; Whoop
+ *                out of tune (a box's). (Format 34) held, its own page (V_SIREN): the knobs its Pitch, Rate, Depth
+ *                and Echo while held, kept for its next tap or hold (proj.sir)
  * Each key that does something is lit: a part while it sounds, a solo (blinking while on), a move, an effect, a
  * throw, a siren (dark while held, or sounding). The rest do nothing (F#4, G#4: unlit); MIDI notes in still change
  * the scale */
@@ -949,10 +994,10 @@ static const char *const PERF_THRWHAT[PERF_NB] = {"every stab into the echo", "t
 #define PERF_NS 4                                /* (the user's) the dub sirens: black 8-11 (EN_SIR_*'s order) */
 static const uint8_t PERF_SKEY[PERF_NS] = {17, 20, 22, 25};   /* (A#4, C#5, D#5, F#5) */
 static const char *const PERF_SNAME[PERF_NS] = {"WAIL", "WHOOP", "HI-LO", "LASER"};
-static const char *const PERF_STAP[PERF_NS] = {"one bar", "four whoops, a bar", "two seconds of swaps",
-                                               "one drop"};
-static const char *const PERF_SHOLD[PERF_NS] = {"held: every 4 bars", "held: a bar each, rising",
-                                                "held: slow swaps, rising", "held: a slow fall, again"};
+static const char *const PERF_STAP[PERF_NS] = {"one bar", "a burst of whoops", "a bar of swaps", "one drop"};
+static const char *const PERF_SHOLD[PERF_NS] = {"held: slow wails", "held: whoops, on and on",
+                                                "held: slow swaps, rising", "held: a slow fall, again"};   /* (format
+                                                  * 34: their rates the knobs') */
 static void perf_mutes(void)                     /* to the engine: the mutes, and with a solo, all but it */
 {
     en_mute(ui.mutes | (ui.solo ? 0x3Fu & ~ui.solo : 0u));
@@ -1011,6 +1056,8 @@ static void perf_siren(int s, int down)          /* a siren's key: the short one
                                                   * let go: a held one fades, a tap's plays to its end */
 {
     if (down) {
+        if (ui.view == V_SIREN)                  /* (format 34: another takes over; its page, if held, its own) */
+            set_view(V_PERF);
         ui.skey = (uint8_t)(s + 1);
         ui.skey_t = plat_ms();
         ui.skey_hold = 0;
@@ -1024,6 +1071,8 @@ static void perf_siren(int s, int down)          /* a siren's key: the short one
     if (ui.skey_hold)
         en_siren(s, EN_SIR_OFF);
     ui.skey = 0, ui.skey_hold = 0;
+    if (ui.view == V_SIREN)                      /* (format 34: its page gone, back to the Arrangement's) */
+        set_view(V_PERF);
 }
 static void perf_key(uint32_t key, int down)
 {
@@ -1121,7 +1170,14 @@ static void strip_tick(void)                     /* a part's key held long enoug
         ui.skey_hold = 1;
         en_siren(s, EN_SIR_HOLD);
         say(PERF_SNAME[s], "HELD");
-        card_show(PERF_SNAME[s], PERF_SHOLD[s], K_FROST, 0);
+        if (ui.view == V_PERF || ui.view == V_SIREN) {   /* (format 34, the user's) its page: the knobs ride it till
+                                                  * it's let go (a strip open stays; the page itself says it: no card) */
+            sir_page = (uint8_t)s;
+            set_view(V_SIREN);
+            ui.card_until = 0;
+        } else {
+            card_show(PERF_SNAME[s], PERF_SHOLD[s], K_FROST, 0);
+        }
     }
     if (ui.strip_key && ui.perf && ui.view == V_PERF && plat_ms() - ui.strip_t >= STRIP_HOLD)
         strip_open();
@@ -1134,7 +1190,7 @@ static void perf_set(int on)                     /* on: the mixer on the knobs; 
 {
     ui.perf = (uint8_t)on;
     if (on) {
-        if (ui.view != V_PERF && ui.view != V_STRIP)
+        if (ui.view != V_PERF && ui.view != V_STRIP && ui.view != V_SIREN)
             ui.perf_from = ui.view;
         set_view(V_PERF);
     } else {
@@ -1153,7 +1209,7 @@ static void perf_set(int on)                     /* on: the mixer on the knobs; 
                 en_siren(ui.skey - 1, EN_SIR_OFF);
             ui.skey = 0, ui.skey_hold = 0;
         }
-        if (ui.view == V_PERF || ui.view == V_STRIP)
+        if (ui.view == V_PERF || ui.view == V_STRIP || ui.view == V_SIREN)
             set_view(ui.perf_from);
     }
     if (ann_on()) {                              /* (1.4.0, the user's: not on the screen, the page itself shows it; the
@@ -1401,7 +1457,7 @@ static void button(int b)
                                                   * SELECT leaves it) */
         if (!ui.perf)
             perf_set(1);
-        else if (ui.view == V_STRIP)
+        else if (ui.view == V_STRIP || ui.view == V_SIREN)
             set_view(V_PERF);
         break;
     case B_EDIT:                                 /* (its release: edit_released, in input) */
@@ -1998,6 +2054,10 @@ static void input(void)
                 {
                     char sn[24];                 /* (a strip's: its part's name first, "CHORD ECHO") */
                     const char *nm = KNOB_LABEL[ui.view][i];
+                    if (ui.view == V_SIREN) {    /* (format 34: a siren's, its own help, in its red) */
+                        big_show_help(k, nm, K_FROST, SIR_HELP[sir_page % EN_NSIR][i]);
+                        goto shown;
+                    }
                     if (ui.view == V_STRIP) {
                         int a = 0, b = 0;
                         while (STRIP_NAME[strip_part][a])
@@ -2011,6 +2071,7 @@ static void input(void)
                     big_show_help(k, nm, l >= 0 ? LC[l] : K_ACC, KNOB_HELP[ui.view][i]);
                 }
             }
+        shown:
             ui.touched = (int8_t)i;
             ui.touch_until = plat_ms() + 1200u;
             ui.act_t = ui.turn_t = plat_ms();
@@ -4602,7 +4663,7 @@ static void draw_main(void)
         }
         return;
     }
-    if (ui.view == V_PERF || ui.view == V_STRIP) {   /* (1.4.0) the Arrangement page: the meters */
+    if (ui.view == V_PERF || ui.view == V_STRIP || ui.view == V_SIREN) {   /* (1.4.0) the Arrangement page: the meters */
         h = hash(where_sig(hash(desk_sig(), ui.view)), (uint32_t)card_on(now) | (uint32_t)big_on(now) << 1 |
                  (en_phrase_bar == 7 && en_change_next ? (now / 200u & 1u) << 2 : 0u) | (uint32_t)en_drift_bars(proj.par[P_DRIFT]) << 3);
         if (h != ui.sig[1] || big_on(now) || card_on(now)) {
@@ -4910,6 +4971,8 @@ static void draw_knobs(void)
                                                   * LFO pages' rule) */
     if (ui.view == V_STRIP)
         h = hash(h, strip_part);
+    if (ui.view == V_SIREN)
+        h = hash(h, sir_page);
     int now_touch = plat_ms() < ui.touch_until;
     for (i = 0; i < 4; i++) {
         h = hash(h, (uint32_t)knob_get(vknob(ui.view, i)));
@@ -4957,7 +5020,14 @@ static void draw_knobs(void)
             }
             caps(t, vn, sizeof t);
         }
-        {
+        if (ui.view == V_SIREN) {                /* (format 34, the user's: "SIREN · WAIL", the dot drawn: the font has
+                                                  * none) */
+            caps(pn, EN_SIR_NAME[sir_page % EN_NSIR], sizeof pn);
+            xl = cv_text(6, 1, &FONT_XS, "SIREN", K_ACC);
+            cv_rect(xl + 3, 6, 2, 2, K_ACC);
+            xl = cv_text(xl + 8, 1, &FONT_XS, pn, K_ACC) + 5;
+            cv_rect(xl, 7, 234 - xl, 1, K_LINE);
+        } else {
             xl = cv_text(6, 1, &FONT_XS, pn, K_ACC);   /* (1.4.0, the user's: 2 px more above and below) */
             page_pos(ui.view, &n, &m);
             if (m > 1) {
@@ -4985,7 +5055,8 @@ static void draw_knobs(void)
         int32_t x = (int32_t)i * 60, cx = x + 30;
         char t[16];
         static const uint16_t STC[NSTRIP] = {K_PAD, K_BELL, K_BASS, K_PULSE, K_TEXT, K_NOISE};   /* (a strip: its part's) */
-        uint16_t bg = hot ? K_PANEL : K_BG, fill = off ? K_LINE : ui.view == V_STRIP ? STC[strip_part] : hot ? K_ACC : K_PAD;
+        uint16_t bg = hot ? K_PANEL : K_BG, fill = off ? K_LINE : ui.view == V_STRIP ? STC[strip_part] : ui.view == V_SIREN ? K_FROST
+                                                                                                   : hot ? K_ACC : K_PAD;
         if (k == K_NONE && KNOB_LABEL[ui.view][i][0]) {   /* (1.4.0: a knob to come: its name greyed, its ring empty) */
             caps(t, KNOB_LABEL[ui.view][i], sizeof t);
             if (i)
@@ -5484,17 +5555,20 @@ static void speak_dump(void)
     uint8_t keep_ext = en_ext, keep_frozen = en_frozen, keep_rest = en_pulse_rest, keep_sec = en_section;
     int v, i, x, lo, hi;
     char t[48];
-    for (v = 0; v < NVIEWS; v++) {
-        ui.view = (uint8_t)v;
+    for (v = 0; v < NVIEWS + EN_NSIR - 1; v++) {   /* (the siren page once a siren: past NVIEWS, the others) */
+        ui.view = (uint8_t)(v < NVIEWS ? v : V_SIREN);
+        sir_page = (uint8_t)(v < NVIEWS ? 0 : v - NVIEWS + 1);
         sp_page(0);
         sp_print("SCREEN", sp_buf);
         for (i = 0; i < 4; i++) {
-            int k = vknob(v, i);
+            int k = vknob(ui.view, i);
             if (k == K_NONE)
                 continue;
             knob_range(k, &lo, &hi);
             for (x = lo; x <= hi; x++) {
-                if (k < P_NPARAMS)
+                if (k >= K_SPITCH && k <= K_SECHO)
+                    proj.sir[sir_page][k - K_SPITCH] = (int8_t)x;
+                else if (k < P_NPARAMS)
                     proj.par[k] = (int16_t)x;
                 else if (k == K_SLOT)
                     ui.slot = (uint8_t)x;
@@ -5507,7 +5581,7 @@ static void speak_dump(void)
                 else
                     proj.leds = (uint8_t)x;
                 sp_n = 0;
-                sp_knob(v, i);
+                sp_knob(ui.view, i);
                 sp_print("KNOB", sp_buf);
             }
             proj = keep;
@@ -5529,6 +5603,7 @@ static void speak_dump(void)
         sp_print("WHERE", sp_buf);
     }
     proj = keep;
+    sir_page = 0;
     ui.dirty = keep_dirty;
     sp_tp.playing = keep_play;
     en_ext = keep_ext;

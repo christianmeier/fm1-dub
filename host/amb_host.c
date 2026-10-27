@@ -29,6 +29,8 @@
  *   storefile PATH               a saved project from a file (tests/host/proj-*.bin)
  *   store30s                     save it as step 2's test builds did (zzo, zzp: format 30, the LFOs' Shape, Sine
  *                                or Wander, in the Wave's slots, no layout B mark)
+ *   store32                      save it as the variety plan's step 4 did (format 32: today's layout without the
+ *                                sirens' knobs, proj.sir: its bytes not written)
  *   store31                      save it as the variety plan's step 3 did (format 31: Stabs 0..100, Hits, the
  *                                Densities, the Tones, the noise's Decay, the echo's Tone and Attack as they were)
  *   store30 [MIXER]              save it as the variety plan's step 2 did (format 30: Motion and the Mixer in their
@@ -523,6 +525,12 @@ static int expect(const char *what, const char *val)
         got = (int)(lit_keys >> (atoi(what + 6) % 27) & 1u);
     else if (!strcmp(what, "sirenon"))            /* (1.4.0) the dub siren sounding (its gate open): EN_SIR_* + 1, 0 none */
         got = (int)en_sir_on;
+    else if (!strncmp(what, "sirk", 4))           /* (format 34) sirkN: siren N / 4's knob N % 4 as saved (proj.sir) */
+        got = proj.sir[atoi(what + 4) / EN_NSK % EN_NSIR][atoi(what + 4) % EN_NSK];
+    else if (!strcmp(what, "sirpage"))            /* (format 34) the siren the siren page shows (EN_SIR_*) */
+        got = sir_page;
+    else if (!strcmp(what, "sirhz"))              /* (format 34) the siren's pitch now, Hz (rounded) */
+        got = (int)(en_sir_hz + 0.5f);
     else if (!strcmp(what, "mutes"))              /* the layers muted (EN_M_*: 1 chord .. 16 hats, 32 noise) */
         got = (int)ui.mutes;
     else if (!strcmp(what, "scopepk")) {          /* the scope's buffer, its peak (the page's layer alone, or the whole) */
@@ -539,6 +547,12 @@ static int expect(const char *what, const char *val)
             for (k = 0; k < 4; k++) {
                 char a2[48], b2[48];
                 caps(hp, KNOB_HELP[v][k], sizeof hp);
+                if (v == V_SIREN) {                  /* (format 34: each siren its own help) */
+                    int r;
+                    for (r = 0; r < EN_NSIR; r++)
+                        if (!help_lines(SIR_HELP[r][k], a2, b2, (int)sizeof a2))
+                            printf("  too wide: %s\n", SIR_HELP[r][k]), got++;
+                }
                 if (v == V_CHORDS || v == V_PAT) {   /* (no big ring there: the help on the rule, in capitals) */
                     if (text_w(&FONT_XS, hp) > 222 || strlen(KNOB_HELP[v][k]) >= sizeof hp)
                         printf("  too wide: %s\n", hp), got++;
@@ -1055,6 +1069,14 @@ int main(int argc, char **argv)
                 o.slot[i].par[P_NLWAVE] = (int16_t)(o.slot[i].par[P_NLWAVE] ? 0 : 4);
             }
             plat_store_save(OBJ_PROJ, &o, sizeof o);
+        } else if (!strcmp(cmd, "store32")) {    /* (format 34) the project as step 4 saved it (32: today's layout
+                                                  * without the sirens' knobs at its end) */
+            static project_t o;
+            keep();
+            o = proj;
+            o.format = 32u;
+            o.rsv[0] = PROJ_WAVE_MARK;
+            plat_store_save(OBJ_PROJ, &o, sizeof o - sizeof o.sir);
         } else if (!strcmp(cmd, "store31")) {    /* the project as the variety plan's step 3 saved it (31: today's
                                                   * layout, the knobs with dead steps in their old meaning) */
             static project_t o;

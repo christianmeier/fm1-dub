@@ -8,7 +8,8 @@
  * NAME=V@T sets it at T seconds instead; fx=N@T0-T1 holds the effects grid's effect N (0..15) from T0 to T1; outro=T asks
  * for the outro at T seconds (HOME held + PLAY; a song: Song_mode=1 Intro=2 Main=4 Outro=2, in phrases); siren=S@T taps
  * PERFORM's dub siren S (0 Wail, 1 Whoop, 2 Hi-lo, 3 Laser) at T, siren=S@T0-T1 holds it (its key down at T0, the hold a
- * third of a second on, let go at T1); sirlog=FILE writes the siren's pitch each block (s, on, semitones, Hz); log prints each
+ * third of a second on, let go at T1); sirknob=S:K:V sets siren S's knob K (0 Pitch, 1 Rate, 2 Depth, 3 Echo: amb.h
+ * EN_SK_*) to V, sirknob=S:K:V0:V1@T0-T1 sweeps it from V0 to V1 over T0..T1 (a step a block); sirlog=FILE writes the siren's pitch each block (s, on, semitones, Hz); log prints each
  * bar's section and stabs, the song's place, the kick's and the hats' lanes, and the chord as it moves.
  *   cc -O2 -ffp-contract=off -DEN_HOST -Ifirmware/src/dsp -o build/host/en_render host/en_render.c \
  *      firmware/src/dsp/amb.c -lm */
@@ -52,6 +53,8 @@ int main(int argc, char **argv)
     double sr0[16], sr1[16];
     int nsr = 0, srn[16], srs[16];
     FILE *slog = 0;
+    int nsk = 0, skn[16][2], skv[16][2], skl[16];
+    double skt[16][2];
     uint32_t fxwas = 0;
     unsigned seed = 0;
     struct { double t; int p, v; } ev[64];
@@ -83,6 +86,15 @@ int main(int argc, char **argv)
             sr1[nsr] = -1;
             sscanf(a + 6, "%d@%lf-%lf", &srn[nsr], &sr0[nsr], &sr1[nsr]);
             srs[nsr++] = 0;
+        } else if (!strncmp(a, "sirknob=", 8) && nsk < 16) {
+            skt[nsk][0] = skt[nsk][1] = -1, skl[nsk] = -999;
+            if (sscanf(a + 8, "%d:%d:%d:%d@%lf-%lf", &skn[nsk][0], &skn[nsk][1], &skv[nsk][0], &skv[nsk][1], &skt[nsk][0],
+                       &skt[nsk][1]) < 6) {
+                sscanf(a + 8, "%d:%d:%d", &skn[nsk][0], &skn[nsk][1], &skv[nsk][0]);
+                en_sir_set(skn[nsk][0], skn[nsk][1], skv[nsk][0]);
+            } else {
+                nsk++;
+            }
         } else if (!strncmp(a, "sirlog=", 7)) {
             slog = fopen(a + 7, "w");
         } else if (!strncmp(a, "outro=", 6)) {
@@ -140,6 +152,14 @@ int main(int argc, char **argv)
                 en_set(ev[e].p, ev[e].v);
                 ev[e].t = -1;
             }
+        for (e = 0; e < nsk; e++) {               /* (a knob swept: a step a block, as a hand) */
+            if (t >= skt[e][0]) {
+                const double x = t >= skt[e][1] ? 1.0 : (t - skt[e][0]) / (skt[e][1] - skt[e][0]);
+                const int v = (int)(skv[e][0] + (skv[e][1] - skv[e][0]) * x + (skv[e][1] > skv[e][0] ? 0.5 : -0.5));
+                if (v != skl[e])
+                    en_sir_set(skn[e][0], skn[e][1], skl[e] = v);
+            }
+        }
         for (e = 0; e < nsr; e++) {               /* (the key down: a tap; held a third of a second: the hold; up) */
             if (srs[e] == 0 && t >= sr0[e])
                 en_siren(srn[e], EN_SIR_TAP), srs[e] = 1;
