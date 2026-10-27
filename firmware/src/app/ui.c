@@ -881,9 +881,11 @@ static void turn(int role, int k, int32_t e)
         static int8_t held[16];
         static uint32_t held_t[16];
         int v = knob_get(k), n, r = role & 15;
-        if (v == 0) {                            /* (clicks out of 0 held back, NOTCH of them, one way, close together) */
+        if (v == 0) {                            /* (clicks out of 0 held back, NOTCH of them, one way, within 3 s of
+                                                  * each other: a slow ride, a click a second, leaves it; a stray one
+                                                  * doesn't) */
             int32_t a = e > 0 ? e : -e, dir = e > 0 ? 1 : -1;
-            if (plat_ms() - held_t[r] > 700u || (held[r] > 0) != (dir > 0))
+            if (plat_ms() - held_t[r] > 3000u || (held[r] > 0) != (dir > 0))
                 held[r] = 0;
             held_t[r] = plat_ms();
             while (a > 0 && (held[r] > 0 ? held[r] : -held[r]) < NOTCH)
