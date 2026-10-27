@@ -68,10 +68,14 @@ wait 1500
 shot screen-setup.png
 tap GLO
 wait 300
-spin K1 1
+spin K1 2
+wait 300
+spin K2 2
 wait 1800
 shot screen-song-mode.png
-spin K1 -1
+spin K2 -2
+wait 300
+spin K1 -2
 wait 300
 tap FX
 wait 1500

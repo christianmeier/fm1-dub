@@ -326,6 +326,78 @@ static void png_write(const char *path)
 
 static FILE *wav;
 static uint32_t wav_frames;
+static FILE *tlog;                                       /* (1.4.0: Transition) tlog FILE: the song's state every 50 ms */
+/* (1.4.0: Transition) trwatch: a Set's hand-over watched, from the outro on: the longest stretch under -60 dBFS (250 ms
+ * windows, in ms); the largest sample-to-sample step (the 2nd difference) against the music's RMS around it (x100;
+ * 10 ms either side: a click stands out of its music, a strike's edge doesn't), from the cue to 2 s past the downbeat, a strike's own first 40 ms left out (a drum, a stab, a noise hit); the next piece's downbeats seen without a stop; the sixteenths from
+ * the downbeat to its chord's fader up (0.01), its kick's, its bass's */
+static int trw_on, trw_quiet_ms, trw_run_ms, trw_restarts, trw_click, trw_ch = -1, trw_kick = -1, trw_bass = -1;
+static double trw_acc, trw_sq, trw_x1[2], trw_x2[2];
+#define TRW_N 1024                                /* (a ring of the samples: the step judged 10 ms back, the level
+                                                  * around it, 10 ms either side) */
+static float trw_ring[TRW_N][2];
+static uint32_t trw_w;
+static uint32_t trw_n, trw_bars_was, trw_t_restart, trw_t_cue, trw_onset_t, trw_was[5];
+static void trw_sample(float l, float r)
+{
+    const uint32_t w = trw_w % TRW_N, o = (trw_w + TRW_N - 882u) % TRW_N, m = (trw_w + TRW_N - 441u) % TRW_N;
+    int c;
+    trw_acc += 0.5 * ((double)l * l + (double)r * r);
+    trw_sq += 0.5 * ((double)l * l + (double)r * r) - 0.5 * ((double)trw_ring[o][0] * trw_ring[o][0] +
+                                                         (double)trw_ring[o][1] * trw_ring[o][1]);
+    trw_ring[w][0] = l, trw_ring[w][1] = r;
+    trw_w++;
+    for (c = 0; c < 2; c++) {                     /* (the sample 10 ms back, against the level either side of it) */
+        const double xm = trw_ring[m][c], d2 = fabs(xm - 2.0 * trw_x1[c] + trw_x2[c]),
+                     rms = sqrt((trw_sq > 0.0 ? trw_sq : 0.0) / 882.0);
+        const int in = trw_w > 882u && trw_t_cue && now_ms >= trw_t_cue + 10u &&
+                       (!trw_t_restart || now_ms < trw_t_restart + 2010u) && now_ms > trw_onset_t + 50u;   /* (not a
+                                                  * strike's own edge: a drum, a stab, a noise hit) */
+        if (in && (int)(100.0 * d2 / (rms + 1e-4)) > trw_click)
+            trw_click = (int)(100.0 * d2 / (rms + 1e-4));
+        trw_x2[c] = trw_x1[c], trw_x1[c] = xm;
+    }
+    if (++trw_n >= 11025u) {                      /* (250 ms) */
+        const double db = 10.0 * log10(trw_acc / (double)trw_n + 1e-20);
+        trw_run_ms = db < -60.0 && (en_song_ph >= 3 || trw_t_restart) ? trw_run_ms + 250 : 0;   /* (from the outro) */
+        if (trw_run_ms > trw_quiet_ms)
+            trw_quiet_ms = trw_run_ms;
+        trw_acc = 0.0, trw_n = 0;
+    }
+}
+static void trw_ms(void)                          /* (each ms: the song's place) */
+{
+    if (!trw_on)
+        return;
+    {   /* (a strike heard: its part's fader up; a silent one, a stab under a faded fader, not left out) */
+        const uint32_t now[5] = {en_hits[0], en_hits[1], en_hits[2], en_hits[3], en_hits[4]};   /* (the layers' strikes:
+                                                  * the chord, the pings, the bass, the drums, the noise) */
+        const int heard[5] = {en_fader[0] > 0.001f, en_fader[1] > 0.001f, en_fader[2] > 0.001f,
+                              en_fader[3] > 0.001f || en_fader[4] > 0.001f, en_fader[5] > 0.001f};
+        int k;
+        for (k = 0; k < 5; k++) {
+            if (now[k] != trw_was[k] && heard[k])
+                trw_onset_t = now_ms;
+            trw_was[k] = now[k];
+        }
+    }
+    if (!trw_t_cue && en_tr_cue)
+        trw_t_cue = now_ms;
+    if (en_playing && en_bars < trw_bars_was && trw_t_cue) {
+        trw_restarts++;
+        trw_t_restart = now_ms;
+        trw_ch = trw_kick = trw_bass = -1;
+    }
+    trw_bars_was = en_bars;
+    if (trw_t_restart) {
+        if (trw_ch < 0 && en_fader[0] > 0.01f)
+            trw_ch = (int)en_bars;
+        if (trw_kick < 0 && en_fader[3] > 0.01f)
+            trw_kick = (int)en_bars;
+        if (trw_bass < 0 && en_fader[2] > 0.01f)
+            trw_bass = (int)en_bars;
+    }
+}
 static float peak_out;
 static void wav_open(const char *path)
 {
@@ -436,6 +508,8 @@ static void run_ms(uint32_t ms)
                     peak_out = fabsf(r);
                 s[0] = (int16_t)(l * 32767.0f);
                 s[1] = (int16_t)(r * 32767.0f);
+                if (trw_on)
+                    trw_sample(l, r);
                 if (wav) {
                     fwrite(s, 2, 2, wav);
                     wav_frames++;
@@ -446,6 +520,16 @@ static void run_ms(uint32_t ms)
         if (sim_listen && now_ms % 2000u == 0) {        /* the reader's HELLO, as it sends it */
             static const uint8_t HELLO[] = {ANN_H0, ANN_H1, ANN_H2, ANN_HELLO, ANN_VER};
             ann_frame(HELLO, sizeof HELLO, now_ms);
+        }
+        trw_ms();
+        if (tlog && now_ms % 50u == 0) {                /* ms, wav s, tempo heard, the song's place, bars, the echo, faders,
+                                                         * the piece, the Transition's cue */
+            int f;
+            fprintf(tlog, "%u %.3f %.3f %d %.3f %.1f", now_ms, wav ? (double)wav_frames / 44100.0 : -1.0, (double)en_bpm,
+                    (int)en_song_ph, (double)en_bars / 16.0, (double)en_echo_ms);
+            for (f = 0; f < EN_NPART; f++)
+                fprintf(tlog, " %.4f", (double)en_fader[f]);
+            fprintf(tlog, " %d %d %d %.3f %.1f\n", proj.piece, (int)en_tr_cue, (int)en_playing, (double)en_echo_g, 20.0 * log10((double)en_echo_pk + 1e-9));
         }
         if (ui_off) {
         } else if (now_ms >= ui_due) {
@@ -507,6 +591,24 @@ static int expect(const char *what, const char *val)
         got = proj.screen;
     else if (!strcmp(what, "values"))            /* (1.4.0) the knobs' numbers: 0 Peek, 1 Always (Setup's Values) */
         got = proj.values;
+    else if (!strcmp(what, "trans"))             /* (1.4.0) a Set's Transition: 0 LP, 1 Segue, 2 Mix */
+        got = proj.trans;
+    else if (!strcmp(what, "trcue"))             /* the Transition's cue up (the next piece set under the last bar) */
+        got = en_tr_cue;
+    else if (!strcmp(what, "trquiet"))           /* (trwatch) the longest stretch under -60 dBFS since the outro, ms */
+        got = trw_quiet_ms;
+    else if (!strcmp(what, "trclick"))           /* the largest step against the level around it, x100 (cue .. +2 s) */
+        got = trw_click;
+    else if (!strcmp(what, "trrestarts"))        /* the next piece's downbeats without a stop */
+        got = trw_restarts;
+    else if (!strcmp(what, "trchord"))           /* the next piece's chord in, sixteenths after its downbeat (-1: not yet) */
+        got = trw_ch;
+    else if (!strcmp(what, "trkick"))
+        got = trw_kick;
+    else if (!strcmp(what, "trbass"))
+        got = trw_bass;
+    else if (!strcmp(what, "bpm"))               /* the tempo heard now, rounded (a Mix's glide) */
+        got = (int)(en_bpm + 0.5f);
     else if (!strcmp(what, "peek"))              /* (1.4.0) 1 while a page's knobs show their numbers (a page opened) */
         got = proj.values || plat_ms() < ui.peek_until;
     else if (!strncmp(what, "kbnote", 6)) {       /* kbnoteN: the Chords page keyboard's note N (0..3; 0: the root), MIDI
@@ -546,6 +648,12 @@ static int expect(const char *what, const char *val)
                     printf("  too wide: %s\n", KNOB_HELP[v][k]), got++;
                 }
             }
+        for (k = 0; k <= EN_NTRANS; k++) {          /* (1.4.0: Transition's, a line a choice, and while not Set: one
+                                                   * line of 228 px in the small font) */
+            const char *h = k < EN_NTRANS ? TRANS_HELP[k] : TRANS_OFF;
+            if (text_w(&FONT_XS, h) > 228)
+                printf("  too wide: %s (%d px)\n", h, (int)text_w(&FONT_XS, h)), got++;
+        }
         for (v = 0; v < NKNOB_ZONES; v++)           /* (format 31: the zones' sentences, under the big ring) */
             for (k = 0; k < KNOB_ZONES[v].n; k++) {
                 char a2[48], b2[48];
@@ -813,7 +921,8 @@ int main(int argc, char **argv)
         lineno++;
         if (line[0] == '#' || sscanf(line, "%31s %255s %63s %63s", cmd, a, b, c) < 1)
             continue;
-        st_old = !strncmp(cmd, "store", 5) && strcmp(cmd, "storefile") && strcmp(cmd, "storescreen");
+        st_old = !strncmp(cmd, "store", 5) && strcmp(cmd, "storefile") && strcmp(cmd, "storescreen") &&
+                 strcmp(cmd, "store32");         /* (32: today's meanings, its layout; no Transition) */
         if (st_old) {                            /* (format 31) an older format's store: the pieces' Motion as their
                                                   * recipes had it then, where it's today's */
             keep();
@@ -895,6 +1004,18 @@ int main(int argc, char **argv)
             wav_open(out);
         } else if (!strcmp(cmd, "wavstop"))
             wav_close();
+        else if (!strcmp(cmd, "trwatch")) {      /* (1.4.0) a Set's hand-over watched from here (trquiet, trclick ..) */
+            trw_on = 1, trw_quiet_ms = trw_run_ms = trw_restarts = trw_click = 0, trw_ch = trw_kick = trw_bass = -1;
+            trw_acc = trw_sq = 0.0, trw_n = 0, trw_t_restart = trw_t_cue = 0, trw_bars_was = en_bars, trw_w = 0;
+            memset(trw_ring, 0, sizeof trw_ring);
+        } else if (!strcmp(cmd, "tlog")) {         /* tlog FILE: the song's state every 50 ms (tempo, place, faders) */
+            snprintf(out, sizeof out, "%s/%s", dir, a);
+            tlog = fopen(out, "w");
+        } else if (!strcmp(cmd, "tlogstop")) {
+            if (tlog)
+                fclose(tlog);
+            tlog = 0;
+        }
         else if (!strcmp(cmd, "peakreset"))
             peak_out = 0.0f;
         else if (!strcmp(cmd, "shot")) {
@@ -1054,6 +1175,16 @@ int main(int argc, char **argv)
                 o.slot[i].par[P_CLWAVE] = (int16_t)(o.slot[i].par[P_CLWAVE] ? 0 : 4);
                 o.slot[i].par[P_NLWAVE] = (int16_t)(o.slot[i].par[P_NLWAVE] ? 0 : 4);
             }
+            plat_store_save(OBJ_PROJ, &o, sizeof o);
+        } else if (!strcmp(cmd, "store32")) {    /* (1.4.0) the project as the variety plan's step 4 saved it (32:
+                                                  * today's layout, its last byte room: the Transition's place set
+                                                  * to Mix, to show it read as LP) */
+            static project_t o;
+            keep();
+            o = proj;
+            o.format = 32u;
+            o.rsv[0] = PROJ_WAVE_MARK;
+            o.trans = EN_TR_MIX;
             plat_store_save(OBJ_PROJ, &o, sizeof o);
         } else if (!strcmp(cmd, "store31")) {    /* the project as the variety plan's step 3 saved it (31: today's
                                                   * layout, the knobs with dead steps in their old meaning) */
