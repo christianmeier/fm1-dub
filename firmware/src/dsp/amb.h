@@ -239,6 +239,7 @@ extern volatile uint8_t en_tr_cue;
 extern volatile float en_bpm;                  /* the tempo heard now (a Mix's glide; else Tempo's), for tests and logs */
 extern volatile uint8_t en_song_ph;
 extern volatile uint32_t en_song_b0, en_song_bo, en_song_be;
+extern volatile uint8_t en_song_ask;
 /* (1.4.0) the dub mixer (format 31: its rides Drift's, its moves Motion's) as heard now: each part's level ride (dB, a move out and back in it), its echo and
  * plate sends' (dB); the move under way (0 none, 1 a part out and back, 2 an echo swell); the moves begun and those on
  * a phrase's first bar (for the tests) */

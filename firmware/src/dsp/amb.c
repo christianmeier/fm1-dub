@@ -2127,6 +2127,7 @@ static float song_co, song_wet = 1.0f, song_hits = 1.0f, song_nthr;   /* the cho
 static uint8_t song_thr;                         /* the outro's last bars: every stab thrown */
 volatile uint8_t en_song_ph;
 volatile uint32_t en_song_b0, en_song_bo, en_song_be;
+volatile uint8_t en_song_ask;                    /* (an outro asked by hand, HOME held + PLAY: again, back to the main) */
 /* (1.4.0, the user's) Transition, a Set's hand-over (amb.h): its mode and the next piece's tempo and echo time (tempo
  * 0: none next, it rests); the app's next piece asked (tr_go: set, the cue answered); waiting past the outro for it;
  * a Mix's glide under way (its tempo and echo time from, the echo's beats now: 0 the knob's); a Mix's new piece, its
@@ -2153,7 +2154,7 @@ float en_song_in(int kind, int part) { return SONG_IN[kind ? 1 : 0][(unsigned)pa
 float en_song_out(int part) { return SONG_OUT[(unsigned)part < EN_NPART ? part : 0][0]; }
 static void song_publish(void)
 {
-    en_song_ph = song_ph;
+    en_song_ph = song_ph, en_song_ask = song_ask;
     en_song_b0 = song_b0, en_song_bo = song_bo_on ? song_bo : 0u, en_song_be = song_bo_on ? song_be : 0u;
 }
 static void song_plan(void)                      /* (the main's and the outro's lengths, as the knobs have them now) */
@@ -2316,7 +2317,7 @@ EN_COLD static void song_tick(void)                      /* each sixteenth: the 
          * downbeat): the chord's dry out over 4 bars (a Mix's from 7 bars before the end, a Segue's from 5), its echo
          * send kept and pushed, every stab thrown: the old harmony the echo's alone; from the cue (the outro's last
          * bar, the send cut) the echo's loop held as it is (tr_frz: REC's hold, the tape alone), a Segue's plate
-         * held too; past the downbeat a Segue's held 2 bars (its plate let go over 2 more), a Mix's 1: then the
+         * held too; past the downbeat held 1 bar, a Segue's and a Mix's (a Segue's plate let go over 2 more): then the
          * repeats die as the loop has them, the new piece in the echo again; a Mix's chord no sooner than bar 2 */
         float pl = 0.0f, dry = 1.0f;
         uint8_t fz = 0;

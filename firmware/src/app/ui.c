@@ -412,7 +412,7 @@ static struct {
     uint8_t card_shake;                /* the card a big move's (red: a shake, new chords, a reset) or not */
     uint16_t card_col;                 /* its colour */
     uint8_t lock;                      /* Lock (SEL held): each phrase keeps what it has */
-    char card_head[16], card_text[40];
+    char card_head[20], card_text[40];   /* ("BACK TO THE MAIN": 16 and its end) */
     uint32_t oct_until, oct_pulse;     /* the ring: up until, then fading; its last step (a pulse) */
     uint32_t big_until;                /* (1.4.0) the big ring (a knob turning, SELECT's filter): up until, then fading */
     int16_t big_k;                     /* its knob (VIEW_KNOB's codes) */
@@ -1486,10 +1486,10 @@ static void button(int b)
         if (ui.btn >> B_HOME & 1u) {             /* (1.4.0, the user's) HOME held + PLAY: the outro from the next
                                                   * phrase, in any Song mode; again, in it or while it waits: back to
                                                   * the main */
-            const int back = en_song_ph == EN_SG_OUTRO ||
-                             (en_song_bo && en_song_bo * 16u > en_bars && en_song_bo * 16u - en_bars <= 128u);
+            const int back = (en_song_ph == EN_SG_OUTRO || en_song_ask) && !en_tr_cue;   /* (as the engine has it: in
+                                                  * it, or asked by hand; a planned one near is only kept: OUTRO) */
             ui.btn_used |= 1u << B_HOME;
-            if (!en_playing)
+            if (!en_playing || en_tr_cue)        /* (a Transition's cue: the next piece set, nothing to call) */
                 break;
             en_outro();
             say("OUTRO", back ? "OFF" : "NEXT PHRASE");
@@ -4540,6 +4540,19 @@ static void tp_reel(int32_t cx, int32_t cy, int32_t r, float ang, uint16_t tape)
     cv_disc(cx, cy, 6, K_PANEL);
     cv_disc(cx, cy, 2, K_DIM);
 }
+static uint32_t tp_shown;                       /* the tape's TIME, in seconds: kept on every page (tape_clock) */
+static void tape_clock(uint32_t now)             /* each frame: from PLAY, a Set's next piece from its own start (before,
+                                                  * kept only while the tape was seen: wrong if PLAY came elsewhere) */
+{
+    static uint32_t t0, last_b;
+    static uint8_t was;
+    const uint32_t b = en_bars / 16u;
+    if ((en_playing && !was) || (en_playing && b < last_b))
+        t0 = now;
+    was = en_playing, last_b = b;
+    if (en_playing)
+        tp_shown = (now - t0) / 1000u;
+}
 static void draw_tape(uint32_t now)
 {
     static float al, ar;
@@ -4572,18 +4585,11 @@ static void draw_tape(uint32_t now)
     cv_rect(134, 88, 10, 5, ec);
     {   /* (1.4.0, the user's) the tape's counter, seen nowhere else: at the left, where the song is (INTRO, MAIN,
          * OUTRO; ENDLESS) and the bars left of it (BARS); at its right, the time since PLAY, and in a song its whole length */
-        static uint32_t t0, shown, last_b;
-        static uint8_t was;
-        const uint32_t b = en_bars / 16u;
+        const uint32_t b = en_bars / 16u, shown = tp_shown;
         const int song = en_song_ph == EN_SG_INTRO || en_song_ph == EN_SG_MAIN || en_song_ph == EN_SG_OUTRO;
         const uint16_t tc = en_playing ? K_TEXT : K_DIM;
         enum { TX_L = 95, TX_R = 144, TY_LBL = 20, TY_VAL = 39, TY_SUB = 65 };   /* (zzu, the user's: the three lines evenly spaced, the figures in M) */
         char t[12];
-        if ((en_playing && !was) || (en_playing && b < last_b))
-            t0 = now;                            /* (from PLAY; a Set's next piece, from its own start) */
-        was = en_playing, last_b = b;
-        if (en_playing)
-            shown = (now - t0) / 1000u;
         text_c(TX_L, TY_LBL, &FONT_XS, song ? (en_song_ph == EN_SG_INTRO ? "INTRO" : en_song_ph == EN_SG_MAIN ? "MAIN" : "OUTRO")
                                       : en_song_ph == EN_SG_END ? "END" : "ENDLESS", K_DIM);   /* (TIME's colour) */
         if (song) {
@@ -5792,6 +5798,7 @@ void ui_frame(void)
     groove_tick();
     input();
     set_tick();
+    tape_clock(plat_ms());
     autosave();
     if (grid_up()) {                             /* REC held: the effects, the whole screen */
         if (!(ui.frame % 3u))
