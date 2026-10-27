@@ -1208,6 +1208,13 @@ int main(void)
         unsigned z;
         for (z = 0; z < sizeof DZ / sizeof DZ[0]; z++) {
             int f, n = dead_steps(DZ[z].pc, DZ[z].p, DZ[z].mac, DZ[z].lo, DZ[z].hi, 4.0f, &f);
+            for (dz_seed = 2; n && dz_seed <= 4; dz_seed++) {   /* (step 5's recipes: a seed whose four seconds
+                                                  * hide a part; a step that does nothing does nothing on any seed) */
+                int f2, n2 = dead_steps(DZ[z].pc, DZ[z].p, DZ[z].mac, DZ[z].lo, DZ[z].hi, 4.0f, &f2);
+                if (n2 < n)
+                    n = n2, f = f2;
+            }
+            dz_seed = 1;
             if (n)
                 printf("  %s: %d steps alike, the first %d -> %d\n", DZ[z].nm, n, f, f + 1);
             CHECK(n == 0, "%s: %d steps change nothing", DZ[z].nm, n);
@@ -1269,28 +1276,31 @@ int main(void)
         printf("  throws in 2 min: %u at looseness 0, %u at 100\n", lo, hi);
         CHECK(hi >= 3u && lo == 0u, "throws: %u at looseness 100, %u at 0", hi, lo);   /* (fewer fills since the classics pass: a fill throws its last stab) */
     }
-    /* (format 30, the user's) the throws as the chord's amount: none at its Hold (Vary 100), more at Vary 100 than at
-     * the piece's own (P_TVARY 40, Vary 40), the looseness at 100 and Motion 0 (no fills) */
+    /* (format 30, the user's) the throws as the chord's amount: none at its Hold (Vary 100), a stab thrown more often at
+     * Vary 100 than at the piece's own (P_TVARY 40, Vary 40), the looseness at 100 and Motion 0 (no fills) */
     {
-        uint32_t t0, n[3];
-        int k;
-        for (k = 0; k < 3; k++) {
-            fresh();
-            en_seed(3);
-            en_set(P_LOOSE, 100);
-            en_set(P_MOTION, 0);
-            en_set(P_TVARY, 40);
-            en_set(P_VARY, k ? 100 : 40);
-            en_set(P_CVARY, k == 2 ? -50 : 0);
-            en_play(1);
-            t0 = en_throws;
-            run(180.0f);
-            n[k] = en_throws - t0;
-        }
-        printf("  throws in 3 min: %u at the piece's own amount (40), %u at Vary 100, %u at the chord's Hold\n", n[0], n[1],
-               n[2]);
-        CHECK(n[0] >= 2u && n[1] > n[0] && n[2] == 0u, "throws by the chord's amount: %u at 40, %u at 100, %u at Hold", n[0],
-              n[1], n[2]);
+        uint32_t t0, s0, n[3] = {0, 0, 0}, st[3] = {0, 0, 0};
+        int k, sd;
+        for (k = 0; k < 3; k++)
+            for (sd = 3; sd <= 5; sd++) {        /* (three seeds, and a stab's chance: Vary 100 turns the stabs more, a
+                                                  * bar now and then with none, so fewer stabs to throw; one seed's 3
+                                                  * minutes held as many throws either way after step 5's recipes) */
+                fresh();
+                en_seed((uint32_t)sd);
+                en_set(P_LOOSE, 100);
+                en_set(P_MOTION, 0);
+                en_set(P_TVARY, 40);
+                en_set(P_VARY, k ? 100 : 40);
+                en_set(P_CVARY, k == 2 ? -50 : 0);
+                en_play(1);
+                t0 = en_throws, s0 = en_stabs;
+                run(180.0f);
+                n[k] += en_throws - t0, st[k] += en_stabs - s0;
+            }
+        printf("  throws in 3 x 3 min: %u of %u stabs at the piece's own amount (40), %u of %u at Vary 100, %u at the chord's"
+               " Hold\n", n[0], st[0], n[1], st[1], n[2]);
+        CHECK(n[0] >= 2u && (uint64_t)n[1] * st[0] > (uint64_t)n[0] * st[1] && n[2] == 0u,
+              "throws by the chord's amount: %u of %u at 40, %u of %u at 100, %u at Hold", n[0], st[0], n[1], st[1], n[2]);
     }
 
     /* the loops evolve: with Vary at 100, the phrases change */

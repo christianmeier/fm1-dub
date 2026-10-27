@@ -876,20 +876,40 @@ static void lc_fold(int16_t *par, int n)        /* (before 28: the strips' Low c
             par[LC[k]] = (int16_t)(o > 100 ? 100 : o);
         }
 }
-/* (format 31, the variety plan's step 3) the recipes' Motion before 31 (its old meaning: Full only to 40, the Mixer
- * the moves): an older format's store writes it where a piece has today's, as that build's recipe had it (a piece
- * never changed then known by its old recipe on the upgrade, as on a device) */
-static void motion_before31(void)
+/* (the variety plan's step 5) the recipes' Vary, its trims, Motion, Drift and the LFOs' Trims before it (step 4's,
+ * as 1.4.0's test builds had them): every older format's store writes them where a piece has today's (a piece never
+ * changed then known by its old recipe on the upgrade, as on a device) */
+static void models_before5(void)
 {
-    static const int16_t MOT30[NPIECES] = {30, 30, 25, 72, 35, 45, 25, 35};
+    static const uint8_t MP[10] = {P_VARY, P_CVARY, P_PVARY, P_BVARY, P_DVARY, P_NVARY, P_MOTION, P_MOVE, P_CLTRIM,
+                                   P_NLTRIM};
+    static const int16_t OLD[NPIECES][10] = {
+        {45, 0, 0, 0, 0, 0, 12, 41, -2, 5},           {25, 0, -17, -12, -15, -15, 8, 27, -25, 50},
+        {35, 0, -14, 0, -21, 0, 10, 35, 11, 21},      {40, -16, -16, 0, 0, 0, 42, 72, -12, -15},
+        {50, 0, 0, 0, 0, 0, 20, 80, 50, -6},          {40, 0, 0, -16, -16, 0, 38, 50, 12, 15},
+        {30, -15, -15, -15, -15, 0, 8, 43, 3, -3},    {20, -12, -12, -12, 0, -12, 10, 41, -25, -13}};
     int16_t rec[P_NPARAMS];
     uint16_t pool;
-    int i;
+    int i, k;
     for (i = 0; i < NPIECES; i++) {
         en_piece(i, rec, &pool);
-        if (proj.slot[i].par[P_MOTION] == rec[P_MOTION])
-            proj.slot[i].par[P_MOTION] = MOT30[i];
+        for (k = 0; k < 10; k++)
+            if (proj.slot[i].par[MP[k]] == rec[MP[k]])
+                proj.slot[i].par[MP[k]] = OLD[i][k];
     }
+    for (k = 0; k < 10; k++)
+        proj.par[MP[k]] = proj.slot[proj.piece].par[MP[k]];
+}
+/* (format 31, the variety plan's step 3) the recipes' Motion before 31 (its old meaning: Full only to 40, the Mixer
+ * the moves): an older format's store writes it where a piece has step 3's (models_before5's, first), as that build's
+ * recipe had it (a piece never changed then known by its old recipe on the upgrade, as on a device) */
+static void motion_before31(void)
+{
+    static const int16_t MOT30[NPIECES] = {30, 30, 25, 72, 35, 45, 25, 35}, MOT31[NPIECES] = {12, 8, 10, 42, 20, 38, 8, 10};
+    int i;
+    for (i = 0; i < NPIECES; i++)
+        if (proj.slot[i].par[P_MOTION] == MOT31[i])
+            proj.slot[i].par[P_MOTION] = MOT30[i];
     proj.par[P_MOTION] = proj.slot[proj.piece].par[P_MOTION];
 }
 
@@ -991,16 +1011,20 @@ int main(int argc, char **argv)
     while (fgets(line, sizeof line, sc)) {
         char cmd[32] = {0}, a[256] = {0}, b[64] = {0}, c[64] = {0};
         static project_t st_keep;
-        int st_old;
+        int st_old, st_pre5;
         lineno++;
         if (line[0] == '#' || sscanf(line, "%31s %255s %63s %63s", cmd, a, b, c) < 1)
             continue;
         st_old = !strncmp(cmd, "store", 5) && strcmp(cmd, "storefile") && strcmp(cmd, "storescreen") &&
                  strcmp(cmd, "store32");         /* (32: today's meanings, its layout; no Transition) */
-        if (st_old) {                            /* (format 31) an older format's store: the pieces' Motion as their
-                                                  * recipes had it then, where it's today's */
+        st_pre5 = st_old || !strcmp(cmd, "store32");
+        if (st_pre5) {                           /* (step 5) every older format's store: the recipes before it */
             keep();
             st_keep = proj;
+            models_before5();
+        }
+        if (st_old) {                            /* (format 31) an older format's store: the pieces' Motion as their
+                                                  * recipes had it then, where it's today's */
             zones_before32();                    /* (format 32: the rescaled knobs, in their old meaning) */
             if (strcmp(cmd, "store31"))
                 motion_before31();
@@ -1576,7 +1600,7 @@ int main(int argc, char **argv)
             printf("line %d: unknown command %s\n", lineno, cmd);
             return 2;
         }
-        if (st_old)
+        if (st_pre5)
             proj = st_keep;
     }
     wav_close();
