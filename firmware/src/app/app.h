@@ -16,7 +16,9 @@
 #define PROJ_WAVE_MARK 0xB1u           /* (format 30, the LFO pages' layout B) proj.rsv[0] in a save whose LFOs
                                          * have a Wave (P_CLWAVE, P_NLWAVE: 0..100); a format 30 save without it is
                                          * the step 2 test builds' (zzo, zzp), those slots their Shape (0..4) */
-#define PROJ_FORMAT 32u                  /* 32: the variety plan's step 4: no dead steps: Stabs the count (1..6);
+#define PROJ_FORMAT 33u                  /* 33: a Set's Transition (proj.trans, in the room at the end: the layout
+                                         * 32's; 32's read, LP);
+                                         * 32: the variety plan's step 4: no dead steps: Stabs the count (1..6);
                                          * Hits', the bass's Density's and the noise's Density's last step faded
                                          * in (the bass's from its first note alone to all); the hats', the pings'
                                          * and the noise's Tone, the noise's Decay, the echo's Tone and the Pad's
@@ -100,7 +102,10 @@ typedef struct {
     uint8_t values;                      /* (1.4.0) the knobs' numbers: 0 shown a moment as a page opens, 1 always
                                           * (was rsv0, 0 in older saves: Peek) */
     slot_t slot[NPIECES];                /* every piece as it was left (Tune and MIDI out are global) */
-    uint8_t rsv[16];                     /* room to grow */
+    uint8_t rsv[15];                     /* room to grow (rsv[0]: PROJ_WAVE_MARK) */
+    uint8_t trans;                       /* (format 33, the user's) a Set's Transition, the Song mode page's KNOB 2:
+                                          * EN_TR_* (0 LP, 1 Segue, 2 Mix); global as Song mode (was rsv[15], 0 in
+                                          * older saves: LP) */
 } project_t;
 
 extern project_t proj;

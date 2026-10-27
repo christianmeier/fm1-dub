@@ -223,6 +223,20 @@ enum { EN_SG_OFF, EN_SG_INTRO, EN_SG_MAIN, EN_SG_OUTRO, EN_SG_END };
 #define EN_NSKIND 2
 extern const char *const EN_SMODE_NAME[EN_NSMODE], *const EN_SKIND_NAME[EN_NSKIND];
 void en_outro(void);
+/* (1.4.0, the user's: Transition, the Song mode page's KNOB 2, Set mode alone; build/design/SET2.md) how a Set goes
+ * from one piece to the next: LP as ever (the song ends, PLAY stops, the tails ring out, the next piece after a wait);
+ * Segue (no stop: the next piece from the bar after the outro, the echo and the plate ringing on into it); Mix (over
+ * the last phrase the tempo and the echo's time glide to the next piece's; on the downbeat its pulse, the kick and the
+ * noise, under the old tails; its bass a bar on, its chord, pings and hats two). en_trans: the mode and the next
+ * piece's tempo and echo time (tempo 0: no next piece: it rests, as LP), as the app has them; en_tr_cue: the outro's
+ * last bar reached, the old parts gone (the app then sets the next piece and says en_trans_go); the next piece then
+ * starts on the next downbeat past the outro, its song from the top */
+enum { EN_TR_LP, EN_TR_SEGUE, EN_TR_MIX, EN_NTRANS };
+extern const char *const EN_TRANS_NAME[EN_NTRANS];
+void en_trans(int mode, int next_tempo, int next_etime);
+void en_trans_go(void);
+extern volatile uint8_t en_tr_cue;
+extern volatile float en_bpm;                  /* the tempo heard now (a Mix's glide; else Tempo's), for tests and logs */
 extern volatile uint8_t en_song_ph;
 extern volatile uint32_t en_song_b0, en_song_bo, en_song_be;
 /* (1.4.0) the dub mixer (format 31: its rides Drift's, its moves Motion's) as heard now: each part's level ride (dB, a move out and back in it), its echo and
