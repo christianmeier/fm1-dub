@@ -332,8 +332,12 @@ static FILE *tlog;                                       /* (1.4.0: Transition) 
 /* (1.4.0: Transition) trwatch: a Set's hand-over watched, from the outro on: the longest stretch under -60 dBFS (250 ms
  * windows, in ms); the largest sample-to-sample step (the 2nd difference) against the music's RMS around it (x100;
  * 10 ms either side: a click stands out of its music, a strike's edge doesn't), from the cue to 2 s past the downbeat, a strike's own first 40 ms left out (a drum, a stab, a noise hit); the next piece's downbeats seen without a stop; the sixteenths from
- * the downbeat to its chord's fader up (0.01), its kick's, its bass's */
-static int trw_on, trw_quiet_ms, trw_run_ms, trw_restarts, trw_click, trw_ch = -1, trw_kick = -1, trw_bass = -1;
+ * the downbeat to its chord's fader up (0.01), its kick's, its bass's; over its first 8 bars, a fader's largest fall
+ * from the highest it reached (x1000: a dip) and its largest rise in a ms (x1000: a slam), the kick's left out (whole
+ * on the downbeat, a Mix's) */
+static int trw_on, trw_quiet_ms, trw_run_ms, trw_restarts, trw_click, trw_ch = -1, trw_kick = -1, trw_bass = -1,
+           trw_dip, trw_jump;
+static float trw_fmax[EN_NPART], trw_f1[EN_NPART];
 static double trw_acc, trw_sq, trw_x1[2], trw_x2[2];
 #define TRW_N 1024                                /* (a ring of the samples: the step judged 10 ms back, the level
                                                   * around it, 10 ms either side) */
@@ -389,8 +393,23 @@ static void trw_ms(void)                          /* (each ms: the song's place)
         trw_restarts++;
         trw_t_restart = now_ms;
         trw_ch = trw_kick = trw_bass = -1;
+        trw_dip = trw_jump = 0;
+        memset(trw_fmax, 0, sizeof trw_fmax);
     }
     trw_bars_was = en_bars;
+    {   /* (the new piece's first 8 bars: each fader up without a fall, and not at once) */
+        int f;
+        for (f = 0; f < EN_NPART; f++) {
+            if (trw_t_restart && en_bars < 128u && f != 3) {
+                const int dip = (int)(1000.0f * (trw_fmax[f] - en_fader[f])),
+                          jump = (int)(1000.0f * (en_fader[f] - trw_f1[f]));
+                trw_fmax[f] = en_fader[f] > trw_fmax[f] ? en_fader[f] : trw_fmax[f];
+                trw_dip = dip > trw_dip ? dip : trw_dip;
+                trw_jump = jump > trw_jump ? jump : trw_jump;
+            }
+            trw_f1[f] = en_fader[f];
+        }
+    }
     if (trw_t_restart) {
         if (trw_ch < 0 && en_fader[0] > 0.01f)
             trw_ch = (int)en_bars;
@@ -609,6 +628,10 @@ static int expect(const char *what, const char *val)
         got = trw_kick;
     else if (!strcmp(what, "trbass"))
         got = trw_bass;
+    else if (!strcmp(what, "trdip"))             /* the next piece's first 8 bars: a fader's largest fall (x1000) */
+        got = trw_dip;
+    else if (!strcmp(what, "trjump"))            /* and its largest rise in a ms (x1000; the kick's left out) */
+        got = trw_jump;
     else if (!strcmp(what, "bpm"))               /* the tempo heard now, rounded (a Mix's glide) */
         got = (int)(en_bpm + 0.5f);
     else if (!strcmp(what, "peek"))              /* (1.4.0) 1 while a page's knobs show their numbers (a page opened) */
@@ -1020,6 +1043,7 @@ int main(int argc, char **argv)
             wav_close();
         else if (!strcmp(cmd, "trwatch")) {      /* (1.4.0) a Set's hand-over watched from here (trquiet, trclick ..) */
             trw_on = 1, trw_quiet_ms = trw_run_ms = trw_restarts = trw_click = 0, trw_ch = trw_kick = trw_bass = -1;
+            trw_dip = trw_jump = 0;
             trw_acc = trw_sq = 0.0, trw_n = 0, trw_t_restart = trw_t_cue = 0, trw_bars_was = en_bars, trw_w = 0;
             memset(trw_ring, 0, sizeof trw_ring);
         } else if (!strcmp(cmd, "tlog")) {         /* tlog FILE: the song's state every 50 ms (tempo, place, faders) */

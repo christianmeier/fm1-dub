@@ -39,7 +39,8 @@ turn SELECT -1 100
 expect view 11
 turn SELECT 1 100
 tap SEL
-wait 1000
+# (the notch's count forgotten after 3 s: the click just now not one of the next three)
+wait 3100
 turn SELECT 3 100
 expect view 17
 expect filter 1
