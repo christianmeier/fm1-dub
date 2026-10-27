@@ -5665,7 +5665,7 @@ void ui_init(void)
 static void set_tick(void)
 {
     static uint32_t end_t;
-    static uint8_t cued;
+    static uint8_t cued, end_p, by_hand;
     static int16_t sent = -1;
     const uint32_t now = plat_ms();
     {
@@ -5691,8 +5691,14 @@ static void set_tick(void)
     }
     if (proj.par[P_SMODE] != 2 || en_song_ph != EN_SG_END || en_playing) {
         end_t = 0;
+        end_p = proj.piece, by_hand = 0;
         return;
     }
+    if (proj.piece != end_p)                     /* (a piece chosen by hand, resting after a song: the set left
+                                                  * there, till PLAY) */
+        by_hand = 1;
+    if (by_hand)
+        return;
     if (!end_t) {
         end_t = now | 1u;
     } else if (now - end_t >= 6000u && proj.piece + 1 < NPIECES) {

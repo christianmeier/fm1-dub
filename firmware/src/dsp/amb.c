@@ -2301,6 +2301,11 @@ EN_COLD static void song_tick(void)                      /* each sixteenth: the 
             step_len = EN_SR * 60.0f / (bpm_now * 4.0f);
             en_bpm = bpm_now;
             echo_time();
+        } else if (tr_glide && !en_tr_cue) {     /* (the outro called back to the main, HOME held + PLAY: the
+                                                  * piece's own tempo again) */
+            tr_glide = 0, tr_beats = 0.0f;
+            tempo_set();
+            echo_time();
         }
         if (!en_tr_cue && song_ph != EN_SG_MAIN && t >= be - 1.0f && ((fd_quiet & 0x3Fu) == 0x3Fu || t >= be)) {
             en_tr_cue = 1;                       /* (the old parts gone: the app sets the next piece now) */
@@ -2357,7 +2362,7 @@ EN_COLD static void tr_reset(void)               /* (stopped, or a new start: no
 EN_COLD static void song_outro(void)                     /* HOME held + PLAY: the outro from the next phrase; again: the main */
 {
     const uint32_t nb = (bar + 7u) & ~7u;        /* (the next phrase's first bar: the next to start, if it's one) */
-    if (!en_playing || song_ph == EN_SG_END)
+    if (!en_playing || song_ph == EN_SG_END || en_tr_cue)   /* (a Transition's cue: the next piece already set) */
         return;
     if (song_ph == EN_SG_OUTRO || song_ask) {      /* (in it, or asked: back) */
         song_ask = 0;

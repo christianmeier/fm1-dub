@@ -133,6 +133,22 @@ expect trclick <80
 wait 130000
 expect piece 7
 expect playing 0
+# a Mix's glide under way, the outro called back (HOME held + PLAY): the piece's own tempo again
+turn PRESET -1
+wait 600
+expect piece 6
+tap PLAY
+wait 82000
+expect bpm <124
+press HOME
+tap PLAY
+release HOME
+wait 300
+said OUTRO OFF
+expect bpm 126
+expect song 2
+tap PLAY
+wait 500
 # kept by a save and a reboot; a format 32 save reads LP
 press GLO
 wait 700
