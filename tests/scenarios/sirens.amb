@@ -43,6 +43,7 @@ spin K1 4
 wait 300
 said Pitch +3
 expect sirk0 3
+shot siren_wail_pitch.png
 spin K1 -2
 wait 300
 expect sirk0 0
@@ -57,6 +58,7 @@ spin K4 20
 wait 300
 said Echo 70
 expect sirk3 70
+shot siren_wail_echo.png
 expect sirenon 1
 key b7 up
 wait 300
@@ -100,6 +102,7 @@ shot siren_hilo.png
 spin K2 -1
 wait 300
 said Rate 1/8.
+shot siren_hilo_rate.png
 key b9 up
 wait 300
 key b10 down
@@ -109,6 +112,7 @@ shot siren_laser.png
 spin K3 -2
 wait 300
 said Depth 21 st
+shot siren_laser_depth.png
 key b10 up
 wait 300
 expect view 17
