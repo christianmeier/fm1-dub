@@ -16,7 +16,10 @@
 #define PROJ_WAVE_MARK 0xB1u           /* (format 30, the LFO pages' layout B) proj.rsv[0] in a save whose LFOs
                                          * have a Wave (P_CLWAVE, P_NLWAVE: 0..100); a format 30 save without it is
                                          * the step 2 test builds' (zzo, zzp), those slots their Shape (0..4) */
-#define PROJ_FORMAT 32u                  /* 32: the variety plan's step 4: no dead steps: Stabs the count (1..6);
+#define PROJ_FORMAT 34u                  /* 34: the dub sirens' knobs, each siren's Pitch, Rate, Depth and Echo
+                                         * (proj.sir, global; older saves: the defaults, en_sir_def: the sirens as
+                                         * they were, Whoop's new); 32: today's layout without proj.sir, read;
+                                         * 32: the variety plan's step 4: no dead steps: Stabs the count (1..6);
                                          * Hits', the bass's Density's and the noise's Density's last step faded
                                          * in (the bass's from its first note alone to all); the hats', the pings'
                                          * and the noise's Tone, the noise's Decay, the echo's Tone and the Pad's
@@ -101,6 +104,8 @@ typedef struct {
                                           * (was rsv0, 0 in older saves: Peek) */
     slot_t slot[NPIECES];                /* every piece as it was left (Tune and MIDI out are global) */
     uint8_t rsv[16];                     /* room to grow */
+    int8_t sir[EN_NSIR][EN_NSK];         /* (format 34, the user's) each dub siren's knobs (EN_SK_*: Pitch, Rate, Depth,
+                                          * Echo), global: as they were left, its next tap or hold from them */
 } project_t;
 
 extern project_t proj;
