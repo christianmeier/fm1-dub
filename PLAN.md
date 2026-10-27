@@ -1125,17 +1125,32 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
 - [ ] The user on the FM-1 with the last test build
 - [ ] `./build.sh --release 1.4.0`; tests; the emulator and the site (`tools/publish_pages.sh 1.4.0`, the cheat sheets)
 - [ ] Publish (the user's go): merge dub-1.4 into main, push, tag v1.4.0, `gh release create v1.4.0` with dub-1.4.0.fwsc
-- [ ] After: the Winter Set video (build/film/channel/long_videos/set2), a release video; the SMK branch; the wiki
+- [ ] The videos: the release video, the shorts, the cheat sheets' videos ("The videos" below); the Winter Set
+      (build/film/channel/long_videos/set2: again on the release build, with stems and more pages?)
+- [ ] After: the SMK branch; the wiki
 
-## 1.5.0: sets, sound sets, the web (the user, 2026-10-27)
+## 1.5.0: sets, their cues, the web (the user, 2026-10-27)
 1. **Writing and loading sets**, of fewer than eight pieces too (Set mode ends at the set's last; the other slots as
    they were): build/design/SETFILES.md, pieces 1-4 and 6.
-2. **Loading sound sets:** other drum, bass, chord and ping instruments, maybe other noise sources
-   (SETFILES.md, "Sound sets"). **A set is pieces + sounds** (the user's): one file, the pieces and the sounds
-   they play; a sound set alone loads too.
-3. **Managing songs and sounds from the web:** a page (WebMIDI, beside the installer) to back up, edit, download and
-   send sets and sound sets; the web emulator to hear them first (SETFILES.md piece 5).
-Later (not 1.5.0): the cues (moves at set bars in a song), then recording them on the device.
+2. **The cues:** moves at set bars in a song (SETFILES.md, "Cues"), carried by the set; then recording them on the
+   device.
+3. **Managing them from the web:** a page (WebMIDI, beside the installer) to back up, edit, download and send sets
+   and their cues; the web emulator to hear them first (SETFILES.md piece 5).
+
+## 1.6.0: songs and sounds (the user, 2026-10-27)
+- **Saving and loading songs and sounds:** a piece on its own; sound sets (other drum, bass, chord and ping
+  instruments, maybe other noise sources: SETFILES.md, "Sound sets"). **A set is pieces + sounds** (the user's):
+  one file, the pieces and the sounds they play; a sound set alone loads too.
+
+## The videos (the user, 2026-10-27)
+- **For 1.4.0:** a release video; shorts on the novelties; and maybe a video for each cheat sheet, linked from the
+  sheets and to them (whether these are the shorts or a series of their own: to settle).
+- **The hour videos, next time:**
+  - **Stems:** the emulator (or the host) records more than one page at once: one or more of the views (the scope,
+    the spectrum) all the time, beside the main view, to use in the edit as a full-screen background under it.
+  - **More variety:** stay on the Arrangement page while cueing moves; show the Chords page or the Walk page's wheel
+    at a chord change; the Song page (the song line, the parts) at an intro or an outro; and the like.
+  - **Later, in the edit:** the user's own footage (the city, nature, bicycle trips) blended in the background.
 
 ## Now: two lines in parallel (the user, 2026-10-23)
 
