@@ -1115,6 +1115,18 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   text): the unanswered "which codebase to start from", the stability-testing question (our CPU page, the dropout
   counter, safe mode), the SMK-37 port needing a tester, and the m-bootloader clock loss.
 
+## Release 1.4.0: what's left (the user, 2026-10-27: "prepare what's left for 1.4.0 release")
+- [ ] The three fixes (dub-1.4-fixes3): a Mix into an Intro None piece; a key on a gap slot (the wrong root); the
+      centred knobs' notch on a slow turn (the reset 3 s)
+- [ ] Step 5: the recipes against their models (dub-1.4-models); the user's ears on the before/after renders
+- [ ] Step 6: the manual, README and the cheat sheets (the errors in REPORT-cheatsheets*.md, -zones, -motion; step 5's
+      values; web/emu/index.html's key layout; docs/img and fm1-panel.svg)
+- [ ] The release notes (build/release-notes-1.4.0.md, drafted)
+- [ ] The user on the FM-1 with the last test build
+- [ ] `./build.sh --release 1.4.0`; tests; the emulator and the site (`tools/publish_pages.sh 1.4.0`, the cheat sheets)
+- [ ] Publish (the user's go): merge dub-1.4 into main, push, tag v1.4.0, `gh release create v1.4.0` with dub-1.4.0.fwsc
+- [ ] After: the Winter Set video (build/film/channel/long_videos/set2), a release video; the SMK branch; the wiki
+
 ## Now: two lines in parallel (the user, 2026-10-23)
 
 After 1.3.0's release (the docs done, e20d31b..e10ddf4; a release video being made in build/film/release-1.3.0/):
