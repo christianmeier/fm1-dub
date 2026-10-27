@@ -14,7 +14,8 @@
      (firmware/src/app/ui.c: the PERFORM section, PERF_KEY, PERF_NAME, PERF_FX, PERF_BPART, perf_key(), perf_solo(),
      perf_throw(), strip_tick() and STRIP_HOLD, perf_set(), lock_toggle(), leds(); VIEW_KNOB / KNOB_LABEL / KNOB_HELP
      for V_PERF and V_STRIP; firmware/src/dsp/amb.c: EN_FX_NAME, the throws, the moves, the strips' parameters).
-     The sirens (black 8-11) checked against the built ones (dub-1.4-sirens, 194faed; REPORT-sirens). -->
+     The sirens (black 8-11) checked against the built ones (dub-1.4-sirens, 194faed; REPORT-sirens), their knobs
+     and Whoop out of tune against dub-1.4-sirenknobs (REPORT-sirenknobs). -->
 <div class="sheet">
 <header><span class="badge">DUB-1</span><h1>Arrangement</h1>
 <span class="sub">SEL: the desk, the dub moves and the effects under your fingers, as of 1.4.0 (build 194faed). FM-1 firmware.</span></header>
@@ -117,7 +118,8 @@
 <text x="623.0" y="100.0" text-anchor="0" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing=".03em">A#4</text>
 <rect x="718.9" y="34" width="54.1" height="74" rx="9" fill="#fbe2dc" stroke="#c4503c" stroke-width="1.6"/>
 <text x="746.0" y="49.0" text-anchor="0" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing=".03em">9</text>
-<text x="746.0" y="79.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#8f3020" class="" letter-spacing=".03em">WHOOP</text>
+<text x="746.0" y="72.0" text-anchor="middle" font-size="14.5" font-weight="700" fill="#8f3020" class="" letter-spacing=".03em">WHOOP</text>
+<text x="746.0" y="87.0" text-anchor="middle" font-size="12.5" font-weight="700" fill="#8f3020" class="" letter-spacing=".03em">OFF-KEY</text>
 <text x="746.0" y="100.0" text-anchor="0" font-size="11" font-weight="400" fill="#7d8787" class="mono" letter-spacing=".03em">C#5</text>
 <rect x="780.4" y="34" width="54.1" height="74" rx="9" fill="#fbe2dc" stroke="#c4503c" stroke-width="1.6"/>
 <text x="807.5" y="49.0" text-anchor="0" font-size="10.5" font-weight="400" fill="#7d8787" class="mono" letter-spacing=".03em">10</text>
@@ -131,7 +133,7 @@
 <path d="M42.4 28 V22 H404.1 V28" fill="none" stroke="#c08a1e" stroke-width="1.4"/>
 <text x="223.2" y="16.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="#c08a1e" class="" letter-spacing=".02em">SOLO: a tap · THROW: held</text>
 <path d="M595.9 28 V22 H957.6 V28" fill="none" stroke="#c4503c" stroke-width="1.4"/>
-<text x="776.8" y="16.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="#c4503c" class="" letter-spacing=".02em">SIRENS: a tap, a short one · held, a slow one</text>
+<text x="776.8" y="16.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="#c4503c" class="" letter-spacing=".02em">SIRENS: a tap, a short one · held, a slow one, its knobs</text>
 <path d="M472.9 28 V22 H588.6 V28" fill="none" stroke="#8a9494" stroke-width="1.4"/>
 <text x="530.8" y="16.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="#8a9494" class="" letter-spacing=".02em">nothing</text>
 <path d="M11.7 216 V222 H373.3 V216" fill="none" stroke="#1f7f75" stroke-width="1.4"/>
@@ -193,11 +195,12 @@
 
 <div class="card">
 <h2>5 · The sirens <span class="where">black 8–11 · A#4–F#5</span></h2>
-<div class="intro">Tuned to the key (root, fifth, octave). A tap: a short one, about a bar, played to its end; held past a third of a second, it turns slow from where it is, looping until you let go (out in ~0.15 s). A new one takes over. Into the echo.</div>
-<div class="row"><div class="n">Wail<small>follows the tempo</small></div><div class="d">A glide root, fifth, octave and back.<span class="r">tap: a rise and fall, a bar · held: every 4 bars</span></div></div>
-<div class="row"><div class="n">Whoop<small>follows the tempo</small></div><div class="d">Sweeps up root to octave, each dropping back.<span class="r">tap: four, a negra (quarter) each · held: one a bar, from root, root, fifth, octave</span></div></div>
-<div class="row"><div class="n">Hi-lo<small>follows the tempo</small></div><div class="d">Root and fifth in turn, the old police siren.<span class="r">tap: a bar, a corchea (8th) a swap · held: a negra (quarter) a swap, the pair sliding to fifth and octave over 4 bars and back</span></div></div>
-<div class="row"><div class="n">Laser drop<small>free</small></div><div class="d">A fall from two octaves up to the root, warbling.<span class="r">tap: one 1.5 s drop · held: 8 s falls, a breath on the root, again</span></div></div>
+<div class="intro">A tap: a short one, about a bar. Held: slow from where it is, till let go, on its page. One at a time, into the echo. Whoop off the key on purpose; the rest on its root, fifth, octave.</div>
+<div class="row"><div class="n">Wail<small>the tempo's</small></div><div class="d">A glide root, fifth, octave and back.<span class="r">tap: a bar · held: every 4 bars</span></div></div>
+<div class="row"><div class="n">Whoop<small>free, off-key</small></div><div class="d">A box's whoops, an octave up and back.<span class="r">tap: 1.2 s, 2.5 a second · held: on, rising</span></div></div>
+<div class="row"><div class="n">Hi-lo<small>the tempo's</small></div><div class="d">Root and fifth in turn, the police siren.<span class="r">tap: a corchea (8th) a swap · held: a negra (quarter)</span></div></div>
+<div class="row"><div class="n">Laser drop<small>free</small></div><div class="d">Two octaves down to the root, warbling.<span class="r">tap: 1.5 s · held: 8 s falls, again</span></div></div>
+<div class="row"><div class="n">Its page<small>held</small></div><div class="d">The knobs ride it; kept, saved: <b>Pitch</b> ±1 octave, <b>Rate</b>, <b>Depth</b> 1–24 st, <b>Echo</b> (past 50, the repeats stack).</div></div>
 </div>
 
 <div class="card">

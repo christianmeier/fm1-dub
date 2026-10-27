@@ -253,7 +253,7 @@ Each key that does something is lit:
 | **White 9–12** | G4 A4 B4 C5 | | the global moves: **Open**, **Shut**, **Drop**, **Echo** |
 | **White 13–16** | D5 E5 F5 G5 | | four effects: **Time x2**, **Freeze**, **Tape stop**, **Stutter** |
 | Black 6–7 | F♯4 G♯4 | nothing (dark) | |
-| **Black 8–11** | A♯4 C♯5 D♯5 F♯5 | a short **dub siren**: **Wail**, **Whoop**, **Hi-lo**, **Laser** (about a bar) | the slow one, looping until you let go |
+| **Black 8–11** | A♯4 C♯5 D♯5 F♯5 | a short **dub siren**: **Wail**, **Whoop**, **Hi-lo**, **Laser** (about a bar) | the slow one, looping until you let go; its page: the knobs its Pitch, Rate, Depth, Echo |
 
 The first four black keys belong to the white key on their left: F♯3 the chord (F3), G♯3 the pings, A♯3 the bass,
 C♯4 the hats (C4). The kick's white key (B3) has no black key after it, so the last one, D♯4, is the kick's (1.4.0:
@@ -294,20 +294,41 @@ without looking. (1.4.0: the gap was one key; the Siren's key went and the moves
 - **White 13–16, four effects, held** (lit; dark while held): **Time x2**, **Freeze**, **Tape stop**
   and **Stutter**, the same as the effects grid's (REC held, below), one key each
   and nearer to hand. They play together with the grid's.
-- **Black 8–11, the dub sirens** (lit; dark while one sounds). One siren voice, tuned to the piece's key: its
-  turning points are the root, the fifth and the octave (the mode's fifth: a flat fifth in Iwato), and it slides
-  between them. It goes into the echo as the grid's Siren does (at the piece's Echo), at about its level, so its
-  tails ring on after it. **A tap** plays a short one, about a bar, to its end even though you let go at once.
-  **Held** past a third of a second, it turns into the slow one from where it is (no jump) and loops until you let
-  go; then it fades over about 150 ms and the echo carries the tail. A new siren takes over from the one sounding.
-  Wail, Whoop and Hi-lo follow the tempo; Laser doesn't.
+- **Black 8–11, the dub sirens** (lit; dark while one sounds). One siren voice. Wail, Hi-lo and Laser are tuned to
+  the piece's key: their turning points are the root, the fifth and the octave (the mode's fifth: a flat fifth in
+  Iwato), and they slide between them. **Whoop is out of tune on purpose**: the classic dub siren box, which knows
+  nothing of the key, clashing with it (its own pitch, A3 and 40 cents, about 225 Hz, a shade under a quarter-tone off
+  every key's notes; turn its Pitch to sweep it into the key by ear). Each goes into the echo as the grid's Siren does
+  (at the piece's Echo), at about its level, so its tails ring on after it. **A tap** plays a short one, about a
+  bar, to its end even though you let go at once. **Held** past a third of a second, it turns into the slow one from
+  where it is (no jump) and loops until you let go; then it fades over about 150 ms and the echo carries the tail. A
+  new siren takes over from the one sounding. Wail and Hi-lo follow the tempo; Whoop and Laser don't.
 
   | Key | Siren | A tap | Held |
   |---|---|---|---|
   | A♯4 | **Wail**: a near-sine tone gliding root, fifth, octave and back, lingering on each | one rise and fall over a bar | one rise and fall every 4 bars |
-  | C♯5 | **Whoop**: sweeps rising from the root to the octave, each dropping back | four whoops, one a negra (quarter) | a whoop a bar, from the root, the root, the fifth, the octave: rising to an octave higher over 4 bars |
+  | C♯5 | **Whoop**: a box's whoops, each rising an octave quickly and dropping back, out of tune | a burst of whoops, 2.5 a second (three: 1.2 seconds) | whoops on and on, 2.5 a second, their floor rising a fifth over 4 seconds and back over 4 |
   | D♯5 | **Hi-lo**: the root and the fifth swapped, square-ish (the old police siren) | a bar of swaps, one a corchea (8th) | swaps a negra (quarter) each, the pair rising to the fifth and the octave over 4 bars and back over 4 |
   | F♯5 | **Laser**: a fall from two octaves up to the root, warbling (6 a second) | one 1.5-second drop | 8-second falls, half a second on the root fading, then again |
+
+  **A siren held is its own page** (as a white key held is a part's strip): the knob strip shows
+  **SIREN · WAIL** (or WHOOP, HI-LO, LASER) and the four knobs ride that siren while you hold it. Let go: the siren
+  fades as above and the screen goes back to the Arrangement page. Each knob shows the big ring as it turns (its
+  name, its value: "Pitch +3", "Rate 1/8", "Rate 4.0 Hz", "Depth 12 st", "Echo 70"); the reader says them.
+
+  | Knob | | Wail | Whoop | Hi-lo | Laser |
+  |---|---|---|---|---|---|
+  | 1 | **Pitch** | an octave down to an octave up, a note of the key a click | the same, free: a tenth of a semitone a click | as Wail | where it lands, on the key's notes |
+  | 2 | **Rate** | one wail held, a note value: a semicorchea (16th) to 8 bars (4 bars; a tap a quarter of it, as many as fill a bar) | whoops a second, 0.2 to 12 Hz (2.5), tapped and held | one swap held, a semicorchea (16th) to 4 bars (a negra (quarter); a tap half of it, a bar's worth) | the warble, 0.2 to 12 Hz (6); the fall's time stays |
+  | 3 | **Depth** | its top, 1 to 24 semitones on the key's notes (12: the octave; its middle the fifth, else the note nearest 7/12 of it) | how far each whoop rises, 1 to 24 semitones (12) | its other note, on the key's notes (7: the mode's fifth) | how far it falls, on the key's notes (24: two octaves) |
+  | 4 | **Echo** | its send into the echo, 0 to 100 (50: as before). Past 50 the echo's feedback is pushed too, as a throw's, so the repeats stack and ring on after it (the push eases out over about a second) | | | |
+
+  The values in brackets are where each starts: the sirens exactly as they were before the knobs (Whoop's new
+  sound aside). Each siren keeps its own four settings, as a box's knobs stay where you left them: its next tap or
+  hold starts from them. A tap uses them; the knobs move them only while the key is held. They are saved with the
+  project and the same for every piece (format 34; an older save gives them as they start). On the tuned sirens
+  Pitch and Depth step through the key's notes, so a piece in another key keeps them in its own; when the scale
+  changes they move to its nearest note. Pitch has the centred knobs' notch at 0.
 
   The effects grid's Siren (REC held, key 15) is unchanged. Leaving the page lets a held siren go.
 - The other keys (F♯4, G♯4) do nothing on the Arrangement page; MIDI notes in still change the scale.
