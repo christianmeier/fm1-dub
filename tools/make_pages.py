@@ -9,6 +9,7 @@
   install/index.html          the web installer (web/amb_installer.html, with fm1pkg.js, fm1ota.js and
                               the package's metadata inlined; Chrome or Edge, Web MIDI)
   manual/index.html, img/     the manual (tools/manual_html.py, from docs/MANUAL.md)
+  cheatsheets/                the printable cheat sheets (docs/cheatsheets: each page and its PDF), and their list
   firmware/dub-VERSION.fwsc   the package the installer writes; also the download
 
   tools/make_pages.py build/dub-1.1.0.fwsc 1.1.0 OUT_DIR
@@ -92,6 +93,7 @@ your own chords and drum patterns.</p>
   <a href="emu/"><strong>Try it in the browser</strong><span>The same code the FM-1 runs, with sound. Mouse, touch or keyboard; no FM-1 needed.</span></a>
   <a href="install/"><strong>Install <em class="v">v__VERSION__</em></strong><span>From Chrome or Edge, with the FM-1 connected by USB. Nothing to install on the computer.</span></a>
   <a href="manual/"><strong>Manual</strong><span>Getting started in a few minutes, then everything else.</span></a>
+  <a href="cheatsheets/"><strong>Cheat sheets</strong><span>One A4 page each: the panel, every layer, the arrangement, songs and sets. To print and keep by the FM-1.</span></a>
   <a href="firmware/__PKG__"><strong>Download <em class="v">__PKG__</em></strong><span>For the command-line installer: <code>python3 tools/fm1_install.py __PKG__</code></span></a>
   <a href="__REPO__"><strong>Source</strong><span>GitHub, GPL-3.0. A fork of AMB-1 by Charles Vestal, built on Felucca by Hügelton Instruments.</span></a>
 </nav>
@@ -119,6 +121,69 @@ M-VAVE and FM-1 are trademarks of their owners. DUB-1 is not affiliated with M-V
 </body>
 </html>
 """
+
+
+# the cheat sheets, in the order they're read (docs/cheatsheets: NAME.html and NAME.pdf), each with its line
+SHEETS = [
+    ("panel", "The panel", "Every button, knob and key, and what holding one does."),
+    ("arrangement", "Arrangement", "The dub desk: the meters, the parts' strips, the throws, the moves, the sirens."),
+    ("chords", "Chords", "The eight slots, the walk, Endless and Loop, the Walk page."),
+    ("chord-voice", "Chord voice", "The stab's sound: its envelope, colour, FM and LFO."),
+    ("pings", "Pings", "The pings' loops, octave, wet and cloud."),
+    ("bass", "Bass", "The bass's density, octave, groove and fifth, and its voice."),
+    ("drums", "Drums", "The kick's shapes, the hits, the hats, the rumble; the pattern page."),
+    ("noise", "Noise", "The noise machine: its density, air, tone and decay, its width and sends."),
+    ("space", "The space", "The echo, the plate and the width."),
+    ("effects", "Effects grid", "The sixteen effects on REC."),
+    ("variety", "Variety", "How the music changes: Vary, Motion, Drift, Energy, the LFO pages."),
+    ("songs", "Songs and sets", "Endless, Song and Set; the intro and outro; Transition."),
+    ("pieces", "Pieces", "The eight pieces, each after a record."),
+    ("screen", "The screen", "Everything the screen shows, page by page."),
+]
+
+CHEATS = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DUB-1 · Cheat sheets</title>
+<meta name="description" content="DUB-1's cheat sheets: one printable A4 page for each part of the machine.">
+<meta name="theme-color" content="#10141a">
+__STYLE__
+</head>
+<body>
+<main>
+<p class="sub"><a href="../">DUB-1</a> · Dub techno for the M-VAVE FM-1</p>
+<h1 class="sheets">Cheat sheets</h1>
+<p class="lede">One A4 page each, for DUB-1 __VERSION__. Open a sheet to read it on screen, or take its PDF to print.</p>
+<nav class="ways" aria-label="The cheat sheets">
+__LIST__
+</nav>
+<p class="small">The manual has the details: <a href="../manual/">the manual</a>.</p>
+</main>
+</body>
+</html>
+"""
+
+
+def cheatsheets(version, out):
+    """the sheets (each page with its sheet.css, and its PDF) and their list"""
+    src = SRC / "docs" / "cheatsheets"
+    shutil.copytree(src, out, ignore=shutil.ignore_patterns(".*"))
+    rows = []
+    for name, title, line in SHEETS:
+        for ext in ("html", "pdf"):
+            if not (src / f"{name}.{ext}").exists():
+                raise SystemExit(f"no docs/cheatsheets/{name}.{ext}: run tools/make_cheatsheets.sh")
+        rows.append(f'  <a href="{name}.html"><strong>{html.escape(title)}</strong><span>{html.escape(line)}'
+                    f'</span></a><a class="pdf" href="{name}.pdf" aria-label="{html.escape(title)}, PDF">PDF</a>')
+    style = re.search(r"<style>.*?</style>", LANDING, re.S).group(0).replace(
+        "</style>", ".ways { grid-template-columns: minmax(0, 1fr) auto; }\n.ways a.pdf { display: flex; align-items: center; "
+        "background: var(--card); border-color: var(--rule); }\n.ways a:first-child { background: var(--card); "
+        "border-color: var(--rule); }\nh1.sheets { font-size: 2.2rem; letter-spacing: .04em; margin: 0 0 1rem; }\n"
+        ".sub a { color: var(--teal); }\n</style>")
+    (out / "index.html").write_text(CHEATS.replace("__STYLE__", style).replace("__VERSION__", html.escape(version))
+                                    .replace("__LIST__", "\n".join(rows)), encoding="utf-8")
 
 
 def main(pkg, version, out):
@@ -158,8 +223,9 @@ def main(pkg, version, out):
     shutil.copytree(emu, out / "emu")
     # the screen reader's words files (fm1-reader): every one ever made, for the devices that point at them
     shutil.copytree(SRC / "web" / "words", out / "words")
+    cheatsheets(version, out / "cheatsheets")
     (out / ".nojekyll").write_text("")
-    print(f"site: {out}: index.html, install/ ({product}), manual/, emu/, words/, firmware/{name} ({len(raw)} B)")
+    print(f"site: {out}: index.html, install/ ({product}), manual/, cheatsheets/, emu/, words/, firmware/{name} ({len(raw)} B)")
 
 
 if __name__ == "__main__":
