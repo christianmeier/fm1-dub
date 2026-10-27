@@ -1131,7 +1131,8 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
 1. **Writing and loading sets**, of fewer than eight pieces too (Set mode ends at the set's last; the other slots as
    they were): build/design/SETFILES.md, pieces 1-4 and 6.
 2. **Loading sound sets:** other drum, bass, chord and ping instruments, maybe other noise sources
-   (SETFILES.md, "Sound sets").
+   (SETFILES.md, "Sound sets"). **A set is pieces + sounds** (the user's): one file, the pieces and the sounds
+   they play; a sound set alone loads too.
 3. **Managing songs and sounds from the web:** a page (WebMIDI, beside the installer) to back up, edit, download and
    send sets and sound sets; the web emulator to hear them first (SETFILES.md piece 5).
 Later (not 1.5.0): the cues (moves at set bars in a song), then recording them on the device.
