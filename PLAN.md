@@ -1143,11 +1143,19 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   one file, the pieces and the sounds they play; a sound set alone loads too.
 
 ## The videos (the user, 2026-10-27)
-- **For 1.4.0:** a release video; shorts on the novelties; and maybe a video for each cheat sheet, linked from the
-  sheets and to them (whether these are the shorts or a series of their own: to settle).
+- **For 1.4.0** (settled, the user, 2026-10-27): **two series.**
+  - **The release video**, and **shorts** (vertical, under a minute): one novelty each, a hook pointing to its
+    full video (the sirens, a Mix between songs, the DJ filter on SELECT, throws on the desk, Motion's zones, the
+    tape).
+  - **The cheat sheets' videos** (horizontal, 3-6 min): one per sheet, a walk through it on the emulator, the
+    sheet's link in the description (and the sheet's page linking back); the shorts can be cut from them.
+  - **First:** the release video and the sheets Arrangement, Variety, Songs and sets; the rest over time. Filmed
+    on the release build (after step 5).
+- **The hour video again** after step 5 (the user, 2026-10-27), with a stem for every view (not only the scope and
+  the spectrum: a choice of backgrounds) and the pages varied as below. The stems: dub-1.4-stems (being built).
 - **The hour videos, next time:**
-  - **Stems:** the emulator (or the host) records more than one page at once: one or more of the views (the scope,
-    the spectrum) all the time, beside the main view, to use in the edit as a full-screen background under it.
+  - **Stems:** the host records every view all the time beside the main screen (each its own video, frame-exact),
+    to use in the edit as a full-screen background under it.
   - **More variety:** stay on the Arrangement page while cueing moves; show the Chords page or the Walk page's wheel
     at a chord change; the Song page (the song line, the parts) at an intro or an outro; and the like.
   - **Later, in the edit:** the user's own footage (the city, nature, bicycle trips) blended in the background.
