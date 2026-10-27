@@ -45,7 +45,7 @@
                                          * value kept), the layers' Varys trims on it (P_CVARY .. P_NVARY, -50..+50:
                                          * the old factor's amount as Vary + trim, 0 Hold), the piece's looseness
                                          * its own (P_LOOSE, from the recipes; Evolve's before); 8-28 read;
-                                         * 28: Robert's: each strip's Low cut a centred Filter (P_CLOW .. P_NLOW,
+                                         * 28: KellyOffski's: each strip's Low cut a centred Filter (P_CLOW .. P_NLOW,
                                          * P_KLOW, -50..+50: left a low-pass, right a high-pass; 27's 0..100
                                          * converted to the high-pass's same cutoff), five Japanese scales (P_MODE's
                                          * range), the tempo from 40 BPM; 27 read;

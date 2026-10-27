@@ -101,7 +101,7 @@ shot screen-arrangement-solo.png
 tapkey b2
 tapkey w1
 # (1.4.0, the user's) a channel strip: white 1 held, the chord's; its Echo turned (the big ring names it); then its
-# Filter to the left, a low-pass (1.4.0, format 28, Robert's)
+# Filter to the left, a low-pass (1.4.0, format 28, KellyOffski's)
 wait 1500
 key w0 down
 wait 600

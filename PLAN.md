@@ -1058,7 +1058,7 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   maybe a **second oscillator** or a sub; how it's triggered (held, one-shot, repeat in time); and its send into the
   echo (sirens live in the echo: a high send, the feedback pushed). To design with the user: where its knobs live
   (a Siren page under FX? a hold on its key?), presets, the CPU (one voice, cheap).
-- **Requests from a user, Robert** (GitHub issue, 2026-10-25, "Not an Issue, more of a request list"; the user's:
+- **Requests from a user, KellyOffski** (GitHub issue, 2026-10-25, "Not an Issue, more of a request list"; the user's:
   "build the filter and scales, but I'm afraid of the CPU cost; floor at 40 BPM"). **Built** (dub-1.4-robert, format
   28; build/design/REPORT-robert.md):
   1. **A filter per part**: each strip's KNOB 4, the Low cut, a centred **Filter** (P_CLOW .. P_NLOW, P_KLOW,

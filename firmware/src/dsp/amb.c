@@ -637,7 +637,7 @@ EN_COLD void en_voicing(uint32_t pool, int deg, int shape, int *iv)
     for (i = 1; i < 4; i++)
         while (iv[i] <= iv[i - 1])
             iv[i] += 12;
-    if (en_scale(pool, sc) <= 5) {                /* (1.4.0, Robert's Japanese scales: their half-steps never side by
+    if (en_scale(pool, sc) <= 5) {                /* (1.4.0, KellyOffski's Japanese scales: their half-steps never side by
                                                   * side, a cluster; spread to a minor ninth, as a koto's: of the
                                                   * voicings within 26 semitones, no two neighbours a semitone apart,
                                                   * the nearest to this one; the pentatonics have no half-step, so
@@ -831,7 +831,7 @@ static float chord_dry = 0.5f, chord_snd = 1.5f;   /* the chord's Ghost: its dry
 /* (1.4.0, the Arrangement page's channel strips) each part's sends, the chord's, the pings', the bass's and the drums'
  * Echo and Plate: what each sent before, times this (1 at 50); each part's Filter, a one-pole's coefficient (0 off:
  * the chord, the pings, the bass, the drums, the noise; lcut4 the noise's rings', at their quarter rate), and its
- * side (1.4.0, format 28, Robert's: the Low cut a centred filter): lpf 0 a high-pass (the Low cut as it was, bit for
+ * side (1.4.0, format 28, KellyOffski's: the Low cut a centred filter): lpf 0 a high-pass (the Low cut as it was, bit for
  * bit), 1 a low-pass (lcut_step). The noise's low-pass in its own filters (nz_lpa, nz_lpa4: as its LFO's), its
  * lcut[4] then 0 */
 static float sx[4][2] = {{1.0f, 1.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}, {1.0f, 1.0f}}, lcut[6], lcut4;
@@ -3904,7 +3904,7 @@ EN_COLD static void apply(int p, int v)
                                                   * v / 50, as the noise's Echo and Plate were already: 50 exactly 1) */
         break;
     case P_CLOW: case P_PLOW: case P_BLOW: case P_DLOW: case P_NLOW: case P_KLOW:   /* (1.4.0, the strips) the Filter
-                                                  * (format 28, Robert's; the Low cut before): centred, 0 off (the
+                                                  * (format 28, KellyOffski's; the Low cut before): centred, 0 off (the
                                                   * filter not run); right a high-pass, ~20 Hz at +1 .. ~2.5 kHz at +50
                                                   * (the old Low cut's 600 Hz near +36); left a low-pass, ~18 kHz at -1
                                                   * .. ~200 Hz at -50; a one-pole (6 dB), its coefficient here; the

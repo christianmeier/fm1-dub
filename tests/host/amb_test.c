@@ -2467,7 +2467,7 @@ int main(void)
         printf("  the dub mixer: off at 0, riding within bounds, Lock resting it, a song's intro left to the song\n");
     }
 
-    /* (1.4.0, format 28, Robert's) a strip's Filter, either way: the chord alone, a fork from one moment, the filter
+    /* (1.4.0, format 28, KellyOffski's) a strip's Filter, either way: the chord alone, a fork from one moment, the filter
      * off in one and on in the other; the low-pass at -40 (~500 Hz) takes its highs (over ~2 kHz), the high-pass at +36 its lows
      * (under ~150 Hz), on the dry and on what it sent (the echo's tail, everything muted after: the filter before the
      * sends); the bass, not filtered, left as it is */
@@ -2581,7 +2581,7 @@ int main(void)
         en_set(P_BLOW, 0);
     }
 
-    /* (1.4.0, format 28, Robert's) the tempo from 40 BPM: at 40, 60 and 90 the grid runs at its rate, the sound clean
+    /* (1.4.0, format 28, KellyOffski's) the tempo from 40 BPM: at 40, 60 and 90 the grid runs at its rate, the sound clean
      * (no NaN, no clipping), the echo's longest times capped to its tape and shown as they are ("5.6 s" at 40 for a bar:
      * 6 s would not fit; at 90, "1 bar") */
     {
@@ -2613,7 +2613,7 @@ int main(void)
         en_set(P_ETIME, 1);
     }
 
-    /* (1.4.0, format 28, Robert's) the Japanese scales: five notes each, in the table; their chords' voicings never with
+    /* (1.4.0, format 28, KellyOffski's) the Japanese scales: five notes each, in the table; their chords' voicings never with
      * two neighbours a semitone apart (spread to a ninth) */
     {
         static const struct { int m; uint16_t pool; } JS[5] = {

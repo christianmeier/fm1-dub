@@ -1174,7 +1174,7 @@ int main(int argc, char **argv)
             proj.slot[proj.piece].screen = proj.screen;
             plat_store_save(OBJ_PROJ, &proj, sizeof proj);
         } else if (!strcmp(cmd, "store27") || !strcmp(cmd, "store28")) {   /* the project as 1.4.0's dub mixer
-                                                  * saved it (27: the strips' Low cut) or Robert's Filter (28): no
+                                                  * saved it (27: the strips' Low cut) or KellyOffski's Filter (28): no
                                                   * looseness, the Varys 0..100 on Evolve */
             static project28_t o;
             const int f27 = !strcmp(cmd, "store27");

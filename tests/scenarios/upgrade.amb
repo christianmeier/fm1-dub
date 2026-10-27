@@ -196,7 +196,7 @@ turn PRESET 3
 wait 300
 expect piece 3
 expect par163 90
-# (1.4.0, format 28, Robert's) a dub mixer project (format 27): each strip's Low cut (0..100) read as its Filter's
+# (1.4.0, format 28, KellyOffski's) a dub mixer project (format 27): each strip's Low cut (0..100) read as its Filter's
 # high-pass, the same cutoff as near as a step goes (+28, ~290 Hz, saved as 27's 78 and read back +28); a low-pass,
 # which 27 had not, saved as none
 turn PRESET -3

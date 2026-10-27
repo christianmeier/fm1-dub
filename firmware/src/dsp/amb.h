@@ -36,7 +36,7 @@
 /* modes: pools relative to the root (bit i: root + i semitones) */
 enum { MODE_IONIAN, MODE_DORIAN, MODE_PHRYGIAN, MODE_LYDIAN, MODE_MIXOLYDIAN, MODE_AEOLIAN, MODE_PENT_MAJ,
        MODE_PENT_MIN, MODE_HIRAJOSHI, MODE_IN, MODE_IWATO, MODE_YO, MODE_INSEN, EN_NMODES };   /* (1.4.0, format 28,
-       Robert's: five Japanese scales, five notes as the pentatonics) */
+       KellyOffski's: five Japanese scales, five notes as the pentatonics) */
 extern const char *const EN_MODE_NAME[EN_NMODES];
 extern const uint16_t EN_MODE_POOL[EN_NMODES];
 extern const char *const EN_NOTE_NAME[12];

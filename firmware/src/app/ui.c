@@ -280,7 +280,7 @@ static const char *const KNOB_LABEL[NVIEWS][4] = {
     {"Drift", "Wave", "Rate", "Target"},
     {"Level", "Tone", "Length", ""},
     {"Air", "Tone", "Decay", "Width"},
-    {"Level", "Echo", "Plate", "Filter"},   /* (1.4.0, format 28, Robert's: the Low cut a centred filter) */
+    {"Level", "Echo", "Plate", "Filter"},   /* (1.4.0, format 28, KellyOffski's: the Low cut a centred filter) */
     {"Intro", "Main", "Outro", "Kind"},
     {"Mode", "Transition", "", "Values"},
     {"Walk", "Change", "", ""},
@@ -566,7 +566,7 @@ static const char *mode_name(void)
  * are the engine's, MODE_*) */
 static const uint8_t MODE_ORDER[EN_NMODES] = {MODE_AEOLIAN, MODE_IONIAN, MODE_DORIAN, MODE_MIXOLYDIAN, MODE_PENT_MIN,
                                               MODE_PENT_MAJ, MODE_PHRYGIAN, MODE_LYDIAN, MODE_HIRAJOSHI, MODE_IN,
-                                              MODE_IWATO, MODE_YO, MODE_INSEN};   /* (1.4.0, Robert's: the Japanese last) */
+                                              MODE_IWATO, MODE_YO, MODE_INSEN};   /* (1.4.0, KellyOffski's: the Japanese last) */
 static int mode_pos(int m)
 {
     int i;
