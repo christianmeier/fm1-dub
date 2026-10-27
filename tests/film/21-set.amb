@@ -37,9 +37,17 @@ wait 300
 tap HOME
 wait 300
 expect view 0
-# Form: Motion 42 -> 20 (Breathes: the loop holds), Drift 72 -> 75 (the record's filter moves the most)
-spin K3 -22
-spin K4 3
+# Form: Vary 82 (format 35's scale: the amount 40 the song had, the old knob's 40), Motion 20 (Breathes: the loop
+# holds), Drift 75 (the record's filter moves the most). Every value the songs rely on is set where it lands whatever
+# the recipe has (the recipes moved in 1.4.0's step 5): a knob turned to its bottom, then up to the value; a centred
+# one (a layer's Vary trim, an LFO's Drift) to its far end on the value's side, twice (the notch at 0 stops the
+# first), then back to the value
+spin K2 -100
+spin K2 82
+spin K3 -100
+spin K3 20
+spin K4 -100
+spin K4 75
 wait 300
 tap HOME
 wait 300
@@ -58,8 +66,12 @@ wait 300
 tap ENV
 wait 300
 expect view 1
-# Chord: Change 64 bars -> Hold (Dm7, the walk's home, held all song); one stab a bar, the Pad (the recipe's)
+# Chord: Change 64 bars -> Hold (Dm7, the walk's home, held all song); one stab a bar, the Pad (the recipe's); its
+# Vary -10 (the amount 24, as the old -16 on 40)
 spin K3 1
+spin K4 -100
+spin K4 -100
+spin K4 40
 wait 300
 tap ENV
 wait 300
@@ -67,7 +79,31 @@ expect view 8
 # Chord voice: Attack 0 -> 25 (each stab a swell, as Aries' pad)
 spin K3 25
 wait 300
+tap ENV
+wait 300
+tap ENV
+wait 300
+expect view 22
+# Chord LFO: its Drift -12 (Fog's)
+spin K1 -100
+spin K1 -100
+spin K1 38
+wait 300
+tap ARP
+wait 300
+expect view 2
+# Pings: Vary -10 (the amount 24, as the chord's)
+spin K2 -100
+spin K2 -100
+spin K2 40
+wait 300
 tap LFO
+wait 300
+expect view 3
+# Bass: Vary 0 (the amount 40, Form's)
+spin K2 -100
+spin K2 -100
+spin K2 50
 wait 300
 tap LFO
 wait 300
@@ -75,6 +111,42 @@ expect view 10
 # Bass voice: Octave -1 -> 0 (the record's low end at 60-150 Hz, a drone on D2)
 spin K1 1
 wait 300
+tap SEQ
+wait 300
+expect view 4
+# Drums: Vary 0 (the amount 40)
+spin K3 -100
+spin K3 -100
+spin K3 50
+wait 300
+tap SAVE
+wait 300
+expect view 19
+# Noise: Vary 0 (the amount 40)
+spin K2 -100
+spin K2 -100
+spin K2 50
+wait 300
+tap SAVE
+wait 300
+tap SAVE
+wait 300
+expect view 23
+# Noise LFO: its Drift -15 (Fog's)
+spin K1 -100
+spin K1 -100
+spin K1 35
+wait 300
+expect par5 82
+expect par133 -10
+expect par135 -10
+expect par136 0
+expect par137 0
+expect par138 0
+expect par166 -12
+expect par167 -15
+# (the filter's sweep at format 35's pace, a new place every 6-20 bars: the recipe's, on no knob)
+expect par169 1
 expect par15 20
 expect par165 75
 expect par159 2
@@ -96,9 +168,13 @@ expect piece 4
 tap HOME
 wait 300
 expect view 0
-# Form: Vary 50 -> 35, Drift 80 -> 70 (Motion 20, Breathes: the recipe's)
-spin K2 -15
-spin K4 -10
+# Form: Vary 79 (the amount 35), Motion 20 (Breathes), Drift 70
+spin K2 -100
+spin K2 79
+spin K3 -100
+spin K3 20
+spin K4 -100
+spin K4 70
 wait 300
 tap HOME
 wait 300
@@ -119,11 +195,15 @@ wait 300
 tap ENV
 wait 300
 expect view 1
-# Chord: ALGORITHM Noise -> Saws (round); Density 3 -> 2 stabs a bar; Change 64 -> 16 bars
+# Chord: ALGORITHM Noise -> Saws (round); Density 3 -> 2 stabs a bar; Change 64 -> 16 bars; its Vary 0 (the amount
+# 35, Form's)
 turn ALGO 1
 wait 300
 spin K1 -1
 spin K3 -2
+spin K4 -100
+spin K4 -100
+spin K4 50
 wait 300
 tap ENV
 wait 300
@@ -137,6 +217,8 @@ tap ENV
 wait 300
 expect view 22
 # Chord LFO: its Drift +50 -> +15 (the recipe's wobble calmed)
+spin K1 100
+spin K1 100
 spin K1 -35
 wait 300
 tap EDIT
@@ -186,16 +268,23 @@ wait 300
 tap ARP
 wait 300
 expect view 2
-# Pings: ALGORITHM Glass -> Marimba (Steppers')
+# Pings: ALGORITHM Glass -> Marimba (Steppers'); Vary 0
 turn ALGO -1
+wait 300
+spin K2 -100
+spin K2 -100
+spin K2 50
 wait 300
 tap LFO
 wait 300
 expect view 3
 # Bass: Roller (the recipe's: the rolling low figure); ALGORITHM Pluck -> Punch; its level 70 -> 55 (Abraxas' bass
-# sits low in the mix)
+# sits low in the mix); Vary 0
 turn ALGO -2
 wait 300
+spin K2 -100
+spin K2 -100
+spin K2 50
 tap OCT-
 tap OCT-
 tap OCT-
@@ -203,14 +292,21 @@ wait 300
 tap SEQ
 wait 300
 expect view 4
-# Drums: Hits 58 -> 50 (the open hat on all four offbeats, the shaker under it; kit Punch, the recipe's)
+# Drums: Hits 58 -> 50 (the open hat on all four offbeats, the shaker under it; kit Punch, the recipe's); Vary 0
 spin K2 -8
+spin K3 -100
+spin K3 -100
+spin K3 50
 wait 300
 tap SAVE
 wait 300
 expect view 19
-# Noise: ALGORITHM Vinyl -> Tape (a hiss, not a crackle); its level 5 -> 20
+# Noise: ALGORITHM Vinyl -> Tape (a hiss, not a crackle); its level 5 -> 20; Vary 0
 turn ALGO 1
+wait 300
+spin K2 -100
+spin K2 -100
+spin K2 50
 wait 300
 tap OCT+
 tap OCT+
@@ -222,14 +318,30 @@ expect view 25
 # Noise voice: Air 66 -> 75
 spin K1 9
 wait 300
+tap SAVE
+wait 300
+expect view 23
+# Noise LFO: its Drift -6 (Concrete's)
+spin K1 -100
+spin K1 -100
+spin K1 44
+wait 300
 tap SEL
 wait 300
 expect view 17
 # Arrangement: Width 55 -> 70 (the record's wide mids)
 spin K1 15
 wait 300
-expect par5 35
+expect par5 79
+expect par15 20
 expect par165 70
+expect par133 0
+expect par135 0
+expect par136 0
+expect par137 0
+expect par138 0
+expect par167 -6
+expect par169 1
 expect par159 2
 expect par160 37
 expect par161 2
@@ -274,10 +386,13 @@ expect piece 5
 tap HOME
 wait 300
 expect view 0
-# Form: Vary 40 -> 30, Motion 38 -> 10 (the loop held), Drift 50 -> 85 (the drone breathing)
-spin K2 -10
-spin K3 -28
-spin K4 35
+# Form: Vary 76 (the amount 30), Motion 10 (the loop held), Drift 85 (the drone breathing)
+spin K2 -100
+spin K2 76
+spin K3 -100
+spin K3 10
+spin K4 -100
+spin K4 85
 wait 300
 tap HOME
 wait 300
@@ -298,12 +413,16 @@ wait 300
 tap ENV
 wait 300
 expect view 1
-# Chord: ALGORITHM Keys -> Pad; Density 2 -> 1 stab a bar; Throws 80 -> 40; Change 16 bars -> Hold (Am7 held)
+# Chord: ALGORITHM Keys -> Pad; Density 2 -> 1 stab a bar; Throws 80 -> 40; Change 16 bars -> Hold (Am7 held); its
+# Vary 0 (the amount 30, Form's)
 turn ALGO 2
 wait 300
 spin K1 -1
 spin K2 -40
 spin K3 2
+spin K4 -100
+spin K4 -100
+spin K4 50
 wait 300
 tap ENV
 wait 300
@@ -312,11 +431,25 @@ expect view 8
 spin K3 40
 spin K4 45
 wait 300
+tap ENV
+wait 300
+tap ENV
+wait 300
+expect view 22
+# Chord LFO: its Drift +12 (Night Drive's as the song was made; its recipe's +25 since step 5)
+spin K1 100
+spin K1 100
+spin K1 -38
+wait 300
 tap ARP
 wait 300
 expect view 2
-# Pings: ALGORITHM Drop -> Glass (long and bright); Pings voice: Octave 0 -> +1
+# Pings: ALGORITHM Drop -> Glass (long and bright), Vary 0; Pings voice: Octave 0 -> +1
 turn ALGO -2
+wait 300
+spin K2 -100
+spin K2 -100
+spin K2 50
 wait 300
 tap ARP
 wait 300
@@ -326,8 +459,12 @@ wait 300
 tap LFO
 wait 300
 expect view 3
-# Bass: Offbeat -> Drone (one long note a bar); its level 68 -> 43 (a quiet floor under the drone)
+# Bass: Offbeat -> Drone (one long note a bar); its level 68 -> 43 (a quiet floor under the drone); Vary -15 (the
+# amount 14, as the old -16 on 30)
 spin K1 -1
+spin K2 -100
+spin K2 -100
+spin K2 35
 wait 300
 tap OCT-
 tap OCT-
@@ -338,8 +475,11 @@ wait 300
 tap SEQ
 wait 300
 expect view 4
-# Drums: Hits 33 -> 0 (no hats; the kick muted on the Arrangement page from the song's start)
+# Drums: Hits 33 -> 0 (no hats; the kick muted on the Arrangement page from the song's start); Vary -15 (the amount 14)
 spin K2 -40
+spin K3 -100
+spin K3 -100
+spin K3 35
 wait 300
 tap FX
 wait 300
@@ -359,15 +499,27 @@ wait 300
 tap SAVE
 wait 300
 expect view 19
-# Noise: its level 15 -> 30 (Tape, the recipe's); Noise voice: Air 58 -> 80 (the record's hiss)
+# Noise: its level 15 -> 30 (Tape, the recipe's), Vary 0; Noise voice: Air 58 -> 80 (the record's hiss); Noise LFO:
+# its Drift +15 (Night Drive's as the song was made; +30 since step 5)
 tap OCT+
 tap OCT+
 tap OCT+
+wait 300
+spin K2 -100
+spin K2 -100
+spin K2 50
 wait 300
 tap SAVE
 wait 300
 expect view 25
 spin K1 22
+wait 300
+tap SAVE
+wait 300
+expect view 23
+spin K1 100
+spin K1 100
+spin K1 -35
 wait 300
 tap SEL
 wait 300
@@ -375,9 +527,17 @@ expect view 17
 # Arrangement: Duck 50 -> 0 (no kick, no pump)
 spin K4 -50
 wait 300
-expect par5 30
+expect par5 76
 expect par15 10
 expect par165 85
+expect par133 0
+expect par135 0
+expect par136 -15
+expect par137 -15
+expect par138 0
+expect par166 12
+expect par167 15
+expect par169 1
 expect par160 27
 expect par19 9
 expect par20 5
@@ -408,10 +568,13 @@ expect piece 6
 tap HOME
 wait 300
 expect view 0
-# Form: Vary 30 -> 40, Motion 8 -> 25 (Breathes; turned into Sections mid-song), Drift 43 -> 55
-spin K2 10
-spin K3 17
-spin K4 12
+# Form: Vary 82 (the amount 40), Motion 25 (Breathes; turned into Sections mid-song), Drift 55
+spin K2 -100
+spin K2 82
+spin K3 -100
+spin K3 25
+spin K4 -100
+spin K4 55
 wait 300
 tap HOME
 wait 300
@@ -432,16 +595,30 @@ wait 300
 tap ENV
 wait 300
 expect view 1
-# Chord: ALGORITHM Tonewheel -> Saws (round, past Noise); Change Hold -> 64 bars (two stabs a bar, the recipe's)
+# Chord: ALGORITHM Tonewheel -> Saws (round, past Noise); Change Hold -> 64 bars (two stabs a bar, the recipe's); its
+# Vary -9 (the amount 25, as the old -15 on 40)
 turn ALGO 2
 wait 300
 spin K3 -1
+spin K4 -100
+spin K4 -100
+spin K4 41
 wait 300
 tap ENV
 wait 300
 expect view 8
 # Chord voice: Cutoff +15 (a brighter chord: Elysian's is the album's brightest)
 spin K1 17
+wait 300
+tap ENV
+wait 300
+tap ENV
+wait 300
+expect view 22
+# Chord LFO: its Drift +3 (Pressure's)
+spin K1 100
+spin K1 100
+spin K1 -47
 wait 300
 tap EDIT
 wait 300
@@ -490,26 +667,35 @@ wait 300
 tap ARP
 wait 300
 expect view 2
-# Pings: ALGORITHM Wood -> Blip; Density 20 -> 25
+# Pings: ALGORITHM Wood -> Blip; Density 20 -> 25; Vary -9 (the amount 25)
 turn ALGO -3
 wait 300
 spin K1 5
+spin K2 -100
+spin K2 -100
+spin K2 41
 wait 300
 tap LFO
 wait 300
 expect view 3
 # Bass: Offbeat (the recipe's: the dub bass on the offbeats); Fifth 10 -> 0 (one note, as Elysian's); ALGORITHM
-# Growl -> Sub (round)
+# Growl -> Sub (round); Vary -9 (the amount 25)
 spin K4 -10
+spin K2 -100
+spin K2 -100
+spin K2 41
 turn ALGO 1
 wait 300
 tap SEQ
 wait 300
 expect view 4
-# Drums: ALGORITHM Deep -> Tight; Hits 39 -> 50 (the open hat on the four offbeats)
+# Drums: ALGORITHM Deep -> Tight; Hits 39 -> 50 (the open hat on the four offbeats); Vary -9 (the amount 25)
 turn ALGO -1
 wait 300
 spin K2 11
+spin K3 -100
+spin K3 -100
+spin K3 41
 wait 300
 tap FX
 wait 300
@@ -528,8 +714,22 @@ wait 300
 tap SAVE
 wait 300
 expect view 19
-# Noise: ALGORITHM Tape -> Vinyl (the crackle groove on the grid, as Elysian's noise)
+# Noise: ALGORITHM Tape -> Vinyl (the crackle groove on the grid, as Elysian's noise); Vary 0 (the amount 40, Form's)
 turn ALGO -1
+wait 300
+spin K2 -100
+spin K2 -100
+spin K2 50
+wait 300
+tap SAVE
+wait 300
+tap SAVE
+wait 300
+expect view 23
+# Noise LFO: its Drift -3 (Pressure's)
+spin K1 -100
+spin K1 -100
+spin K1 47
 wait 300
 tap SEL
 wait 300
@@ -537,9 +737,17 @@ expect view 17
 # Arrangement: Duck 70 -> 45 (the record's chords barely dip)
 spin K4 -25
 wait 300
-expect par5 40
+expect par5 82
 expect par15 25
 expect par165 55
+expect par133 -9
+expect par135 -9
+expect par136 -9
+expect par137 -9
+expect par138 0
+expect par166 3
+expect par167 -3
+expect par169 1
 expect par160 56
 expect par18 120
 expect par19 4
@@ -581,10 +789,13 @@ expect piece 7
 tap HOME
 wait 300
 expect view 0
-# Form: Vary 20 -> 35, Motion 10 -> 20, Drift 41 -> 50
-spin K2 15
-spin K3 10
-spin K4 9
+# Form: Vary 79 (the amount 35), Motion 20, Drift 50
+spin K2 -100
+spin K2 79
+spin K3 -100
+spin K3 20
+spin K4 -100
+spin K4 50
 wait 300
 tap HOME
 wait 300
@@ -606,12 +817,15 @@ tap ENV
 wait 300
 expect view 1
 # Chord: ALGORITHM Pad -> Keys; Density 1 -> 2 stabs a bar; Throws 70 -> 40 (fewer pushes of the echo: the keys'
-# strikes are the song's peaks); Change 64 -> 32 bars
+# strikes are the song's peaks); Change 64 -> 32 bars; its Vary -8 (the amount 23, as the old -12 on 35)
 turn ALGO -2
 wait 300
 spin K1 1
 spin K2 -30
 spin K3 -1
+spin K4 -100
+spin K4 -100
+spin K4 42
 wait 300
 tap ENV
 wait 300
@@ -619,6 +833,16 @@ expect view 8
 # Chord voice: Cutoff +10 (brighter), Decay 80 -> 35 (Bcn Dub is a stab track: short stabs)
 spin K1 12
 spin K4 -45
+wait 300
+tap ENV
+wait 300
+tap ENV
+wait 300
+expect view 22
+# Chord LFO: its Drift -25 (Haze's)
+spin K1 -100
+spin K1 -100
+spin K1 25
 wait 300
 tap EDIT
 wait 300
@@ -667,8 +891,12 @@ wait 300
 tap ARP
 wait 300
 expect view 2
-# Pings: ALGORITHM Glass -> Drop (Night Drive's); Pings voice: Octave +1 -> 0
+# Pings: ALGORITHM Glass -> Drop (Night Drive's), Vary -8 (the amount 23); Pings voice: Octave +1 -> 0
 turn ALGO 2
+wait 300
+spin K2 -100
+spin K2 -100
+spin K2 42
 wait 300
 tap ARP
 wait 300
@@ -679,9 +907,12 @@ tap LFO
 wait 300
 expect view 3
 # Bass: Drone -> Offbeat; Fifth 20 -> 0 (Bcn Dub's bass on F, 83% of the time); its level 58 -> 73 (Liumin's low
-# end is its weight: 11 dB over the mids)
+# end is its weight: 11 dB over the mids); Vary -8 (the amount 23)
 spin K1 1
 spin K4 -20
+spin K2 -100
+spin K2 -100
+spin K2 42
 tap OCT+
 tap OCT+
 tap OCT+
@@ -689,11 +920,15 @@ wait 300
 tap SEQ
 wait 300
 expect view 4
-# Drums: ALGORITHM Dusty -> Tight (round); Kick Half -> Four (Liumin's kick never stops); Hits 33 -> 60
+# Drums: ALGORITHM Dusty -> Tight (round); Kick Half -> Four (Liumin's kick never stops); Hits 33 -> 60; Vary 0 (the
+# amount 35, Form's)
 turn ALGO 1
 wait 300
 spin K1 -2
 spin K2 27
+spin K3 -100
+spin K3 -100
+spin K3 50
 wait 300
 tap SEQ
 wait 300
@@ -702,6 +937,24 @@ wait 300
 expect view 24
 # Hats: Level 50 -> 60 (Liumin's hats as loud as the modern records')
 spin K1 10
+wait 300
+tap SAVE
+wait 300
+expect view 19
+# Noise: Vary -8 (the amount 23)
+spin K2 -100
+spin K2 -100
+spin K2 42
+wait 300
+tap SAVE
+wait 300
+tap SAVE
+wait 300
+expect view 23
+# Noise LFO: its Drift -13 (Haze's)
+spin K1 -100
+spin K1 -100
+spin K1 37
 wait 300
 tap SEL
 wait 300
@@ -721,9 +974,17 @@ expect par153 62
 expect par0 45
 expect par2 73
 expect par111 40
-expect par5 35
+expect par5 79
 expect par15 20
 expect par165 50
+expect par133 -8
+expect par135 -8
+expect par136 -8
+expect par137 0
+expect par138 -8
+expect par166 -25
+expect par167 -13
+expect par169 1
 expect par160 42
 expect par162 0
 expect par18 123
@@ -765,7 +1026,7 @@ spin K2 2
 wait 300
 expect par158 2
 expect trans 2
-turn PRESET -4 5
+turn PRESET -4 300
 wait 800
 expect piece 3
 expect playing 0
