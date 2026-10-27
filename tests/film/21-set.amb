@@ -793,14 +793,14 @@ expect screen 0
 expect filter 0
 # The launch screen's run starts the music by itself, as the FM-1 at power-on: here, Set mode on slot 4, the first
 # song's intro from the top. Its UI starts again too (the DJ filter at Off), so the filter is shut now, on camera, as
-# the intro's first sounds come: Shut 30, opened over the intro's last phrase
+# the intro's first sounds come: Shut 60 as the ring shows it (-30 of -50..+50), opened over the intro's last phrase
 spin SELECT -32
 expect filter -30
 wait 200
 expect playing 1
 expect song 1
 # ------------------------------------------------------ 1 Hoarfrost (D minor, 120, bars 0-311) ---
-bar 8 Hoarfrost: the DJ filter opened, Shut 30 to Off over the intro's last phrase (SELECT, slowly)
+bar 8 Hoarfrost: the DJ filter opened, Shut 60 to Off over the intro's last phrase (SELECT, slowly)
 turn SELECT 30 530
 bar 16 Hoarfrost: the main, the filter clear
 wait 300
@@ -850,7 +850,7 @@ key b3 up
 tap HOME
 bar 125 Black Ice: SEL
 tap SEL
-bar 126 Black Ice: the DJ filter ridden up, Off to Open 28 over 8 bars (thin, the floor going)
+bar 126 Black Ice: the DJ filter ridden up, Off to Open 56 over 8 bars (thin, the floor going)
 turn SELECT 30 530
 bar 134 Black Ice: DROP, 2 bars before the phrase line (white 11 held)
 key w10 down
@@ -897,7 +897,7 @@ bar 0 3 SNOWFIELD: the downbeat, no kick: the old chord in the held echo, the hi
 expect piece 5
 expect song 1
 expect progpos 0
-bar 40 Snowfield: the DJ filter shut slowly, Off to Shut 35 over a minute (under water)
+bar 40 Snowfield: the DJ filter shut slowly, Off to Shut 70 over a minute (under water)
 turn SELECT -3 120
 turn SELECT -34 1700
 expect filter -35
@@ -956,7 +956,7 @@ bar 201 Aurora: HOME
 tap HOME
 bar 271 Aurora: SEL
 tap SEL
-bar 272 Aurora: the peak: the DJ filter ridden up, Off to Open 28 over 14 bars
+bar 272 Aurora: the peak: the DJ filter ridden up, Off to Open 56 over 14 bars
 turn SELECT 3 120
 turn SELECT 27 1000
 expect filter 28
@@ -985,7 +985,7 @@ tapkey b2
 tap HOME
 wait 200
 expect song 3
-bar 466 Aurora: the DJ filter shut slowly as the parts leave, Off to Shut 25
+bar 466 Aurora: the DJ filter shut slowly as the parts leave, Off to Shut 50
 turn SELECT -27 590
 bar 474 Aurora: and opened again over the held echo, to Off by the change
 turn SELECT 25 380
@@ -1030,7 +1030,7 @@ bar 343 Thaw: SEL
 tap SEL
 bar 344 Thaw: OPEN held over the main's last phrase, the light coming up (white 9 held)
 key w8 down
-bar 352 Thaw: the outro: let go; the DJ filter shut slowly to the end, Off to Shut 35
+bar 352 Thaw: the outro: let go; the DJ filter shut slowly to the end, Off to Shut 70
 key w8 up
 wait 200
 expect song 3
