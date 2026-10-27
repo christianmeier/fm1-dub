@@ -896,7 +896,7 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   +552 B. Renders: build/mixer/ (Fog and Basic at 0, the recipe's, 100). To judge by ear: the rates, the depths,
   how often a part leaves.
 - **The variety study, its first step** (the user, 2026-10-25: "the first step is cheap, let's do it";
-  build/variety/REPORT-variety.md, build/design/REPORT-variety1.md): no format step, no knob moved.
+  build/design/REPORT-variety.md, build/design/REPORT-variety1.md): no format step, no knob moved.
   - **Energy leans, it doesn't lock:** past -25 a Groove Motion picks comes as a Thin, past +25 a Break as a Groove;
     Motion's sections work at any Energy (it fixed the phrases Thin or Full before).
   - **The filter's sweep the slow movement's, not Motion's:** its depth (and the stabs' filter's, the echo heads',
