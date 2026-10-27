@@ -2197,8 +2197,14 @@ EN_COLD static void song_start(void)                     /* PLAY from the top: E
         fd_pos[i] = fd_tgt[i] = fd_g[i] = en_fader[i] = song_b0 ? 0.0f : 1.0f;
     }
     fd_quiet = song_b0 ? 0x3Fu : 0u;
-    if (tr_in && song_b0) {                      /* (a Mix: the kick from the downbeat, whole; the noise with it, faded
-                                                  * in; the rest no sooner than song_tick lets them, as the Kind has) */
+    if (tr_in) {                                 /* (a Mix: the kick from the downbeat, whole; the noise with it, faded
+                                                  * in; the rest no sooner than song_tick lets them, as the Kind has;
+                                                  * Intro None's too: out first, not full and dipping under the ramp) */
+        if (!song_b0) {
+            for (i = 0; i < EN_NPART; i++)
+                fd_pos[i] = fd_tgt[i] = fd_g[i] = en_fader[i] = 0.0f;
+            fd_quiet = 0x3Fu;
+        }
         song_ent[3] = 0.0f, song_fd[3] = 1.0f;
         song_ent[5] = 0.0f, song_fd[5] = 2.0f;
         fd_pos[3] = fd_tgt[3] = fd_g[3] = en_fader[3] = 1.0f;
