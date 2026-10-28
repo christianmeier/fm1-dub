@@ -1059,8 +1059,8 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   echo (sirens live in the echo: a high send, the feedback pushed). To design with the user: where its knobs live
   (a Siren page under FX? a hold on its key?), presets, the CPU (one voice, cheap).
 - **Requests from a user, KellyOffski** (GitHub issue, 2026-10-25, "Not an Issue, more of a request list"; the user's:
-  "build the filter and scales, but I'm afraid of the CPU cost; floor at 40 BPM"). **Built** (dub-1.4-robert, format
-  28; build/design/REPORT-robert.md):
+  "build the filter and scales, but I'm afraid of the CPU cost; floor at 40 BPM"). **Built** (dub-1.4-kellyoffski, format
+  28; build/design/REPORT-kellyoffski.md):
   1. **A filter per part**: each strip's KNOB 4, the Low cut, a centred **Filter** (P_CLOW .. P_NLOW, P_KLOW,
      -50..+50): 0 off and not run; right a high-pass, 6 dB, the Low cut's own one-pole (bit for bit), 20 Hz at +1 ..
      2.5 kHz at +50 (the old 600 Hz near +36); left a low-pass, 12 dB (two one-poles), 18 kHz at -1 .. 200 Hz at -50;
@@ -1076,7 +1076,7 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   3. **Slower tempos**: 40-140 BPM; the echo already kept to its tape (5.6 s): under ~43 BPM a bar's echo stays at
      5.6 s, the Dub page showing "5.6 s"; the grid's rate checked at 40, 60 and 90. Not changed: Stutter catches 160
      ms (its buffer), less than a sixteenth under ~94 BPM, as before.
-  A reply drafted for the user to post (build/design/REPLY-robert.md). Open: the 12 dB low-pass and the policy to
+  A reply drafted for the user to post (build/design/REPLY-kellyoffski.md). Open: the 12 dB low-pass and the policy to
   try on the FM-1 (the device's own load with all six on); a resonance near the extremes (the brief's "DJ
   filter's character") not built: a one-pole has none, an SVF a part would cost ~5% each (the noise's, measured
   earlier).
