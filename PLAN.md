@@ -1140,6 +1140,14 @@ about this later." The pings are DUB-1's own layer (four drifting loops of singl
 (build/research/dubtechno/classics/PROFILES-INDEX.md). To talk over before 1.5.0: their place and level in the
 recipes, off or rare by default, or another voice in their slot.
 
+## Next hour set: after the Munich set (the user, 2026-10-28)
+"We can aim at releasing a one-hour set inspired on this set, after we discuss a few things." The model: Abyss
+Pulse's "Munich Edition" (REPORT11-munich.md: dub techno's sound and filter drift over a deep tech / deep house groove,
+offbeat hats and a clap, sus chords changing about once a minute, breakdowns, a bright top, the chords gated on every
+corchea (8th)). To discuss first: which of the traits DUB-1 lacks to build (the top end, the hats' level, the drift's
+depth, a chord gate), the pings (above), and the stabs' fast filter closing (the user: "bright at the start, then it
+rapidly closes", in the classics and in this set; not measured yet).
+
 ## 1.5.0: sets, their cues, the web (the user, 2026-10-27)
 1. **Writing and loading sets**, of fewer than eight pieces too (Set mode ends at the set's last; the other slots as
    they were): build/design/SETFILES.md, pieces 1-4 and 6.
