@@ -1135,6 +1135,13 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
       (build/film/channel/long_videos/set2: again on the release build, with stems and more pages?)
 - [ ] After: the SMK branch; the wiki
 
+## 1.4.1: a fix for 1.4.0 (2026-10-28)
+- [x] PRESETS spun fast while playing (4 clicks or more within ~40 ms each) filled the engine's queue: the piece
+      arrived at played partly as the pieces passed through, the screen showing its own (a 1.4.0 regression: the
+      piece spread over blocks, the CPU work). Fixed, bbdd410 (presetflood.amb). Found making the LFO short.
+- [ ] The shorts 60, 61, 63, 65 and the Songs sheet video again on it (their takes spin fast); thumbnails for the shorts
+- [ ] Release 1.4.1 on the user's go (release notes: the fix; the same rewrite without build/)
+
 ## To discuss: the pings (the user, 2026-10-28)
 "One thing to reflect upon: the pings. Most of the tracks I've analysed do not have this voice. We shall discuss
 about this later." The pings are DUB-1's own layer (four drifting loops of single notes), not a trait of the classics
