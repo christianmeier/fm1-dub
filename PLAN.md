@@ -1116,13 +1116,15 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
   counter, safe mode), the SMK-37 port needing a tester, and the m-bootloader clock loss.
 
 ## Release 1.4.0: what's left (the user, 2026-10-27: "prepare what's left for 1.4.0 release")
-- [ ] The three fixes (dub-1.4-fixes3): a Mix into an Intro None piece; a key on a gap slot (the wrong root); the
+- [x] The three fixes (dub-1.4-fixes3): a Mix into an Intro None piece; a key on a gap slot (the wrong root); the
       centred knobs' notch on a slow turn (the reset 3 s)
-- [ ] Step 5: the recipes against their models (dub-1.4-models); the user's ears on the before/after renders
-- [ ] Step 6: the manual, README and the cheat sheets (the errors in REPORT-cheatsheets*.md, -zones, -motion; step 5's
+- [x] Step 5: the recipes against their models (REPORT-models.md), and 5b (REPORT-models2.md: Vary's scale, format 35,
+      the slower sweep, Fog to Drift 100); the user's ears on build/models2/*-before/after.m4a still to come
+- [x] The Winter Set re-based on them (REPORT-set2rebase.md); the PRESET race it found fixed (presetrace.amb)
+- [x] Step 6: the manual, README and the cheat sheets (REPORT-docs-manual.md, REPORT-docs-sheets.md) (the errors in REPORT-cheatsheets*.md, -zones, -motion; step 5's
       values; web/emu/index.html's key layout; docs/img and fm1-panel.svg)
 - [ ] The release notes (build/release-notes-1.4.0.md, drafted)
-- [ ] The user on the FM-1 with the last test build
+- [ ] The user on the FM-1 with the last test build (zzz8, 88d7922)
 - [ ] `./build.sh --release 1.4.0`; tests; the emulator and the site (`tools/publish_pages.sh 1.4.0`, the cheat sheets)
 - [ ] Publish (the user's go): merge dub-1.4 into main, push, tag v1.4.0, `gh release create v1.4.0` with dub-1.4.0.fwsc
 - [ ] The videos: the release video, the shorts, the cheat sheets' videos ("The videos" below); the Winter Set
