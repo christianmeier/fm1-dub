@@ -426,6 +426,7 @@ static struct {
     uint32_t prog_gen;                 /* the engine's slots, as last taken (en_prog_gen) */
     int8_t cue_from;                   /* (1.4.0) a Set's Transition cued: the piece still ending (its outro, to the
                                         * downbeat), the header's name till then; -1 none */
+    uint32_t q_drops;                  /* (1.4.1) the engine's dropped commands, as last seen (en_queue_drops) */
     uint32_t prog_from;                /* (1.4.0) and taken only from this command on (en_queue_w after a piece's regrow):
                                         * PRESET spun fast handed a piece the slots of the one passed through */
     uint8_t lane;                      /* the Pattern page: the lane edited */
@@ -5812,6 +5813,14 @@ static void set_tick(void)
 
 void ui_frame(void)
 {
+    if (en_queue_drops() != ui.q_drops && !en_queue_left()) {   /* (1.4.1: PRESETS spun fast filled the engine's queue
+                                                  * and the piece arrived at lost its last commands, playing with
+                                                  * the ones it passed through: all of it again, now there's room) */
+        ui.q_drops = en_queue_drops();
+        project_apply();
+        en_regrow();
+        ui.prog_from = en_queue_w();
+    }
     prog_take();
     groove_tick();
     input();

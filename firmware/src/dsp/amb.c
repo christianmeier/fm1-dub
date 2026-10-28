@@ -724,12 +724,16 @@ enum { C_SET, C_POOL, C_PLAY, C_NEXT, C_FREEZE, C_SEED, C_PANIC, C_CLOCK, C_REGR
 #define QN 512u                                 /* (a piece is every parameter at once: room for twice over and more) */
 _Static_assert(QN >= 2u * (P_NPARAMS + 8), "the command queue can't hold a piece's parameters twice over");
 static uint32_t q[QN];
-static volatile uint32_t q_w, q_r;
+static volatile uint32_t q_w, q_r, q_drop;
 static void post(uint32_t c, int a, int b)
 {
     uint32_t w = q_w;
-    if (w - q_r >= QN)
-        return;                                   /* full: dropped (never, at the UI's rate) */
+    if (w - q_r >= QN) {                          /* full: dropped (PRESETS spun fast: a piece's every parameter a
+                                                  * click, drained over ~7 blocks while playing): the UI applies the
+                                                  * piece again once the queue is empty (en_queue_drops) */
+        q_drop++;
+        return;
+    }
     q[w % QN] = c << 24 | ((uint32_t)a & 0xFFu) << 16 | ((uint32_t)b & 0xFFFFu);
     BARRIER();
     q_w = w + 1;
@@ -744,6 +748,7 @@ void en_panic(void) { post(C_PANIC, 0, 0); }
 void en_clock(int msg) { post(C_CLOCK, msg, 0); }
 void en_regrow(void) { post(C_REGROW, 0, 0); }
 uint32_t en_queue_w(void) { return q_w; }
+uint32_t en_queue_drops(void) { return q_drop; }
 uint32_t en_queue_left(void) { return q_w - q_r; }   /* (1.4.0: the commands still waiting: a piece's, spread) */
 void en_mute(uint32_t m) { post(C_MUTE, (int)(m & 0xFFu), 0); }
 void en_perf(uint32_t f) { post(C_PERF, 0, (int)(f & 0xFFFFu)); }   /* (1.4.0: the throws past 8 bits: in the 16-bit field) */
@@ -823,6 +828,9 @@ static uint32_t mutes, perf, fxm, fxm_was;      /* performance: the layers muted
 static float perf_sw, perf_echo, mb_c[4], mb_s[4];   /* (mb: Open's and Shut's filter on the music, the kick left out) */                /* the filter pushed open (+) or shut (-), the echo pushed */
 
 static int16_t par[P_NPARAMS];
+#ifdef EN_HOST
+int en_par_now(int p) { return (unsigned)p < P_NPARAMS ? par[p] : 0; }   /* (the host's tests: the engine's own) */
+#endif
 /* the noise's controls (P_NCOL .. P_NCHAR: render_crackle reads them) */
 typedef struct {
     float colour, grain, room, drift;           /* dark .. bright; smooth .. granular; the Air's gain (0 .. 2.3); steady

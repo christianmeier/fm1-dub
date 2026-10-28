@@ -667,6 +667,16 @@ static int expect(const char *what, const char *val)
         got = trw_dip;
     else if (!strcmp(what, "trjump"))            /* and its largest rise in a ms (x1000; the kick's left out) */
         got = trw_jump;
+    else if (!strcmp(what, "qdrops"))            /* (1.4.1) the engine's commands dropped, its queue full */
+        got = (int)en_queue_drops();
+    else if (!strcmp(what, "endiff")) {          /* (1.4.1) the parameters the engine has otherwise than the project
+                                                  * (the chord slots left out: the walk and Endless move them) */
+        int p;
+        got = 0;
+        for (p = 0; p < P_NPARAMS; p++)
+            if (!(p >= P_CR0 && p <= P_CX7) && en_par_now(p) != proj.par[p])
+                got++;
+    }
     else if (!strcmp(what, "bpm"))               /* the tempo heard now, rounded (a Mix's glide) */
         got = (int)(en_bpm + 0.5f);
     else if (!strcmp(what, "peek"))              /* (1.4.0) 1 while a page's knobs show their numbers (a page opened) */

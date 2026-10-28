@@ -194,7 +194,11 @@ void en_freeze(int on);
 void en_seed(uint32_t s);                      /* stir some entropy into the generators */
 void en_panic(void);                           /* everything quiet, now */
 void en_regrow(void);                          /* a new piece: fresh loops and patterns, the home chord */
-uint32_t en_queue_w(void);                     /* (1.4.0) the commands posted so far (en_prog_q's count) */
+uint32_t en_queue_w(void);
+uint32_t en_queue_drops(void);                 /* (1.4.1) commands dropped, the queue full (PRESETS spun fast) */
+#ifdef EN_HOST
+int en_par_now(int p);
+#endif                     /* (1.4.0) the commands posted so far (en_prog_q's count) */
 uint32_t en_queue_left(void);                  /* (1.4.0) the commands still waiting (a piece's, spread over ~7 blocks) */
 /* the ping loops, packed a byte a step (EN_PINGS_N: every loop's steps, in turn): the note offset in the low
  * nibble (15: a rest), the velocity in the high one (50 + 3 x v). A piece keeps them; en_pings gives them back
