@@ -1123,9 +1123,12 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
 - [x] The Winter Set re-based on them (REPORT-set2rebase.md); the PRESET race it found fixed (presetrace.amb)
 - [x] Step 6: the manual, README and the cheat sheets (REPORT-docs-manual.md, REPORT-docs-sheets.md) (the errors in REPORT-cheatsheets*.md, -zones, -motion; step 5's
       values; web/emu/index.html's key layout; docs/img and fm1-panel.svg)
-- [ ] The release notes (build/release-notes-1.4.0.md, drafted)
-- [ ] The user on the FM-1 with the last test build (zzz8, 88d7922)
-- [ ] `./build.sh --release 1.4.0`; tests; the emulator and the site (`tools/publish_pages.sh 1.4.0`, the cheat sheets)
+- [x] The release notes (build/release-notes-1.4.0.md; publish the part above "NOTES FOR CLAUDE")
+- [x] The user on the FM-1 with the last test build (zzz8, 88d7922: "looks good")
+- [x] `./build.sh --release 1.4.0` (bb1573e's code, FM-1_8010400); tests; the site built locally (source emsdk_env and the
+      venv's python before publish_pages.sh: the system python3 is 3.6)
+- [ ] The user's ears on Basic's slower sweep (build/models2/basic-*.m4a) before publishing
+- [ ] Publish the site: the emulator and the site (`tools/publish_pages.sh 1.4.0`, the cheat sheets)
 - [ ] Publish (the user's go): merge dub-1.4 into main, push, tag v1.4.0, `gh release create v1.4.0` with dub-1.4.0.fwsc
 - [ ] The videos: the release video, the shorts, the cheat sheets' videos ("The videos" below); the Winter Set
       (build/film/channel/long_videos/set2: again on the release build, with stems and more pages?)
