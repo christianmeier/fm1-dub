@@ -12,7 +12,7 @@ echo, lock the groove.
 
 DUB-1 is a fork of AMB-1, Charles Vestal's generative ambient firmware for the FM-1.
 
-![A drawing of the FM-1 running DUB-1, each control labelled with what it does: the Controls section below says the same in words](img/fm1-panel.svg "The FM-1 (a drawing), running DUB-1, each control labelled")
+![A drawing of the FM-1 running DUB-1, each control labelled with what it does (SEL's Desk is the Arrangement page): the Controls section below says the same in words](img/fm1-panel.svg "The FM-1 (a drawing), running DUB-1, each control labelled")
 
 ---
 
@@ -101,7 +101,8 @@ drums' and the bass's patterns and the noise's groove until you hold SEL again.
 
 ## 3. Controls
 
-The drawing at the top shows them all; here they are in more detail.
+The drawing at the top shows them all, each with its page or what it does (SEL's **Desk** is the Arrangement
+page, the dub desk); here they are in more detail.
 
 | Control | What it does |
 |---|---|
