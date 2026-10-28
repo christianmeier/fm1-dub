@@ -12,7 +12,12 @@
 #   5 Thaw       (slot 8, Haze)        F minor, 123, FM7 EM7 F#M7 BbM7 (32 bars each), Ambient, 16 + 336 + 16
 # Between the songs' own movement, a ghost performer's few moves, on the phrase lines (multiples of 8 bars), about one
 # every 2-3 minutes; the DJ filter (SELECT) ridden slowly; the sirens twice in the hour. The Arrangement page (SEL)
-# for a move, the Form page (HOME) after it; now and then the scope, the spectrum or the tape (ALGORITHM).
+# a few bars before a move and a few after it (its meters through the move), then the Form page (HOME); now and then
+# the scope, the spectrum or the tape (ALGORITHM). The pages between (1.4.0's video, the user's: more variety): the
+# Song page (HOME again) at an intro or an outro, then the Key page (HOME a third time) for the key and the tempo;
+# the Chords page (EDIT) or the Walk page's wheel (EDIT again) over a chord change. A page changes the picture only:
+# the WAV is the same, sample for sample, as with the Form page throughout (no key or knob but SELECT on those pages;
+# SELECT is the DJ filter on every page).
 # Each `bar` prints the film's time there: the cue sheet (build/film/channel/long_videos/set2/cues.txt). In a Set the
 # bar count starts again at 0 on each song's downbeat: each song's first cue waits for the last bar of the one before
 # (`bar LAST`), then a bar and a little more (`wait`), so it lands just past the next downbeat (checked: `expect piece`).
@@ -1061,18 +1066,31 @@ wait 200
 expect playing 1
 expect song 1
 # ------------------------------------------------------ 1 Hoarfrost (D minor, 120, bars 0-311) ---
+bar 2 Hoarfrost: HOME again, the Song page: the intro under way, the main to come
+tap HOME
+expect view 27
+expect song 1
 bar 8 Hoarfrost: the DJ filter opened, Shut 60 to Off over the intro's last phrase (SELECT, slowly)
 turn SELECT 30 530
 bar 16 Hoarfrost: the main, the filter clear
 wait 300
 expect filter 0
 expect song 2
-bar 79 Hoarfrost: SEL (the Arrangement page)
+expect view 27
+bar 18 Hoarfrost: HOME, the Key page (D minor, 120)
+tap HOME
+expect view 18
+bar 22 Hoarfrost: HOME, the Form page
+tap HOME
+expect view 0
+bar 76 Hoarfrost: SEL (the Arrangement page)
 tap SEL
+expect view 17
 bar 80 Hoarfrost: CHORD THROW, 2 bars (black 1 held)
 key b0 down
-bar 82 Hoarfrost: let go; HOME (the Form page)
+bar 82 Hoarfrost: let go
 key b0 up
+bar 88 Hoarfrost: HOME (the Form page)
 tap HOME
 expect view 0
 bar 152 Hoarfrost: ALGORITHM, the scope
@@ -1087,13 +1105,16 @@ expect screen 0
 bar 296 Hoarfrost: the outro
 wait 300
 expect song 3
-bar 299 Hoarfrost: SEL
+bar 297 Hoarfrost: SEL
 tap SEL
+expect view 17
 bar 300 Hoarfrost: SHUT, 4 bars, under water (white 10 held)
 key w9 down
-bar 304 Hoarfrost: let go; HOME; the Mix's last phrase, the old chord into the echo
+bar 304 Hoarfrost: let go; the Mix's last phrase, the old chord into the echo
 key w9 up
+bar 308 Hoarfrost: HOME
 tap HOME
+expect view 0
 bar 311 Hoarfrost: the last bar, the echo held on the chord
 wait 2600
 # -------------------------------------------------------------------- 2 Black Ice (D minor, 120) ---
@@ -1102,55 +1123,89 @@ expect piece 4
 expect song 1
 expect playing 1
 expect progpos 0
-bar 54 Black Ice: SEL
+bar 52 Black Ice: SEL
 tap SEL
+expect view 17
 bar 55 Black Ice: HATS THROWN, the phrase's last bar (black 4 held)
 key b3 down
-bar 56 Black Ice: let go on the downbeat; HOME
+bar 56 Black Ice: let go on the downbeat
 key b3 up
+bar 60 Black Ice: HOME
 tap HOME
-bar 125 Black Ice: SEL
+expect view 0
+bar 94 Black Ice: EDIT, the Chords page: Dm7 on, E7 next (the change at bar 96)
+tap EDIT
+expect view 15
+expect progpos 1
+bar 100 Black Ice: HOME
+expect progpos 2
+tap HOME
+expect view 0
+bar 122 Black Ice: SEL
 tap SEL
+expect view 17
 bar 126 Black Ice: the DJ filter ridden up, Off to Open 56 over 8 bars (thin, the floor going)
 turn SELECT 30 530
 bar 134 Black Ice: DROP, 2 bars before the phrase line (white 11 held)
 key w10 down
-bar 136 Black Ice: the floor back on the downbeat, the filter Off; HOME
+bar 136 Black Ice: the floor back on the downbeat, the filter Off
 key w10 up
 spin SELECT -40
-tap HOME
 expect filter 0
+bar 140 Black Ice: HOME
+tap HOME
+expect view 0
 bar 160 Black Ice: ALGORITHM, the spectrum
 spin ALGO 2
 expect screen 2
 bar 184 Black Ice: ALGORITHM, the ripples again
 spin ALGO -2
 expect screen 0
-bar 198 Black Ice: SEL
+bar 196 Black Ice: SEL
 tap SEL
+expect view 17
 bar 199 Black Ice: KICK SOLO, a bar (black 5 tapped)
 tapkey b4
-bar 200 Black Ice: the solo off: all back on the phrase line; HOME
+bar 200 Black Ice: the solo off: all back on the phrase line
 tapkey b4
+bar 204 Black Ice: HOME
 tap HOME
-bar 262 Black Ice: SEL
+expect view 0
+bar 250 Black Ice: EDIT, the Chords page: Am7 on, FM7 next (the loop again at bar 256)
+tap EDIT
+expect view 15
+expect progpos 3
+bar 253 Black Ice: EDIT again, the Walk page's wheel: the root from A to F at bar 256
+tap EDIT
+expect view 29
+expect progpos 3
+bar 260 Black Ice: SEL (from the wheel)
+expect progpos 0
 tap SEL
+expect view 17
 bar 263 Black Ice: HATS THROWN again, the phrase's last bar
 key b3 down
-bar 264 Black Ice: let go on the downbeat; HOME
+bar 264 Black Ice: let go on the downbeat
 key b3 up
+bar 268 Black Ice: HOME
 tap HOME
+expect view 0
 bar 312 Black Ice: the outro
 wait 300
 expect song 3
-bar 323 Black Ice: SEL
+bar 313 Black Ice: HOME again, the Song page: the outro, the parts leaving
+tap HOME
+expect view 27
+bar 321 Black Ice: SEL (from the Song page)
 tap SEL
+expect view 17
 bar 324 Black Ice: the kick and the hats muted for the next song (both already out of the outro)
 tapkey w3
 tapkey w4
 expect mutes 24
 bar 325 Black Ice: HOME
 tap HOME
+expect view 0
 bar 327 Black Ice: the last bar, the echo held
 wait 2600
 # ---------------------------------------------------------- 3 Snowfield (A minor, 120, beatless) ---
@@ -1158,6 +1213,15 @@ bar 0 3 SNOWFIELD: the downbeat, no kick: the old chord in the held echo, the hi
 expect piece 5
 expect song 1
 expect progpos 0
+bar 2 Snowfield: HOME again, the Song page: the intro, beatless
+tap HOME
+expect view 27
+bar 14 Snowfield: HOME, the Key page (A minor, 120)
+tap HOME
+expect view 18
+bar 20 Snowfield: HOME, the Form page
+tap HOME
+expect view 0
 bar 40 Snowfield: the DJ filter shut slowly, Off to Shut 70 over a minute (under water)
 turn SELECT -3 120
 turn SELECT -34 1700
@@ -1165,33 +1229,40 @@ expect filter -35
 bar 70 Snowfield: and opened again over the next minute
 turn SELECT 35 1700
 expect filter 0
-bar 135 Snowfield: SEL
+bar 132 Snowfield: SEL
 tap SEL
+expect view 17
 bar 136 Snowfield: WAIL, held 4 bars, slow (black 8 held); its Echo ridden up, 50 to 80
 key b7 down
 bar 137 Snowfield: (the siren's page: KNOB 4, Echo)
 turn K4 30 250
 bar 140 Snowfield: let go: the tail into the echo
 key b7 up
-bar 142 Snowfield: HOME
+bar 146 Snowfield: HOME
 tap HOME
-bar 191 Snowfield: SEL
+expect view 0
+bar 188 Snowfield: SEL
 tap SEL
+expect view 17
 bar 192 Snowfield: FREEZE, 8 bars, the cloud held (white 14 held)
 key w13 down
-bar 200 Snowfield: let go; HOME
+bar 200 Snowfield: let go
 key w13 up
+bar 204 Snowfield: HOME
 tap HOME
+expect view 0
 bar 232 Snowfield: the outro
 wait 300
 expect song 3
-bar 245 Snowfield: SEL
+bar 242 Snowfield: SEL
 tap SEL
+expect view 17
 bar 246 Snowfield: the kick and the hats back for the next song (the outro all but over)
 tapkey w3
 tapkey w4
 expect mutes 0
 tap HOME
+expect view 0
 bar 247 Snowfield: the last bar, the echo held
 wait 2600
 # --------------------------------------------------- 4 Aurora (E minor, 120, the centrepiece) ---
@@ -1199,43 +1270,74 @@ bar 0 4 AURORA: the downbeat, the kick back under the held echo
 expect piece 6
 expect song 1
 expect progpos 0
-bar 61 Aurora: SEL
+bar 58 Aurora: SEL
 tap SEL
+expect view 17
 bar 62 Aurora: PINGS THROWN, 2 bars (black 2 held)
 key b1 down
-bar 64 Aurora: let go on the phrase line; HOME
+bar 64 Aurora: let go on the phrase line
 key b1 up
+bar 68 Aurora: HOME
 tap HOME
+expect view 0
 bar 128 Aurora: Motion turned slowly, 25 to 55, Breathes into Sections (KNOB 3, a minute)
 turn K3 30 2100
 expect par15 55
-bar 199 Aurora: SEL
+bar 189 Aurora: EDIT, the Chords page: Dm7 on, D7 next (the change at bar 192)
+tap EDIT
+expect view 15
+expect progpos 2
+bar 196 Aurora: SEL (from the Chords page)
+expect progpos 3
 tap SEL
+expect view 17
 bar 200 Aurora: WHOOP, a tap on the phrase line (black 9): the box out of tune
 tapkey b8
-bar 201 Aurora: HOME
+bar 204 Aurora: HOME
 tap HOME
-bar 271 Aurora: SEL
+expect view 0
+bar 250 Aurora: EDIT, the Chords page: D7 on, GM7 next (the loop again at bar 256)
+tap EDIT
+expect view 15
+expect progpos 3
+bar 253 Aurora: EDIT again, the Walk page's wheel: the root from D to G at bar 256
+tap EDIT
+expect view 29
+expect progpos 3
+bar 266 Aurora: SEL (from the wheel)
+expect progpos 0
 tap SEL
+expect view 17
 bar 272 Aurora: the peak: the DJ filter ridden up, Off to Open 56 over 14 bars
 turn SELECT 3 120
 turn SELECT 27 1000
 expect filter 28
 bar 286 Aurora: ECHO pushed, 2 bars, over the open filter (white 12 held)
 key w11 down
-bar 288 Aurora: let go on the phrase line, the filter Off; HOME
+bar 288 Aurora: let go on the phrase line, the filter Off
 key w11 up
 spin SELECT -40
-tap HOME
 expect filter 0
+bar 292 Aurora: HOME
+tap HOME
+expect view 0
+bar 317 Aurora: EDIT, the Chords page: GM7 on, G7 next (the change at bar 320)
+tap EDIT
+expect view 15
+expect progpos 0
+bar 324 Aurora: HOME
+expect progpos 1
+tap HOME
+expect view 0
 bar 344 Aurora: ALGORITHM, the tape (coloured by the song's part)
 spin ALGO 3
 expect screen 5
 bar 408 Aurora: ALGORITHM, the ripples again
 spin ALGO 1
 expect screen 0
-bar 455 Aurora: SEL
+bar 452 Aurora: SEL
 tap SEL
+expect view 17
 bar 456 Aurora: BASS SOLO, the main's last phrase (black 3 tapped)
 tapkey b2
 bar 463 Aurora: TAPE STOP on the phrase's last bar (white 15 held)
@@ -1246,6 +1348,10 @@ tapkey b2
 tap HOME
 wait 200
 expect song 3
+expect view 0
+bar 465 Aurora: HOME again, the Song page: the outro, then the change into Thaw
+tap HOME
+expect view 27
 bar 466 Aurora: the DJ filter shut slowly as the parts leave, Off to Shut 50
 turn SELECT -27 590
 bar 474 Aurora: and opened again over the held echo, to Off by the change
@@ -1259,36 +1365,72 @@ expect piece 7
 expect song 1
 expect bpm 123
 expect progpos 0
+expect view 27
+bar 8 Thaw: HOME, the Key page (F minor, 123)
+tap HOME
+expect view 18
+bar 14 Thaw: HOME, the Form page
+tap HOME
+expect view 0
 bar 96 Thaw: ALGORITHM, the scope
 spin ALGO 1
 expect screen 1
-bar 103 Thaw: SEL
+bar 100 Thaw: SEL
 tap SEL
+expect view 17
 bar 104 Thaw: CHORD THROW, 2 bars
 key b0 down
-bar 106 Thaw: let go; HOME (the scope again)
+bar 106 Thaw: let go
 key b0 up
+bar 110 Thaw: HOME (the scope again)
 tap HOME
+expect view 0
 expect screen 1
 bar 136 Thaw: ALGORITHM, the ripples again
 spin ALGO -1
 expect screen 0
-bar 199 Thaw: SEL
+bar 157 Thaw: EDIT, the Chords page: FM7 on, EM7 next (the change at bar 160)
+tap EDIT
+expect view 15
+expect progpos 0
+bar 164 Thaw: HOME
+expect progpos 1
+tap HOME
+expect view 0
+bar 196 Thaw: SEL
 tap SEL
+expect view 17
 bar 200 Thaw: ECHO pushed, 2 bars
 key w11 down
-bar 202 Thaw: let go; HOME
+bar 202 Thaw: let go
 key w11 up
+bar 206 Thaw: HOME
 tap HOME
-bar 277 Thaw: SEL
+expect view 0
+bar 219 Thaw: EDIT, the Chords page: F#M7 on, BbM7 next (the change at bar 224)
+tap EDIT
+expect view 15
+expect progpos 2
+bar 221 Thaw: EDIT again, the Walk page's wheel: the root from F# to Bb at bar 224
+tap EDIT
+expect view 29
+bar 228 Thaw: HOME
+expect progpos 3
+tap HOME
+expect view 0
+bar 274 Thaw: SEL
 tap SEL
+expect view 17
 bar 278 Thaw: DROP, 2 bars before the phrase line
 key w10 down
-bar 280 Thaw: the floor back on the downbeat; HOME
+bar 280 Thaw: the floor back on the downbeat
 key w10 up
+bar 284 Thaw: HOME
 tap HOME
-bar 343 Thaw: SEL
+expect view 0
+bar 340 Thaw: SEL
 tap SEL
+expect view 17
 bar 344 Thaw: OPEN held over the main's last phrase, the light coming up (white 9 held)
 key w8 down
 bar 352 Thaw: the outro: let go; the DJ filter shut slowly to the end, Off to Shut 70
@@ -1301,6 +1443,7 @@ key w13 down
 bar 368 Thaw: the outro over: DUB-1 rests by itself, the echo and the plate ring out behind the glass
 wait 1000
 expect playing 0
+expect view 17
 at 3457.0 THE END: the fade-out begins (20 s)
 at 3478.0 END: Freeze let go
 key w13 up
