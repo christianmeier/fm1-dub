@@ -1127,9 +1127,10 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
 - [x] The user on the FM-1 with the last test build (zzz8, 88d7922: "looks good")
 - [x] `./build.sh --release 1.4.0` (bb1573e's code, FM-1_8010400); tests; the site built locally (source emsdk_env and the
       venv's python before publish_pages.sh: the system python3 is 3.6)
-- [ ] The user's ears on Basic's slower sweep (build/models2/basic-*.m4a) before publishing
-- [ ] Publish the site: the emulator and the site (`tools/publish_pages.sh 1.4.0`, the cheat sheets)
-- [ ] Publish (the user's go): merge dub-1.4 into main, push, tag v1.4.0, `gh release create v1.4.0` with dub-1.4.0.fwsc
+- [x] Basic's sweep the faster pace (the user: too static)
+- [x] The site published (gh-pages, 2026-10-28) (`tools/publish_pages.sh 1.4.0`, the cheat sheets)
+- [x] Published 2026-10-28: main = release-1.4 (dub-1.4 rewritten without build/, the user's: build/'s reports stay
+      private; KellyOffski's name in the messages), tag v1.4.0 at f79a8de, the GitHub release with dub-1.4.0.fwsc
 - [ ] The videos: the release video, the shorts, the cheat sheets' videos ("The videos" below); the Winter Set
       (build/film/channel/long_videos/set2: again on the release build, with stems and more pages?)
 - [ ] After: the SMK branch; the wiki
