@@ -13,10 +13,11 @@
 <!-- Cheat sheet 1 of the series (build/design/CHEATSHEETS.md). Every fact checked against the firmware at c1fdc41
      (firmware/src/app/ui.c: button(), input(), edit_released(), oct_*(), turn(), accel(), leds(), draw_knobs();
      VIEW_NAME, VIEW_KNOB, KNOB_LABEL; main_fm1.c and panel.c for the update mode and the calibration).
-     The drawing follows web/emu/index.html's panel (the same places, compressed). -->
+     The drawing follows web/emu/index.html's panel (the same places, compressed).
+     Re-checked against the firmware at 671d9be for the 1.4.0 release (step 6: build/design/REPORT-docs-sheets.txt). -->
 <div class="sheet">
 <header><span class="badge">DUB-1</span><h1>The panel</h1>
-<span class="sub">Every button and knob, and where each page is, as of 1.4.0 (build c1fdc41). FM-1 firmware.</span></header>
+<span class="sub">Every button and knob, and where each page is, as of 1.4.0 (build 671d9be). FM-1 firmware.</span></header>
 
 <figure>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 366" role="img" aria-label="The FM-1 panel, each control labelled">
@@ -225,7 +226,7 @@
 <div class="card">
 <h2>6 · The knobs <span class="where">KNOB 1–4</span></h2>
 <div class="row"><div class="n">Steps</div><div class="d">A few clicks are single steps; a quick turn speeds up, half a turn sweeping 0–100. A switch: one place a click.</div></div>
-<div class="row"><div class="n">Notch</div><div class="d">Centred on 0 (a tick over the ring): it stops at 0 on its way through; three clicks on leave it.</div></div>
+<div class="row"><div class="n">Notch</div><div class="d">Centred on 0 (a tick over the ring): it stops at 0 on its way through; three clicks on (within 3 s) leave it.</div></div>
 <div class="row"><div class="n">Big ring</div><div class="d">While one turns: its value large in the middle, its name and what it does (not on Chords, Pattern).</div></div>
 <div class="row"><div class="n">Numbers</div><div class="d">A ring's number shows 1.5 s as its page opens; units and words always. <b>Values: Always</b> (Song mode) keeps them.</div></div>
 <div class="row"><div class="n">Grey</div><div class="d">Does nothing there: FM on a voice not FM (Colour, Bite still work); Ratio on two operators; Transition but in Set mode.</div></div>

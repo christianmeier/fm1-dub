@@ -16,10 +16,11 @@
      CELL, leds()' grid branch, PERF_FX and perf_fx_send(); firmware/src/dsp/amb.c: EN_FX_NAME, fx_ctl() (each
      effect's easing and target), render_fx() (the Siren, the Riser), mfx(), render_chunk() (Wash, Verb, Crash, Freeze,
      the master filter after the mix, Stutter), the stabs' Gate and gate_dec, stab_fire()'s Throw, heads (fx_em),
-     perf_echo (Swell)). The screen: build/cheatsheets/src/extra.amb on the host build of eceec65. -->
+     perf_echo (Swell)). The screen: build/cheatsheets/src/extra.amb on the host build of eceec65.
+     Re-checked against the firmware at 671d9be for the 1.4.0 release (step 6: build/design/REPORT-docs-sheets.txt). -->
 <div class="sheet">
 <header><span class="badge">DUB-1</span><h1>Effects grid</h1>
-<span class="sub">REC held: sixteen effects on the white keys, each as long as its key is held, as of 1.4.0 (build eceec65). FM-1 firmware.</span></header>
+<span class="sub">REC held: sixteen effects on the white keys, each as long as its key is held, as of 1.4.0 (build 671d9be). FM-1 firmware.</span></header>
 
 <figure>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 238" role="img" aria-label="The effects grid on the white keys F3 to G5, REC held">
@@ -188,7 +189,7 @@
 <div class="intro">The rhythm and two noise voices of its own.</div>
 <div class="row"><div class="n">Stutter</div><div class="d">A semicorchea (16th) of the whole mix caught as the key goes down, and looped.</div></div>
 <div class="row"><div class="n">Gate</div><div class="d">The chord ringing on (1.5 s), chopped in semicorcheas (16ths), its sends too.</div></div>
-<div class="row"><div class="n">Siren</div><div class="d">The dub siren: a square-ish tone swung up and down (about 200 Hz to 1.2 kHz, 0.8 times a second), into the echo.</div></div>
+<div class="row"><div class="n">Siren</div><div class="d">The dub siren: a square-ish tone swung up and down (about 200 Hz to 1.2 kHz, 0.8 times a second), into the echo. (Not the Arrangement page's four sirens: sheet 2.)</div></div>
 <div class="row"><div class="n">Riser</div><div class="d">Noise through a band-pass rising 1.5 octaves a second, louder as it climbs; into the plate, a little into the echo.</div></div>
 </div>
 

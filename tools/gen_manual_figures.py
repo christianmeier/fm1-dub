@@ -2,10 +2,11 @@
 # SPDX-License-Identifier: GPL-3.0-only
 """The manual's map of the controls, drawn (no photographs: M-VAVE's and Felucca's are not ours to use):
 
-  docs/img/fm1-panel.svg   the FM-1 front panel, AMB-1's real screen in it, each control labelled with
-                           what it does in AMB-1, the keys with their notes
+  docs/img/fm1-panel.svg   the FM-1 front panel, DUB-1's real screen in it (the Form page), each control
+                           labelled with what it does in DUB-1 (1.4.0: ui.c's button(), PERF_KEY), the keys
+                           with their notes
 
-  tools/gen_manual_figures.py [SCREEN.png]     (default docs/img/screen-garden.png)
+  tools/gen_manual_figures.py [SCREEN.png]     (default docs/img/screen-main.png)
 
 From X0X's: the panel layout follows the FM-1: two knob pairs and the octave buttons on the left, the
 screen in the middle, four knobs and two rows of six buttons on the right, and the keys below: 11
@@ -87,22 +88,23 @@ STYLE = (f"<style>.lbl{{font:600 16px {FONT};fill:{LABEL};letter-spacing:.06em}}
 def panel(screen_png):
     W, H = 1000, 720
     s = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" role="img" '
-         f'aria-label="The FM-1 front panel running AMB-1, each control labelled with what it does">', STYLE,
+         f'aria-label="The FM-1 front panel running DUB-1, each control labelled with what it does">', STYLE,
          f'<rect x="4" y="4" width="{W - 8}" height="{H - 8}" rx="44" fill="{BODY}"/>',
-         knob(105, 92, 24, "MASTER", "Volume"), knob(215, 92, 24, "SELECT", "Filter|HOME + it: tempo"),
+         knob(105, 92, 24, "MASTER", "Volume"), knob(215, 92, 24, "SELECT", "DJ filter|HOME held: tempo"),
          knob(105, 210, 24, "PRESETS", "Piece"), knob(215, 210, 24, "ALGORITHM", "Voice · screen"),
          f'<rect x="58" y="284" width="210" height="58" rx="14" fill="{TRAY}"/>',
          button(72, 294, 82, 38, "OCT-"), button(170, 294, 82, 38, "OCT+"),
-         what(113, 362, "Bells down"), what(211, 362, "Bells up"),
+         what(113, 362, "Level -5|both: mute"), what(211, 362, "Level +5|both: mute"),
          f'<rect x="300" y="44" width="236" height="236" rx="26" fill="#111214"/>',
          f'<image x="318" y="62" width="200" height="200" href="{png_data_uri(screen_png)}" style="image-rendering:pixelated"/>']
     for i in range(4):
         s.append(knob(610 + i * 104, 92, 22, f"KNOB{i + 1}"))
-    s.append(what(766, 136, "The page's four values (KNOB1: a layer's level)"))
+    s.append(what(766, 136, "The page's four values"))
     s.append(f'<rect x="568" y="146" width="400" height="236" rx="18" fill="{TRAY}"/>')
-    top = [("FX", "Space"), ("SEL", ""), ("ENV", "Pad"), ("LFO", "Bass"), ("EDIT", "Next|chord"), ("GLO", "Setup")]
-    bot = [("HOME", "Garden"), ("SAVE", "Save, hold:|recipe"), ("ARP", "Bells"), ("SEQ", "Pulse"),
-           (("PLAY", "STOP"), "Grow /|rest"), ("REC", "Freeze")]
+    top = [("FX", "Dub"), ("SEL", "Desk|held: Lock"), ("ENV", "Chord"), ("LFO", "Bass"),
+           ("EDIT", "Chords|held: next"), ("GLO", "Setup|held: save")]
+    bot = [("HOME", "Form"), ("SAVE", "Noise"), ("ARP", "Pings"), ("SEQ", "Drums"),
+           (("PLAY", "STOP"), "Play /|rest"), ("REC", "Dub hold|held: grid")]
     for i in range(6):
         x = 582 + i * 63
         s.append(button(x, 158, 54, 48, top[i][0]))
@@ -113,14 +115,14 @@ def panel(screen_png):
         if bot[i][1]:
             s.append(what(x + 27, 330, bot[i][1]))
     s.append(keybed(36, 400, W - 72, 270))
-    s.append(what(W / 2, 698, "Every key: its note into the scale, or out of it (lit: in the scale)   ·   "
-                              "Hold a page's button: a nudge; GLO held: save"))
+    s.append(what(W / 2, 698, "Every key: its note into the scale, or out (lit: in it)   ·   SEL: the keys the desk   ·   "
+                              "REC held: the effects grid   ·   a layer's button held: a nudge"))
     s.append("</svg>")
     return "".join(s)
 
 
 def main():
-    screen = Path(sys.argv[1]) if len(sys.argv) > 1 else OUT / "screen-garden.png"
+    screen = Path(sys.argv[1]) if len(sys.argv) > 1 else OUT / "screen-main.png"
     (OUT / "fm1-panel.svg").write_text(panel(screen))
     print(f"figure: {OUT / 'fm1-panel.svg'}")
 
