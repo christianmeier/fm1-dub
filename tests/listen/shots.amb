@@ -154,14 +154,16 @@ shot screen-strip-ride.png
 key w0 up
 tap HOME
 wait 300
-spin K4 -59
+spin K4 -50
 wait 300
 tap SEL
 wait 1500
 spin K4 -30
 tap HOME
-turn K3 50
-wait 92000
+# (format 35, step 5b: Basic's Drift 50, back to it from the mixer's 100) a Groove: Motion 57 from Basic's 12, one
+# playing at 252 s
+turn K3 45
+wait 252000
 expect section 2
 shot screen-groove.png
 # the Echo page (FX, FX again)
