@@ -424,6 +424,8 @@ static struct {
     uint16_t big_col;                  /* its colour: the layer's, or the accent */
     float oct_v;                       /* the ring's arc, gliding to the level */
     uint32_t prog_gen;                 /* the engine's slots, as last taken (en_prog_gen) */
+    int8_t cue_from;                   /* (1.4.0) a Set's Transition cued: the piece still ending (its outro, to the
+                                        * downbeat), the header's name till then; -1 none */
     uint32_t prog_from;                /* (1.4.0) and taken only from this command on (en_queue_w after a piece's regrow):
                                         * PRESET spun fast handed a piece the slots of the one passed through */
     uint8_t lane;                      /* the Pattern page: the lane edited */
@@ -2608,7 +2610,7 @@ static void draw_header(void)
         h = hash(h, (uint32_t)((en_bars & 3u) == 0u) | (en_phrase_bar == 7 && en_change_next ? (now / 200u) & 1u : 0u) << 1);
     if (song)
         h = hash(h, (uint32_t)((float)en_bars * (1.0f / 16.0f) * 224.0f / (float)en_song_be) | en_song_be << 12 | en_song_bo << 22);
-    h = hash(h, (uint32_t)clip | (uint32_t)(ui.solo != 0) << 1 | (uint32_t)en_frozen << 2);
+    h = hash(h, (uint32_t)clip | (uint32_t)(ui.solo != 0) << 1 | (uint32_t)en_frozen << 2 | (uint32_t)en_tr_cue << 3);
     if (h == ui.sig[0])
         return;
     ui.sig[0] = h;
@@ -2686,9 +2688,13 @@ static void draw_header(void)
             cv_text(x - 2 - cw + 3, 6, &FONT_B, "!", K_TEXT);
             x -= cw + 6;
         }
-        w = text_w(&FONT_B, piece_name(proj.piece)) + 12;   /* the piece, in a coral tag */
-        cv_round(4, 4, w, 20, 6, K_TEXT);
-        cv_text(10, 6, &FONT_B, piece_name(proj.piece), K_BG);
+        {                                        /* the piece, in a coral tag (a Set's Transition cued: the one
+                                                  * ending, its OUTRO, till the downbeat) */
+            const char *pn = piece_name(en_tr_cue && ui.cue_from >= 0 ? ui.cue_from : proj.piece);
+            w = text_w(&FONT_B, pn) + 12;
+            cv_round(4, 4, w, 20, 6, K_TEXT);
+            cv_text(10, 6, &FONT_B, pn, K_BG);
+        }
         /* (1.4.0, the user's: the piece's name alone; its key on the Key page) */
         hdr_phrase(4 + w + 10, x - 6, now);       /* then where we are */
         if (song)
@@ -5740,6 +5746,7 @@ static void speak_dump(void)
 void ui_init(void)
 {
     memset(&ui, 0, sizeof ui);
+    ui.cue_from = -1;
     ui.touched = -1;
     lcd_fill(0, 0, 240, 240, K_BG);
     if (!en_playing)
@@ -5764,6 +5771,7 @@ static void set_tick(void)
                   et = nx ? proj.slot[proj.piece + 1].par[P_ETIME] : 0, sig = m | tp << 2 | et << 10;
         if (!en_tr_cue) {
             cued = 0;
+            ui.cue_from = -1;
             if (sig != sent) {                   /* (the engine told, as it changes) */
                 sent = (int16_t)sig;
                 en_trans(m, tp, et);
@@ -5772,6 +5780,7 @@ static void set_tick(void)
             cued = 1;
             sent = -1;                           /* (told again once it has started: the piece after) */
             if (nx && en_playing) {
+                ui.cue_from = (int8_t)proj.piece;
                 set_piece(proj.piece + 1);
                 en_trans_go();
                 sp_tp.play_t = now;
@@ -5865,7 +5874,7 @@ static void splash_band(int f, int32_t oy)
     if (f >= 20)
         text_c(120, 204 - oy, &FONT_S, "Dub techno for the FM-1", mix(K_BG, K_ACC, f >= 23 ? 16 : (f - 19) * 4));
     if (f >= 22)
-        text_c(120, 224 - oy, &FONT_XS, "DUB-1 " EN_VERSION, K_DIM);
+        text_c(120, 224 - oy, &FONT_XS, "DUB-1  " EN_VERSION, K_DIM);   /* (two spaces: FONT_XS's one read "DUB-11.4.0") */
     cv_blit(0, (uint32_t)oy);
 }
 
