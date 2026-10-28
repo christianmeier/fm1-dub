@@ -1131,6 +1131,12 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
       (build/film/channel/long_videos/set2: again on the release build, with stems and more pages?)
 - [ ] After: the SMK branch; the wiki
 
+## To discuss: the pings (the user, 2026-10-28)
+"One thing to reflect upon: the pings. Most of the tracks I've analysed do not have this voice. We shall discuss
+about this later." The pings are DUB-1's own layer (four drifting loops of single notes), not a trait of the classics
+(build/research/dubtechno/classics/PROFILES-INDEX.md). To talk over before 1.5.0: their place and level in the
+recipes, off or rare by default, or another voice in their slot.
+
 ## 1.5.0: sets, their cues, the web (the user, 2026-10-27)
 1. **Writing and loading sets**, of fewer than eight pieces too (Set mode ends at the set's last; the other slots as
    they were): build/design/SETFILES.md, pieces 1-4 and 6.
