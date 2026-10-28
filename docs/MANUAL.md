@@ -761,7 +761,7 @@ gives it any steps), and the last stab is thrown into the echo.
 **The sweep:** the arrangement moves a slow filter sweep, from dark to open, and the Form page's
 Drift sets how far it goes (at 0 it stays put, but a Break still goes dark, a Thin and a Groove a
 little). In Full it goes to a new place every 6 to 20 bars, off the phrase's line, gliding there over 3
-to 7.5 bars (a piece you changed in a project saved before 1.4.0, format 35, keeps the old pace, every 4 to 14
+to 7.5 bars (Basic's quicker, every 4 to 14 bars over 2 to 5, as BCD's filter moves; a piece you changed in a project saved before 1.4.0, format 35, keeps the old pace, every 4 to 14
 bars over 2 to 5: see [Saving](#10-saving)). A Break goes dark, then opens from its third bar. It opens
 the stabs' filter (up to an octave and a half either way) and its resonance, moves the echo's band-pass, thins the pings in the dark, moves the noise's
 tone and takes a little off the reverb when it's open.
@@ -1141,7 +1141,7 @@ spectrum or tape (see [The screen](#4-the-screen)). **HOME** again: the Song pag
   all of it: the chord's and the noise's LFOs (their wave and their random wander; see
   [The LFO pages](#the-lfo-pages): each LFO page's Drift more or less of it), how far the filter's long
   sweeps go (about 1.6 octaves either way at 50, a little more above, a new place every 6 to 20 bars, off the
-  phrase's line, glided to over 3 to 7.5; a piece you changed in an older project keeps the old pace, 4 to 14), how much the stabs' filter, the echo's heads, its band-pass and its feedback wander
+  phrase's line, glided to over 3 to 7.5; Basic's every 4 to 14; a piece you changed in an older project keeps the old pace, 4 to 14), how much the stabs' filter, the echo's heads, its band-pass and its feedback wander
   (Motion's until now), and the dub mixer's slow rides of the parts' levels and sends (the Arrangement
   page's Mixer until now). A continuous knob, every step heard. At 0 the piece's sound holds still (a
   Break still goes dark, a Thin a little); at 50 the classic records' middle (about an octave of the
