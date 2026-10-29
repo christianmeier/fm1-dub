@@ -1546,9 +1546,14 @@ MIDI comes in over USB and the TRS jack, and goes out over USB.
 - **In, channel 1:** a note adds or removes its note from the scale, like a key.
 - **In, channel 1, CC:** a controller's knobs and faders turn DUB-1's (the table below), the
   whole 0–127 over the knob's range: a centred knob (the Filter, Resonance, Cutoff) is at its
-  middle at 64. The knob shows large, as when you turn it. The FM-1's USB is a device, like the
-  controller's, so a USB controller reaches it through a computer (or a USB MIDI host box), or by
-  the TRS jack.
+  middle at 64. The knob shows large, as when you turn it.
+- **A controller on the FM-1's own USB:** hold **HOME** while you switch the FM-1 on, until
+  USB HOST shows, and let go. For that session the FM-1 is the USB host: plug a class-compliant
+  USB-MIDI controller (an Intech Grid module, a keyboard) straight into its port, and the screen
+  says CONTROLLER CONNECTED. Its notes and CCs come in as above. One controller, no hub. The
+  FM-1's port may not power the controller: one that needs power wants a powered OTG cable. While
+  it is the host, no computer can reach the FM-1 by USB (no MIDI out over USB, no installs):
+  switch it off and on again, without HOME, to have it back.
 - **In, clock:** the grid follows MIDI clock (six clocks a sixteenth), and start, continue and stop
   start, continue and stop the music. The screen shows EXT for the tempo. When the clock stops
   coming, DUB-1 goes back to its own tempo.
