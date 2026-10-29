@@ -1139,8 +1139,19 @@ The UI plan (build/design/UI-REVIEW.md; the user: "I agree with the plan"), and 
 - [x] PRESETS spun fast while playing (4 clicks or more within ~40 ms each) filled the engine's queue: the piece
       arrived at played partly as the pieces passed through, the screen showing its own (a 1.4.0 regression: the
       piece spread over blocks, the CPU work). Fixed, bbdd410 (presetflood.amb). Found making the LFO short.
-- [ ] The shorts 60, 61, 63, 65 and the Songs sheet video again on it (their takes spin fast); thumbnails for the shorts
-- [ ] Release 1.4.1 on the user's go (release notes: the fix; the same rewrite without build/)
+- [x] Shorts 60 and 63 again on it (61 and 65 spin while stopped: unaffected); thumbnails for all seven shorts
+- [ ] The Mix's hole (the user: "too much lag between the end of one piece and the start of the next"; short 61:
+      ~9 s of draining echo, near silence before the downbeat; the Songs video, the outro called in the intro: 20 s of
+      silence): a firmware fix being made (dub-1.4-mixgap, REPORT-mixgap); then a release (1.4.2)
+- [x] The Mix fixed (REPORT-mixgap.md; the user: "subtle, but sounds better… now there's always something to hear");
+      the manual and the Songs sheet updated
+- [ ] Later: the intros and outros themselves are quiet, so a hand-over is quiet too (the user, 2026-10-29): their
+      levels and curves, to tune
+- [x] Release 1.4.2 (the Mix), the user's go 2026-10-29 (the hour and the release video stay as uploaded, old Mix)
+- [ ] Then short 61 and the Songs sheet video again, on the Song page during the Mix (the user's: not the Arrangement
+      page), the Songs take calling the outro once the chord is in
+- [x] Released 1.4.1, 2026-10-28: v1.4.1 at 861a363 (the commits since 1.4.0 cherry-picked onto main, none touching
+      build/), the GitHub release with dub-1.4.1.fwsc, the site (installer FM-1_8010401)
 
 ## To discuss: the pings (the user, 2026-10-28)
 "One thing to reflect upon: the pings. Most of the tracks I've analysed do not have this voice. We shall discuss
@@ -1155,6 +1166,19 @@ offbeat hats and a clap, sus chords changing about once a minute, breakdowns, a 
 corchea (8th)). To discuss first: which of the traits DUB-1 lacks to build (the top end, the hats' level, the drift's
 depth, a chord gate), the pings (above), and the stabs' fast filter closing (the user: "bright at the start, then it
 rapidly closes", in the classics and in this set; not measured yet).
+
+## After 1.5.0: the voices (the user, 2026-10-29; to talk over and plan first, nothing committed)
+- **What voices the references use:** an analysis of the pings (or their absence) and of a lead voice in the classics
+  and the less classic (the Munich set, REPORT11): which pieces have a lead, what kind, how often. The user: the pings
+  aren't always heard in the references, sometimes there's a lead voice, sometimes not; DUB-1's pings sound repetitive
+  over a set.
+- **A "lead" voice:** other sources beside or instead of the pings: short samples, brief melodic phrases.
+- **New voices for variety:** bring in some of the other Felucca instruments.
+- An important overhaul of DUB-1: talk and plan before committing to anything (after 1.5.0 and 1.6.0's plans).
+
+## For the wiki, later (the user, 2026-10-29)
+- The Reddit thread "Claude skill" on r/MVaveFM1 and its linked references, "very useful for our wiki":
+  https://www.reddit.com/r/MVaveFM1/comments/1xh6o7m/claude_skill/ (not read yet; the user is short of tokens).
 
 ## 1.5.0: sets, their cues, the web (the user, 2026-10-27)
 1. **Writing and loading sets**, of fewer than eight pieces too (Set mode ends at the set's last; the other slots as

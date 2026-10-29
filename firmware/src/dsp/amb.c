@@ -1890,6 +1890,8 @@ EN_COLD static void stabs_bar(void)                     /* this bar's stabs: the
 
 static float cc_col(void);
 static uint8_t tr_frz;                           /* (Transition: the echo's loop held, as REC's dub hold has it, the tape alone) */
+static float tr_hg = 1.0f;                       /* (1.4.2: the held loop's gain a pass, under 1 only while the hand-over
+                                                  * plays louder than the main had: tr_level) */
 static uint8_t tr_arm;                           /* (Transition: the echo's hold armed, the next stab's, an echo's time
                                                   * on; samples to it, 0 none waiting) */
 static int32_t tr_fwait;
@@ -2127,8 +2129,9 @@ static void fader_step(uint32_t n)
     for (i = 0; i < EN_NPART; i++) {
         const float d = fd_tgt[i] - fd_pos[i];
         if (d != 0.0f) {
-            const float m = i == 0 && tr_cut ? (float)n * (1.0f / (0.05f * EN_SR)) : mx;   /* (a hand-over's last
-                                                  * bar: the chord's send out at once) */
+            const float m = i == 0 && (tr_cut & 1u) ? (float)n * (1.0f / (0.05f * EN_SR)) : i == 3 && (tr_cut & 2u) ?
+                            mx + mx : mx;        /* (a hand-over's last bar: the chord's send out at once; the kick
+                                                  * out over the bar before) */
             fd_pos[i] += fm_clampf(d, -m, m);
             fd_g[i] = fd_pos[i] * fd_pos[i];
             en_fader[i] = fd_g[i];
@@ -2148,6 +2151,8 @@ static uint8_t song_bo_on, song_fixed, song_ask, song_end_now;   /* (an outro co
 static uint32_t song_b0, song_bo, song_be;       /* the bars the main, the outro and the silence start on */
 static float song_ent[EN_NPART], song_fd[EN_NPART], song_cap[EN_NPART];   /* each part's entry and fade (bars); its
                                                   * fader as the outro began (a part not in yet stays out) */
+static float song_io;                            /* (1.4.2) a Mix's intro: its entries a phrase sooner (bars) */
+static uint8_t song_mx;                          /* (1.4.2) the song entered by a Mix */
 static float song_co, song_wet = 1.0f, song_hits = 1.0f, song_nthr;   /* the chord's cutoff (octaves), the echo's send
                                                   * (x), the hats' share of their hits, the noise into the echo (0..1) */
 static uint8_t song_thr;                         /* the outro's last bars: every stab thrown */
@@ -2161,7 +2166,7 @@ volatile uint8_t en_song_ask;                    /* (an outro asked by hand, HOM
  * (s, 0: Feedback's) while the old harmony fades. All 0 in LP: the music as it was, bit for bit */
 static uint8_t tr_mode, tr_go, tr_wait, tr_glide, tr_in, tr_slew, tr_after;
 static int tr_tempo, tr_etime;
-static float bpm_now, tr_bpm0, tr_beats0, tr_beats, tr_pl;
+static float bpm_now, tr_bpm0, tr_beats0, tr_beats, tr_pl, tr_gv = 1.0f;
 volatile uint8_t en_tr_cue;
 volatile float en_bpm;
 #define TR_SLEW 0.05f                            /* (the echo's time, a tape sample at most: 5%, under a semitone) */
@@ -2176,6 +2181,12 @@ static const float SONG_IN[2][EN_NPART] = {{0.06f, 0.60f, 0.45f, 0.30f, 0.78f, 0
                                            {0.25f, 0.45f, 0.0f, 0.0f, 0.78f, 0.58f}};
 static const float SONG_OUT[EN_NPART][2] = {{0.78f, 0.22f}, {0.25f, 0.2f}, {0.4f, 0.2f}, {0.55f, 0.15f}, {0.0f, 0.15f},
                                             {0.72f, 0.28f}};
+/* (1.4.2: the Mix's hole, build/design/REPORT-mixgap.txt) a Segue's and a Mix's outro: the pulse to the hand-over, as
+ * a DJ's outgoing record: the hats and the pings out first as ever, the bass a little later, the kick last, whole (one
+ * and three from the outro's half) to 2 bars before the end and out over that bar (song_tick); the last bar the
+ * echo's, the next piece set under it, its kick on the downbeat. The chord as song_tick has it (its dry out, thrown) */
+static const float SONG_OUT_TR[EN_NPART][2] = {{0.78f, 0.22f}, {0.25f, 0.2f}, {0.5f, 0.25f}, {1.0f, 1.0f}, {0.0f, 0.15f},
+                                               {0.72f, 0.28f}};   /* (the chord's and the kick's: song_tick's own) */
 float en_song_in(int kind, int part) { return SONG_IN[kind ? 1 : 0][(unsigned)part < EN_NPART ? part : 0]; }
 float en_song_out(int part) { return SONG_OUT[(unsigned)part < EN_NPART ? part : 0][0]; }
 static void song_publish(void)
@@ -2212,9 +2223,9 @@ EN_COLD static void song_start(void)                     /* PLAY from the top: E
         return;
     }
     song_b0 = 8u * (uint32_t)par[P_SINTRO];
+    song_io = 0.0f, song_mx = tr_in;
     song_bo_on = 1;
     song_ph = song_b0 ? EN_SG_INTRO : EN_SG_MAIN;
-    song_plan();
     for (i = 0; i < EN_NPART; i++) {             /* (each part's entry, off the phrase lines; its fade, 2-4 bars, done by
                                                   * the intro's end) */
         const float e = SONG_IN[par[P_SKIND] ? 1 : 0][i] * (float)song_b0;
@@ -2222,6 +2233,17 @@ EN_COLD static void song_start(void)                     /* PLAY from the top: E
         song_fd[i] = fm_clampf(fm_minf(2.0f + 2.0f * frand(), (float)song_b0 - song_ent[i]), 1.0f, 4.0f);
         fd_pos[i] = fd_tgt[i] = fd_g[i] = en_fader[i] = song_b0 ? 0.0f : 1.0f;
     }
+    if (tr_in && song_b0 >= 16u) {               /* (1.4.2: a Mix: the intro as from its second phrase, its length
+                                                  * kept: the parts due in its first phrase on the Mix's own entries
+                                                  * below, the rest a phrase sooner, the kick's Half and Four, the
+                                                  * filter's opening too: the next record's beat in under the old echo,
+                                                  * not a lone downbeat for a dozen bars; the bars, the song's line and
+                                                  * its main where Intro has them) */
+        song_io = 8.0f;
+        for (i = 0; i < EN_NPART; i++)
+            song_ent[i] -= 8.0f;
+    }
+    song_plan();
     fd_quiet = song_b0 ? 0x3Fu : 0u;
     if (tr_in) {                                 /* (a Mix: the kick from the downbeat, whole; the noise with it, faded
                                                   * in; the rest no sooner than song_tick lets them, as the Kind has;
@@ -2231,7 +2253,7 @@ EN_COLD static void song_start(void)                     /* PLAY from the top: E
                 fd_pos[i] = fd_tgt[i] = fd_g[i] = en_fader[i] = 0.0f;
             fd_quiet = 0x3Fu;
         }
-        song_ent[3] = 0.0f, song_fd[3] = 1.0f;
+        song_ent[3] = -song_io, song_fd[3] = 1.0f;   /* (the kick's shape from where the intro starts) */
         song_ent[5] = 0.0f, song_fd[5] = 2.0f;
         fd_pos[3] = fd_tgt[3] = fd_g[3] = en_fader[3] = 1.0f;
         fd_quiet &= ~(uint32_t)EN_M_KICK;
@@ -2244,10 +2266,14 @@ static int song_kick(void)
     const float b = (float)bar;
     if (song_ph == EN_SG_INTRO) {
         const float x = (b - song_ent[3]) / fm_maxf((float)song_b0 - song_ent[3], 1.0f);
-        return x < 0.4f ? KS_ONE : x < 0.75f ? KS_HALF : KS_FOUR;
+        return x < 0.4f && !song_mx ? KS_ONE : x < 0.75f ? KS_HALF : KS_FOUR;   /* (a Mix's: one and three from
+                                                  * the downbeat, the beat under the old echo) */
     }
     if (song_ph == EN_SG_OUTRO && song_be > song_bo) {
         const float o = (b - (float)song_bo) / (float)(song_be - song_bo);
+        if (tr_on())                             /* (a hand-over's: the piece's own longer, then one and three to the
+                                                  * end, never the lone downbeat) */
+            return o < 0.5f ? -1 : KS_HALF;
         return o < 0.25f ? -1 : o < 0.42f ? KS_HALF : KS_ONE;
     }
     return -1;
@@ -2276,7 +2302,7 @@ EN_COLD static void song_tick(void)                      /* each sixteenth: the 
     if (song_ph == EN_SG_OFF)
         return;
     if (song_ph == EN_SG_INTRO) {
-        const float u = t / fm_maxf((float)song_b0, 1.0f);
+        const float u = (t + song_io) / fm_maxf((float)song_b0 + song_io, 1.0f);   /* (a Mix's: from its second phrase) */
         for (i = 0; i < EN_NPART; i++)
             fd_tgt[i] = fm_clampf((t - song_ent[i]) / song_fd[i], 0.0f, 1.0f);
         song_co = -(1.0f - u);                   /* (the chord's filter an octave under, opening) */
@@ -2289,13 +2315,21 @@ EN_COLD static void song_tick(void)                      /* each sixteenth: the 
          * piece set under it, unheard) */
         const float sp = (float)(song_be - song_bo) - (tr_on() && song_be > song_bo + 1u ? 1.0f : 0.0f),
                     o = song_be > song_bo ? (t - (float)song_bo) / sp : 1.0f;
+        const float (*const so)[2] = tr_on() ? SONG_OUT_TR : SONG_OUT;
         for (i = 0; i < EN_NPART; i++)
-            fd_tgt[i] = fm_minf(song_cap[i], 1.0f - fm_clampf((o - SONG_OUT[i][0]) / SONG_OUT[i][1], 0.0f, 1.0f));
+            fd_tgt[i] = fm_minf(song_cap[i], 1.0f - fm_clampf((o - so[i][0]) / so[i][1], 0.0f, 1.0f));
         if (tr_on()) {                           /* (Segue, Mix: the chord on, every stab thrown, its dry out from 7 bars
                                                   * before the end to 3 (tr_dry): the echo alone has it, fed to the
                                                   * last bar; there its send out in 50 ms (tr_cut), the echo's bar) */
-            fd_tgt[0] = t < (float)song_be - 1.0f ? song_cap[0] : 0.0f;
-            tr_cut = (uint8_t)(t >= (float)song_be - 1.0f);
+            fd_tgt[0] = t >= (float)song_be - 1.0f ? 0.0f : song_cap[0] < 0.5f && t >= (float)song_be - 4.0f ? 1.0f :
+                        song_cap[0];             /* (1.4.2: a chord never in or barely, the outro called early: its
+                                                  * echo alone from 4 bars before the end, its dry not heard: struck,
+                                                  * thrown, held, the old harmony over the hand-over all the same) */
+            fd_tgt[3] = fm_minf(song_cap[3], fm_clampf((float)song_be - 1.0f - t, 0.0f, 1.0f));   /* (1.4.2: the
+                                                  * kick whole to 2 bars before the end, out over that bar, twice the
+                                                  * faders' rate: gone for the echo's bar, the next kick on the
+                                                  * downbeat after it) */
+            tr_cut = (uint8_t)((t >= (float)song_be - 1.0f ? 1u : 0u) | (t >= (float)song_be - 2.0f ? 2u : 0u));
         }
         song_co = 0.0f, song_wet = 1.0f, song_hits = 1.0f;
         song_thr = (uint8_t)(o >= 0.6f);         /* (the last bars: the chord thrown, the noise into the echo) */
@@ -2349,8 +2383,9 @@ EN_COLD static void song_tick(void)                      /* each sixteenth: the 
          * downbeat): the chord's dry out over 4 bars (a Mix's from 7 bars before the end, a Segue's from 5), its echo
          * send kept and pushed, every stab thrown: the old harmony the echo's alone; from the cue (the outro's last
          * bar, the send cut) the echo's loop held as it is (tr_frz: REC's hold, the tape alone), a Segue's plate
-         * held too; past the downbeat held 1 bar, a Segue's and a Mix's (a Segue's plate let go over 2 more): then the
-         * repeats die as the loop has them, the new piece in the echo again; a Mix's chord no sooner than bar 2 */
+         * held too; past the downbeat held 1 bar, a Mix's, 2 a Segue's (1.4.2; its plate let go over bars 2 to 4): then
+         * the repeats die as the loop has them, the new piece in the echo again; a Mix's chord no sooner than bar 2. The
+         * push and the hold never louder than the main had been (1.4.2: tr_level) */
         float pl = 0.0f, dry = 1.0f;
         uint8_t fz = 0;
         const float plh = fm_maxf(pl_decay_t, TR_PLATE);
@@ -2359,12 +2394,16 @@ EN_COLD static void song_tick(void)                      /* each sixteenth: the 
             if (tr_mode == EN_TR_SEGUE && t > be - 4.0f)
                 pl = pl_decay_t + (plh - pl_decay_t) * fm_minf(t - (be - 4.0f), 1.0f);
             dry = 1.0f - fm_clampf((t - (be - (tr_mode == EN_TR_MIX ? 7.0f : 5.0f))) * 0.25f, 0.0f, 1.0f);
+            if (song_cap[0] < 0.5f && t >= be - 4.0f)
+                dry = 0.0f;                      /* (the chord never in, or barely: its echo alone, above) */
             tr_arm = (uint8_t)(!tr_frz && t >= be - 2.0f);   /* (the hold: on the stab thrown on the downbeat two
                                                   * bars before the end (bar_start), once its repeat is in the loop
                                                   * (stab_fire); at the cue at the latest) */
             fz = (uint8_t)(tr_frz || en_tr_cue);
         } else if (tr_after && t < 4.0f && (song_ph == EN_SG_INTRO || song_ph == EN_SG_MAIN)) {
-            fz = (uint8_t)(tr_frz && t < 1.0f);
+            fz = (uint8_t)(tr_frz && t < (tr_after == EN_TR_SEGUE ? 2.0f : 1.0f));   /* (1.4.2: a Segue's held a
+                                                  * bar more, over its intro's bare start; a Mix's let go before the
+                                                  * new chord) */
             if (tr_after == EN_TR_SEGUE)
                 pl = plh + (pl_decay_t - plh) * (t < 2.0f ? 0.0f : (t - 2.0f) * 0.5f);
         } else {
@@ -2374,9 +2413,23 @@ EN_COLD static void song_tick(void)                      /* each sixteenth: the 
         if (fz)
             tr_arm = 0, tr_fwait = 0;
         if (dry < 1.0f)
-            song_wet = 1.0f + (TR_WET - 1.0f) * (1.0f - dry);   /* (and the echo's send pushed as the dry leaves: a
-                                                  * throw, the harmony held there) */
+            song_wet = (1.0f + (TR_WET - 1.0f) * (1.0f - dry)) * tr_gv;   /* (and the echo's send pushed as the dry
+                                                  * leaves: a throw, the harmony held there; never louder than the main
+                                                  * had been: tr_level) */
     }
+}
+/* (1.4.2: the swell, build/design/REPORT-mixgap.txt) the music's power (the master's, a block's sum of squares)
+ * eased over 1.5 s; the main's, eased over 8 s, kept from its end; over a hand-over louder than that (Fog's high
+ * feedback, the send pushed, the loop held: 10 dB over), the push and the held loop brought down to it: tr_gv,
+ * tr_hg. Only a Segue's and a Mix's sends and hold read them: LP, Endless and REC's own hold as they were */
+static float tr_lv, tr_lref, lv_lp;
+EN_COLD static void tr_level(float sq, uint32_t n)
+{
+    tr_lv += (sq / (float)n - tr_lv) * fm_minf((float)n * (1.0f / (1.5f * EN_SR)), 1.0f);
+    if (song_ph == EN_SG_MAIN && !tr_after)
+        tr_lref += (tr_lv - tr_lref) * fm_minf((float)n * (1.0f / (8.0f * EN_SR)), 1.0f);
+    tr_gv = tr_lv > 0.7f * tr_lref && tr_lref > 0.0f ? fm_sqrtf(0.7f * tr_lref / tr_lv) : 1.0f;
+    tr_hg = tr_frz ? 1.0f - 0.4f * (1.0f - tr_gv) : 1.0f;
 }
 static void notes_off(void);
 EN_COLD static void tr_reset(void)               /* (stopped, or a new start: no hand-over under way) */
@@ -2411,13 +2464,18 @@ EN_COLD static void song_outro(void)                     /* HOME held + PLAY: th
                 song_bo = nb + 32u, song_be = song_bo + 8u * (uint32_t)par[P_SOUTRO], song_fixed = 1;
         }
     } else {                                     /* (asked: from the next phrase, in any mode) */
-        if (song_ph == EN_SG_INTRO)
+        const int in = song_ph == EN_SG_INTRO;
+        if (in)
             song_b0 = nb;                        /* (the intro cut short: those not in yet stay out) */
         if (song_ph == EN_SG_OFF)
             song_ph = EN_SG_MAIN;
         song_bo_on = 1, song_fixed = 1, song_ask = 1;
         song_bo = nb;
         song_be = nb + 8u * (uint32_t)par[P_SOUTRO];
+        if (in && tr_on() && song_be > nb + (nb > 8u ? nb : 8u))   /* (1.4.2: a Segue's or a Mix's, called in the
+                                                  * intro: the outro as long as the intro had been, a phrase at least:
+                                                  * the few parts in not taken out over the whole Outro) */
+            song_be = nb + (nb > 8u ? nb : 8u);
     }
     song_publish();
 }
@@ -3453,7 +3511,7 @@ static inline void echoes(float in, float *el, float *er, float *xl, float *xr)
             int16_t s = tape[i0 < 0 ? i0 + TAPE_N : i0];
             if (++tape_w >= TAPE_N)
                 tape_w = 0;
-            tape[tape_w] = s;
+            tape[tape_w] = tr_hg < 1.0f && tr_frz ? (int16_t)((float)s * tr_hg) : s;
         } else {
             float g = fm_minf(echo_fb + 0.15f * st_throw + 0.12f * perf_echo + 0.1f * dub_up + mx_fb, fb_cap);   /* (Dub:
                                                   * past the knob) */
@@ -6166,7 +6224,7 @@ static float ms_lp1, ms_lp2;                     /* the side's lows (mono below 
 static void render_chunk(int32_t *out, uint32_t n, float gain)
 {
     uint32_t j;
-    float epk, mpk[EN_NMETER] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, dlo = 1.0f, dlob = 1.0f;
+    float epk, mpk[EN_NMETER] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, dlo = 1.0f, dlob = 1.0f, msq = 0.0f;
     const float rg = rev_send * rev_in_gain * (1.0f - 0.2f * arcm);
     /* (the cloud listens as if Reverb were at 63 at least, so Cloud works with little reverb too) */
     const float cl_in = rev_send > 0.0001f ? fm_maxf(rev_send, 0.4f) / rev_send : 0.0f;
@@ -6343,6 +6401,12 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
 
         mpk[EN_MT_MASTER] = fm_maxf(mpk[EN_MT_MASTER], fm_maxf(fm_fabsf(l), fm_fabsf(r)));   /* (the master meter, the
                                                   * clip light: going into the soft clip) */
+        {   /* (1.4.2: the level as heard, tr_level's: the mono sum above ~200 Hz, the kick's and the bass's weight
+             * left out as a loudness meter's curve leaves most of it) */
+            const float m = l + r - lv_lp;
+            lv_lp += 0.028f * m;
+            msq += m * m;
+        }
         l = soft(l);                             /* (1.3.0: a rational curve, not tanh: the same below the clip,
                                                   * a fraction of the time) */
         r = soft(r);
@@ -6367,6 +6431,7 @@ static void render_chunk(int32_t *out, uint32_t n, float gain)
     }
     PROF_E(11, p11);
     en_echo_pk = epk;
+    tr_level(msq, n);
     {   /* (the meters: in the output's units, the parts' with the master's gain; each the highest since taken) */
         const float og = 0.75f * gain;
         int i;

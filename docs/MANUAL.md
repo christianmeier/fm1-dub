@@ -48,12 +48,12 @@ same code the FM-1 runs, with sound.
 to install on the computer. Don't unplug it while it's writing; when it finishes, the FM-1 restarts
 into DUB-1.
 
-**Or from the command line:** download `dub-1.4.1.fwsc` from the
+**Or from the command line:** download `dub-1.4.2.fwsc` from the
 [releases](https://github.com/sbegueria/fm1-dub/releases), install Python 3 with
 `pip3 install mido python-rtmidi`, and run, in a checkout of the source:
 
 ```
-python3 tools/fm1_install.py dub-1.4.1.fwsc
+python3 tools/fm1_install.py dub-1.4.2.fwsc
 ```
 
 **Go back:** the installer page's "Back to the stock firmware", or M-VAVE's own updater, M-UPGRADE,
@@ -806,18 +806,22 @@ How one piece hands over to the next is the set's **Transition** (on the same pa
   its last, while its stabs go on into the echo (pushed, every one thrown); two bars before the end
   the chord is struck on the downbeat and the echo is held on it, as REC's dub hold does; the outro's
   last bar is the echo's alone (the next piece is set under it, unheard); the next piece's intro
-  starts on the downbeat under the held echo and the plate, and the hold lets go after its first bar.
+  starts on the downbeat under the held echo and the plate, and the hold lets go after its second bar.
+  The kick plays on (one and three) to two bars before the end and leaves over that bar.
   The tempo is the next piece's from the outro's last bar, as the next piece is set under it; the
   echo's time glides to it, as a tape slowing or speeding up (about 5% at most: under a semitone).
 - **Mix:** a DJ's hand-over. Over the eight bars before the outro's last the tempo glides to the next
-  piece's, and the echo's time with it, so the echo keeps time; the last bar is at the new tempo. The chord's dry leaves over bars 7 to
+  piece's, and the echo's time with it, so the echo keeps time; the last bar is at the new tempo. The kick plays on to the end, as a DJ's outgoing record: the
+  piece's own beat to the outro's half, then one and three, out over the bar two before the end. The chord's dry leaves over bars 7 to
   3 before the end, the echo keeping its harmony (pushed, every stab thrown); the echo is held on the
   stab two bars before the end, as Segue. On the next downbeat the next piece's pulse: its kick at full
-  level from the first beat (as an intro plays it: the downbeat alone, then one and three, then four),
+  level from the first beat, one and three, then four on the floor,
   and its noise, faded in; its bass a bar later at the soonest; its chord, pings
   and hats two bars later at the soonest, once the held echo has let go (after one bar) and faded:
-  the old harmony is in the echo alone, gone before the new chord comes. Then its intro goes on as
-  its Kind has it.
+  the old harmony is in the echo alone, gone before the new chord comes. Its intro plays as from its
+  second phrase: the parts the first phrase would bring come in on those steps, the rest a phrase
+  sooner; its length, and where its main starts, are as Intro has them. Over the hand-over the echo
+  is never louder than the music was.
 
 In all three the old piece's notes end cleanly (MIDI out gets an All Notes Off at the change). The
 tape view's TIME starts again with each piece, as its song line does. PLAY stops a set by hand,
@@ -843,12 +847,15 @@ four for its first phrases as a piece's opening always is.
 **In the outro**, the mirror: the hats leave first, then the pings and the bass; the kick thins (one
 and three, then the downbeat alone) and stops; the chord and the noise stay longest, and for the last
 bars every stab is thrown into the echo and the noise goes into it too, fading, so the song ends on
-the echo's tails and the hiss, then silence. No sections in the outro either.
+the echo's tails and the hiss, then silence. No sections in the outro either. (In a Set's Segue or
+Mix the kick stays to the last bars: above.)
 
 **Outro now:** hold HOME and press PLAY: the outro starts from the next phrase, in any mode. In Endless
 too: a way to land any piece by hand (it plays the Song page's Outro, then rests). Again, in the outro
 or while it waits: back to the main (in a song, for four phrases at least, then the outro as planned;
-in Endless, on as ever). A card says which.
+in Endless, on as ever). A card says which. In a Set's Segue or Mix, called in the intro, the outro is
+as long as the intro had been (a phrase at least), and the chord, even if it never came in, is thrown
+into the held echo at the end.
 
 The knobs work as ever during a song: what you turn is kept, and the song's moves are around it (each
 part's fader, the filter's and the echo's offsets), never on its values. Turning Main as it plays moves

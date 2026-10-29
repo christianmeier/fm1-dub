@@ -350,6 +350,80 @@ static double trw_acc, trw_sq, trw_x1[2], trw_x2[2];
 static float trw_ring[TRW_N][2];
 static uint32_t trw_w;
 static uint32_t trw_n, trw_bars_was, trw_t_restart, trw_t_cue, trw_onset_t, trw_was[5];
+/* (1.4.2: the Mix's hole, build/design/REPORT-mixgap.txt) the hand-over's loudness as a loudness meter has it (BS.1770:
+ * K-weighted, 100 ms steps; the momentary 400 ms, the short-term 3 s), against the music's: the 16 s before the outro
+ * (or what there was since trwatch). trhole: the longest stretch of the momentary more than 12 LU under it, from the
+ * outro to the next piece's bar 8, ms; trswell: the short-term's highest over it there, LU x10; trlow: the
+ * short-term's lowest under it, LU x10 (both from 3 s into the outro) */
+#define TRK_N 192
+static double trk_b[2][3], trk_a[2][3], trk_z[2][2][2], trk_acc, trk_blk[TRK_N], trk_ref;
+static uint32_t trk_n, trk_w, trk_out_w;
+static int trk_on, trk_run, trw_hole, trw_swell, trw_low;
+static void trk_init(void)
+{
+    const double fs = 44100.0, pi = 3.14159265358979;
+    double K = tan(pi * 1681.974450955533 / fs), Q = 0.7071752369554196, Vh = pow(10.0, 3.999843853973347 / 20.0),
+           Vb = pow(Vh, 0.4996667741545416), a0 = 1.0 + K / Q + K * K;
+    trk_b[0][0] = (Vh + Vb * K / Q + K * K) / a0, trk_b[0][1] = 2.0 * (K * K - Vh) / a0;
+    trk_b[0][2] = (Vh - Vb * K / Q + K * K) / a0;
+    trk_a[0][1] = 2.0 * (K * K - 1.0) / a0, trk_a[0][2] = (1.0 - K / Q + K * K) / a0;
+    K = tan(pi * 38.13547087602444 / fs), Q = 0.5003270373238773, a0 = 1.0 + K / Q + K * K;
+    trk_b[1][0] = 1.0, trk_b[1][1] = -2.0, trk_b[1][2] = 1.0;
+    trk_a[1][1] = 2.0 * (K * K - 1.0) / a0, trk_a[1][2] = (1.0 - K / Q + K * K) / a0;
+    memset(trk_z, 0, sizeof trk_z);
+    trk_acc = 0.0, trk_n = trk_w = 0, trk_on = 0, trk_run = 0, trk_ref = 0.0;
+    trw_hole = 0, trw_swell = -999, trw_low = 999;
+}
+static double trk_mean(uint32_t k)               /* (the last k steps' power) */
+{
+    double m = 0.0;
+    uint32_t i;
+    for (i = 1; i <= k; i++)
+        m += trk_blk[(trk_w + TRK_N - i) % TRK_N];
+    return m / (double)k;
+}
+static void trk_sample(float l, float r)
+{
+    const float x[2] = {l, r};
+    int c, st;
+    for (c = 0; c < 2; c++) {                     /* (two biquads, transposed direct form II) */
+        double v = x[c];
+        for (st = 0; st < 2; st++) {
+            const double y = trk_b[st][0] * v + trk_z[c][st][0];
+            trk_z[c][st][0] = trk_b[st][1] * v - trk_a[st][1] * y + trk_z[c][st][1];
+            trk_z[c][st][1] = trk_b[st][2] * v - trk_a[st][2] * y;
+            v = y;
+        }
+        trk_acc += v * v;
+    }
+    if (++trk_n < 4410u)
+        return;
+    trk_blk[trk_w % TRK_N] = trk_acc / 4410.0;
+    trk_w++;
+    trk_acc = 0.0, trk_n = 0;
+    if (!trk_on && en_song_ph >= 3 && !trw_t_restart) {   /* (the outro: the music's level from before it) */
+        const uint32_t k = trk_w - 1u < 160u ? trk_w - 1u : 160u;
+        uint32_t i;
+        trk_ref = 0.0;
+        for (i = 2; i <= k + 1u; i++)
+            trk_ref += trk_blk[(trk_w + TRK_N - i) % TRK_N];
+        trk_ref = 10.0 * log10(trk_ref / (double)(k ? k : 1u) + 1e-20);
+        trk_on = 1, trk_out_w = trk_w;
+    }
+    if (trk_on == 1 && trw_t_restart && en_bars >= 128u)
+        trk_on = 2;                               /* (the next piece's bar 8: done) */
+    if (trk_on == 1 && trk_w >= 4u) {
+        const double m = 10.0 * log10(trk_mean(4u) + 1e-20) - trk_ref;
+        trk_run = m < -12.0 ? trk_run + 100 : 0;
+        if (trk_run > trw_hole)
+            trw_hole = trk_run;
+        if (trk_w >= trk_out_w + 30u) {
+            const int sh = (int)floor(10.0 * (10.0 * log10(trk_mean(30u) + 1e-20) - trk_ref) + 0.5);
+            trw_swell = sh > trw_swell ? sh : trw_swell;
+            trw_low = sh < trw_low ? sh : trw_low;
+        }
+    }
+}
 static void trw_sample(float l, float r)
 {
     const uint32_t w = trw_w % TRW_N, o = (trw_w + TRW_N - 882u) % TRW_N, m = (trw_w + TRW_N - 441u) % TRW_N;
@@ -359,6 +433,7 @@ static void trw_sample(float l, float r)
                                                          (double)trw_ring[o][1] * trw_ring[o][1]);
     trw_ring[w][0] = l, trw_ring[w][1] = r;
     trw_w++;
+    trk_sample(l, r);
     for (c = 0; c < 2; c++) {                     /* (the sample 10 ms back, against the level either side of it) */
         const double xm = trw_ring[m][c], d2 = fabs(xm - 2.0 * trw_x1[c] + trw_x2[c]),
                      rms = sqrt((trw_sq > 0.0 ? trw_sq : 0.0) / 882.0);
@@ -663,6 +738,12 @@ static int expect(const char *what, const char *val)
         got = trw_kick;
     else if (!strcmp(what, "trbass"))
         got = trw_bass;
+    else if (!strcmp(what, "trhole"))            /* (1.4.2) the longest stretch 12 LU under the music, ms (trk_sample) */
+        got = trw_hole;
+    else if (!strcmp(what, "trswell"))           /* the short-term's highest over the music, LU x10 */
+        got = trw_swell;
+    else if (!strcmp(what, "trlow"))             /* and its lowest, LU x10 */
+        got = trw_low;
     else if (!strcmp(what, "trdip"))             /* the next piece's first 8 bars: a fader's largest fall (x1000) */
         got = trw_dip;
     else if (!strcmp(what, "trjump"))            /* and its largest rise in a ms (x1000; the kick's left out) */
@@ -1153,6 +1234,7 @@ int main(int argc, char **argv)
         else if (!strcmp(cmd, "trwatch")) {      /* (1.4.0) a Set's hand-over watched from here (trquiet, trclick ..) */
             trw_on = 1, trw_quiet_ms = trw_run_ms = trw_restarts = trw_click = 0, trw_ch = trw_kick = trw_bass = -1;
             trw_dip = trw_jump = 0;
+            trk_init();
             trw_acc = trw_sq = 0.0, trw_n = 0, trw_t_restart = trw_t_cue = 0, trw_bars_was = en_bars, trw_w = 0;
             memset(trw_ring, 0, sizeof trw_ring);
         } else if (!strcmp(cmd, "tlog")) {         /* tlog FILE: the song's state every 50 ms (tempo, place, faders) */

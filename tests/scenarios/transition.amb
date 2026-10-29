@@ -130,6 +130,9 @@ wait 8000
 expect trchord >31
 expect trquiet <2000
 expect trclick <80
+# (1.4.2: no hole, mixgap.amb: never 12 LU under the music for more than about a bar; no swell over it)
+expect trhole <2100
+expect trswell <60
 # Haze, the last: its song to its end (64 bars at 116), then it rests
 wait 130000
 expect piece 7
