@@ -18,7 +18,8 @@ shot songmode.png
 tap HOME
 wait 100
 expect view 0
-# the PBF4, a column a track: fader F1 (CC 36) the chord's level, pot P1 (CC 32) the chord's track filter
+# the PBF4, a column a track: fader F1 (CC 36) the chord's level, pot P1 (CC 32) the chord's track filter (from the
+# Grid a filter closes to the right: CC 0 its thinnest, 127 its darkest)
 midi B0 24 00
 wait 20
 expect par0 0
@@ -27,6 +28,9 @@ wait 20
 expect par0 100
 midi B0 20 00
 wait 20
+expect par148 50
+midi B0 20 7F
+wait 20
 expect par148 -50
 midi B0 20 40
 wait 20
@@ -34,8 +38,8 @@ expect par148 0
 # pot P4 (CC 35): the drums' filter, the kick's strip and the hats' both
 midi B0 23 7F
 wait 20
-expect par156 50
-expect par151 50
+expect par156 -50
+expect par151 -50
 # another channel: not the Grid's
 midi B1 24 00
 wait 20
@@ -97,11 +101,11 @@ turn ALGO 1
 wait 100
 midi B0 30 00
 wait 20
-expect par148 -50
+expect par148 50
 midi B0 33 7F
 wait 20
-expect par156 50
-expect par151 50
+expect par156 -50
+expect par151 -50
 # encoder 5's push (the echo sends' row, Throw): the chord's echo send up while held
 midi B0 34 00
 wait 20
@@ -127,10 +131,11 @@ expect view 31
 spin K3 -40
 wait 1600
 shot learn.png
-# (the chord's filter -50 here, Tracks' encoder 1 left it so: the binding CC's own value doesn't move it)
+# (the chord's filter +50 here, Tracks' encoder 1 left it so: the binding CC's own value, which would take it to -50,
+# doesn't move it)
 midi B0 46 7F
 wait 20
-expect par148 -50
+expect par148 50
 midi B0 46 40
 wait 20
 expect par148 0
@@ -147,4 +152,4 @@ reboot
 wait 300
 midi B0 46 7F
 wait 20
-expect par148 50
+expect par148 -50
