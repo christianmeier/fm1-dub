@@ -3179,7 +3179,7 @@ EN_COLD static void tick(void)
         en_drum_pos[d] = (uint8_t)st;
     {   /* (1.4.0, the overview's pings row) this bar's sixteenths a ping falls on: those that rang so far, kept; then
          * the loops' notes ahead, where each loop will be (a pass's end may still change them) */
-        uint32_t m = en_lane_png & ((st & 1 ? 2u : 1u) << st) - 1u;
+        uint32_t m = en_lane_png & (((st & 1 ? 2u : 1u) << st) - 1u);
         int q;
         if (!st)
             m = 0u;
